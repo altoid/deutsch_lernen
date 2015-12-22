@@ -37,7 +37,7 @@ while getopts "n:r:d" opt; do
     esac
 done
 
-cat <<EOF | mysql -u german -D deutsch -t
+cat <<EOF | mysql -t
 select
 	lpad(t.name, 9, ' ') name, -- part of speech
 	rpad(concat(ifnull(wa.value, '   '), ' ', t.word), 30, ' ') word,
