@@ -8,7 +8,6 @@ datecolumn=""
 
 function usage() {
     echo "usage: $1 [-d] [-r <regex>] [-n <nwords>]
- -r <regex>  mysql-style regex to match words
  -n <nwords> number of words to select, default 10
  -d          select last nwords added instead of random selection
 "
@@ -22,9 +21,6 @@ while getopts "n:r:d" opt; do
 	    ;;
 	n)
 	    nwords=$OPTARG
-	    ;;
-	r)
-	    regex=" and w.word like '$OPTARG'"
 	    ;;
 	\?)
 	    usage $0
@@ -53,7 +49,7 @@ from
 	inner join attribute a on wa.attribute_id = a.id
 	inner join pos p on p.id = w.pos_id
 	where
-		a.attrkey = 'definition' $regex
+		a.attrkey = 'definition'
 ) t
 left join
 word_attribute wa
