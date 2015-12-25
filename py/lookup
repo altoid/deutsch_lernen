@@ -1,0 +1,63 @@
+#!/usr/bin/python
+# -*- python -*-
+
+import MySQLdb
+# docs at http://mysql-python.sourceforge.net/MySQLdb.html
+
+import common
+import noun
+import sys
+import codecs
+import dsn
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("word", help="word to look up")
+args = parser.parse_args()
+
+# https://pythonhosted.org/kitchen/unicode-frustrations.html
+utf8writer = codecs.getwriter('utf8')
+sys.stdout = utf8writer(sys.stdout)
+
+db = dsn.getConnection()
+c = db.cursor()
+
+word = db.escape_string(args.word)
+
+q = """
+select
+	p.name,
+	w.word,
+	concat(a.attrkey, ':') attrkey,
+	wa.value
+from
+	pos p,
+	word w,
+	attribute a,
+	word_attribute wa,
+	words_x_attributes_v v
+where
+	v.pos_id = p.id	and
+	v.attribute_id = a.id	and
+	v.word_id = w.id and
+	wa.attribute_id = v.attribute_id	and
+	wa.word_id = w.id and
+	w.word = '%s'
+""" % (word)
+
+c.execute(q)
+
+result = {}
+pos=''
+for row in c.fetchall():
+    d = dict(zip(['name', 'word', 'attrkey', 'value'],
+                 row))
+    result[d['attrkey']] = d['value']
+    pos = d['name']
+
+print "%s: %s" % (word, pos)
+for k in result.keys():
+    print "%-15s %s" % (k, result[k])
+
+
+
