@@ -22,7 +22,11 @@ sys.stdout = utf8writer(sys.stdout)
 db = dsn.getConnection()
 c = db.cursor()
 
-word = db.escape_string(args.word)
+word = args.word
+word = word.strip().lower()
+
+word = db.escape_string(word)
+word = unicode(word, 'utf8')
 
 q = """
 select
@@ -55,9 +59,12 @@ for row in c.fetchall():
     result[d['attrkey']] = d['value']
     pos = d['name']
 
-print "%s: %s" % (word, pos)
-for k in result.keys():
-    print "%-15s %s" % (k, result[k])
+if len(result) > 0:
+    print "%s: %s" % (word, pos)
+    for k in result.keys():
+        print "%-15s %s" % (k, result[k])
+else:
+    print "not found:  %s" % word
 
 
 
