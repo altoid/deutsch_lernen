@@ -8,13 +8,26 @@ import noun
 import sys
 import codecs
 import dsn
+import argparse
 
-# https://pythonhosted.org/kitchen/unicode-frustrations.html
-utf8writer = codecs.getwriter('utf8')
-sys.stdout = utf8writer(sys.stdout)
+def check_key(db, c, attrkey):
+    q = """
+ select attribute.attrkey
+ from pos, attribute, pos_form
+ where pos.id = pos_form.pos_id
+   and attribute.id = pos_form.attribute_id
+   and pos.name ='verb'
+"""
 
-db = dsn.getConnection()
-c = db.cursor()
+    attrkeys = set()
+    c.execute(q)
+    for row in c.fetchall():
+        r = dict(zip(['attrkey'],
+                     row))
+        attrkeys.add(r['attrkey'])
+
+    return attrkey in attrkeys
+
 
 def jam(db, c, tuples):
     if len(tuples) > 0:
@@ -26,18 +39,22 @@ on duplicate key update value=values(value)
         c.execute(iquery)
         db.commit()
 
-# TODO:  make this more generic
 
-attrkeys = [
-    'third_person_past',
-#    'past_participle',
-#    'first_person_singular',
-#    'second_person_singular',
-#    'third_person_singular',
-#    'first_person_plural',
-#    'second_person_plural',
-#    'third_person_plural',
-]
+parser = argparse.ArgumentParser()
+parser.add_argument("key", help="attr key to populate")
+args = parser.parse_args()
+attrkey = args.key.strip().lower()
+
+# https://pythonhosted.org/kitchen/unicode-frustrations.html
+utf8writer = codecs.getwriter('utf8')
+sys.stdout = utf8writer(sys.stdout)
+
+db = dsn.getConnection()
+c = db.cursor()
+if not check_key(db, c, attrkey):
+    print "no such key:  %s" % attrkey
+    sys.exit(1)
+
 
 q = """
 
@@ -49,10 +66,9 @@ inner join word w on w.id = x.word_id
 left join word_attribute wa on x.attribute_id = wa.attribute_id 
                            and x.word_id = wa.word_id
 where pos.name = 'verb'
-and a.attrkey in ( %(attrlist)s )
+and a.attrkey = '%(attrkey)s'
 and wa.value is null
-order by x.word_id, field( attrkey, %(attrlist)s )
-""" % {'attrlist' : ','.join(["'" + x + "'" for x in attrkeys]) }
+""" % {'attrkey' : attrkey }
 
 
 c.execute(q)
