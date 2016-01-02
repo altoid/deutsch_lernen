@@ -10,7 +10,22 @@ import codecs
 import dsn
 import argparse
 
-def check_key(db, c, attrkey):
+def usage():
+    global db
+    global c
+
+    keys = get_keys(db, c)
+    msg = """
+fix_verbs [-h] attrkey
+
+attribute keys to populate:
+"""
+    for k in keys:
+        msg += "\t%s\n" % k
+
+    return msg
+
+def get_keys(db, c):
     q = """
  select attribute.attrkey
  from pos, attribute, pos_form
@@ -26,7 +41,11 @@ def check_key(db, c, attrkey):
                      row))
         attrkeys.add(r['attrkey'])
 
-    return attrkey in attrkeys
+    return attrkeys
+
+def check_key(db, c, attrkey):
+    keys = get_keys(db, c)
+    return attrkey in keys
 
 
 def jam(db, c, tuples):
@@ -40,7 +59,9 @@ on duplicate key update value=values(value)
         db.commit()
 
 
-parser = argparse.ArgumentParser()
+db = dsn.getConnection()
+c = db.cursor()
+parser = argparse.ArgumentParser(usage=usage())
 parser.add_argument("key", help="attr key to populate")
 args = parser.parse_args()
 attrkey = args.key.strip().lower()
@@ -49,8 +70,6 @@ attrkey = args.key.strip().lower()
 utf8writer = codecs.getwriter('utf8')
 sys.stdout = utf8writer(sys.stdout)
 
-db = dsn.getConnection()
-c = db.cursor()
 if not check_key(db, c, attrkey):
     print "no such key:  %s" % attrkey
     sys.exit(1)
