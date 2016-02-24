@@ -32,11 +32,12 @@ def get_word_info(c, worddict, posname):
  from words_x_attributes_v v   -- pos_id, word_id, attribute_id
  inner join pos on pos.id = v.pos_id
  inner join attribute a on a.id = v.attribute_id
+ inner join pos_form on pos_form.pos_id = v.pos_id and pos_form.attribute_id = v.attribute_id
  inner join word on word.id = v.word_id
  left join word_attribute wa on v.word_id = wa.word_id and v.attribute_id = wa.attribute_id
  where word.word = '%s'
  and pos.name = '%s'
- order by v.word_id, v.attribute_id
+ order by v.word_id, pos_form.sort_order
 
 """ % (worddict['word'], posname)
 
