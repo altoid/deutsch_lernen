@@ -4,6 +4,7 @@
 import MySQLdb
 # docs at http://mysql-python.sourceforge.net/MySQLdb.html
 
+import string
 import common
 import noun
 import sys
@@ -59,12 +60,21 @@ for row in c.fetchall():
     result[d['attrkey']] = d['value']
     pos = d['name']
 
-if len(result) > 0:
-    print "%s: %s" % (word, pos)
-    for k in result.keys():
-        print "%-15s %s" % (k, result[k])
-else:
+if len(result) == 0:
     print "not found:  %s" % word
+    sys.exit(0)
+
+# get the max width of all attr keys
+max_width = 0
+for r in result.keys():
+    if len(r) > max_width:
+        max_width = len(r)
+
+print "%s %s" % (string.ljust(word + ":", max_width),
+                  pos)
+for k in result.keys():
+    print "%s %s" % (string.ljust(k, max_width),
+                     result[k])
 
 
 

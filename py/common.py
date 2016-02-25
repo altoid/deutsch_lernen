@@ -1,3 +1,5 @@
+import string
+
 def get_word(db, dasWort):
 
     word = db.escape_string(dasWort)
@@ -143,8 +145,19 @@ def update_word(db, c, word_attributes):
             word_id = r['word_id']
             break
 
+    # get the max width of the attribute names
+    max_width = 0
     for r in word_attributes:
-        prompt = "--[%s]--> [%s]:" % (r['attrkey'], '' if r['value'] == None else r['value'])
+        if len(r['attrkey']) > max_width:
+            max_width = len(r['attrkey'])
+            
+    max_width += 8  # pad for "--[]--> "
+
+    for r in word_attributes:
+        prefix = "--[%s]-->" % r['attrkey']
+        prompt = "%s [%s]:" % (
+            string.ljust(prefix, max_width),
+            '' if r['value'] == None else r['value'])
         v = raw_input(prompt)
         v = unicode(v, 'utf8').strip().lower()
         if len(v) > 0 and r['value'] != v:
