@@ -65,6 +65,7 @@ select pos.name, pos_form.pos_id, pos_form.attribute_id, attribute.attrkey
 from
 pos, pos_form, attribute where pos.id = pos_form.pos_id
   and pos_form.attribute_id = attribute.id and pos.name = '%s'
+order by pos_form.sort_order
 """ % (pos)
 
     c.execute(q)
@@ -78,10 +79,26 @@ pos, pos_form, attribute where pos.id = pos_form.pos_id
 
     return word_attributes
 
+def get_max_width(word_attributes):
+    """
+    get the maximum display width of all the attribute keys.
+    used for building prompts.
+    """
+
+    max_width = 0
+    for r in word_attributes:
+        if len(r['attrkey']) > max_width:
+            max_width = len(r['attrkey'])
+            
+    max_width += 8  # pad for "--[]--> "
+    return max_width
+
 def insert_word(db, c, input_word, posname):
 
     # fetch all the attributes for word
     word_attributes = get_pos_attributes(c, posname)
+
+    max_width = get_max_width(word_attributes)
 
     pos_id = word_attributes[0]['pos_id']
 
@@ -90,7 +107,10 @@ def insert_word(db, c, input_word, posname):
     tuples = []
     for r in word_attributes:
         d = {}
-        v = raw_input( "--[%s]--> " % (r['attrkey'])).strip().lower()
+        prefix = "--[%s]-->" % r['attrkey']
+        prompt = string.ljust(prefix, max_width)
+
+        v = raw_input(prompt)
         v = db.escape_string(v)
         if len(v) > 0:
             d['value'] = v
@@ -145,13 +165,7 @@ def update_word(db, c, word_attributes):
             word_id = r['word_id']
             break
 
-    # get the max width of the attribute names
-    max_width = 0
-    for r in word_attributes:
-        if len(r['attrkey']) > max_width:
-            max_width = len(r['attrkey'])
-            
-    max_width += 8  # pad for "--[]--> "
+    max_width = get_max_width(word_attributes)
 
     for r in word_attributes:
         prefix = "--[%s]-->" % r['attrkey']
