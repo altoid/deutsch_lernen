@@ -1,10 +1,15 @@
+import logging
 import common
 
-articles=['der','die','das']
+articles = ['der', 'die', 'das']
 
 # prompt for article and word
 def get_word_with_article(db, dasWort):
-
+    '''
+    returns word and the article in a dictionary,
+    keys are 'article' and 'word'
+    '''
+    
     stuff = dasWort.split()
 
     if len(stuff) != 2:
@@ -17,7 +22,7 @@ def get_word_with_article(db, dasWort):
     noun = db.escape_string(stuff[1])
 
     r = {'article' : article,
-         'word' : noun }
+         'word' : noun}
 
     return r
 
@@ -63,7 +68,7 @@ where
         d = dict(zip(['pos_name', 'pos_id', 'attribute_id', 'attrkey', 'word_id', 'value'],
                      row))
 
-        if d['attrkey'] == 'article' and d['value'] == None:
+        if d['attrkey'] == 'article' and d['value'] is None:
             # abort
             return []
 
@@ -74,7 +79,7 @@ where
 def insert_word(db, c, input_word):
 
     # fetch all the attributes for nouns
-    word_attributes = common.get_pos_attributes(c, 'Noun')
+    word_attributes = common.get_word_attributes(c, 'Noun', input_word['word'])
 
     pos_id = word_attributes[0]['pos_id']
 
@@ -87,11 +92,11 @@ def insert_word(db, c, input_word):
             d['value'] = input_word['article']
             d['attribute_id'] = r['attribute_id']
         else:
-            v = raw_input( "--[%s]--> " % (r['attrkey'])).strip().lower()
-            v = db.escape_string(v)
-            v = unicode(v, 'utf8')
-            if len(v) > 0:
-                d['value'] = v
+            value = raw_input( "--[%s]--> " % (r['attrkey'])).strip().lower()
+            value = db.escape_string(value)
+            value = unicode(value, 'utf8')
+            if len(value) > 0:
+                d['value'] = value
                 d['attribute_id'] = r['attribute_id']
 
         if len(d) > 0:
@@ -116,6 +121,9 @@ select last_insert_id() as word_id
     for row in c.fetchall():
         word_id = row[0]
         break
+
+    logging.debug("inserted '%s', id = %s" % (
+        input_word['word'], word_id))
 
     # insert into the word_attribute table
     tuples = []
@@ -148,14 +156,14 @@ def update_word(db, c, word_attributes):
         if r['attrkey'] == 'article':
             continue
 
-        prompt = "--[%s]--> [%s]:" % (r['attrkey'], '' if r['value'] == None else r['value'])
+        prompt = "--[%s]--> [%s]:" % (r['attrkey'], '' if r['value'] is None else r['value'])
 
-        v = raw_input(prompt).strip().lower()
-        v = db.escape_string(v)
-        v = unicode(v, 'utf8')
-        if len(v) > 0 and r['value'] != v:
-            tuple = "(%s, %s, '%s')" % (r['attribute_id'], word_id, v)
-            tuples.append(tuple)
+        value = raw_input(prompt).strip().lower()
+        value = db.escape_string(value)
+        value = unicode(value, 'utf8')
+        if len(value) > 0 and r['value'] != value:
+            tmptuple = "(%s, %s, '%s')" % (r['attribute_id'], word_id, value)
+            tuples.append(tmptuple)
             
     if len(tuples) == 0:
         print "no new data, returning"

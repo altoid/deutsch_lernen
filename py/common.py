@@ -82,14 +82,7 @@ on duplicate key update value=values(value)
 
     db.commit()
 
-def prompt_word(db, c, posname):
-    input_string = raw_input('--[word]--> ').strip().lower()
-
-    if len(input_string) == 0:
-        return True
-
-    input_word = get_word(db, input_string)
-
+def get_word_attributes(c, posname, word):
     q = """
 select
         pos.name,
@@ -109,7 +102,7 @@ from
 where
 	pos.name = '%(posname)s'
 order by pf.sort_order
-""" % { "word" : input_word['word'],
+""" % { "word" : word,
         "posname" : posname }
 
     c.execute(q)
@@ -119,5 +112,17 @@ order by pf.sort_order
         d = dict(zip(['pos_name', 'pos_id', 'attribute_id', 'attrkey', 'word', 'word_id', 'attrvalue'],
                      row))
         word_attributes.append(d)
+
+    return word_attributes
+
+def prompt_word(db, c, posname):
+    input_string = raw_input('--[word]--> ').strip().lower()
+
+    if len(input_string) == 0:
+        return True
+
+    input_word = get_word(db, input_string)
+
+    word_attributes = get_word_attributes(c, posname, input_word['word'])
 
     add_or_update_word(db, c, word_attributes)

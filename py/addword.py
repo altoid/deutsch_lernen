@@ -8,6 +8,9 @@ import noun
 import sys
 import codecs
 import dsn
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 # https://pythonhosted.org/kitchen/unicode-frustrations.html
 utf8writer = codecs.getwriter('utf8')

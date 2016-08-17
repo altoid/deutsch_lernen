@@ -1,5 +1,4 @@
 #!/bin/bash
-# -*- shell-script -*-
 
 nwords=10
 regex=""
@@ -7,14 +6,21 @@ orderby="rand()"
 datecolumn=""
 
 function usage() {
-    echo "usage: $1 [-d] [-r <regex>] [-n <nwords>]
+    echo "usage: $1 [-d] [-r <regex>] [-n <nwords>] [-s]
+
+ -s          select all the words from the last day when words were added (session option)
  -n <nwords> number of words to select, default 10
  -d          select last nwords added instead of random selection
+
+-s supersedes all the other options.
 "
 }
 
-while getopts "n:r:d" opt; do
+while getopts "sn:d" opt; do
     case $opt in
+	s)
+	    session=1
+	    ;;
 	d)
 	    orderby="t.added desc"
 	    datecolumn=", date(t.added) added"
@@ -32,6 +38,36 @@ while getopts "n:r:d" opt; do
 	    ;;
     esac
 done
+
+# this is the query used for the session option.
+if [ $session ]; then
+    cat <<EOF | mysql -t
+select
+	lpad(t.name, 9, ' ') name, -- part of speech
+	rpad(concat(ifnull(wa.value, '   '), ' ', t.word), 30, ' ') word,
+	t.value definition,
+        date(t.added) added
+from
+(
+	select
+		p.name, w.word, w.added, wa.*
+	from
+		word w
+	inner join word_attribute wa on w.id = wa.word_id
+	inner join attribute a on wa.attribute_id = a.id
+	inner join pos p on p.id = w.pos_id
+	where
+		a.attrkey = 'definition'
+                and date(w.added) = (select date(max(added)) from word)
+) t
+left join
+word_attribute wa
+on t.word_id = wa.word_id and wa.attribute_id = 1
+order by $orderby
+EOF
+
+    exit
+fi
 
 cat <<EOF | mysql -t
 select
