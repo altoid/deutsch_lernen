@@ -1,0 +1,6 @@
+crontab
+**/*~
+py/dsn.*
+**/*.pyc
+sql/deutsch.sql
+
