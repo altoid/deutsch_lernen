@@ -3,4 +3,7 @@ crontab
 py/dsn.*
 **/*.pyc
 sql/deutsch.sql
+**/*.bak
+**/*.BAK
+**/x
 

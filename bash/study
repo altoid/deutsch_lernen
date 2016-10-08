@@ -4,6 +4,7 @@ nwords=10
 regex=""
 orderby="rand()"
 datecolumn=""
+CLIENT="mysql --defaults-file=~/.deutsch.cnf"
 
 function usage() {
     echo "usage: $1 [-d] [-r <regex>] [-n <nwords>] [-s]
@@ -41,7 +42,7 @@ done
 
 # this is the query used for the session option.
 if [ $session ]; then
-    cat <<EOF | mysql -t
+    cat <<EOF | $CLIENT -t
 select
 	lpad(t.name, 9, ' ') name, -- part of speech
 	rpad(concat(ifnull(wa.value, '   '), ' ', t.word), 30, ' ') word,
@@ -69,7 +70,7 @@ EOF
     exit
 fi
 
-cat <<EOF | mysql -t
+cat <<EOF | $CLIENT -t
 select
 	lpad(t.name, 9, ' ') name, -- part of speech
 	rpad(concat(ifnull(wa.value, '   '), ' ', t.word), 30, ' ') word,
