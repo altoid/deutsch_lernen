@@ -33,28 +33,30 @@ where
 
     c.execute(q)
 
-    result = {}
+    result = []
     pos=''
     for row in c.fetchall():
         d = dict(zip(['name', 'word', 'attrkey', 'value', 'sort_order'],
                  row))
-        result[d['attrkey']] = d['value']
         pos = d['name']
+        result.append(d)
 
     if len(result) == 0:
         print "%s NOT FOUND:  %s" % ('#' * 33, word)
         return
 
+    result = sorted(result, key = lambda x: x['sort_order'])
+
     # get the max width of all attr keys
     max_width = 0
-    for r in result.keys():
-        if len(r) > max_width:
-            max_width = len(r)
+    for r in result:
+        if len(r['attrkey']) > max_width:
+            max_width = len(r['attrkey'])
 
     print "%s %s: %s" % ('=' * 33, word, pos)
-    for k in result.keys():
-        print "%s %s" % (string.ljust(k, max_width),
-                         result[k])
+    for r in result:
+        print "%s %s" % (string.ljust(r['attrkey'], max_width),
+                         r['value'])
 
 parser = argparse.ArgumentParser()
 parser.add_argument("word",
