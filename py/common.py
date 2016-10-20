@@ -1,12 +1,7 @@
 import string
+import logging
 
-def get_word(db, dasWort):
-
-    word = db.escape_string(dasWort)
-
-    r = {'word' : word }
-
-    return r
+logging.basicConfig(level=logging.DEBUG)
 
 def get_max_width(word_attributes):
     """
@@ -85,23 +80,20 @@ on duplicate key update value=values(value)
 def get_word_attributes(c, posname, word):
     q = """
 select
-        pos.name,
-        pos.id pos_id,
-        a.id attribute_id,
-        a.attrkey,
+        pos_name,
+        pos_id,
+        attribute_id,
+        attrkey,
         '%(word)s' word,
-        word.id word_id,
-        wa.value attrvalue
+        word_id,
+        attrvalue,
+        sort_order
 from
-	pos
-	inner join pos_form pf on pos.id = pf.pos_id
-	inner join attribute a on a.id = pf.attribute_id
-	left join word on word.pos_id = pos.id and word.word = '%(word)s'
-	left join words_x_attributes_v v on v.pos_id = pos.id and v.attribute_id = a.id and v.word_id = word.id
-	left join word_attribute wa on wa.attribute_id = v.attribute_id and wa.word_id = v.word_id
+    mashup
 where
-	pos.name = '%(posname)s'
-order by pf.sort_order
+	pos_name = '%(posname)s'
+    and word = '%(word)s'
+order by sort_order
 """ % { "word" : word,
         "posname" : posname }
 
@@ -121,8 +113,8 @@ def prompt_word(db, c, posname):
     if len(input_string) == 0:
         return True
 
-    input_word = get_word(db, input_string)
+    input_word = db.escape_string(input_string)
 
-    word_attributes = get_word_attributes(c, posname, input_word['word'])
+    word_attributes = get_word_attributes(c, posname, input_word)
 
     add_or_update_word(db, c, word_attributes)
