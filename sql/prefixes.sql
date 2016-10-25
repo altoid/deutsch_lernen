@@ -29,9 +29,9 @@ where 1
 and left(prefix.word, length(prefix.word) - length(noprefix.word))
     in ('an', 'ab', 'auf', 'aus',
         'be', 'fest', 'er', 'ge', 'heraus', 'herum',
-        'hin', 'hinunter', 'los', 'mit', 'nach',
-        'statt', 'über', 'um', 'unter', 'ver'
-        'vor', 'weg', 'wider', 'wieder', 'zer'
+        'hin', 'hinunter', 'los', 'mit', 'nach', 'rein',
+        'statt', 'über', 'um', 'unter', 'ver',
+        'vor', 'weg', 'wider', 'wieder', 'zer',
         'zu', 'züruck')
 and length(prefix.word) > length(noprefix.word)
 and right(prefix.word, length(noprefix.word)) = noprefix.word

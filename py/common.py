@@ -1,7 +1,4 @@
 import string
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
 
 def get_max_width(word_attributes):
     """
@@ -80,20 +77,23 @@ on duplicate key update value=values(value)
 def get_word_attributes(c, posname, word):
     q = """
 select
-        pos_name,
-        pos_id,
-        attribute_id,
-        attrkey,
+        pos.name,
+        pos.id pos_id,
+        a.id attribute_id,
+        a.attrkey,
         '%(word)s' word,
-        word_id,
-        attrvalue,
-        sort_order
+        word.id word_id,
+        wa.value attrvalue
 from
-    mashup
+	pos
+	inner join pos_form pf on pos.id = pf.pos_id
+	inner join attribute a on a.id = pf.attribute_id
+	left join word on word.pos_id = pos.id and word.word = '%(word)s'
+	left join words_x_attributes_v v on v.pos_id = pos.id and v.attribute_id = a.id and v.word_id = word.id
+	left join word_attribute wa on wa.attribute_id = v.attribute_id and wa.word_id = v.word_id
 where
-	pos_name = '%(posname)s'
-    and word = '%(word)s'
-order by sort_order
+	pos.name = '%(posname)s'
+order by pf.sort_order
 """ % { "word" : word,
         "posname" : posname }
 
