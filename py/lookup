@@ -21,6 +21,7 @@ def lookup(word):
 select
     pos_name,
     word,
+    word_id,
 	concat(attrkey, ':') attrkey,
     attrvalue,
     pf.sort_order
@@ -36,7 +37,7 @@ where
     result = []
     pos=''
     for row in c.fetchall():
-        d = dict(zip(['name', 'word', 'attrkey', 'value', 'sort_order'],
+        d = dict(zip(['name', 'word', 'word_id', 'attrkey', 'value', 'sort_order'],
                  row))
         pos = d['name']
         result.append(d)
@@ -57,6 +58,13 @@ where
     for r in result:
         print "%s %s" % (string.ljust(r['attrkey'], max_width),
                          r['value'])
+
+    # record this lookup
+    q = """
+insert into lookup (word_id) values (%s)
+on duplicate key update count = count + 1
+""" % (result[0]['word_id'])
+    db.commit()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("word",
