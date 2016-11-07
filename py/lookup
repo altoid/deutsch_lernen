@@ -64,6 +64,7 @@ where
 insert into lookup (word_id) values (%s)
 on duplicate key update count = count + 1
 """ % (result[0]['word_id'])
+    c.execute(q)
     db.commit()
 
 parser = argparse.ArgumentParser()
