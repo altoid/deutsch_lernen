@@ -3,6 +3,8 @@
 import MySQLdb
 # docs at http://mysql-python.sourceforge.net/MySQLdb.html
 
+import _mysql_exceptions
+
 import common
 import noun
 import sys
@@ -64,13 +66,22 @@ while not done:
     if choice == 7:
         break
 
-    if choice == 1:
-        done = noun.prompt_noun(db, c)
-    else:
-        done = common.prompt_word(db, c, menu[choice])
+    try:
+        if choice == 1:
+            done = noun.prompt_noun(db, c)
+        else:
+            done = common.prompt_word(db, c, menu[choice])
+    except _mysql_exceptions.OperationalError as e:
+        # connection went away, retry
+        db = dsn.getConnection()
+        c = db.cursor()
+        print "########## database connection timed out, please reenter:"
+        if choice == 1:
+            done = noun.prompt_noun(db, c)
+        else:
+            done = common.prompt_word(db, c, menu[choice])
 
 print 'auf wiedersehen'
     
 c.close()
-
 db.close()

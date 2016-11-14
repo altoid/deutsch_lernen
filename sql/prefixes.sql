@@ -33,6 +33,7 @@ and left(prefix.word, length(prefix.word) - length(noprefix.word))
         'auf',
         'aus',
         'be',
+        'ent',
         'er',
         'fest',
         'ge',

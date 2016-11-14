@@ -1,0 +1,185 @@
+#!/usr/bin/python
+# -*- python -*-
+
+import MySQLdb
+# docs at http://mysql-python.sourceforge.net/MySQLdb.html
+
+import string
+import sys
+import dsn
+import argparse
+import codecs
+
+def format_and_print_results(results):
+    # construct format string used to print each line.
+    # want mysql-stile formatting.  need to get max width
+    # of each field.
+    #
+    # the first column will be right-justified, the rest are
+    # left-justified.
+
+    field_widths = [max(len(y[k]) for y in results) for k in xrange(len(results[0]))]
+
+    format = "| %%%ds " % field_widths[0]
+    for w in field_widths[1:]:
+        format += "| %%-%ds " % w
+    format += "|"
+
+    bookend = '+'
+    for w in field_widths:
+        bookend += '-' * (w + 2)
+        bookend += '+'
+
+    print bookend
+    for row in results:
+        # get max defn length
+        print format % (row)
+    print bookend
+
+def handle_regex(regex):
+    regex = db.escape_string(regex)
+    regex = unicode(regex, 'utf8')
+
+    query = """
+select
+	lpad(t.name, 9, ' ') name, -- part of speech
+	rpad(concat(ifnull(wa.value, '   '), ' ', t.word), 30, ' ') word,
+	t.value definition
+from
+(
+	select
+		p.name, w.word, w.added, wa.*
+	from
+		word w
+	inner join word_attribute wa on w.id = wa.word_id
+	inner join attribute a on wa.attribute_id = a.id
+	inner join pos p on p.id = w.pos_id
+	where
+		a.attrkey = 'definition'      AND
+        w.word like '%(regex)s'
+) t
+left join
+word_attribute wa
+on t.word_id = wa.word_id and wa.attribute_id = 1
+order by t.word
+""" % {
+        "regex" : regex
+        }
+
+    c.execute(query)
+    results = []
+    for row in c.fetchall():
+        results.append(row)
+
+    format_and_print_results(results)
+
+def handle_session():
+    query = """
+select
+	lpad(t.name, 9, ' ') name, -- part of speech
+	rpad(concat(ifnull(wa.value, '   '), ' ', t.word), 30, ' ') word,
+	t.value definition,
+    DATE_FORMAT(t.added, '%Y-%m-%d') AS added
+from
+(
+	select
+		p.name, w.word, w.added, wa.*
+	from
+		word w
+	inner join word_attribute wa on w.id = wa.word_id
+	inner join attribute a on wa.attribute_id = a.id
+	inner join pos p on p.id = w.pos_id
+	where
+		a.attrkey = 'definition'
+        and date(w.added) = (select date(max(added)) from word)
+) t
+left join
+word_attribute wa
+on t.word_id = wa.word_id and wa.attribute_id = 1
+order by rand()
+"""
+
+    c.execute(query)
+    results = []
+    for row in c.fetchall():
+        results.append(row)
+
+    format_and_print_results(results)
+
+def find_words(nwords, latest):
+    limit = "limit %d" % nwords
+    datecolumn = ""
+    orderby = ""
+    if latest:
+        orderby = "order by t.added desc"
+        datecolumn = ", DATE_FORMAT(t.added, '%Y-%m-%d') AS added"
+    else:
+        orderby = "order by rand()"
+
+    query = """
+select
+	lpad(t.name, 9, ' ') name, -- part of speech
+	rpad(concat(ifnull(wa.value, '   '), ' ', t.word), 30, ' ') word,
+	t.value definition
+    %(datecolumn)s
+from
+(
+	select
+		p.name, w.word, w.added, wa.*
+	from
+		word w
+	inner join word_attribute wa on w.id = wa.word_id
+	inner join attribute a on wa.attribute_id = a.id
+	inner join pos p on p.id = w.pos_id
+	where
+		a.attrkey = 'definition'
+) t
+left join
+word_attribute wa
+on t.word_id = wa.word_id and wa.attribute_id = 1
+
+%(orderby)s
+%(limit)s
+""" % {
+        "datecolumn" : datecolumn,
+        "orderby" : orderby,
+        "limit" : limit
+        }
+    c.execute(query)
+    results = []
+    for row in c.fetchall():
+        results.append(row)
+
+    format_and_print_results(results)
+
+parser = argparse.ArgumentParser(epilog="if the session or regex options are given, -n and -l are ignored")
+
+group = parser.add_mutually_exclusive_group()
+group.add_argument("-s", "--session",
+                   help="select all the words from the last day when words were added",
+                   action="store_true")
+group.add_argument("-r", "--regex",
+                   help="regex to match words")
+
+parser.add_argument("-n", "--nwords",
+                    type=int, default=10,
+                    help="select <nwords> words at random from dictionary, default 10")
+parser.add_argument("-l", "--latest",
+                    help="select most recently added words instead of random selection",
+                    action="store_true")
+
+args = parser.parse_args()
+
+# https://pythonhosted.org/kitchen/unicode-frustrations.html
+utf8writer = codecs.getwriter('utf8')
+sys.stdout = utf8writer(sys.stdout)
+
+db = dsn.getConnection()
+c = db.cursor()
+
+if args.regex:
+    handle_regex(args.regex)
+elif args.session:
+    handle_session()
+else:
+    find_words(args.nwords, args.latest)
