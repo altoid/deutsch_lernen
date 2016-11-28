@@ -62,7 +62,7 @@ and length(prefix.word) > length(noprefix.word)
 and right(prefix.word, length(noprefix.word)) = noprefix.word
 
 order by 
- noprefix.word,
-left(prefix.word, length(prefix.word) - length(noprefix.word))
+left(prefix.word, length(prefix.word) - length(noprefix.word)),
+ noprefix.word
 
 ;

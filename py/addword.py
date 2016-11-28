@@ -21,6 +21,7 @@ sys.stdout = utf8writer(sys.stdout)
 db = dsn.getConnection()
 c = db.cursor()
 
+# mysql> select * from pos;
 # +----+-------------+
 # | id | name        |
 # +----+-------------+
@@ -29,6 +30,7 @@ c = db.cursor()
 # |  5 | Conjunction |
 # |  1 | Noun        |
 # |  6 | other       |
+# |  7 | Preposition |
 # |  2 | Verb        |
 # +----+-------------+
 
@@ -42,7 +44,8 @@ menu = {
     4: 'Adverb',
     5: 'Conjunction',
     6: 'other',
-    7: 'exit'
+    7: 'Preposition',
+    8: 'exit'
 }
 
 done = False
@@ -63,11 +66,11 @@ while not done:
         if choice in menu.keys():
             break
 
-    if choice == 7:
+    if 'exit' == menu[choice]:
         break
 
     try:
-        if choice == 1:
+        if menu[choice] == 'Noun':
             done = noun.prompt_noun(db, c)
         else:
             done = common.prompt_word(db, c, menu[choice])
@@ -76,7 +79,7 @@ while not done:
         db = dsn.getConnection()
         c = db.cursor()
         print "########## database connection timed out, please reenter:"
-        if choice == 1:
+        if menu[choice] == 'Noun':
             done = noun.prompt_noun(db, c)
         else:
             done = common.prompt_word(db, c, menu[choice])
