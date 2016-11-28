@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/local/bin/python
+# -*- encoding: utf-8 -*-
 
 import MySQLdb
 # docs at http://mysql-python.sourceforge.net/MySQLdb.html
@@ -8,45 +9,40 @@ import _mysql_exceptions
 import common
 import noun
 import sys
-import codecs
+#import codecs
+from kitchen.text.converters import getwriter
 import dsn
 import logging
 
 logging.basicConfig(level=logging.INFO)
 
 # https://pythonhosted.org/kitchen/unicode-frustrations.html
-utf8writer = codecs.getwriter('utf8')
+utf8writer = getwriter('utf8')
 sys.stdout = utf8writer(sys.stdout)
+
+print 'fück'
+print u'fück'
 
 db = dsn.getConnection()
 c = db.cursor()
 
-# mysql> select * from pos;
-# +----+-------------+
-# | id | name        |
-# +----+-------------+
-# |  3 | Adjective   |
-# |  4 | Adverb      |
-# |  5 | Conjunction |
-# |  1 | Noun        |
-# |  6 | other       |
-# |  7 | Preposition |
-# |  2 | Verb        |
-# +----+-------------+
+query = """
+ select id, name from pos
+ order by id
+"""
 
-# TODO:  construct the menu from what's in the database.
-# have to join with the pos_form table to avoid POS without attributes.
+menu = {}
+c.execute(query)
+for row in c.fetchall():
+    menu[row[0]] = row[1]
 
-menu = {
-    1: 'Noun',
-    2: 'Verb',
-    3: 'Adjective',
-    4: 'Adverb',
-    5: 'Conjunction',
-    6: 'other',
-    7: 'Preposition',
-    8: 'exit'
-}
+query = """
+ select max(id) + 1 from pos
+"""
+
+c.execute(query)
+for row in c.fetchall():
+    menu[row[0]] = 'exit'
 
 done = False
 
