@@ -42,7 +42,7 @@ def handle_regex(regex):
 
     query = """
 select
-	lpad(t.name, 9, ' ') name, -- part of speech
+	lpad(t.name, 11, ' ') name, -- part of speech
 	rpad(concat(ifnull(wa.value, '   '), ' ', t.word), 30, ' ') word,
 	t.value definition
 from
@@ -71,12 +71,15 @@ order by t.word
     for row in c.fetchall():
         results.append(row)
 
-    format_and_print_results(results)
+    if len(results) > 0:
+        format_and_print_results(results)
+    else:
+        print "nuthin"
 
 def handle_session():
     query = """
 select
-	lpad(t.name, 9, ' ') name, -- part of speech
+	lpad(t.name, 11, ' ') name, -- part of speech
 	rpad(concat(ifnull(wa.value, '   '), ' ', t.word), 30, ' ') word,
 	t.value definition,
     DATE_FORMAT(t.added, '%Y-%m-%d') AS added
@@ -118,7 +121,7 @@ def find_words(nwords, latest):
 
     query = """
 select
-	lpad(t.name, 9, ' ') name, -- part of speech
+	lpad(t.name, 11, ' ') name, -- part of speech
 	rpad(concat(ifnull(wa.value, '   '), ' ', t.word), 30, ' ') word,
 	t.value definition
     %(datecolumn)s

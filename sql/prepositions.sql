@@ -24,6 +24,16 @@ select distinct word_id from mashup where pos_name = 'preposition' and word in (
 )
 ;
 
+insert ignore into genitive_preposition
+select distinct word_id from mashup where pos_name = 'preposition' and word in (
+'trotz',
+'während',
+'statt',
+'anstatt',
+'wegen'
+)
+;
+
 insert ignore into acc_dat_preposition
 select distinct word_id from mashup where pos_name = 'preposition' and word in (
 'an',
@@ -37,3 +47,14 @@ select distinct word_id from mashup where pos_name = 'preposition' and word in (
 'zwischen'
 )
 ;
+
+/*
+this is a simple check to make sure we didn't miss any words:
+
+select mashup.word_id, p.word_id 
+from mashup 
+left join preposition_case_v p on mashup.word_id = p.word_id
+where mashup.pos_id = 7
+;
+*/
+
