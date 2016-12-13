@@ -21,6 +21,16 @@ sys.stdout = utf8writer(sys.stdout)
 db = dsn.getConnection()
 c = db.cursor()
 
+def test_connection(db, c):
+    try:
+        c.execute("select 1")
+    except _mysql_exceptions.OperationalError as e:
+        # connection went away, retry
+        db = dsn.getConnection()
+        c = db.cursor()
+
+    return db, c
+
 # mysql> select * from pos;
 # +----+-------------+
 # | id | name        |
@@ -70,6 +80,8 @@ while not done:
         break
 
     try:
+        db, c = test_connection(db, c)
+
         if menu[choice] == 'Noun':
             done = noun.prompt_noun(db, c)
         else:
