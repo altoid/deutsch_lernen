@@ -16,13 +16,14 @@ def usage():
 
     keys = get_keys(db, c)
     msg = """
-fix_verbs [-h] attrkey
-
-attribute keys to populate:
+optional attribute keys to populate:
 """
     for k in keys:
         msg += "\t%s\n" % k
 
+    msg += """
+when attribute not specified, populate all attributes
+"""
     return msg
 
 def get_keys(db, c):
@@ -59,36 +60,40 @@ on duplicate key update value=values(value)
         db.commit()
 
 
-db = dsn.getConnection()
-c = db.cursor()
-parser = argparse.ArgumentParser(usage=usage())
-parser.add_argument("key", help="attr key to populate")
-args = parser.parse_args()
-attrkey = args.key.strip().lower()
-
 # https://pythonhosted.org/kitchen/unicode-frustrations.html
 utf8writer = codecs.getwriter('utf8')
 sys.stdout = utf8writer(sys.stdout)
 
-if not check_key(db, c, attrkey):
-    print "no such key:  %s" % attrkey
-    sys.exit(1)
+db = dsn.getConnection()
+c = db.cursor()
+parser = argparse.ArgumentParser(usage=usage())
+parser.add_argument("-k", "--key",
+                    help="attr key to populate")
+args = parser.parse_args()
+keyfilter = ""
+if args.key:
+    attrkey = args.key.strip().lower()
+    if not check_key(db, c, attrkey):
+        print "no such key:  %s" % attrkey
+        sys.exit(1)
 
+    keyfilter = """ and a.attrkey = '%(attrkey)s' """ % {
+        'attrkey' : attrkey }
 
 q = """
-
 select a.attrkey, x.attribute_id, x.word_id, w.word
 from words_x_attributes_v x 
 inner join pos on pos.id = x.pos_id
 inner join attribute a on a.id = x.attribute_id
+inner join pos_form on pos.id = pos_form.pos_id and a.id = pos_form.attribute_id
 inner join word w on w.id = x.word_id
 left join word_attribute wa on x.attribute_id = wa.attribute_id 
                            and x.word_id = wa.word_id
 where pos.name = 'verb'
-and a.attrkey = '%(attrkey)s'
+%(keyfilter)s
 and wa.value is null
-""" % {'attrkey' : attrkey }
-
+order by word, sort_order
+""" % {'keyfilter' : keyfilter }
 
 c.execute(q)
 rowcount = c.rowcount
