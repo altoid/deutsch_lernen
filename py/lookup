@@ -29,8 +29,15 @@ select
 from
     mashup
 inner join pos_form pf on pf.attribute_id = mashup.attribute_id and pf.pos_id = mashup.pos_id
-where
-	word like '%%%(word)s%%' or attrvalue like '%%%(word)s%%'
+where word_id in
+    (
+    select
+        word_id
+    from
+        mashup
+    where
+    	word like '%%%(word)s%%' or attrvalue like '%%%(word)s%%'
+    )
 """ % {
         'word' : word
         }
