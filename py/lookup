@@ -11,6 +11,7 @@ import sys
 import codecs
 import dsn
 import argparse
+import operator
 
 def lookup(word):
     word = word.lower()
@@ -29,8 +30,10 @@ from
     mashup
 inner join pos_form pf on pf.attribute_id = mashup.attribute_id and pf.pos_id = mashup.pos_id
 where
-	word = '%s'
-""" % (word)
+	word like '%%%(word)s%%' or attrvalue like '%%%(word)s%%'
+""" % {
+        'word' : word
+        }
 
     c.execute(q)
 
@@ -46,7 +49,7 @@ where
         print "%s NOT FOUND:  %s" % ('#' * 33, word)
         return
 
-    result = sorted(result, key = lambda x: x['sort_order'])
+    result = sorted(result, key=operator.itemgetter('word_id', 'sort_order'))
 
     # get the max width of all attr keys
     max_width = 0
@@ -54,8 +57,12 @@ where
         if len(r['attrkey']) > max_width:
             max_width = len(r['attrkey'])
 
-    print "%s %s: %s" % ('=' * 33, word, pos)
+    current_word_id = -1
     for r in result:
+        if r['word_id'] != current_word_id:
+            print "%s %s: %s" % ('=' * 33, r['word'], pos)
+            current_word_id = r['word_id']
+
         print "%s %s" % (string.ljust(r['attrkey'], max_width),
                          r['value'])
 
