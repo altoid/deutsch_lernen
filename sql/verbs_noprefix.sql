@@ -1,5 +1,8 @@
 -- give me all the verbs that don't have separable prefixes
 
+-- eventually the only columns here should be word_id and irregular, keep
+-- the rest for checking
+
 select
 word_id,
 word,
@@ -10,6 +13,7 @@ case
 when attrvalue like '%est' then substring(attrvalue, 1, char_length(attrvalue) - 3)
 when attrvalue like '%st'  then substring(attrvalue, 1, char_length(attrvalue) - 2)
 when attrvalue like '%ßt'  then substring(attrvalue, 1, char_length(attrvalue) - 1)
+when attrvalue like '%zt'  then substring(attrvalue, 1, char_length(attrvalue) - 1)
 else NULL
 end as attrstem,
 
@@ -19,6 +23,7 @@ case
 when attrvalue like '%est' then substring(attrvalue, 1, char_length(attrvalue) - 3)
 when attrvalue like '%st'  then substring(attrvalue, 1, char_length(attrvalue) - 2)
 when attrvalue like '%ßt'  then substring(attrvalue, 1, char_length(attrvalue) - 1)
+when attrvalue like '%zt'  then substring(attrvalue, 1, char_length(attrvalue) - 1)
 else NULL
 end as irregular
 
@@ -40,6 +45,7 @@ case
 when attrvalue like '%est' then substring(attrvalue, 1, char_length(attrvalue) - 3)
 when attrvalue like '%st'  then substring(attrvalue, 1, char_length(attrvalue) - 2)
 when attrvalue like '%ßt'  then substring(attrvalue, 1, char_length(attrvalue) - 1)
+when attrvalue like '%zt'  then substring(attrvalue, 1, char_length(attrvalue) - 1)
 else NULL
 end as attrstem,
 
@@ -49,6 +55,7 @@ case
 when attrvalue like '%est' then substring(attrvalue, 1, char_length(attrvalue) - 3)
 when attrvalue like '%st'  then substring(attrvalue, 1, char_length(attrvalue) - 2)
 when attrvalue like '%ßt'  then substring(attrvalue, 1, char_length(attrvalue) - 1)
+when attrvalue like '%zt'  then substring(attrvalue, 1, char_length(attrvalue) - 1)
 else NULL
 end as irregular
 
@@ -57,4 +64,14 @@ where attrkey = 'second_person_singular'
 and pos_name = 'verb'
 and not attrvalue regexp ' '
 and word like '%en'
+-- and word in ('kratzen','lauschen','löschen',
+-- 'schätzen',
+-- 'schmelzen',
+-- 'schützen',
+-- 'schwatzen',
+-- 'schwitzen',
+-- 'setzen',
+-- 'stürzen',
+-- 'stützen'
+-- )
 ;
