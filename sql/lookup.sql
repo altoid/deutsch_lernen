@@ -1,22 +1,24 @@
 select
-	p.name,
-	w.word,
-	a.attrkey,
-	wa.value,
-	1
+    pos_name,
+    word,
+    word_id,
+	concat(attrkey, ':') attrkey,
+    attrvalue,
+    pf.sort_order
 from
-	pos p,
-	word w,
-	attribute a,
-	word_attribute wa,
-	words_x_attributes_v v
+    mashup
+inner join pos_form pf on pf.attribute_id = mashup.attribute_id and pf.pos_id = mashup.pos_id
 where
-	v.pos_id = p.id	and
-	v.attribute_id = a.id	and
-	v.word_id = w.id and
-	wa.attribute_id = v.attribute_id	and
-	wa.word_id = w.id and
-	w.word = 'ausstrahlen'	and
-	1
+		word_id in
+(
+select
+    word_id
+from
+    mashup
+where
+	word like '%geriet%' or attrvalue like '%geriet%'
+)
+order by word, sort_order
 ;
 
+		

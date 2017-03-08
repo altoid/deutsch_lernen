@@ -13,5 +13,9 @@ select distinct word_id from mashup where pos_name = 'verb' and word in (
 'helfen',
 'raten',
 'schaden',
-'vertrauen'
+'vertrauen',
+
+'passen',
+'schmecken',
+'stehen'
 )

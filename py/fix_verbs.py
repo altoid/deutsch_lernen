@@ -99,6 +99,8 @@ c.execute(q)
 rowcount = c.rowcount
 word_id = None
 tuples = []
+last_word = None
+verbs_fixed = 0
 
 print "enter 'xxx' to terminate"
 
@@ -106,6 +108,15 @@ for row in c.fetchall():
 
     r = dict(zip(['attrkey', 'attribute_id', 'word_id', 'word'],
                  row))
+
+    this_word = r['word']
+    if not last_word:
+        last_word = this_word
+
+    if last_word <> this_word:
+        verbs_fixed += 1
+        print "verbs fixed:  %s" % verbs_fixed
+        last_word = this_word
 
     if r['word_id'] != word_id:
         if word_id is not None:
