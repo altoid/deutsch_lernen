@@ -7,7 +7,9 @@ import quiz_sql
 import sys
 import codecs
 import dsn
+import pprint
 
+pp = pprint.PrettyPrinter()
 # https://pythonhosted.org/kitchen/unicode-frustrations.html
 utf8writer = codecs.getwriter('utf8')
 sys.stdout = utf8writer(sys.stdout)
@@ -25,10 +27,7 @@ order by id
 choices = {}
 c.execute(q)
 for row in c.fetchall():
-    d = dict(zip(['id', 'name', 'quizkey'],
-                 row))
-
-    choices[row[0]] = d
+    choices[row['id']] = row
 
 for k in choices:
     print k, choices[k]['name']
@@ -65,27 +64,23 @@ done = False
 while not done:
     c.execute(q)
     for row in c.fetchall():
-        d = dict(zip(['word', 'value',
-                      'quiz_id','word_id','attribute_id','presentation_count','correct_count'],
-                     row))
-    
-        prompt = "[%s] answer, q to quit --[%s]--> " % (wordcount, d['word'])
+        prompt = "[%s] answer, q to quit --[%s]--> " % (wordcount, row['word'])
         answer = raw_input(prompt)
         answer = unicode(answer, 'utf8').strip().lower()
         while len(answer) == 0:
             answer = raw_input(prompt)
             answer = unicode(answer, 'utf8').strip().lower()
     
-        if answer == d['value']:
+        if answer == row['value']:
             print 'ja'
-            d['correct_count'] += 1
+            row['correct_count'] += 1
         elif answer == 'q':
             done = True
             continue
         else:
-            print 'nein:  %s' % (d['value'])
+            print 'nein:  %s' % (row['value'])
     
-        d['presentation_count'] += 1
+        row['presentation_count'] += 1
     
         u = """
     insert into quiz_score
@@ -95,11 +90,11 @@ while not done:
     on duplicate key update
     presentation_count = values(presentation_count),
     correct_count = values(correct_count)
-    """ % (d['quiz_id'],
-           d['word_id'],
-           d['attribute_id'],
-           d['presentation_count'],
-           d['correct_count'])
+    """ % (row['quiz_id'],
+           row['word_id'],
+           row['attribute_id'],
+           row['presentation_count'],
+           row['correct_count'])
     
         c.execute(u)
         db.commit()

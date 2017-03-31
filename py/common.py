@@ -101,9 +101,7 @@ order by pf.sort_order
 
     word_attributes = []
     for row in c.fetchall():
-        d = dict(zip(['pos_name', 'pos_id', 'attribute_id', 'attrkey', 'word', 'word_id', 'attrvalue'],
-                     row))
-        word_attributes.append(d)
+        word_attributes.append(row)
 
     return word_attributes
 

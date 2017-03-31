@@ -22,7 +22,7 @@ choices = {}
 
 q = """
  select @x := @x + 1 choice, 
- pos.name, a.attrkey,
+ pos.name pos_name, a.attrkey,
  pos.id pos_id, a.id attribute_id
  from pos, attribute a, pos_form
  where pos.id = pos_form.pos_id
@@ -32,11 +32,7 @@ q = """
 
 c.execute(q)
 for row in c.fetchall():
-    d = dict(zip(['choice', 'pos_name', 'attrkey',
-                  'pos_id', 'attribute_id'],
-                 row))
-
-    choices[row[0]] = d
+    choices[row['choice']] = row
 
 for k in choices:
     print k, choices[k]['pos_name'], choices[k]['attrkey']

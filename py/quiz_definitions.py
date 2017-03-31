@@ -21,12 +21,12 @@ def get_article(db):
  and wa.attribute_id = a.id 
  and attrkey = 'article' 
  and word_id = %s
-""" % d['word_id']
+""" % row['word_id']
 
     article_cursor.execute(article_query)
     article = None
     for r1 in article_cursor.fetchall():
-        article = r1[0]
+        article = r1['value']
         break
 
     article_cursor.close()
@@ -38,10 +38,6 @@ counter = 0
 while not done:
     c.execute(q)
     for row in c.fetchall():
-        d = dict(zip(['word', 'value',
-                      'quiz_id','word_id','attribute_id','presentation_count','correct_count'],
-                     row))
-
         # if the word is a noun, get its article.  if it's not a noun, this query retrieves nothing.
         article = get_article(db)
 
@@ -51,7 +47,7 @@ while not done:
         if article:
             print article,
 
-        print unicode(d['word'])
+        print unicode(row['word'])
         prompt = "hit return for answer, q to quit:  --> "
         answer = raw_input(prompt).strip().lower()
 
@@ -59,7 +55,7 @@ while not done:
             done = True
             continue
 
-        print d['value']
+        print row['value']
 
         prompt = "correct? --> "
         answer = raw_input(prompt).strip().lower()
@@ -68,9 +64,9 @@ while not done:
             answer = raw_input(prompt).strip().lower()
 
         if answer.startswith('y'):
-            d['correct_count'] += 1
+            row['correct_count'] += 1
     
-        d['presentation_count'] += 1
+        row['presentation_count'] += 1
     
         u = """
     insert into quiz_score
@@ -80,11 +76,11 @@ while not done:
     on duplicate key update
     presentation_count = values(presentation_count),
     correct_count = values(correct_count)
-    """ % (d['quiz_id'],
-           d['word_id'],
-           d['attribute_id'],
-           d['presentation_count'],
-           d['correct_count'])
+    """ % (row['quiz_id'],
+           row['word_id'],
+           row['attribute_id'],
+           row['presentation_count'],
+           row['correct_count'])
     
         c.execute(u)
         db.commit()

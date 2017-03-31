@@ -65,14 +65,11 @@ where
 
     r = []
     for row in c.fetchall():
-        d = dict(zip(['pos_name', 'pos_id', 'attribute_id', 'attrkey', 'word_id', 'value'],
-                     row))
-
-        if d['attrkey'] == 'article' and d['value'] is None:
+        if row['attrkey'] == 'article' and row['value'] is None:
             # abort
             return []
 
-        r.append(d)
+        r.append(row)
 
     return r
 
@@ -119,7 +116,7 @@ select last_insert_id() as word_id
     c.execute(q)
 
     for row in c.fetchall():
-        word_id = row[0]
+        word_id = row['word_id']
         break
 
     logging.debug("inserted '%s', id = %s" % (

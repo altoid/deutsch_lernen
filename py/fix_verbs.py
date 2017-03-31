@@ -38,9 +38,7 @@ def get_keys(db, c):
     attrkeys = set()
     c.execute(q)
     for row in c.fetchall():
-        r = dict(zip(['attrkey'],
-                     row))
-        attrkeys.add(r['attrkey'])
+        attrkeys.add(row['attrkey'])
 
     return attrkeys
 
@@ -104,11 +102,7 @@ verbs_fixed = 0
 
 print "enter 'xxx' to terminate"
 
-for row in c.fetchall():
-
-    r = dict(zip(['attrkey', 'attribute_id', 'word_id', 'word'],
-                 row))
-
+for r in c.fetchall():
     this_word = r['word']
     if not last_word:
         last_word = this_word
