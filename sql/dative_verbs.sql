@@ -11,10 +11,10 @@ select distinct word_id from mashup where pos_name = 'verb' and word in (
 'gehören',
 'glauben',
 'helfen',
+'imponieren',
 'raten',
 'schaden',
 'vertrauen',
-
 'passen',
 'schmecken',
 'stehen'

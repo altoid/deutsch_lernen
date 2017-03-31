@@ -60,6 +60,7 @@ if not qkey:
 
 q = quiz_sql.next_item_query % {'quizkey':qkey}
 
+wordcount = 1
 done = False
 while not done:
     c.execute(q)
@@ -68,7 +69,7 @@ while not done:
                       'quiz_id','word_id','attribute_id','presentation_count','correct_count'],
                      row))
     
-        prompt = "answer, q to quit --[%s]--> " % d['word']
+        prompt = "[%s] answer, q to quit --[%s]--> " % (wordcount, d['word'])
         answer = raw_input(prompt)
         answer = unicode(answer, 'utf8').strip().lower()
         while len(answer) == 0:
@@ -102,7 +103,9 @@ while not done:
     
         c.execute(u)
         db.commit()
-        
+
+        wordcount += 1
+
 c.close()
 db.close()
 
