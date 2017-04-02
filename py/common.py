@@ -58,7 +58,7 @@ select last_insert_id() as word_id
         c.execute(q)
 
         for row in c.fetchall():
-            word_id = row[0]
+            word_id = row['word_id']
             break
 
     # insert into the word_attribute table

@@ -12,6 +12,9 @@ import codecs
 import dsn
 import argparse
 import operator
+import pprint
+
+pp = pprint.PrettyPrinter()
 
 def lookup(word):
     word = word.lower()
@@ -24,7 +27,7 @@ select
     word,
     word_id,
 	concat(attrkey, ':') attrkey,
-    attrvalue,
+    attrvalue value,
     pf.sort_order
 from
     mashup
@@ -46,9 +49,7 @@ where word_id in
 
     result = []
     for row in c.fetchall():
-        d = dict(zip(['pos_name', 'word', 'word_id', 'attrkey', 'value', 'sort_order'],
-                 row))
-        result.append(d)
+        result.append(row)
 
     if len(result) == 0:
         print "%s NOT FOUND:  %s" % ('#' * 33, word)
