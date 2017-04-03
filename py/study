@@ -12,24 +12,32 @@ import codecs
 
 def format_and_print_results(results):
     # construct format string used to print each line.
-    # want mysql-stile formatting.  need to get max width
+    # want mysql-style formatting.  need to get max width
     # of each field.
     #
     # the first column will be right-justified, the rest are
     # left-justified.
 
-    field_widths = [max(len(y[k]) for y in results) for k in xrange(len(results[0]))]
+    field_widths = [max(len(y[k]) for y in results) for k in results[0].keys()]
+    field_info = dict(zip(results[0].keys(), field_widths))
 
-    format = "| %%%ds " % field_widths[0]
-    for w in field_widths[1:]:
-        format += "| %%-%ds " % w
+    # keys are name, word, definition, and possibly added; we want them in that order
+    format = "| %%(%s)%ds " % ('name', field_info['name'])
+    format += "| %%(%s)-%ds " % ('word', field_info['word'])
+    format += "| %%(%s)-%ds " % ('definition', field_info['definition'])
+    if 'added' in field_info:
+        format += "| %%(%s)-%ds " % ('added', field_info['added'])
     format += "|"
 
     bookend = '+'
-    for w in field_widths:
-        bookend += '-' * (w + 2)
-        bookend += '+'
+    bookend += '-' * (field_info['name'] + 2) + '+'
+    bookend += '-' * (field_info['word'] + 2) + '+'
+    bookend += '-' * (field_info['definition'] + 2) + '+'
+    if 'added' in field_info:
+        bookend += '-' * (field_info['added'] + 2) + '+'
 
+    print format
+    print results[0]
     print bookend
     for row in results:
         # get max defn length
