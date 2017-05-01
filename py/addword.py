@@ -55,7 +55,8 @@ menu = {
     5: 'Conjunction',
     6: 'other',
     7: 'Preposition',
-    8: 'exit'
+    8: 'Place name',
+    9: 'exit'
 }
 
 done = False
