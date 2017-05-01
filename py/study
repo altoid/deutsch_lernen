@@ -36,13 +36,12 @@ def format_and_print_results(results):
     if 'added' in field_info:
         bookend += '-' * (field_info['added'] + 2) + '+'
 
-    print format
-    print results[0]
     print bookend
     for row in results:
         # get max defn length
         print format % (row)
     print bookend
+    print "%s results" % len(results)
 
 def handle_regex(regex):
     regex = db.escape_string(regex)
@@ -88,7 +87,8 @@ def handle_session():
     query = """
 select
 	lpad(t.name, 11, ' ') name, -- part of speech
-	rpad(concat(ifnull(wa.value, '   '), ' ', t.word), 30, ' ') word,
+--	rpad(concat(ifnull(wa.value, '   '), ' ', t.word), 30, ' ') word,
+	concat(ifnull(wa.value, '   '), ' ', t.word) word,
 	t.value definition,
     DATE_FORMAT(t.added, '%Y-%m-%d') AS added
 from
@@ -163,6 +163,35 @@ on t.word_id = wa.word_id and wa.attribute_id = 1
 
     format_and_print_results(results)
 
+def handle_frequency(nwords):
+    query = """
+select
+		pos_name name,
+     	rpad(concat(ifnull(wa.value, '   '), ' ', word), 30, ' ') word,
+		attrvalue definition
+from
+		mashup
+inner join
+	    lookup on mashup.word_id = lookup.word_id
+left join
+        word_attribute wa on wa.word_id = mashup.word_id and wa.attribute_id = 1
+where
+		attrkey = 'definition'
+order by `count` desc, added
+limit %(limit)s
+""" % {
+        'limit' : nwords
+}
+    c.execute(query)
+    results = []
+    for row in c.fetchall():
+        results.append(row)
+
+    format_and_print_results(results)
+
+def handle_recent():
+    pass
+
 parser = argparse.ArgumentParser(epilog="if the session or regex options are given, -n and -l are ignored")
 
 group = parser.add_mutually_exclusive_group()
@@ -171,13 +200,19 @@ group.add_argument("-s", "--session",
                    action="store_true")
 group.add_argument("-r", "--regex",
                    help="regex to match words")
+group.add_argument("-l", "--latest",
+                   help="select most recently added words instead of random selection",
+                   action="store_true")
+group.add_argument("-f", "--frequency",
+                   help="select the most frequently looked up words",
+                   action="store_true")
+group.add_argument("-c", "--recent",
+                   help="select the most recently looked up words",
+                   action="store_true")
 
 parser.add_argument("-n", "--nwords",
                     type=int, default=10,
                     help="select <nwords> words at random from dictionary, default 10")
-parser.add_argument("-l", "--latest",
-                    help="select most recently added words instead of random selection",
-                    action="store_true")
 
 args = parser.parse_args()
 
@@ -192,5 +227,9 @@ if args.regex:
     handle_regex(args.regex)
 elif args.session:
     handle_session()
+elif args.frequency:
+    handle_frequency(args.nwords)
+elif args.recent:
+    handle_recent()
 else:
     find_words(args.nwords, args.latest)
