@@ -30,7 +30,8 @@ select distinct word_id from mashup where pos_name = 'preposition' and word in (
 'während',
 'statt',
 'anstatt',
-'wegen'
+'wegen',
+'außerhalb'
 )
 ;
 

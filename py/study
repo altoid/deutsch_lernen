@@ -50,7 +50,7 @@ def handle_regex(regex):
     query = """
 select
 	lpad(t.name, 11, ' ') name, -- part of speech
-	rpad(concat(ifnull(wa.value, '   '), ' ', t.word), 30, ' ') word,
+	concat(ifnull(wa.value, '   '), ' ', t.word) word,
 	t.value definition
 from
 (
@@ -87,7 +87,6 @@ def handle_session():
     query = """
 select
 	lpad(t.name, 11, ' ') name, -- part of speech
---	rpad(concat(ifnull(wa.value, '   '), ' ', t.word), 30, ' ') word,
 	concat(ifnull(wa.value, '   '), ' ', t.word) word,
 	t.value definition,
     DATE_FORMAT(t.added, '%Y-%m-%d') AS added
@@ -130,7 +129,7 @@ def find_words(nwords, latest):
     query = """
 select
 	lpad(t.name, 11, ' ') name, -- part of speech
-	rpad(concat(ifnull(wa.value, '   '), ' ', t.word), 30, ' ') word,
+	concat(ifnull(wa.value, '   '), ' ', t.word) word,
 	t.value definition
     %(datecolumn)s
 from
@@ -167,7 +166,7 @@ def handle_frequency(nwords):
     query = """
 select
 		pos_name name,
-     	rpad(concat(ifnull(wa.value, '   '), ' ', word), 30, ' ') word,
+     	concat(ifnull(wa.value, '   '), ' ', word) word,
 		attrvalue definition
 from
 		mashup
@@ -177,7 +176,7 @@ left join
         word_attribute wa on wa.word_id = mashup.word_id and wa.attribute_id = 1
 where
 		attrkey = 'definition'
-order by `count` desc, added
+order by `count` desc, lookup.updated desc
 limit %(limit)s
 """ % {
         'limit' : nwords
@@ -189,8 +188,31 @@ limit %(limit)s
 
     format_and_print_results(results)
 
-def handle_recent():
-    pass
+def handle_recent(nwords):
+    query = """
+select
+		pos_name name,
+     	concat(ifnull(wa.value, '   '), ' ', word) word,
+		attrvalue definition
+from
+		mashup
+inner join
+	    lookup on mashup.word_id = lookup.word_id
+left join
+        word_attribute wa on wa.word_id = mashup.word_id and wa.attribute_id = 1
+where
+		attrkey = 'definition'
+order by lookup.updated desc
+limit %(limit)s
+""" % {
+        'limit' : nwords
+}
+    c.execute(query)
+    results = []
+    for row in c.fetchall():
+        results.append(row)
+
+    format_and_print_results(results)
 
 parser = argparse.ArgumentParser(epilog="if the session or regex options are given, -n and -l are ignored")
 
@@ -230,6 +252,6 @@ elif args.session:
 elif args.frequency:
     handle_frequency(args.nwords)
 elif args.recent:
-    handle_recent()
+    handle_recent(args.nwords)
 else:
     find_words(args.nwords, args.latest)

@@ -2,6 +2,7 @@ create or replace view mashup as
 select
 		w.id word_id,
 		w.word,
+		w.added,
 		p.id pos_id,
 		p.name pos_name,
 		a.id attribute_id,
