@@ -5,6 +5,7 @@ select distinct word_id from mashup where pos_name = 'preposition' and word in (
 'aus',
 'außer',
 'bei',
+'gegenüber',
 'mit',
 'nach',
 'seit',
@@ -16,6 +17,7 @@ insert ignore into accusative_preposition
 select distinct word_id from mashup where pos_name = 'preposition' and word in (
 'bis',
 'durch',
+'entlang',
 'für',
 'gegen',
 'ohne',
