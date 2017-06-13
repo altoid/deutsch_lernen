@@ -58,6 +58,7 @@ from
 	from quiz q
 	inner join quiz_structure qstruct on q.id = qstruct.quiz_id
 	inner join word w on qstruct.pos_id = w.pos_id
+    %(filter)s
 	inner join word_attribute wa on w.id = wa.word_id
 	      and wa.attribute_id = qstruct.attribute_id
 	left join quiz_score qscore on
@@ -91,6 +92,7 @@ from
 	from quiz q
 	inner join quiz_structure qstruct on q.id = qstruct.quiz_id
 	inner join word w on qstruct.pos_id = w.pos_id
+    %(filter)s
 	inner join word_attribute wa on w.id = wa.word_id
 	      and wa.attribute_id = qstruct.attribute_id
 	inner join quiz_score qscore on
@@ -127,6 +129,7 @@ from
 	from quiz q
 	inner join quiz_structure qstruct on q.id = qstruct.quiz_id
 	inner join word w on qstruct.pos_id = w.pos_id
+    %(filter)s
 	inner join word_attribute wa on w.id = wa.word_id
 	      and wa.attribute_id = qstruct.attribute_id
 	inner join quiz_score qscore on
@@ -162,6 +165,7 @@ from
 	from quiz q
 	inner join quiz_structure qstruct on q.id = qstruct.quiz_id
 	inner join word w on qstruct.pos_id = w.pos_id
+    %(filter)s
 	inner join word_attribute wa on w.id = wa.word_id
 	      and wa.attribute_id = qstruct.attribute_id
 	inner join quiz_score qscore on

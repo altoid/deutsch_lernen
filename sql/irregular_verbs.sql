@@ -19,6 +19,7 @@ select distinct word_id from mashup where pos_name = 'verb' and word in (
 'bringen',
 'denken',
 'dürfen',
+'einfallen',
 'empfehlen',
 'erschrecken',
 'essen',
