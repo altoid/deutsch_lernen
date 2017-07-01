@@ -44,7 +44,8 @@ next_item_query = """
 select 
        word, value, quiz_id, word_id, attribute_id,
        ifnull(presentation_count, 0) presentation_count,
-       ifnull(correct_count, 0) correct_count
+       ifnull(correct_count, 0) correct_count,
+       'never_tested' method
 from
 	(
 	select
@@ -74,11 +75,12 @@ from
 
 union
 
--- crappy score (for words presented >= 5 times)
+-- crappy score (for words presented >= 10 times)
 select 
        word, value, quiz_id, word_id, attribute_id,
        ifnull(presentation_count, 0) presentation_count,
-       ifnull(correct_count, 0) correct_count
+       ifnull(correct_count, 0) correct_count,
+       'crappy_score' method
 from
 	(	
 	select
@@ -102,7 +104,7 @@ from
 	where
 	 	q.quizkey = '%(quizkey)s' and
 		presentation_count > 5 and
-		(correct_count / presentation_count) <= 0.95
+		(correct_count / presentation_count) <= 0.80
 	order by
 	      presentation_count,
 	      (correct_count / presentation_count)
@@ -111,11 +113,12 @@ from
 
 union
 
--- too few attempts (< 5)
+-- too few attempts (<= 5)
 select 
        word, value, quiz_id, word_id, attribute_id,
        ifnull(presentation_count, 0) presentation_count,
-       ifnull(correct_count, 0) correct_count
+       ifnull(correct_count, 0) correct_count,
+       'too_few_attempts' method
 from
 	(	
 	select
@@ -151,7 +154,8 @@ union
 select 
        word, value, quiz_id, word_id, attribute_id,
        ifnull(presentation_count, 0) presentation_count,
-       ifnull(correct_count, 0) correct_count
+       ifnull(correct_count, 0) correct_count,
+       'been_too_long' method
 from
 	(
 	select

@@ -107,7 +107,9 @@ if __name__ == '__main__':
     while not done:
         c.execute(q)
         for row in c.fetchall():
-            prompt = "[%s] answer, q to quit --[%s]--> " % (wordcount, row['word'])
+            prompt = "[%s] answer, q to quit --[%s] <%s> --> " % (
+                wordcount, row['word'], row['method'])
+
             answer = raw_input(prompt)
             answer = unicode(answer, 'utf8').strip().lower()
             while len(answer) == 0:

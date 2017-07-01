@@ -12,7 +12,10 @@ import dsn
 utf8writer = codecs.getwriter('utf8')
 sys.stdout = utf8writer(sys.stdout)
 
-q = quiz_sql.next_item_query % {'quizkey':'genders'}
+q = quiz_sql.next_item_query % {
+    'quizkey':'genders',
+    'filter' : ''
+    }
 
 db = dsn.getConnection()
 c = db.cursor()
