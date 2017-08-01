@@ -7,6 +7,10 @@
   </head>
   <body>
 	<h1>Word Lists</h1>
+	<form action="/addlist" method="post">
+	  <input type="text" name="name"></input>
+	  <input type="submit" value="Add List"></input>
+	</form>
 	{% for r in rows %}
 	{{ r.name.decode('utf-8') }}<br>
 	{% endfor %}

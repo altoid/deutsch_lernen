@@ -30,3 +30,14 @@ def wordlist():
     rows = cursor.fetchall()
 
     return render_template('wordlist.html', rows=rows)
+
+@app.route('/addlist', methods=['POST'])
+def addlist():
+    dbh, cursor = get_conn()
+    newlist = request.form['name']
+    sql = "insert ignore into wordlist (name) values (%s)"
+    cursor.execute(sql, (newlist,))
+    dbh.commit()
+
+    return redirect('/wordlist')
+    # todo:  error handling for empty list name, list that already exists
