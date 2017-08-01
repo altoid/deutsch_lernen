@@ -18,7 +18,9 @@ create table irregular_verb_list
 
 
 insert ignore into irregular_verb_list values 
+('verbinden'),
 ('verlaufen'),
+('umbringen'),
 ('ausgeben'),
 ('backen'),
 ('befehlen'),
