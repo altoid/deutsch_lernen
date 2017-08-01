@@ -6,13 +6,10 @@
     </title>
   </head>
   <body>
-	<h1>Word Lists</h1>
-	<form action="/addlist" method="post">
-	  <input type="text" name="name"></input>
-	  <input type="submit" value="Add List"></input>
-	</form>
-	{% for r in rows %}
-	{{ r.name.decode('utf-8') }}<br>
-	{% endfor %}
+	<h1>List ID {{ list_id }}</h1>
   </body>
 </html>
+
+{#
+<td><a href="{{ url_for('file_request', log_id=r.log_id, days=days) }}">
+#}

@@ -22,21 +22,26 @@ def get_conn():
 def default_route():
     return render_template('index.html')
 
+@app.route('/wordlist/<int:list_id>')
+def wordlist(list_id):
+    return render_template('wordlist.html', list_id=list_id)
+
 @app.route('/wordlist')
-def wordlist():
+def wordlists():
     dbh, cursor = get_conn()
-    sql = "select name from wordlist"
+    sql = "select name, id from wordlist"
     cursor.execute(sql)
     rows = cursor.fetchall()
 
-    return render_template('wordlist.html', rows=rows)
+    return render_template('wordlists.html', rows=rows)
 
 @app.route('/addlist', methods=['POST'])
 def addlist():
     dbh, cursor = get_conn()
     newlist = request.form['name']
-    sql = "insert ignore into wordlist (name) values (%s)"
-    cursor.execute(sql, (newlist,))
+    source = request.form['source']
+    sql = "insert ignore into wordlist (name, source) values (%s, %s)"
+    cursor.execute(sql, (newlist, source))
     dbh.commit()
 
     return redirect('/wordlist')
