@@ -30,9 +30,18 @@ select * from wordlist
 where id = %s
 """
     cursor.execute(sql, (list_id,))
-    row = cursor.fetchone()
+    wl_row = cursor.fetchone()
 
-    return render_template('wordlist.html', row=row)
+    sql = """
+select *
+from wordlist_word
+where wordlist_id = %s
+"""
+    cursor.execute(sql, (list_id,))
+    ww_rows = cursor.fetchall()
+
+    return render_template('wordlist.html', wl_row=wl_row,
+                           ww_rows=ww_rows)
 
 @app.route('/wordlist')
 def wordlists():

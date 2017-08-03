@@ -6,14 +6,17 @@
     </title>
   </head>
   <body>
-	<h1>{{row.name.decode('utf-8')}}</h1>
+	<h1>{{wl_row.name.decode('utf-8')}}</h1>
 	<form action="/add_to_list" method="post">
 	  Word:
 	  <input type="text" name="word"></input>
 	  <br>
-	  <input type="hidden" value="{{row.id}}" name="list_id"></input>
+	  <input type="hidden" value="{{wl_row.id}}" name="list_id"></input>
 	  <input type="submit" value="Add Word"></input>
 	</form>
+	{% for r in ww_rows %}
+	{{ r.word.decode('utf-8') }}<br>
+	{% endfor %}
   </body>
 </html>
 
