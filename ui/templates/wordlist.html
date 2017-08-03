@@ -16,9 +16,10 @@
 	</form>
 	<h2>Known Words</h2>
 	{% for r in known_words %}
-	{{ r.list_word.decode('utf-8') }}<br>
+	<a href="{{ url_for('single_word', word=r.list_word.decode('utf-8')) }}">{{ r.list_word.decode('utf-8') }}</a>
+	<br>
 	{% endfor %}
-	<h2>Unnown Words</h2>
+	<h2>Unknown Words</h2>
 	{% for r in unknown_words %}
 	{{ r.list_word.decode('utf-8') }}<br>
 	{% endfor %}

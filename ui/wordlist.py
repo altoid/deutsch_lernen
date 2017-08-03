@@ -24,6 +24,10 @@ def get_conn():
 def default_route():
     return render_template('index.html')
 
+@app.route('/word/<string:word>')
+def single_word(word):
+    return render_template('word.html', word=word)
+
 @app.route('/wordlist/<int:list_id>')
 def wordlist(list_id):
     dbh, cursor = get_conn()
@@ -55,8 +59,6 @@ where ww.wordlist_id = %s
         known_words = [x for x in rows if x['dict_word']]
         unknown_words = [x for x in rows if not x['dict_word']]
 
-    pp.pprint(known_words)
-    pp.pprint(unknown_words)
     return render_template('wordlist.html', wl_row=wl_row,
                            known_words=known_words,
                            unknown_words=unknown_words)
