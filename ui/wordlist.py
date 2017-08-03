@@ -26,7 +26,22 @@ def default_route():
 
 @app.route('/word/<string:word>')
 def single_word(word):
-    return render_template('word.html', word=word)
+    dbh, cursor = get_conn()
+
+    sql = """
+select * from mashup
+where word = %s
+order by word_id, sort_order
+"""
+    cursor.execute(sql, (word,))
+    rows = cursor.fetchall()
+    dict_result = {}
+    for r in rows:
+        if not dict_result.get(r['word_id']):
+            dict_result[r['word_id']] = []
+        dict_result[r['word_id']].append(r)
+        
+    return render_template('word.html', dict_result=dict_result)
 
 @app.route('/wordlist/<int:list_id>')
 def wordlist(list_id):

@@ -6,6 +6,16 @@
     </title>
   </head>
   <body>
-	<h1>{{ word }}</h1>
+	{% for word_id in dict_result.keys() %}
+	<h1>{{ dict_result[word_id][0]['word'].decode('utf-8') }}</h1>
+	({{ dict_result[word_id][0]['pos_name'] }})
+	<br>
+
+	{% for attr in dict_result[word_id] %}
+	{{ attr['attrkey'] }}: {{ attr['attrvalue'].decode('utf-8') }}
+	<br>
+	{% endfor %}
+
+	{% endfor %}
   </body>
 </html>
