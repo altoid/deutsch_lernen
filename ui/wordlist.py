@@ -24,7 +24,15 @@ def default_route():
 
 @app.route('/wordlist/<int:list_id>')
 def wordlist(list_id):
-    return render_template('wordlist.html', list_id=list_id)
+    dbh, cursor = get_conn()
+    sql = """
+select * from wordlist
+where id = %s
+"""
+    cursor.execute(sql, (list_id,))
+    row = cursor.fetchone()
+
+    return render_template('wordlist.html', row=row)
 
 @app.route('/wordlist')
 def wordlists():

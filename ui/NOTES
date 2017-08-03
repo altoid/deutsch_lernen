@@ -1,0 +1,3 @@
+invocation:
+
+FLASK_APP=wordlist.py FLASK_DEBUG=1 CONFIG=config.Config python -m flask run
