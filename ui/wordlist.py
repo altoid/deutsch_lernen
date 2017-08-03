@@ -54,3 +54,16 @@ def addlist():
 
     return redirect('/wordlist')
     # todo:  error handling for empty list name, list that already exists
+
+@app.route('/add_to_list', methods=['POST'])
+def add_to_list():
+    dbh, cursor = get_conn()
+    word = request.form['word']
+    id = request.form['list_id']
+    sql = "insert ignore into wordlist_word (wordlist_id, word) values (%s, %s)"
+    cursor.execute(sql, (id, word))
+    dbh.commit()
+
+    target = url_for('wordlist', list_id=id)
+    return redirect(target)
+    # todo:  validate input: word in not bad script, list id is int
