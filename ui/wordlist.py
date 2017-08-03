@@ -2,9 +2,11 @@ from flask import Flask, request, render_template, redirect, url_for
 import MySQLdb
 import MySQLdb.cursors
 import os
+import pprint
 
 app = Flask(__name__)
 app.config.from_object(os.environ['CONFIG'])
+pp = pprint.PrettyPrinter()
 
 def get_conn():
     dbh = MySQLdb.connect(
@@ -32,16 +34,33 @@ where id = %s
     cursor.execute(sql, (list_id,))
     wl_row = cursor.fetchone()
 
+    # join this wordlist with the mashup view
     sql = """
-select *
-from wordlist_word
-where wordlist_id = %s
+select distinct
+ww.wordlist_id,
+ww.word list_word,
+ww.added,
+m.word dict_word
+from wordlist_word ww
+left join mashup m
+on ww.word = m.word
+where ww.wordlist_id = %s
 """
     cursor.execute(sql, (list_id,))
-    ww_rows = cursor.fetchall()
+    rows = cursor.fetchall()
 
+    known_words = []
+    unknown_words = []
+    if len(rows):
+        known_words = [x for x in rows if x['dict_word']]
+        unknown_words = [x for x in rows if not x['dict_word']]
+
+    pp.pprint(known_words)
+    pp.pprint(unknown_words)
     return render_template('wordlist.html', wl_row=wl_row,
-                           ww_rows=ww_rows)
+                           known_words=known_words,
+                           unknown_words=unknown_words)
+                           
 
 @app.route('/wordlist')
 def wordlists():

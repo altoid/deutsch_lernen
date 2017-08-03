@@ -14,8 +14,13 @@
 	  <input type="hidden" value="{{wl_row.id}}" name="list_id"></input>
 	  <input type="submit" value="Add Word"></input>
 	</form>
-	{% for r in ww_rows %}
-	{{ r.word.decode('utf-8') }}<br>
+	<h2>Known Words</h2>
+	{% for r in known_words %}
+	{{ r.list_word.decode('utf-8') }}<br>
+	{% endfor %}
+	<h2>Unnown Words</h2>
+	{% for r in unknown_words %}
+	{{ r.list_word.decode('utf-8') }}<br>
 	{% endfor %}
   </body>
 </html>
