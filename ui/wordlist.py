@@ -74,7 +74,12 @@ where ww.wordlist_id = %s
         known_words = [x for x in rows if x['dict_word']]
         unknown_words = [x for x in rows if not x['dict_word']]
 
+    source_is_url = False
+    if wl_row['source'] and wl_row['source'].startswith('http'):
+        source_is_url = True
+
     return render_template('wordlist.html', wl_row=wl_row,
+                           source_is_url=source_is_url,
                            known_words=known_words,
                            unknown_words=unknown_words)
                            

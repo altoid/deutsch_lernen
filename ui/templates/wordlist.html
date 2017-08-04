@@ -7,6 +7,12 @@
   </head>
   <body>
 	<h1>{{wl_row.name.decode('utf-8')}}</h1>
+	{% if source_is_url %}
+	<a href="{{ wl_row.source }}">{{ wl_row.source }}</a>
+	{% elif wl_row.source %}
+	{{ wl_row.source }}
+	{% endif %}
+	<br>
 	<form action="/add_to_list" method="post">
 	  Word:
 	  <input type="text" name="word"></input>
