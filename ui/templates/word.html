@@ -11,10 +11,16 @@
 	({{ dict_result[word_id][0]['pos_name'] }})
 	<br>
 
-	{% for attr in dict_result[word_id] %}
-	{{ attr['attrkey'] }}: {{ attr['attrvalue'].decode('utf-8') }}
-	<br>
-	{% endfor %}
+	<form action="/edit_word" method="post">
+	  {% for attr in dict_result[word_id] %}
+	  {{ attr['attrkey'] }}:
+	  <input type="text" value="{{ attr['attrvalue'].decode('utf-8') }}" name="{{ attr['attrkey'] }}">
+	  <br>
+	  {% endfor %}
+	  <input type="hidden" value="{{word_id}}" name="word_id"></input>
+	  <input type="hidden" value="{{ dict_result[word_id][0]['word'].decode('utf-8') }}" name="word"></input>
+	  <input type="submit" value="Update Word"></input>
+	</form>
 
 	{% endfor %}
   </body>

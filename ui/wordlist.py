@@ -112,3 +112,28 @@ def add_to_list():
     target = url_for('wordlist', list_id=id)
     return redirect(target)
     # todo:  validate input: word in not bad script, list id is int
+
+@app.route('/edit_word', methods=['POST'])
+def edit_word():
+    dbh, cursor = get_conn()
+
+    conjunction = []
+    for k in request.form.keys():
+        if k in ['word', 'word_id']:
+            continue
+
+        conjunction.append('%(attrkey)s = %%(%(attrkey)s)s' % {
+                'attrkey' : k })
+
+    sql = """
+update mashup
+set %(conjunction)s
+where word_id = %%(word_id)s
+""" % {
+        'conjunction' : ' and '.join(conjunction)
+        }
+
+    print sql
+
+    target = url_for('single_word', word=request.form['word'])
+    return redirect(target)
