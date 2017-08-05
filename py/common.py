@@ -75,7 +75,7 @@ on duplicate key update value=values(value)
     db.commit()
 
 def get_word_attributes(c, posname, word):
-    q = """
+    old_q = """
 select
         pos.name,
         pos.id pos_id,
@@ -96,6 +96,27 @@ where
 order by pf.sort_order
 """ % { "word" : word,
         "posname" : posname }
+
+    q = """
+select
+        pos.name,
+        pos.id pos_id,
+        a.id attribute_id,
+        a.attrkey,
+        '%(word)s' word,
+        word.id word_id,
+        wa.value attrvalue
+from
+	pos
+	inner join pos_form pf on pos.id = pf.pos_id
+	inner join attribute a on a.id = pf.attribute_id
+	left join word on word.pos_id = pos.id
+	left join words_x_attributes_v v on v.pos_id = pos.id and v.attribute_id = a.id and v.word_id = word.id
+	left join word_attribute wa on wa.attribute_id = v.attribute_id and wa.word_id = v.word_id
+where
+	word.word = '%(word)s'
+order by pf.sort_order
+""" % { "word" : word }
 
     c.execute(q)
 

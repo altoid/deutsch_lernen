@@ -17,7 +17,6 @@ def get_conn():
         cursorclass=MySQLdb.cursors.DictCursor)
 
     cursor = dbh.cursor()
-    
     return dbh, cursor
 
 @app.route('/')
@@ -29,7 +28,14 @@ def single_word(word):
     dbh, cursor = get_conn()
 
     sql = """
-select * from mashup
+select
+pos_name,
+word_id,
+word,
+attribute_id,
+attrkey,
+ifnull(attrvalue, '') attrvalue
+from mashup
 where word = %s
 order by word_id, sort_order
 """
@@ -122,23 +128,28 @@ def add_to_list():
 def edit_word():
     dbh, cursor = get_conn()
 
-    conjunction = []
-    for k in request.form.keys():
-        if k in ['word', 'word_id']:
-            continue
+    pp.pprint(request.form)
+    attr_id_keys = [x for x in request.form.keys() if x.endswith('_attrid')]
+    print attr_id_keys
 
-        conjunction.append('%(attrkey)s = %%(%(attrkey)s)s' % {
-                'attrkey' : k })
+    tuples = []
+    for k in attr_id_keys:
+        attrkey = k.replace('_attrid', '')
+        v = request.form[attrkey].strip()
+        if v:
+            tuples.append("%%(word_id)s, %%(%s)s, %%(%s)s" % (k, attrkey))
+
+    pp.pprint(tuples)
 
     sql = """
-update mashup
-set %(conjunction)s
-where word_id = %%(word_id)s
-""" % {
-        'conjunction' : ' and '.join(conjunction)
-        }
+insert into word_attribute(word_id, attribute_id, value)
+values (%s)
+on duplicate key update value=values(value)
+""" % '), ('.join(tuples)
 
     print sql
+    cursor.execute(sql, request.form)
+    dbh.commit()
 
     target = url_for('single_word', word=request.form['word'])
     return redirect(target)
