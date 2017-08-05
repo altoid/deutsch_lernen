@@ -20,23 +20,29 @@
 	  <input type="hidden" value="{{wl_row.id}}" name="list_id"></input>
 	  <input type="submit" value="Add Word"></input>
 	</form>
-	<table width="100%">
-	  <tr valign="top">
-		<td width="50%">
-		  <h2>Known Words</h2>
-		  {% for r in known_words %}
-		  <a href="{{ url_for('single_word', word=r.list_word.decode('utf-8')) }}">{{ r.list_word.decode('utf-8') }}</a>
-		  <br>
-		  {% endfor %}
-		</td>
-		<td width="50%">
-		  <h2>Unbekannte Wörter</h2>
-		  {% for r in unknown_words %}
-		  {{ r.list_word.decode('utf-8') }}<br>
-		  {% endfor %}
-		</td>
-	  </tr>
-	</table>
+	<form action="/delete_from_list" method="post">
+	  <input type="hidden" value="{{wl_row.id}}" name="list_id"></input>
+	  <table width="100%">
+		<tr valign="top">
+		  <td width="50%">
+			<h2>Known Words</h2>
+			{% for r in known_words %}
+			<input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}">
+			<a href="{{ url_for('single_word', word=r.list_word.decode('utf-8')) }}">{{ r.list_word.decode('utf-8') }}</a>
+			<br>
+			{% endfor %}
+		  </td>
+		  <td width="50%">
+			<h2>Unbekannte Wörter</h2>
+			{% for r in unknown_words %}
+			<input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}">
+			{{ r.list_word.decode('utf-8') }}<br>
+			{% endfor %}
+		  </td>
+		</tr>
+	  </table>
+	  <input type="submit" value="Delete Selected Words"></input>
+	</form>
   </body>
 </html>
 

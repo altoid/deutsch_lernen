@@ -14,8 +14,8 @@ FLASK_APP=wordlist.py FLASK_DEBUG=1 CONFIG=config.Config python -m flask run
 
 to do:
 
-in word form, show all fields, even those for which there is no attr values
 wordlists to be editable (change source, name)
 delete words from wordlist
 error handling
 navigation
+show word lists a word is in

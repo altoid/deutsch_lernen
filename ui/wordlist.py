@@ -124,6 +124,31 @@ def add_to_list():
     return redirect(target)
     # todo:  validate input: word in not bad script, list id is int
 
+@app.route('/delete_from_list', methods=['POST'])
+def delete_from_list():
+    dbh, cursor = get_conn()
+
+    id = request.form['list_id']
+    doomed = request.form.getlist('wordlist')
+    
+    if len(doomed):
+        format_list = ['%s'] * len(doomed)
+        format_args = ', '.join(format_list)
+
+        sql = """
+delete from wordlist_word
+where wordlist_id = %%s
+and word in (%s)
+""" % format_args
+
+        args = [id] + doomed
+        cursor.execute(sql, args)
+        dbh.commit()
+
+    target = url_for('wordlist', list_id=id)
+    return redirect(target)
+    # todo:  validate input: word in not bad script, list id is int
+
 @app.route('/edit_word', methods=['POST'])
 def edit_word():
     dbh, cursor = get_conn()
