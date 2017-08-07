@@ -238,8 +238,59 @@ order by p.id, sort_order
 
 @app.route('/add_to_dict', methods=['POST'])
 def add_to_dict():
+    # for user convenience, all the parts of speech and their attributes
+    # can be entered in one form.  extracting the values will be painful.
+    # have to look at what POS was selected, then find the form values for it.
+
+    dbh, cursor = get_conn()
     pp.pprint(request.form)
     if 'pos' not in request.form:
         raise Exception("select something")
-    target = url_for('single_word_id', word_id=2222)
+
+    # add the word to get the word_id
+    form_pos_id = request.form['pos']
+    word = request.form['word'].strip()
+    if not word:
+        raise Exception("no word")
+
+    w_sql = """
+insert into word (pos_id, word)
+values (%s, %s)
+"""
+    cursor.execute(w_sql, (form_pos_id, word))
+
+    id_sql = "select last_insert_id()"
+    cursor.execute(id_sql)
+    r = cursor.fetchone()
+    word_id = r['last_insert_id()']
+
+    # all of the text fields have names of the form <pos_id>_<attribute_id>_<attrkey>.
+    # look for all the form fields that start with the pos_id.
+
+    values = []
+    placeholders = []
+    for k in request.form.keys():
+        splitkey = k.split('-')
+        if len(splitkey) < 3:
+            continue
+        pos_id, attr_id, attrkey = splitkey[:3]
+        if pos_id == form_pos_id and request.form[k]:
+            placeholder = "(%s, %s, %s)" # word_id, attr_id, value
+            placeholders.append(placeholder)
+            values += [word_id, attr_id, request.form[k]]
+
+    if len(values) > 0:
+        wa_sql = """
+insert into word_attribute (word_id, attribute_id, value)
+values
+%s
+""" % ', '.join(placeholders)
+
+    print wa_sql
+    print values
+
+    cursor.execute(wa_sql, values)
+    dbh.commit()
+
+    target = url_for('single_word_id', word_id=word_id)
     return redirect(target)
