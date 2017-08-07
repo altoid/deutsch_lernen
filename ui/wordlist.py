@@ -49,6 +49,32 @@ order by word_id, sort_order
         
     return render_template('word.html', dict_result=dict_result)
 
+@app.route('/word/<int:word_id>')
+def single_word_id(word_id):
+    dbh, cursor = get_conn()
+
+    sql = """
+select
+pos_name,
+word_id,
+word,
+attribute_id,
+attrkey,
+ifnull(attrvalue, '') attrvalue
+from mashup
+where word_id = %s
+order by word_id, sort_order
+"""
+    cursor.execute(sql, (word_id,))
+    rows = cursor.fetchall()
+    dict_result = {}
+    for r in rows:
+        if not dict_result.get(r['word_id']):
+            dict_result[r['word_id']] = []
+        dict_result[r['word_id']].append(r)
+        
+    return render_template('word.html', dict_result=dict_result)
+
 @app.route('/wordlist/<int:list_id>')
 def wordlist(list_id):
     dbh, cursor = get_conn()
@@ -153,9 +179,7 @@ and word in (%s)
 def edit_word():
     dbh, cursor = get_conn()
 
-    pp.pprint(request.form)
     attr_id_keys = [x for x in request.form.keys() if x.endswith('_attrid')]
-    print attr_id_keys
 
     tuples = []
     for k in attr_id_keys:
@@ -164,17 +188,58 @@ def edit_word():
         if v:
             tuples.append("%%(word_id)s, %%(%s)s, %%(%s)s" % (k, attrkey))
 
-    pp.pprint(tuples)
-
     sql = """
 insert into word_attribute(word_id, attribute_id, value)
 values (%s)
 on duplicate key update value=values(value)
 """ % '), ('.join(tuples)
 
-    print sql
     cursor.execute(sql, request.form)
     dbh.commit()
 
     target = url_for('single_word', word=request.form['word'])
+    return redirect(target)
+
+@app.route('/add_word')
+def add_word():
+    """
+    display the page to add a word.  word may be in the request, or not.
+    """
+    dbh, cursor = get_conn()
+    word = request.args.get('word')
+
+    sql = """
+select
+    p.id pos_id,
+    p.name pos_name,
+    a.id attribute_id,
+    a.attrkey
+from
+		pos p
+inner join pos_form pf on pf.pos_id = p.id
+inner join attribute a on a.id = pf.attribute_id
+order by p.id, sort_order
+"""
+
+    cursor.execute(sql)
+    pos_list = cursor.fetchall()
+
+    # create a dict keyed on pos.name
+
+    pos_dict = {}
+    for pos in pos_list:
+        if not pos_dict.get(pos['pos_name']):
+            pos_dict[pos['pos_name']] = []
+        pos_dict[pos['pos_name']].append(pos)
+
+    return render_template('addword.html',
+                           word=word,
+                           pos_dict=pos_dict)
+
+@app.route('/add_to_dict', methods=['POST'])
+def add_to_dict():
+    pp.pprint(request.form)
+    if 'pos' not in request.form:
+        raise Exception("select something")
+    target = url_for('single_word_id', word_id=2222)
     return redirect(target)
