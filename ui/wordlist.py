@@ -243,7 +243,6 @@ def add_to_dict():
     # have to look at what POS was selected, then find the form values for it.
 
     dbh, cursor = get_conn()
-    pp.pprint(request.form)
     if 'pos' not in request.form:
         raise Exception("select something")
 
@@ -285,9 +284,6 @@ insert into word_attribute (word_id, attribute_id, value)
 values
 %s
 """ % ', '.join(placeholders)
-
-    print wa_sql
-    print values
 
     cursor.execute(wa_sql, values)
     dbh.commit()

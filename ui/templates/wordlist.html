@@ -25,7 +25,7 @@
 	  <table width="100%">
 		<tr valign="top">
 		  <td width="50%">
-			<h2>Known Words</h2>
+			<h2>Bekannte Wörter</h2>
 			{% for r in known_words %}
 			<input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}">
 			<a href="{{ url_for('single_word', word=r.list_word.decode('utf-8')) }}">{{ r.list_word.decode('utf-8') }}</a>
@@ -36,7 +36,8 @@
 			<h2>Unbekannte Wörter</h2>
 			{% for r in unknown_words %}
 			<input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}">
-			{{ r.list_word.decode('utf-8') }}<br>
+			<a href="{{ url_for('add_word', word=r.list_word.decode('utf-8')) }}">{{ r.list_word.decode('utf-8') }}</a>
+			<br>
 			{% endfor %}
 		  </td>
 		</tr>
