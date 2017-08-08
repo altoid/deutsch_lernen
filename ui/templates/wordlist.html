@@ -28,7 +28,7 @@
 			<h2>Bekannte Wörter</h2>
 			{% for r in known_words %}
 			<input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}">
-			<a href="{{ url_for('single_word', word=r.list_word.decode('utf-8')) }}">{{ r.list_word.decode('utf-8') }}</a>
+			<a href="{{ url_for('single_word', word=r.list_word.decode('utf-8'), list_id=list_id) }}">{{ r.list_word.decode('utf-8') }}</a>
 			<br>
 			{% endfor %}
 		  </td>
@@ -36,7 +36,7 @@
 			<h2>Unbekannte Wörter</h2>
 			{% for r in unknown_words %}
 			<input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}">
-			<a href="{{ url_for('add_word', word=r.list_word.decode('utf-8')) }}">{{ r.list_word.decode('utf-8') }}</a>
+			<a href="{{ url_for('add_word', list_id=list_id, word=r.list_word.decode('utf-8')) }}">{{ r.list_word.decode('utf-8') }}</a>
 			<br>
 			{% endfor %}
 		  </td>

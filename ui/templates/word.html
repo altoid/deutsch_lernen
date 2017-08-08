@@ -24,6 +24,10 @@
 	  <input type="hidden" value="{{word_id}}" name="word_id"></input>
 	  <input type="hidden" value="{{ dict_result[word_id][0]['word'].decode('utf-8') }}" name="word"></input>
 	  <input type="submit" value="Update Word"></input>
+	  {% if list_id %}
+	  <br>
+	  <a href="{{ url_for('wordlist', list_id=list_id) }}">Back to List</a>
+	  {% endif %}
 	</form>
 
 	{% endfor %}

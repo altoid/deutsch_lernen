@@ -27,6 +27,7 @@ def default_route():
 def single_word(word):
     dbh, cursor = get_conn()
 
+    list_id = request.args.get('list_id')
     sql = """
 select
 pos_name,
@@ -47,12 +48,13 @@ order by word_id, sort_order
             dict_result[r['word_id']] = []
         dict_result[r['word_id']].append(r)
         
-    return render_template('word.html', dict_result=dict_result)
+    return render_template('word.html', dict_result=dict_result, list_id=list_id)
 
 @app.route('/word/<int:word_id>')
 def single_word_id(word_id):
     dbh, cursor = get_conn()
 
+    list_id = request.args.get('list_id')
     sql = """
 select
 pos_name,
@@ -73,7 +75,7 @@ order by word_id, sort_order
             dict_result[r['word_id']] = []
         dict_result[r['word_id']].append(r)
         
-    return render_template('word.html', dict_result=dict_result)
+    return render_template('word.html', dict_result=dict_result, list_id=list_id)
 
 @app.route('/wordlist/<int:list_id>')
 def wordlist(list_id):
@@ -112,11 +114,12 @@ where ww.wordlist_id = %s
 
     return render_template('wordlist.html', wl_row=wl_row,
                            source_is_url=source_is_url,
+                           list_id=list_id,
                            known_words=known_words,
                            unknown_words=unknown_words)
                            
 
-@app.route('/wordlist')
+@app.route('/wordlists')
 def wordlists():
     dbh, cursor = get_conn()
     sql = "select name, id from wordlist"
@@ -134,7 +137,7 @@ def addlist():
     cursor.execute(sql, (newlist, source))
     dbh.commit()
 
-    return redirect('/wordlist')
+    return redirect('/wordlists')
     # todo:  error handling for empty list name, list that already exists
 
 @app.route('/add_to_list', methods=['POST'])
@@ -207,6 +210,7 @@ def add_word():
     """
     dbh, cursor = get_conn()
     word = request.args.get('word')
+    list_id = request.args.get('list_id')
 
     sql = """
 select
@@ -234,6 +238,7 @@ order by p.id, sort_order
 
     return render_template('addword.html',
                            word=word,
+                           list_id=list_id,
                            pos_dict=pos_dict)
 
 @app.route('/add_to_dict', methods=['POST'])
@@ -252,6 +257,7 @@ def add_to_dict():
     if not word:
         raise Exception("no word")
 
+    list_id = request.form.get('list_id')
     w_sql = """
 insert into word (pos_id, word)
 values (%s, %s)
@@ -288,5 +294,5 @@ values
     cursor.execute(wa_sql, values)
     dbh.commit()
 
-    target = url_for('single_word_id', word_id=word_id)
+    target = url_for('single_word_id', word_id=word_id, list_id=list_id)
     return redirect(target)

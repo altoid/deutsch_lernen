@@ -13,6 +13,7 @@
 	{% endif %}
 	<form action="/add_to_dict" method="post">
 	  {% if word %}
+	  <input type="hidden" name="list_id" value="{{list_id}}">
 	  <input type="text" name="word" value="{{word}}">
 	  <br>
 	  {% endif %}
