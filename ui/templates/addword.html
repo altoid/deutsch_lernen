@@ -18,16 +18,30 @@
 	  <br>
 	  {% endif %}
 
-	  {% for pos in pos_dict.keys() %}
-	  <input type="radio" name="pos" value="{{ pos_dict[pos][0].pos_id }}">
-	  {{ pos }}<br>
-	  {% for f in pos_dict[pos] %}
-	  {{ f.attrkey }}
-	  {# name is <pos_id>_<attribute_id>_<attrkey> #}
-	  <input type="text" name="{{f.pos_id}}-{{f.attribute_id}}-{{f.attrkey}}" size="60"></td>
-	  <br>
-	  {% endfor %}
-	  {% endfor %}
+	  <table>
+		{% for pos in pos_dict.keys() %}
+		<tr>
+		  <td>
+			<input type="radio" name="pos" value="{{ pos_dict[pos][0].pos_id }}">
+		  </td>
+		  <td>
+			{{ pos }}
+		  </td>
+		  <td></td>
+		</tr>
+		{% for f in pos_dict[pos] %}
+		<tr>
+		  <td></td>
+		  <td>
+			{{ f.attrkey }}
+		  </td>
+		  <td>
+		    <input type="text" name="{{f.pos_id}}-{{f.attribute_id}}-{{f.attrkey}}" size="60">
+		  </td>
+		</tr>
+        {% endfor %}
+        {% endfor %}
+	  </table>
 	  <input type="submit" value="Submit"></input>
 	</form>
   </body>
