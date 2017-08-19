@@ -8,12 +8,16 @@
   <body>
 	<h1>Word Lists</h1>
 	<form action="/addlist" method="post">
-	  List Name:
-	  <input type="text" name="name" size="100"></input>
-	  <br>
-	  Source:
-	  <input type="text" name="source" size="100"></input>
-	  <br>
+	  <table>
+		<tr>
+		  <td>List Name:</td>
+		  <td><input type="text" name="name" size="100"></input></td>
+		</tr>
+		<tr>
+		  <td>Source:</td>
+		  <td><input type="text" name="source" size="100"></input></td>
+		</tr>
+	  </table>
 	  <input type="submit" value="Add List"></input>
 	</form>
 	<form action="/deletelist" method="post">
