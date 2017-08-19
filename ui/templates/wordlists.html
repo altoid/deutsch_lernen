@@ -16,13 +16,13 @@
 	  <br>
 	  <input type="submit" value="Add List"></input>
 	</form>
-	{% for r in rows %}
-	<a href="{{ url_for('wordlist', list_id=r.id) }}">{{ r.name.decode('utf-8') }}</a>
-	<br>
-	{% endfor %}
+	<form action="/deletelist" method="post">
+	  {% for r in rows %}
+	  <input type="checkbox" name="deletelist" value="{{ r.id }}">
+	  <a href="{{ url_for('wordlist', list_id=r.id) }}">{{ r.name.decode('utf-8') }}</a>
+	  <br>
+	  {% endfor %}
+	  <input type="submit" value="Delete Selected Lists"></input>
+	</form>
   </body>
 </html>
-
-{#
-<td><a href="{{ url_for('file_request', log_id=r.log_id, days=days) }}">
-#}

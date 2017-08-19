@@ -140,6 +140,21 @@ def addlist():
     return redirect('/wordlists')
     # todo:  error handling for empty list name, list that already exists
 
+@app.route('/deletelist', methods=['POST'])
+def deletelist():
+    dbh, cursor = get_conn()
+    doomed = request.form.getlist('deletelist')
+    
+    if len(doomed):
+        format_list = ['%s'] * len(doomed)
+        format_args = ', '.join(format_list)
+        sql = "delete from wordlist where id in (%s)" % format_args
+        args = [int(x) for x in doomed]
+        cursor.execute(sql, args)
+        dbh.commit()
+
+    return redirect('/wordlists')
+
 @app.route('/add_to_list', methods=['POST'])
 def add_to_list():
     dbh, cursor = get_conn()

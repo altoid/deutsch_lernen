@@ -15,8 +15,10 @@
 	  {% if word %}
 	  <input type="hidden" name="list_id" value="{{list_id}}">
 	  <input type="text" name="word" value="{{word}}">
-	  <br>
+	  {% else %}
+	  <input type="text" name="word">
 	  {% endif %}
+	  <br>
 
 	  <table>
 		{% for pos in pos_dict.keys() %}
