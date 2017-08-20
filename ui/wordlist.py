@@ -97,6 +97,7 @@ m.word dict_word
 from wordlist_word ww
 left join mashup m
 on ww.word = m.word
+ collate utf8_swedish_ci
 where ww.wordlist_id = %s
 """
     cursor.execute(sql, (list_id,))

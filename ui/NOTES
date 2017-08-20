@@ -20,3 +20,14 @@ navigation
 show word lists a word is in
 tags
 adding nouns requires an article
+
+BUGS
+
+looks like there is no way to specify the client collation using MySQLdb.  the connect method doesn't accept
+collation as a keyword.
+
+setting 'read_default_file' to a file with syntax errors causes flask to crash.
+setting 'read_default_file' to a nonexistant file at connect time doesn't do anything.  maybe this error
+is handled by reading the default config.
+
+fix:  have to put the collation on the join clause.
