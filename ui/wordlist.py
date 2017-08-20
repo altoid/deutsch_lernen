@@ -93,11 +93,14 @@ select distinct
 ww.wordlist_id,
 ww.word list_word,
 ww.added,
+m.attrvalue definition,
 m.word dict_word
 from wordlist_word ww
 left join mashup m
 on ww.word = m.word
 where ww.wordlist_id = %s
+and attrkey = 'definition'
+order by ww.word
 """
     cursor.execute(sql, (list_id,))
     rows = cursor.fetchall()
