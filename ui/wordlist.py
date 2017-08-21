@@ -313,5 +313,12 @@ values
     cursor.execute(wa_sql, values)
     dbh.commit()
 
-    target = url_for('single_word_id', word_id=word_id, list_id=list_id)
+#    target = url_for('single_word_id', word_id=word_id, list_id=list_id)
+#    return redirect(target)
+
+    if list_id:
+        target = url_for('wordlist', list_id=list_id)
+    else:
+        target = url_for('add_word')
+
     return redirect(target)
