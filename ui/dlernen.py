@@ -219,7 +219,8 @@ on duplicate key update value=values(value)
     cursor.execute(sql, request.form)
     dbh.commit()
 
-    target = url_for('single_word', word=request.form['word'])
+    target = url_for('single_word', word=request.form['word'], list_id=request.form.get('list_id'))
+
     return redirect(target)
 
 @app.route('/add_word')
