@@ -44,7 +44,7 @@ order by word_id, sort_order
             dict_result[r['word_id']] = []
         dict_result[r['word_id']].append(r)
         
-    return render_template('word.html', dict_result=dict_result, list_id=list_id)
+    return render_template('word.html', dict_result=dict_result, list_id=list_id, return_to_list_id=list_id)
 
 @app.route('/word/<int:word_id>')
 def single_word_id(word_id):
