@@ -73,6 +73,18 @@ order by word_id, sort_order
         
     return render_template('word.html', dict_result=dict_result, list_id=list_id)
 
+@app.route('/list_details/<int:list_id>')
+def list_details(list_id):
+    dbh, cursor = get_conn()
+    sql = """
+select * from wordlist
+where id = %s
+"""
+    cursor.execute(sql, (list_id,))
+    wl_row = cursor.fetchone()
+
+    return render_template('list_details.html', wl_row=wl_row)
+
 @app.route('/wordlist/<int:list_id>')
 def wordlist(list_id):
     dbh, cursor = get_conn()
@@ -155,6 +167,19 @@ def deletelist():
         dbh.commit()
 
     return redirect('/wordlists')
+
+@app.route('/edit_list', methods=['POST'])
+def edit_list():
+    dbh, cursor = get_conn()
+    name = request.form['name']
+    source = request.form['source']
+    id = request.form['list_id']
+    sql = "update wordlist set name = %s, source = %s where id = %s"
+    cursor.execute(sql, (name, source, id))
+    dbh.commit()
+
+    target = url_for('wordlist', list_id=id)
+    return redirect(target)
 
 @app.route('/add_to_list', methods=['POST'])
 def add_to_list():

@@ -2,7 +2,7 @@
 
 {% block body %}
 {{ super() }}
-<h1>{{wl_row.name.decode('utf-8')}}</h1>
+<h1><a href="{{ url_for('list_details', list_id=wl_row.id) }}">{{wl_row.name.decode('utf-8')}}</a></h1>
 {% if source_is_url %}
 <a href="{{ wl_row.source }}">{{ wl_row.source }}</a>
 {% elif wl_row.source %}
