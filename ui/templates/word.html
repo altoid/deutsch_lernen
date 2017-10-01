@@ -1,36 +1,31 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-	  "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-  <head>
-    <title>
-    </title>
-  </head>
-  <body>
-	{% for word_id in dict_result.keys() %}
-	<h1>{{ dict_result[word_id][0]['word'].decode('utf-8') }}</h1>
-	({{ dict_result[word_id][0]['pos_name'] }})
-	<br>
+{% extends "home.html" %}
 
-	<form action="/edit_word" method="post">
-	  <table>
-		{% for attr in dict_result[word_id] %}
-		<tr>
-		  <td>{{ attr['attrkey'] }}:</td>
-		  <td><input type="text" value="{{ attr['attrvalue'].decode('utf-8') }}" name="{{ attr['attrkey'] }}" size="60"></td>
-		  <input type="hidden" value="{{ attr['attribute_id'] }}" name="{{ attr['attrkey'] + '_attrid' }}">
-		</tr>
-	  {% endfor %}
-	  </table>
-	  <input type="hidden" value="{{word_id}}" name="word_id"></input>
-	  <input type="hidden" value="{{list_id}}" name="list_id"></input>
-	  <input type="hidden" value="{{ dict_result[word_id][0]['word'].decode('utf-8') }}" name="word"></input>
-	  <input type="submit" value="Update Word"></input>
-	  {% if list_id %}
-	  <br>
-	  <a href="{{ url_for('wordlist', list_id=list_id) }}">Back to List</a>
-	  {% endif %}
-	</form>
+{% block body %}
+{{ super() }}
+{% for word_id in dict_result.keys() %}
+<h1>{{ dict_result[word_id][0]['word'].decode('utf-8') }}</h1>
+({{ dict_result[word_id][0]['pos_name'] }})
+<br>
 
+<form action="/edit_word" method="post">
+  <table>
+	{% for attr in dict_result[word_id] %}
+	<tr>
+	  <td>{{ attr['attrkey'] }}:</td>
+	  <td><input type="text" value="{{ attr['attrvalue'].decode('utf-8') }}" name="{{ attr['attrkey'] }}" size="60"></td>
+	  <input type="hidden" value="{{ attr['attribute_id'] }}" name="{{ attr['attrkey'] + '_attrid' }}">
+	</tr>
 	{% endfor %}
-  </body>
-</html>
+  </table>
+  <input type="hidden" value="{{word_id}}" name="word_id"></input>
+  <input type="hidden" value="{{list_id}}" name="list_id"></input>
+  <input type="hidden" value="{{ dict_result[word_id][0]['word'].decode('utf-8') }}" name="word"></input>
+  <input type="submit" value="Update Word"></input>
+  {% if list_id %}
+  <br>
+  <a href="{{ url_for('wordlist', list_id=list_id) }}">Back to List</a>
+  {% endif %}
+</form>
+
+{% endfor %}
+{% endblock %}

@@ -1,52 +1,47 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-	  "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-  <head>
-    <title>
-    </title>
-  </head>
-  <body>
-	<h1>{{wl_row.name.decode('utf-8')}}</h1>
-	{% if source_is_url %}
-	<a href="{{ wl_row.source }}">{{ wl_row.source }}</a>
-	{% elif wl_row.source %}
-	{{ wl_row.source }}
-	{% endif %}
-	<br>
-	<form action="/add_to_list" method="post">
-	  Word:
-	  <input type="text" name="word"></input>
-	  <br>
-	  <input type="hidden" value="{{wl_row.id}}" name="list_id"></input>
-	  <input type="submit" value="Add Word"></input>
-	</form>
-	<form action="/delete_from_list" method="post">
-	  <input type="hidden" value="{{wl_row.id}}" name="list_id"></input>
-	  <table width="100%">
-		<tr valign="top">
-		  <td width="50%">
-			<h2>Bekannte Wörter</h2>
-			<table>
-			  {% for r in known_words %}
-			  <tr valign="top">
-				<td><input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}"></td>
-				<td><a href="{{ url_for('single_word', word=r.list_word.decode('utf-8'), list_id=list_id) }}">{{ r.list_word.decode('utf-8') }}</a></td>
-				<td>{{ r.definition.decode('utf-8') }}</td>
-			  </tr>
-			{% endfor %}
-			</table>
-		  </td>
-		  <td width="50%">
-			<h2>Unbekannte Wörter</h2>
-			{% for r in unknown_words %}
-			<input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}">
-			<a href="{{ url_for('add_word', list_id=list_id, word=r.list_word.decode('utf-8')) }}">{{ r.list_word.decode('utf-8') }}</a>
-			<br>
-			{% endfor %}
-		  </td>
-		</tr>
-	  </table>
-	  <input type="submit" value="Delete Selected Words"></input>
-	</form>
-  </body>
-</html>
+{% extends "home.html" %}
+
+{% block body %}
+{{ super() }}
+<h1>{{wl_row.name.decode('utf-8')}}</h1>
+{% if source_is_url %}
+<a href="{{ wl_row.source }}">{{ wl_row.source }}</a>
+{% elif wl_row.source %}
+{{ wl_row.source }}
+{% endif %}
+<br>
+<form action="/add_to_list" method="post">
+  Word:
+  <input type="text" name="word"></input>
+  <br>
+  <input type="hidden" value="{{wl_row.id}}" name="list_id"></input>
+  <input type="submit" value="Add Word"></input>
+</form>
+<form action="/delete_from_list" method="post">
+  <input type="hidden" value="{{wl_row.id}}" name="list_id"></input>
+  <table width="100%">
+	<tr valign="top">
+	  <td width="50%">
+		<h2>Bekannte Wörter</h2>
+		<table>
+		  {% for r in known_words %}
+		  <tr valign="top">
+			<td><input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}"></td>
+			<td><a href="{{ url_for('single_word', word=r.list_word.decode('utf-8'), list_id=list_id) }}">{{ r.list_word.decode('utf-8') }}</a></td>
+			<td>{{ r.definition.decode('utf-8') }}</td>
+		  </tr>
+		  {% endfor %}
+		</table>
+	  </td>
+	  <td width="50%">
+		<h2>Unbekannte Wörter</h2>
+		{% for r in unknown_words %}
+		<input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}">
+		<a href="{{ url_for('add_word', list_id=list_id, word=r.list_word.decode('utf-8')) }}">{{ r.list_word.decode('utf-8') }}</a>
+		<br>
+		{% endfor %}
+	  </td>
+	</tr>
+  </table>
+  <input type="submit" value="Delete Selected Words"></input>
+</form>
+{% endblock %}

@@ -19,10 +19,6 @@ def get_conn():
     cursor = dbh.cursor()
     return dbh, cursor
 
-@app.route('/')
-def default_route():
-    return render_template('index.html')
-
 @app.route('/word/<string:word>')
 def single_word(word):
     dbh, cursor = get_conn()
@@ -123,6 +119,7 @@ order by ww.word
                            unknown_words=unknown_words)
                            
 
+@app.route('/')
 @app.route('/wordlists')
 def wordlists():
     dbh, cursor = get_conn()
