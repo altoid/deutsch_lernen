@@ -14,7 +14,6 @@ FLASK_APP=dlernen.py FLASK_DEBUG=1 CONFIG=config.Config python -m flask run
 
 to do:
 
-wordlists to be editable (change source, name)
 error handling
 navigation
 show word lists a word is in
@@ -31,3 +30,9 @@ setting 'read_default_file' to a nonexistant file at connect time doesn't do any
 is handled by reading the default config.
 
 fix:  have to put the collation on the join clause.
+
+
+tags:
+
+verb:  dative, irregular
+nouns:  weak

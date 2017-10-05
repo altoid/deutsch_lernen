@@ -18,7 +18,9 @@
 	{% endfor %}
   </table>
   <input type="hidden" value="{{word_id}}" name="word_id"></input>
+  {% if list_id %}
   <input type="hidden" value="{{list_id}}" name="list_id"></input>
+  {% endif %}
   <input type="hidden" value="{{ dict_result[word_id][0]['word'].decode('utf-8') }}" name="word"></input>
   <input type="submit" value="Update Word"></input>
 </form>

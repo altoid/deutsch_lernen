@@ -241,7 +241,12 @@ on duplicate key update value=values(value)
     cursor.execute(sql, request.form)
     dbh.commit()
 
-    target = url_for('single_word', word=request.form['word'], list_id=request.form.get('list_id'))
+    list_id = request.form.get('list_id')
+    target = None
+    if list_id:
+        target = url_for('single_word', word=request.form['word'], list_id=list_id)
+    else:
+        target = url_for('single_word', word=request.form['word'])
 
     return redirect(target)
 
