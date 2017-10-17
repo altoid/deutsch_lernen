@@ -67,7 +67,7 @@ from
 	     and qstruct.quiz_id = qscore.quiz_id
 	     and qstruct.attribute_id = qscore.attribute_id
 	where
-	 	q.quizkey = %(quizkey)s and
+	 	q.quizkey = '%(quizkey)s' and
 		qscore.word_id is null
         order by rand()
 	limit 2
@@ -102,7 +102,7 @@ from
 	     and qstruct.quiz_id = qscore.quiz_id
 	     and qstruct.attribute_id = qscore.attribute_id
 	where
-	 	q.quizkey = %(quizkey)s and
+	 	q.quizkey = '%(quizkey)s' and
 		presentation_count > 5 and
 		(correct_count / presentation_count) <= 0.80
 	order by
@@ -140,7 +140,7 @@ from
 	     and qstruct.quiz_id = qscore.quiz_id
 	     and qstruct.attribute_id = qscore.attribute_id
 	where
-	 	q.quizkey = %(quizkey)s and
+	 	q.quizkey = '%(quizkey)s' and
 		presentation_count <= 5
 	order by
 	      presentation_count,
@@ -177,7 +177,7 @@ from
 	     and qstruct.quiz_id = qscore.quiz_id
 	     and qstruct.attribute_id = qscore.attribute_id
 	where
-	 	q.quizkey = %(quizkey)s and
+	 	q.quizkey = '%(quizkey)s' and
 		CURDATE() - INTERVAL 30 DAY > last_presentation
 	order by
 	      last_presentation
@@ -207,7 +207,7 @@ left join quiz_score qscore on
      and qstruct.quiz_id = qscore.quiz_id
      and qstruct.attribute_id = qscore.attribute_id
 where
- 	q.quizkey = %(quizkey)s
+ 	q.quizkey = '%(quizkey)s'
     and w.id in (select
 		w.id
         from

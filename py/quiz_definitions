@@ -40,14 +40,12 @@ if __name__ == '__main__':
     q = None
     args = None
     if cl_args.listid:
-        q = quiz_sql.quiz_wordlist
-        args = {
+        q = quiz_sql.quiz_wordlist % {
             'quizkey':'definitions',
             'listid' : cl_args.listid
             }
     else:
-        q = quiz_sql.next_item_query
-        args = {
+        q = quiz_sql.next_item_query % {
             'quizkey':'definitions',
             'filter' : ''
             }
@@ -58,7 +56,7 @@ if __name__ == '__main__':
     done = False
     counter = 0
     while not done:
-        c.execute(q, args)
+        c.execute(q)
         for row in c.fetchall():
             # if the word is a noun, get its article.  if it's not a noun, this query retrieves nothing.
             article = get_article(db)
