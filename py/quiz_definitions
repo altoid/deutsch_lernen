@@ -2,14 +2,12 @@
 
 import MySQLdb
 
+import sys
 import quiz_sql
 import dsn
+import argparse
 
 # docs at http://mysql-python.sourceforge.net/MySQLdb.html
-
-q = quiz_sql.next_item_query % {'quizkey':'definitions'}
-
-db = dsn.getConnection()
 
 def get_article(db):
 
@@ -32,60 +30,84 @@ def get_article(db):
     article_cursor.close()
     return article
 
-c = db.cursor()
-done = False
-counter = 0
-while not done:
-    c.execute(q)
-    for row in c.fetchall():
-        # if the word is a noun, get its article.  if it's not a noun, this query retrieves nothing.
-        article = get_article(db)
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-l', '--listid',
+                        type=int,
+                        help='id of word list to use')
+    cl_args = parser.parse_args()
 
-        counter += 1
-        print "[%s]" % counter,
+    q = None
+    args = None
+    if cl_args.listid:
+        q = quiz_sql.quiz_wordlist
+        args = {
+            'quizkey':'definitions',
+            'listid' : cl_args.listid
+            }
+    else:
+        q = quiz_sql.next_item_query
+        args = {
+            'quizkey':'definitions',
+            'filter' : ''
+            }
 
-        if article:
-            print article,
-
-        print unicode(row['word'])
-        prompt = "hit return for answer, q to quit:  --> "
-        answer = raw_input(prompt).strip().lower()
-
-        if answer.startswith('q'):
-            done = True
-            continue
-
-        print row['value']
-
-        prompt = "correct? --> "
-        answer = raw_input(prompt).strip().lower()
-
-        while len(answer) == 0:
+    db = dsn.getConnection()
+    
+    c = db.cursor()
+    done = False
+    counter = 0
+    while not done:
+        c.execute(q, args)
+        for row in c.fetchall():
+            # if the word is a noun, get its article.  if it's not a noun, this query retrieves nothing.
+            article = get_article(db)
+    
+            counter += 1
+            print "[%s]" % counter,
+    
+            if article:
+                print article,
+    
+            print unicode(row['word'])
+            prompt = "hit return for answer, q to quit:  --> "
             answer = raw_input(prompt).strip().lower()
-
-        if answer.startswith('y'):
-            row['correct_count'] += 1
     
-        row['presentation_count'] += 1
+            if answer.startswith('q'):
+                done = True
+                continue
     
-        u = """
-    insert into quiz_score
-    (quiz_id,word_id,attribute_id,presentation_count,correct_count)
-    VALUES
-    (%s, %s, %s, %s, %s)
-    on duplicate key update
-    presentation_count = values(presentation_count),
-    correct_count = values(correct_count)
-    """ % (row['quiz_id'],
-           row['word_id'],
-           row['attribute_id'],
-           row['presentation_count'],
-           row['correct_count'])
+            print row['value']
     
-        c.execute(u)
-        db.commit()
-
-c.close()
-db.close()
-
-print 'bis bald'
+            prompt = "correct? --> "
+            answer = raw_input(prompt).strip().lower()
+    
+            while len(answer) == 0:
+                answer = raw_input(prompt).strip().lower()
+    
+            if answer.startswith('y'):
+                row['correct_count'] += 1
+        
+            row['presentation_count'] += 1
+        
+            u = """
+        insert into quiz_score
+        (quiz_id,word_id,attribute_id,presentation_count,correct_count)
+        VALUES
+        (%s, %s, %s, %s, %s)
+        on duplicate key update
+        presentation_count = values(presentation_count),
+        correct_count = values(correct_count)
+        """ % (row['quiz_id'],
+               row['word_id'],
+               row['attribute_id'],
+               row['presentation_count'],
+               row['correct_count'])
+        
+            c.execute(u)
+            db.commit()
+    
+    c.close()
+    db.close()
+    
+    print 'bis bald'
