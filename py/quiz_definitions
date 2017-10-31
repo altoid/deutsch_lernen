@@ -40,14 +40,16 @@ if __name__ == '__main__':
     q = None
     args = None
     if cl_args.listid:
-        q = quiz_sql.quiz_wordlist % {
-            'quizkey':'definitions',
-            'listid' : cl_args.listid
+        subquery = """select w.id word_id from wordlist_word ww inner join word w on w.word = ww.word where ww.wordlist_id = %s""" % cl_args.listid
+        filter = "    inner join (%s) t on w.id = t.word_id" % subquery
+        q = quiz_sql.next_item_query % {
+            'quizkey': 'definitions',
+            'filter': filter
             }
     else:
         q = quiz_sql.next_item_query % {
-            'quizkey':'definitions',
-            'filter' : ''
+            'quizkey': 'definitions',
+            'filter': ''
             }
 
     db = dsn.getConnection()

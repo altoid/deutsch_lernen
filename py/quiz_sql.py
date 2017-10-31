@@ -187,34 +187,3 @@ from
 order by rand()
 limit 1
 """
-
-quiz_wordlist = """
-select
-	w.word,
-	wa.value, 
-	q.id quiz_id,
-	w.id word_id,
-	wa.attribute_id,
-    ifnull(presentation_count, 0) presentation_count,
-    ifnull(correct_count, 0) correct_count
-from quiz q
-inner join quiz_structure qstruct on q.id = qstruct.quiz_id
-inner join word w on qstruct.pos_id = w.pos_id
-inner join word_attribute wa on w.id = wa.word_id
-      and wa.attribute_id = qstruct.attribute_id
-left join quiz_score qscore on
-     w.id = qscore.word_id
-     and qstruct.quiz_id = qscore.quiz_id
-     and qstruct.attribute_id = qscore.attribute_id
-where
- 	q.quizkey = '%(quizkey)s'
-    and w.id in (select
-		w.id
-        from
-        		wordlist_word ww
-        inner join word w on ww.word = w.word
-        where wordlist_id = %(listid)s
-    )
-    order by rand()
-    limit 1
-"""
