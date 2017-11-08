@@ -135,7 +135,18 @@ order by ww.word
 @app.route('/wordlists')
 def wordlists():
     dbh, cursor = get_conn()
-    sql = "select name, id from wordlist"
+    sql = """
+select name, id, ifnull(c, 0) listcount
+from wordlist
+left join 
+    (
+	select wordlist_id, count(*) c
+	from wordlist_word 
+	group by wordlist_id
+    ) t
+on t.wordlist_id = wordlist.id
+order by name
+"""
     cursor.execute(sql)
     rows = cursor.fetchall()
 

@@ -19,7 +19,7 @@
 <form action="/deletelist" method="post">
   {% for r in rows %}
   <input type="checkbox" name="deletelist" value="{{ r.id }}">
-  <a href="{{ url_for('wordlist', list_id=r.id) }}">{{ r.name.decode('utf-8') }}</a>
+  <a href="{{ url_for('wordlist', list_id=r.id) }}">{{ r.name.decode('utf-8') }}</a> ({{ r.listcount }})
   <br>
   {% endfor %}
   <input type="submit" value="Delete Selected Lists"></input>
