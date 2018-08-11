@@ -41,7 +41,18 @@
 		{% endfor %}
 	  </td>
 	</tr>
+	<tr>
+	  <td colspan="2">
+		<input type="submit" value="Delete Selected Words"></input>
+	  </td>
+	</tr>
   </table>
-  <input type="submit" value="Delete Selected Words"></input>
+</form>
+<form action="/update_notes" method="post">
+  <h2>Notes<h2>
+  <textarea name="notes" rows="20" cols="100">{{ wl_row.notes.decode('utf-8') }}</textarea>
+  <br>
+  <input type="hidden" value="{{wl_row.id}}" name="list_id"></input>
+  <input type="submit" value="Update Notes"></input>
 </form>
 {% endblock %}

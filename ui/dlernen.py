@@ -89,7 +89,12 @@ where id = %s
 def wordlist(list_id):
     dbh, cursor = get_conn()
     sql = """
-select * from wordlist
+select
+    id,
+    name,
+    source,
+    ifnull(notes, '') notes
+from wordlist
 where id = %s
 """
     cursor.execute(sql, (list_id,))
@@ -204,6 +209,18 @@ def add_to_list():
     target = url_for('wordlist', list_id=id)
     return redirect(target)
     # todo:  validate input: word in not bad script, list id is int
+
+@app.route('/update_notes', methods=['POST'])
+def update_notes():
+    dbh, cursor = get_conn()
+    notes = request.form['notes']
+    id = request.form['list_id']
+    sql = "update wordlist set notes = %s where id = %s"
+    cursor.execute(sql, (notes, id))
+    dbh.commit()
+
+    target = url_for('wordlist', list_id=id)
+    return redirect(target)
 
 @app.route('/delete_from_list', methods=['POST'])
 def delete_from_list():
