@@ -52,7 +52,7 @@
 				{% for r in column %}
 				<tr valign="top">
 				  <td><input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}"></td>
-				  <td><a href="{{ url_for('single_word', word=r.list_word.decode('utf-8'), list_id=list_id) }}">{{ r.list_word.decode('utf-8') }}</a></td>
+				  <td><a href="{{ url_for('add_word', list_id=list_id, word=r.list_word.decode('utf-8')) }}">{{ r.list_word.decode('utf-8') }}</a></td>
 				</tr>
 				{% endfor %}
 			  </table>
