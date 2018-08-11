@@ -20,25 +20,63 @@
   <input type="hidden" value="{{wl_row.id}}" name="list_id"></input>
   <table width="100%">
 	<tr valign="top">
-	  <td width="50%">
+	  <td width>
 		<h2>Bekannte Wörter</h2>
 		<table>
-		  {% for r in known_words %}
 		  <tr valign="top">
-			<td><input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}"></td>
-			<td><a href="{{ url_for('single_word', word=r.list_word.decode('utf-8'), list_id=list_id) }}">{{ r.list_word.decode('utf-8') }}</a></td>
-			<td>{{ r.definition.decode('utf-8') }}</td>
+			<td>
+			  <table>
+				{% for r in known_words[0] %}
+				<tr valign="top">
+				  <td><input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}"></td>
+				  <td><a href="{{ url_for('single_word', word=r.list_word.decode('utf-8'), list_id=list_id) }}">{{ r.list_word.decode('utf-8') }}</a></td>
+				  <td>{{ r.definition.decode('utf-8') }}</td>
+				</tr>
+				{% endfor %}
+			  </table>
+			</td>
+			<td>
+			  <table>
+				{% for r in known_words[1] %}
+				<tr valign="top">
+				  <td><input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}"></td>
+				  <td><a href="{{ url_for('single_word', word=r.list_word.decode('utf-8'), list_id=list_id) }}">{{ r.list_word.decode('utf-8') }}</a></td>
+				  <td>{{ r.definition.decode('utf-8') }}</td>
+				</tr>
+				{% endfor %}
+			  </table>
+			</td>
 		  </tr>
-		  {% endfor %}
 		</table>
 	  </td>
-	  <td width="50%">
+	</tr>
+	<tr>
+	  <td width>
 		<h2>Unbekannte Wörter</h2>
-		{% for r in unknown_words %}
-		<input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}">
-		<a href="{{ url_for('add_word', list_id=list_id, word=r.list_word.decode('utf-8')) }}">{{ r.list_word.decode('utf-8') }}</a>
-		<br>
-		{% endfor %}
+		<table>
+		  <tr valign="top">
+			<td>
+			  <table>
+				{% for r in unknown_words[0] %}
+				<tr valign="top">
+				  <td><input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}"></td>
+				  <td><a href="{{ url_for('single_word', word=r.list_word.decode('utf-8'), list_id=list_id) }}">{{ r.list_word.decode('utf-8') }}</a></td>
+				</tr>
+				{% endfor %}
+			  </table>
+			</td>
+			<td>
+			  <table>
+				{% for r in unknown_words[1] %}
+				<tr valign="top">
+				  <td><input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}"></td>
+				  <td><a href="{{ url_for('single_word', word=r.list_word.decode('utf-8'), list_id=list_id) }}">{{ r.list_word.decode('utf-8') }}</a></td>
+				</tr>
+				{% endfor %}
+			  </table>
+			</td>
+		  </tr>
+		</table>
 	  </td>
 	</tr>
 	<tr>

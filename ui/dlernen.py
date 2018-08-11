@@ -19,6 +19,35 @@ def get_conn():
     cursor = dbh.cursor()
     return dbh, cursor
 
+
+def chunkify(arr, **kwargs):
+    nchunks = kwargs.get('nchunks')
+    chunksize = kwargs.get('chunksize')
+    if not nchunks and not chunksize:
+        # return the whole array as one chunk
+        return [arr]
+
+    if nchunks and chunksize:
+        raise Exception('set chunksize or nchunks but not both')
+
+    arraysize = len(arr)
+    if nchunks:
+        # round up array size to nearest multiple of nchunks
+        arraysize = ((arraysize + nchunks - 1) / nchunks) * nchunks
+        chunksize = arraysize / nchunks
+
+    # add one more increment of chunksize so that our zip array includes
+    # the last elements
+    chunks = [x for x in xrange(0, arraysize + chunksize, chunksize)]
+
+    z = zip(chunks, chunks[1:])
+
+    result = []
+    for x in z:
+        result.append(arr[x[0]:x[1]])
+    return result
+
+
 @app.route('/word/<string:word>')
 def single_word(word):
     dbh, cursor = get_conn()
@@ -122,8 +151,8 @@ order by ww.word
     known_words = []
     unknown_words = []
     if len(rows):
-        known_words = [x for x in rows if x['dict_word']]
-        unknown_words = [x for x in rows if not x['dict_word']]
+        known_words = chunkify([x for x in rows if x['dict_word']], nchunks=2)
+        unknown_words = chunkify([x for x in rows if not x['dict_word']], nchunks=2)
 
     source_is_url = False
     if wl_row['source'] and wl_row['source'].startswith('http'):
