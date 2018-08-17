@@ -21,7 +21,7 @@
   <table width="100%">
 	<tr valign="top">
 	  <td width>
-		<h2>Bekannte Wörter</h2>
+		<h2>Bekannte Wörter ({{ known_words_count }})</h2>
 		<table>
 		  <tr valign="top">
 			{% for column in known_words %}
@@ -43,7 +43,7 @@
 	</tr>
 	<tr>
 	  <td width>
-		<h2>Unbekannte Wörter</h2>
+		<h2>Unbekannte Wörter ({{ unknown_words_count }})</h2>
 		<table>
 		  <tr valign="top">
 			{% for column in unknown_words %}

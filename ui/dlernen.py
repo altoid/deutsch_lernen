@@ -21,6 +21,9 @@ def get_conn():
 
 
 def chunkify(arr, **kwargs):
+    if not arr:
+        return []
+
     nchunks = kwargs.get('nchunks')
     chunksize = kwargs.get('chunksize')
     if not nchunks and not chunksize:
@@ -162,6 +165,8 @@ order by ww.word
                            source_is_url=source_is_url,
                            list_id=list_id,
                            known_words=known_words,
+                           known_words_count=sum(map(lambda x: len(x), known_words)),
+                           unknown_words_count=sum(map(lambda x: len(x), unknown_words)),
                            unknown_words=unknown_words)
                            
 
