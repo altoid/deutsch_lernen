@@ -6,4 +6,5 @@ def getConnection():
                            passwd="",
                            db="",
                            host="",
+                           use_unicode=True, charset="utf8",
                            cursorclass=MySQLdb.cursors.DictCursor)
