@@ -25,8 +25,6 @@ def get_word_with_article(db, dasWort):
     r = {'article' : article,
          'word' : noun}
 
-    pprint(r)
-    
     return r
 
 # noundict is the noun info typed in.
@@ -204,7 +202,6 @@ def prompt_noun(db, c):
         print 'falsches input'
 
     word_attributes = get_noun_info(c, input_word)
-    pprint(word_attributes)
     
     if len(word_attributes) == 0:
         insert_word(db, c, input_word)
