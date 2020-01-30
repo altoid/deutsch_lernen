@@ -87,7 +87,6 @@ while True:
         print 'that key exists'
         continue
 
-    qkey = db.escape_string(qkey)
     break
 
 while True:
@@ -96,7 +95,6 @@ while True:
     if qname == '':
         continue
 
-    qname = db.escape_string(qname);
     break
 
 # stuff db

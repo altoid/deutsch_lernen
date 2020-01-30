@@ -33,7 +33,6 @@ def add_or_update_word(db, c, word_attributes):
                 '' if r['attrvalue'] == None else r['attrvalue'])
 
         v = raw_input(prompt)
-        v = db.escape_string(v)
         if len(v) > 0:
             d['value'] = v
             d['attribute_id'] = r['attribute_id']
@@ -118,6 +117,7 @@ where
 order by pf.sort_order
 """ % { "word" : word }
 
+    print q
     c.execute(q)
 
     word_attributes = []
@@ -131,8 +131,6 @@ def prompt_word(db, c, posname):
 
     if len(input_string) == 0:
         return True
-
-    input_word = db.escape_string(input_string)
 
     word_attributes = get_word_attributes(c, posname, input_word)
 

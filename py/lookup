@@ -1,9 +1,6 @@
 #!/usr/bin/python
 # -*- python -*-
 
-import MySQLdb
-# docs at http://mysql-python.sourceforge.net/MySQLdb.html
-
 import string
 import common
 import noun
@@ -18,7 +15,6 @@ pp = pprint.PrettyPrinter()
 
 def lookup(word):
     word = word.lower()
-    word = db.escape_string(word)
     word = unicode(word, 'utf8')
 
     q = """
@@ -102,7 +98,7 @@ utf8writer = codecs.getwriter('utf8')
 sys.stdout = utf8writer(sys.stdout)
 
 db = dsn.getConnection()
-c = db.cursor()
+c = db.cursor(dictionary=True)
 
 for word in args.word:
     lookup(word)

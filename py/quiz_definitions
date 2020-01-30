@@ -11,7 +11,7 @@ import argparse
 # docs at http://mysql-python.sourceforge.net/MySQLdb.html
 
 def get_article(db):
-    article_cursor = db.cursor()
+    article_cursor = db.cursor(dictionary=True)
     article_query = """
  select wa.value 
  from word w, word_attribute wa, attribute a 
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     db = dsn.getConnection()
 
-    c = db.cursor()
+    c = db.cursor(dictionary=True)
     done = False
     counter = 0
     while not done:

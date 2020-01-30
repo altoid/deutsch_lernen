@@ -1,10 +1,5 @@
 #!/usr/bin/python
 
-import MySQLdb
-# docs at http://mysql-python.sourceforge.net/MySQLdb.html
-
-import _mysql_exceptions
-
 import common
 import noun
 import sys
@@ -17,10 +12,10 @@ logging.basicConfig(level=logging.INFO)
 def test_connection(db, c):
     try:
         c.execute("select 1")
-    except _mysql_exceptions.OperationalError as e:
+    except Exception as e:
         # connection went away, retry
         db = dsn.getConnection()
-        c = db.cursor()
+        c = db.cursor(dictionary=True)
 
     return db, c
     
@@ -30,7 +25,7 @@ if __name__ == '__main__':
     sys.stdout = utf8writer(sys.stdout)
     
     db = dsn.getConnection()
-    c = db.cursor()
+    c = db.cursor(dictionary=True)
 
     # mysql> select * from pos;
     # +----+-------------+
@@ -80,23 +75,25 @@ if __name__ == '__main__':
     
         if 'exit' == menu[choice]:
             break
+
+        print choice, menu[choice]
+        
+#        try:
+#            db, c = test_connection(db, c)
     
-        try:
-            db, c = test_connection(db, c)
-    
-            if menu[choice] == 'Noun':
-                done = noun.prompt_noun(db, c)
-            else:
-                done = common.prompt_word(db, c, menu[choice])
-        except _mysql_exceptions.OperationalError as e:
-            # connection went away, retry
-            db = dsn.getConnection()
-            c = db.cursor()
-            print "########## database connection timed out, please reenter:"
-            if menu[choice] == 'Noun':
-                done = noun.prompt_noun(db, c)
-            else:
-                done = common.prompt_word(db, c, menu[choice])
+        if menu[choice] == 'Noun':
+            done = noun.prompt_noun(db, c)
+        else:
+            done = common.prompt_word(db, c, menu[choice])
+#        except Exception as e:
+#            # connection went away, retry
+#            db = dsn.getConnection()
+#            c = db.cursor(dictionary=True)
+#            print "########## database connection timed out, please reenter:"
+#            if menu[choice] == 'Noun':
+#                done = noun.prompt_noun(db, c)
+#            else:
+#                done = common.prompt_word(db, c, menu[choice])
     
     print 'auf wiedersehen'
         

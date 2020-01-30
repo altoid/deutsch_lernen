@@ -1,5 +1,6 @@
 import logging
 import common
+from pprint import pprint
 
 articles = ['der', 'die', 'das']
 
@@ -18,12 +19,14 @@ def get_word_with_article(db, dasWort):
     if not stuff[0] in articles:
         return None
 
-    article = db.escape_string(stuff[0])
-    noun = db.escape_string(stuff[1])
+    article = stuff[0]
+    noun = stuff[1]
 
     r = {'article' : article,
          'word' : noun}
 
+    pprint(r)
+    
     return r
 
 # noundict is the noun info typed in.
@@ -76,8 +79,19 @@ where
 def insert_word(db, c, input_word):
 
     # fetch all the attributes for nouns
-    word_attributes = common.get_word_attributes(c, 'Noun', input_word['word'])
-
+    q = """
+select
+	attribute.attrkey, attribute.id attribute_id, pos_form.pos_id
+from
+	pos
+inner join pos_form on pos.id = pos_form.pos_id
+inner join attribute on pos_form.attribute_id = attribute.id
+where
+	pos.name = 'noun'
+"""
+    c.execute(q)
+    word_attributes = c.fetchall()
+    
     pos_id = word_attributes[0]['pos_id']
 
     input_values = []
@@ -90,7 +104,6 @@ def insert_word(db, c, input_word):
             d['attribute_id'] = r['attribute_id']
         else:
             value = raw_input( "--[%s]--> " % (r['attrkey'])).strip().lower()
-            value = db.escape_string(value)
             value = unicode(value, 'utf8')
             if len(value) > 0:
                 d['value'] = value
@@ -156,7 +169,6 @@ def update_word(db, c, word_attributes):
         prompt = "--[%s]--> [%s]:" % (r['attrkey'], '' if r['value'] is None else r['value'])
 
         value = raw_input(prompt).strip().lower()
-        value = db.escape_string(value)
         value = unicode(value, 'utf8')
         if len(value) > 0 and r['value'] != value:
             tmptuple = "(%s, %s, '%s')" % (r['attribute_id'], word_id, value)
@@ -192,7 +204,8 @@ def prompt_noun(db, c):
         print 'falsches input'
 
     word_attributes = get_noun_info(c, input_word)
-
+    pprint(word_attributes)
+    
     if len(word_attributes) == 0:
         insert_word(db, c, input_word)
     else:
