@@ -76,8 +76,6 @@ if __name__ == '__main__':
         if 'exit' == menu[choice]:
             break
 
-        print choice, menu[choice]
-        
 #        try:
 #            db, c = test_connection(db, c)
     

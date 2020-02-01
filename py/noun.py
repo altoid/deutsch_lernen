@@ -20,7 +20,7 @@ def get_word_with_article(db, dasWort):
         return None
 
     article = stuff[0]
-    noun = stuff[1]
+    noun = unicode(stuff[1], 'utf8')
 
     r = {'article' : article,
          'word' : noun}
@@ -104,6 +104,8 @@ where
             value = raw_input( "--[%s]--> " % (r['attrkey'])).strip().lower()
             value = unicode(value, 'utf8')
             if len(value) > 0:
+                if r['attrkey'] == 'plural':
+                    value = value.capitalize()
                 d['value'] = value
                 d['attribute_id'] = r['attribute_id']
 
@@ -116,9 +118,11 @@ where
     # insert into the word table
     q = """
 insert into word (pos_id, word) values (%s, '%s')
-""" % (pos_id, input_word['word'])
+""" % (pos_id, input_word['word'].capitalize())
     c.execute(q)
 
+    print q
+    
     # fetch the word id
     word_id = None
     q = """
@@ -169,6 +173,9 @@ def update_word(db, c, word_attributes):
         value = raw_input(prompt).strip().lower()
         value = unicode(value, 'utf8')
         if len(value) > 0 and r['value'] != value:
+            if r['attrkey'] == 'plural':
+                value = value.capitalize()
+                
             tmptuple = "(%s, %s, '%s')" % (r['attribute_id'], word_id, value)
             tuples.append(tmptuple)
             
