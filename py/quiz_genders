@@ -1,8 +1,5 @@
 #!/usr/bin/python
 
-import MySQLdb
-# docs at http://mysql-python.sourceforge.net/MySQLdb.html
-
 import quiz_sql
 import sys
 import codecs
@@ -18,7 +15,7 @@ q = quiz_sql.next_item_query % {
     }
 
 db = dsn.getConnection()
-c = db.cursor()
+c = db.cursor(dictionary=True)
 
 done = False
 while not done:

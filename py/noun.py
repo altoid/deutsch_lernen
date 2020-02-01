@@ -121,8 +121,6 @@ insert into word (pos_id, word) values (%s, '%s')
 """ % (pos_id, input_word['word'].capitalize())
     c.execute(q)
 
-    print q
-    
     # fetch the word id
     word_id = None
     q = """

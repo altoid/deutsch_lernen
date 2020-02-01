@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-import MySQLdb
-
 import sys
 import quiz_sql
 import dsn

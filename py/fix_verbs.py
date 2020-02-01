@@ -1,8 +1,5 @@
 #!/usr/bin/python
 
-import MySQLdb
-# docs at http://mysql-python.sourceforge.net/MySQLdb.html
-
 import common
 import noun
 import sys
@@ -63,7 +60,7 @@ if __name__ == '__main__':
     sys.stdout = utf8writer(sys.stdout)
     
     db = dsn.getConnection()
-    c = db.cursor()
+    c = db.cursor(dictionary=True)
 
     parser = argparse.ArgumentParser(usage=usage())
     parser.add_argument("-k", "--key",
