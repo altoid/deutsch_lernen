@@ -132,6 +132,6 @@ def prompt_word(db, c, posname):
     if len(input_string) == 0:
         return True
 
-    word_attributes = get_word_attributes(c, posname, input_word)
+    word_attributes = get_word_attributes(c, posname, input_string)
 
     add_or_update_word(db, c, word_attributes)

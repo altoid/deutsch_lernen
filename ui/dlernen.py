@@ -1,22 +1,20 @@
 from flask import Flask, request, render_template, redirect, url_for
-import MySQLdb
-import MySQLdb.cursors
 import os
 import pprint
+import mysql.connector
 
 app = Flask(__name__)
 app.config.from_object(os.environ['CONFIG'])
 pp = pprint.PrettyPrinter()
 
 def get_conn():
-    dbh = MySQLdb.connect(
+    dbh = mysql.connector.connect(
         host=app.config['MYSQL_HOST'], 
         user=app.config['MYSQL_USER'],
         passwd=app.config['MYSQL_PASS'],
-        db=app.config['MYSQL_DB'],
-        cursorclass=MySQLdb.cursors.DictCursor)
+        db=app.config['MYSQL_DB'])
 
-    cursor = dbh.cursor()
+    cursor = dbh.cursor(dictionary=True)
     return dbh, cursor
 
 

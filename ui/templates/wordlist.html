@@ -2,7 +2,7 @@
 
 {% block body %}
 {{ super() }}
-<h1><a href="{{ url_for('list_details', list_id=wl_row.id) }}">{{wl_row.name.decode('utf-8')}}</a></h1>
+<h1><a href="{{ url_for('list_details', list_id=wl_row.id) }}">{{wl_row.name}}</a></h1>
 {% if source_is_url %}
 <a href="{{ wl_row.source }}">{{ wl_row.source }}</a>
 {% elif wl_row.source %}
@@ -29,9 +29,9 @@
 			  <table>
 				{% for r in column %}
 				<tr valign="top">
-				  <td><input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}"></td>
-				  <td><a href="{{ url_for('single_word', word=r.list_word.decode('utf-8'), list_id=list_id) }}">{{ r.list_word.decode('utf-8') }}</a></td>
-				  <td>{{ r.definition.decode('utf-8') }}</td>
+				  <td><input type="checkbox" name="wordlist" value="{{ r.list_word }}"></td>
+				  <td><a href="{{ url_for('single_word', word=r.list_word, list_id=list_id) }}">{{ r.list_word }}</a></td>
+				  <td>{{ r.definition }}</td>
 				</tr>
 				{% endfor %}
 			  </table>
@@ -51,8 +51,8 @@
 			  <table>
 				{% for r in column %}
 				<tr valign="top">
-				  <td><input type="checkbox" name="wordlist" value="{{ r.list_word.decode('utf-8') }}"></td>
-				  <td><a href="{{ url_for('add_word', list_id=list_id, word=r.list_word.decode('utf-8')) }}">{{ r.list_word.decode('utf-8') }}</a></td>
+				  <td><input type="checkbox" name="wordlist" value="{{ r.list_word }}"></td>
+				  <td><a href="{{ url_for('add_word', list_id=list_id, word=r.list_word) }}">{{ r.list_word }}</a></td>
 				</tr>
 				{% endfor %}
 			  </table>
@@ -71,7 +71,7 @@
 </form>
 <form action="/update_notes" method="post">
   <h2>Notes<h2>
-  <textarea name="notes" rows="20" cols="100">{{ wl_row.notes.decode('utf-8') }}</textarea>
+  <textarea name="notes" rows="20" cols="100">{{ wl_row.notes }}</textarea>
   <br>
   <input type="hidden" value="{{wl_row.id}}" name="list_id"></input>
   <input type="submit" value="Update Notes"></input>
