@@ -3,7 +3,7 @@
 {% block body %}
 {{ super() }}
 {% for word_id in dict_result.keys() %}
-<h1>{{ dict_result[word_id][0]['word'].decode('utf-8') }}</h1>
+<h1>{{ dict_result[word_id][0]['word'] }}</h1>
 ({{ dict_result[word_id][0]['pos_name'] }})
 <br>
 
@@ -12,7 +12,7 @@
 	{% for attr in dict_result[word_id] %}
 	<tr>
 	  <td>{{ attr['attrkey'] }}:</td>
-	  <td><input type="text" value="{{ attr['attrvalue'].decode('utf-8') }}" name="{{ attr['attrkey'] }}" size="60"></td>
+	  <td><input type="text" value="{{ attr['attrvalue'] }}" name="{{ attr['attrkey'] }}" size="60"></td>
 	  <input type="hidden" value="{{ attr['attribute_id'] }}" name="{{ attr['attrkey'] + '_attrid' }}">
 	</tr>
 	{% endfor %}
@@ -21,7 +21,7 @@
   {% if list_id %}
   <input type="hidden" value="{{list_id}}" name="list_id"></input>
   {% endif %}
-  <input type="hidden" value="{{ dict_result[word_id][0]['word'].decode('utf-8') }}" name="word"></input>
+  <input type="hidden" value="{{ dict_result[word_id][0]['word'] }}" name="word"></input>
   <input type="submit" value="Update Word"></input>
 </form>
 
