@@ -52,35 +52,35 @@ from pos
             print k, v
     
         while True:
-            choice = raw_input('---> ').strip()
+            pos_id = raw_input('---> ').strip()
     
             try:
-                choice = int(choice)
+                pos_id = int(pos_id)
             except ValueError:
                 continue
     
-            if choice in menu.keys():
+            if pos_id in menu.keys():
                 break
     
-        if 'exit' == menu[choice]:
+        if 'exit' == menu[pos_id]:
             break
 
 #        try:
 #            db, c = test_connection(db, c)
     
-        if menu[choice] == 'Noun':
+        if menu[pos_id] == 'Noun':
             done = noun.prompt_noun(db, c)
         else:
-            done = common.prompt_word(db, c, menu[choice])
+            done = common.prompt_word(db, c, pos_id)
 #        except Exception as e:
 #            # connection went away, retry
 #            db = dsn.getConnection()
 #            c = db.cursor(dictionary=True)
 #            print "########## database connection timed out, please reenter:"
-#            if menu[choice] == 'Noun':
+#            if menu[pos_id] == 'Noun':
 #                done = noun.prompt_noun(db, c)
 #            else:
-#                done = common.prompt_word(db, c, menu[choice])
+#                done = common.prompt_word(db, c, menu[pos_id])
     
     print 'auf wiedersehen'
         
