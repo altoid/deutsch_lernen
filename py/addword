@@ -6,6 +6,7 @@ import sys
 import codecs
 import dsn
 import logging
+from pprint import pprint
 
 logging.basicConfig(level=logging.INFO)
 
@@ -20,41 +21,29 @@ def test_connection(db, c):
     return db, c
     
 if __name__ == '__main__':
-    # https://pythonhosted.org/kitchen/unicode-frustrations.html
     utf8writer = codecs.getwriter('utf8')
     sys.stdout = utf8writer(sys.stdout)
     
     db = dsn.getConnection()
     c = db.cursor(dictionary=True)
 
-    # mysql> select * from pos;
-    # +----+-------------+
-    # | id | name        |
-    # +----+-------------+
-    # |  3 | Adjective   |
-    # |  4 | Adverb      |
-    # |  5 | Conjunction |
-    # |  1 | Noun        |
-    # |  6 | other       |
-    # |  7 | Preposition |
-    # |  2 | Verb        |
-    # +----+-------------+
+    q = """
+select max(id) + 1 id, 'exit' name
+from pos
+"""
+    c.execute(q)
+    results = c.fetchall()
     
-    # TODO:  construct the menu from what's in the database.
-    # have to join with the pos_form table to avoid POS without attributes.
-    
-    menu = {
-        1: 'Noun',
-        2: 'Verb',
-        3: 'Adjective',
-        4: 'Adverb',
-        5: 'Conjunction',
-        6: 'other',
-        7: 'Preposition',
-        8: 'Place name',
-        9: 'exit'
-    }
-    
+    q = """
+select id, name
+from pos
+"""
+    c.execute(q)
+    results = c.fetchall() + results
+    results = sorted(results, key=lambda x: x['id'])
+
+    menu = {x['id']:x['name'] for x in results}
+
     done = False
     
     while not done:
