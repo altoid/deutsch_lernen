@@ -1,11 +1,10 @@
 from flask import Flask, request, render_template, redirect, url_for
 import os
-import pprint
+from pprint import pprint
 import mysql.connector
 
 app = Flask(__name__)
 app.config.from_object(os.environ['CONFIG'])
-pp = pprint.PrettyPrinter()
 
 def get_conn():
     dbh = mysql.connector.connect(
@@ -348,6 +347,7 @@ order by p.id, sort_order
                            list_id=list_id,
                            pos_dict=pos_dict)
 
+
 @app.route('/add_to_dict', methods=['POST'])
 def add_to_dict():
     # for user convenience, all the parts of speech and their attributes
@@ -360,7 +360,22 @@ def add_to_dict():
 
     # add the word to get the word_id
     form_pos_id = request.form['pos']
+
+    # get the name of the pos
+    q = """
+select name
+from pos
+where id = %s
+"""
+
+    cursor.execute(q, (form_pos_id,))
+    r = cursor.fetchone()
+    pos_name = r['name']
+    
     word = request.form['word'].strip()
+    if pos_name == 'Noun':
+        word = word.capitalize()
+        
     if not word:
         raise Exception("no word")
 
@@ -376,7 +391,7 @@ values (%s, %s)
     r = cursor.fetchone()
     word_id = r['last_insert_id()']
 
-    # all of the text fields have names of the form <pos_id>_<attribute_id>_<attrkey>.
+    # all of the text fields have names of the form <pos_id>-<attribute_id>-<attrkey>.
     # look for all the form fields that start with the pos_id.
 
     values = []
@@ -389,7 +404,11 @@ values (%s, %s)
         if pos_id == form_pos_id and request.form[k]:
             placeholder = "(%s, %s, %s)" # word_id, attr_id, value
             placeholders.append(placeholder)
-            values += [word_id, attr_id, request.form[k]]
+            value = request.form[k]
+            if pos_name == 'Noun' and attrkey == 'plural':
+                value = value.capitalize()
+                
+            values += [word_id, attr_id, value]
 
     if len(values) > 0:
         wa_sql = """
@@ -400,9 +419,6 @@ values
 
     cursor.execute(wa_sql, values)
     dbh.commit()
-
-#    target = url_for('single_word_id', word_id=word_id, list_id=list_id)
-#    return redirect(target)
 
     if list_id:
         target = url_for('wordlist', list_id=list_id)
