@@ -278,6 +278,7 @@ and word in (%s)
     return redirect(target)
     # todo:  validate input: word in not bad script, list id is int
 
+
 @app.route('/edit_word', methods=['POST'])
 def edit_word():
     dbh, cursor = get_conn()
@@ -291,13 +292,16 @@ def edit_word():
         if v:
             tuples.append("%%(word_id)s, %%(%s)s, %%(%s)s" % (k, attrkey))
 
+    form_copy = [(f[0], f[1].capitalize()) if f[0] == 'plural' else (f[0], f[1]) for f in request.form.items()]
+    form_copy = dict(form_copy)
+    
     sql = """
 insert into word_attribute(word_id, attribute_id, value)
 values (%s)
 on duplicate key update value=values(value)
 """ % '), ('.join(tuples)
 
-    cursor.execute(sql, request.form)
+    cursor.execute(sql, form_copy)
     dbh.commit()
 
     list_id = request.form.get('list_id')
