@@ -25,5 +25,9 @@
   <input type="submit" value="Update Word"></input>
 </form>
 
+{% if list_id %}
+<a href="{{ url_for('wordlist', list_id=list_id) }}">back to list</a>
+{% endif %}
+
 {% endfor %}
 {% endblock %}
