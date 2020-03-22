@@ -6,8 +6,6 @@ import dsn
 import argparse
 
 
-# docs at http://mysql-python.sourceforge.net/MySQLdb.html
-
 def get_article(db):
     article_cursor = db.cursor(dictionary=True)
     article_query = """
@@ -40,17 +38,11 @@ if __name__ == '__main__':
     args = None
     if cl_args.listid:
         subquery = """select w.id word_id from wordlist_word ww inner join word w on w.word = ww.word where ww.wordlist_id = %s""" % cl_args.listid
-        filter = "    inner join (%s) t on w.id = t.word_id" % subquery
-        q = quiz_sql.next_item_query % {
-            'quizkey': 'definitions',
-            'filter': filter
-        }
+        filter = ["    inner join (%s) t on w.id = t.word_id" % subquery]
     else:
-        q = quiz_sql.next_item_query % {
-            'quizkey': 'definitions',
-            'filter': ''
-        }
-
+        filter = []
+        
+    q = quiz_sql.build_quiz_query('definitions', join_clauses=filter)
     db = dsn.getConnection()
 
     c = db.cursor(dictionary=True)

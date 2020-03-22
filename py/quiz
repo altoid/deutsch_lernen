@@ -1,16 +1,16 @@
 #!/usr/bin/python
 
-import MySQLdb
-# docs at http://mysql-python.sourceforge.net/MySQLdb.html
-
 import quiz_sql
 import sys
-import codecs
 import dsn
 import pprint
+import argparse
 
 filters = {
-    'irregular_verbs' : 'INNER JOIN irregular_verb ON w.id = irregular_verb.word_id',
+    'irregular_verbs' : """inner join wordlist_word ww on ww.word =  w.word
+inner join wordlist wl on wl.id = ww.wordlist_id
+where wl.name = 'irregular verbs'"""
+# 'INNER JOIN irregular_verb ON w.id = irregular_verb.word_id',
 }
 
 def choose_filter():
@@ -32,6 +32,7 @@ def choose_filter():
                                      menu[default])
         try:
             answer = raw_input(prompt).strip()
+            print "got %s" % answer
             if len(answer) == 0:
                 break
 
@@ -47,13 +48,11 @@ def choose_filter():
     return filter
 
 if __name__ == '__main__':
-    pp = pprint.PrettyPrinter()
-    # https://pythonhosted.org/kitchen/unicode-frustrations.html
-    utf8writer = codecs.getwriter('utf8')
-    sys.stdout = utf8writer(sys.stdout)
-    
+    parser = argparse.ArgumentParser()
+    cl_args = parser.parse_args()
+
     db = dsn.getConnection()
-    c = db.cursor()
+    c = db.cursor(dictionary=True)
     
     q = """
     select id, name, quizkey
@@ -96,11 +95,14 @@ if __name__ == '__main__':
         sys.exit()
 
     filter = choose_filter()
-
+    print filter
+    
     q = quiz_sql.next_item_query % {
         'quizkey': qkey,
         'filter' : filter
         }
+
+    print q
     
     wordcount = 1
     done = False

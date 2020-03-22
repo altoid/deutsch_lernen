@@ -36,6 +36,26 @@
 #
 # for a score over 95%, don't retest.  unless it's been more than 30 days.
 
+join_clauses = [
+    "inner join quiz_structure qstruct on q.id = qstruct.quiz_id",
+    "inner join word w on qstruct.pos_id = w.pos_id",
+    "inner join word_attribute wa on w.id = wa.word_id and wa.attribute_id = qstruct.attribute_id",
+    """left join quiz_score qscore on
+	     w.id = qscore.word_id
+	     and qstruct.quiz_id = qscore.quiz_id
+	     and qstruct.attribute_id = qscore.attribute_id"""
+]
+
+never_tested_filter = ["""qscore.word_id is null"""]
+crappy_score_filter = [
+    """presentation_count > 5""",
+    """(correct_count / presentation_count) <= 0.80"""]
+
+too_few_attempts_filter = [
+    """presentation_count <= 5"""]
+
+been_too_long_filter = ["""CURDATE() - INTERVAL 30 DAY > last_presentation"""]
+
 next_item_query = """
 -- need quiz_id, word_id, attribute_id from other tables.  these are the PK of quiz_score.
 
@@ -57,18 +77,9 @@ from
 		qscore.presentation_count,
 		qscore.correct_count
 	from quiz q
-	inner join quiz_structure qstruct on q.id = qstruct.quiz_id
-	inner join word w on qstruct.pos_id = w.pos_id
-    %(filter)s
-	inner join word_attribute wa on w.id = wa.word_id
-	      and wa.attribute_id = qstruct.attribute_id
-	left join quiz_score qscore on
-	     w.id = qscore.word_id
-	     and qstruct.quiz_id = qscore.quiz_id
-	     and qstruct.attribute_id = qscore.attribute_id
+        {join_clauses}
 	where
-	 	q.quizkey = '%(quizkey)s' and
-		qscore.word_id is null
+                {never_tested_filter}
         order by rand()
 	limit 2
 	) never_tested
@@ -92,19 +103,9 @@ from
 		qscore.presentation_count,
 		qscore.correct_count
 	from quiz q
-	inner join quiz_structure qstruct on q.id = qstruct.quiz_id
-	inner join word w on qstruct.pos_id = w.pos_id
-    %(filter)s
-	inner join word_attribute wa on w.id = wa.word_id
-	      and wa.attribute_id = qstruct.attribute_id
-	inner join quiz_score qscore on
-	     w.id = qscore.word_id
-	     and qstruct.quiz_id = qscore.quiz_id
-	     and qstruct.attribute_id = qscore.attribute_id
+        {join_clauses}
 	where
-	 	q.quizkey = '%(quizkey)s' and
-		presentation_count > 5 and
-		(correct_count / presentation_count) <= 0.80
+              {crappy_score_filter}
 	order by
 	      presentation_count,
 	      (correct_count / presentation_count)
@@ -130,18 +131,9 @@ from
 		qscore.presentation_count,
 		qscore.correct_count
 	from quiz q
-	inner join quiz_structure qstruct on q.id = qstruct.quiz_id
-	inner join word w on qstruct.pos_id = w.pos_id
-    %(filter)s
-	inner join word_attribute wa on w.id = wa.word_id
-	      and wa.attribute_id = qstruct.attribute_id
-	inner join quiz_score qscore on
-	     w.id = qscore.word_id
-	     and qstruct.quiz_id = qscore.quiz_id
-	     and qstruct.attribute_id = qscore.attribute_id
+        {join_clauses}
 	where
-	 	q.quizkey = '%(quizkey)s' and
-		presentation_count <= 5
+              {too_few_attempts_filter}
 	order by
 	      presentation_count,
 	      (correct_count / presentation_count)
@@ -167,18 +159,9 @@ from
 		qscore.presentation_count,
 		qscore.correct_count
 	from quiz q
-	inner join quiz_structure qstruct on q.id = qstruct.quiz_id
-	inner join word w on qstruct.pos_id = w.pos_id
-    %(filter)s
-	inner join word_attribute wa on w.id = wa.word_id
-	      and wa.attribute_id = qstruct.attribute_id
-	inner join quiz_score qscore on
-	     w.id = qscore.word_id
-	     and qstruct.quiz_id = qscore.quiz_id
-	     and qstruct.attribute_id = qscore.attribute_id
+        {join_clauses}
 	where
-	 	q.quizkey = '%(quizkey)s' and
-		CURDATE() - INTERVAL 30 DAY > last_presentation
+              {been_too_long_filter}
 	order by
 	      last_presentation
 	limit 2
@@ -187,3 +170,34 @@ from
 order by rand()
 limit 1
 """
+
+def build_quiz_query(quizkey, **kwargs):
+    global never_tested_filter
+    global crappy_score_filter
+    global been_too_long_filter
+    global too_few_attempts_filter
+    
+    join_clauses_arg = kwargs.get('join_clauses', [])
+    where_clauses = kwargs.get('where_clauses', [])
+
+    j_clauses = join_clauses + join_clauses_arg
+    j_clauses = ' '.join(j_clauses)
+    d1 = {
+        'quizkey': quizkey,
+        }
+
+    qkey = "q.quizkey = '{quizkey}'".format(**d1)
+    never_tested_filter += [qkey]
+    crappy_score_filter += [qkey]
+    too_few_attempts_filter += [qkey]
+    been_too_long_filter += [qkey]
+
+    d2 = {
+        'join_clauses': j_clauses,
+        'never_tested_filter': ' AND '.join(never_tested_filter),
+        'crappy_score_filter': ' AND '.join(crappy_score_filter),
+        'been_too_long_filter': ' AND '.join(been_too_long_filter),
+        'too_few_attempts_filter': ' AND '.join(too_few_attempts_filter),
+        }
+
+    return next_item_query.format(**d2)
