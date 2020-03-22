@@ -7,18 +7,19 @@ import pprint
 import argparse
 
 filters = {
-    'irregular_verbs' : """inner join wordlist_word ww on ww.word =  w.word
-inner join wordlist wl on wl.id = ww.wordlist_id
-where wl.name = 'irregular verbs'"""
-# 'INNER JOIN irregular_verb ON w.id = irregular_verb.word_id',
+    'irregular verbs' : {
+        'join_clauses': ['inner join wordlist_word ww on ww.word =  w.word',
+                         'inner join wordlist wl on wl.id = ww.wordlist_id'],
+        'where_clauses': ["""wl.name = 'irregular verbs'"""]
+    },
+    'no filter': {}
 }
 
 def choose_filter():
     # prepare menu based on the filter keys, with no filter as default
-    menu = filters.keys()
-    menu += ['no filter']
+    menu = ['irregular verbs', 'no filter']
 
-    filter = ''
+    filter = {}
 
     # present menu until we get a useful answer
     while True:
@@ -32,7 +33,6 @@ def choose_filter():
                                      menu[default])
         try:
             answer = raw_input(prompt).strip()
-            print "got %s" % answer
             if len(answer) == 0:
                 break
 
@@ -95,27 +95,26 @@ if __name__ == '__main__':
         sys.exit()
 
     filter = choose_filter()
-    print filter
     
-    q = quiz_sql.next_item_query % {
-        'quizkey': qkey,
-        'filter' : filter
-        }
-
-    print q
+    q = quiz_sql.build_quiz_query(qkey,
+                                  join_clauses=filter.get('join_clauses', []),
+                                  where_clauses=filter.get('where_clauses', []))
     
     wordcount = 1
     done = False
     while not done:
         c.execute(q)
         for row in c.fetchall():
-            prompt = "[%s] answer, q to quit --[%s] <%s> --> " % (
+            prompt = "[%s] answer, q to quit --[%s] <%s>" % (
                 wordcount, row['word'], row['method'])
 
-            answer = raw_input(prompt)
+            # apparently raw_input can't handle unicode chars in the prompt
+            print prompt,
+            answer = raw_input(" --> ")
             answer = unicode(answer, 'utf8').strip().lower()
             while len(answer) == 0:
-                answer = raw_input(prompt)
+                print prompt,
+                answer = raw_input(" --> ")
                 answer = unicode(answer, 'utf8').strip().lower()
         
             if answer == row['value']:

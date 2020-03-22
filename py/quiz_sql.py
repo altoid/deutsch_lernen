@@ -187,10 +187,10 @@ def build_quiz_query(quizkey, **kwargs):
         }
 
     qkey = "q.quizkey = '{quizkey}'".format(**d1)
-    never_tested_filter += [qkey]
-    crappy_score_filter += [qkey]
-    too_few_attempts_filter += [qkey]
-    been_too_long_filter += [qkey]
+    never_tested_filter += [qkey] + where_clauses
+    crappy_score_filter += [qkey] + where_clauses
+    too_few_attempts_filter += [qkey] + where_clauses
+    been_too_long_filter += [qkey] + where_clauses
 
     d2 = {
         'join_clauses': j_clauses,
