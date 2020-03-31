@@ -34,12 +34,21 @@ def add_or_update_word(db, c, word, pos_id):
         row = c.fetchone()
         word_id = row['word_id']
 
+        if word_id == 0:
+            # no rows inserted, which means the word is already there.
+            q = """
+            select id word_id
+            from word 
+            where pos_id = %s and word = '%s'
+            """ % (pos_id, word)
+
+            c.execute(q)
+            row = c.fetchone()
+            word_id = row['word_id']
+            
         word_attributes = get_word_attributes(c, pos_id, word_id)
         max_width = get_max_width(word_attributes)
 
-        # pprint(word_id)
-        # pprint(word_attributes)
-        
         input_values = []
         for r in word_attributes:
             d = {}
@@ -90,7 +99,7 @@ def get_word_attributes(c, pos_id, word_id):
         'pos_id': pos_id,
         'word_id': word_id,
         }
-    
+
     c.execute(q)
 
     word_attributes = []

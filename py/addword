@@ -3,7 +3,6 @@
 import common
 import noun
 import sys
-import codecs
 import dsn
 import logging
 from pprint import pprint
@@ -21,9 +20,6 @@ def test_connection(db, c):
     return db, c
     
 if __name__ == '__main__':
-    utf8writer = codecs.getwriter('utf8')
-    sys.stdout = utf8writer(sys.stdout)
-    
     db = dsn.getConnection()
     c = db.cursor(dictionary=True)
 
