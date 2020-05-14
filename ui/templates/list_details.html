@@ -1,0 +1,19 @@
+{% extends "home.html" %}
+
+{% block body %}
+{{ super() }}
+<form action="/edit_list" method="post">
+  <table>
+	<tr>
+	  <td>List Name:</td>
+	  <td><input type="text" value="{{ wl_row.name }}" name="name" size="60"></td>
+	</tr>
+	<tr>
+	  <td>Source:</td>
+	  <td><input type="text" value="{{ wl_row.source }}" name="source" size="60"></td>
+	</tr>
+	<input type="hidden" value="{{ wl_row.id }}" name="list_id">
+  </table>
+  <input type="submit" value="Update list details"></input>
+</form>
+{% endblock %}
