@@ -95,6 +95,7 @@ def get_word_attributes(c, pos_id, word_id):
     on wa.attribute_id = pf.attribute_id
     and wa.word_id = %(word_id)s
     where pf.pos_id = %(pos_id)s
+    order by pf.sort_order
     """ % {
         'pos_id': pos_id,
         'word_id': word_id,
