@@ -56,8 +56,8 @@ def add_or_update_word(db, c, word, pos_id):
             prompt = string.ljust(prefix, max_width)
             prompt += "[%s]:" % (
                 '' if r['attrvalue'] == None else r['attrvalue'])
-                
-            v = raw_input(prompt)
+            prompt = prompt.encode('utf-8')
+            v = raw_input(prompt).strip()
             if len(v) > 0:
                 d['value'] = v
                 d['attribute_id'] = r['attribute_id']

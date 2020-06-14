@@ -22,6 +22,7 @@ while not done:
     c.execute(q)
     for row in c.fetchall():
         prompt = "answer, q to quit --[%s]--> " % row['word']
+        prompt = prompt.encode('utf-8')
         answer = raw_input(prompt).strip().lower()
         while len(answer) == 0:
             answer = raw_input(prompt).strip().lower()
