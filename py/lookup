@@ -15,9 +15,9 @@ pp = pprint.PrettyPrinter()
 
 def lookup(word):
     word = word.lower()
-    word = unicode(word, 'utf8')
+#    word = unicode(word, 'utf8')
 
-    q = """
+    regex_q = """
 select
     pos_name,
     word,
@@ -41,6 +41,31 @@ where word_id in
         'word' : word
         }
 
+    exact_q = """
+select
+    pos_name,
+    word,
+    word_id,
+	concat(attrkey, ':') attrkey,
+    attrvalue value,
+    pf.sort_order
+from
+    mashup
+inner join pos_form pf on pf.attribute_id = mashup.attribute_id and pf.pos_id = mashup.pos_id
+where word_id in
+    (
+    select
+        word_id
+    from
+        mashup
+    where
+    	word = '%(word)s'
+    )
+""" % {
+        'word' : word
+        }
+
+    q = exact_q if args.exact else regex_q
     c.execute(q)
 
     result = []
@@ -87,19 +112,18 @@ on duplicate key update count = count + 1
     c.execute(q)
     db.commit()
 
-parser = argparse.ArgumentParser()
-parser.add_argument("word",
-                    nargs='+',
-                    help="word to look up")
-args = parser.parse_args()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("word",
+                        nargs='+',
+                        help="word to look up")
+    parser.add_argument("--exact", action='store_true',
+                        help="search for word verbatim, no substring matching")
+    args = parser.parse_args()
 
-# https://pythonhosted.org/kitchen/unicode-frustrations.html
-utf8writer = codecs.getwriter('utf8')
-sys.stdout = utf8writer(sys.stdout)
+    db = dsn.getConnection()
+    c = db.cursor(dictionary=True)
 
-db = dsn.getConnection()
-c = db.cursor(dictionary=True)
-
-for word in args.word:
-    lookup(word)
+    for word in args.word:
+        lookup(word)
 
