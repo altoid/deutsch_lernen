@@ -15,13 +15,13 @@ def test_connection(db, c):
     except Exception as e:
         # connection went away, retry
         db = dsn.getConnection()
-        c = db.cursor(dictionary=True)
+        c = db.cursor(dictionary=True, buffered=True)
 
     return db, c
     
 if __name__ == '__main__':
     db = dsn.getConnection()
-    c = db.cursor(dictionary=True)
+    c = db.cursor(dictionary=True, buffered=True)
 
     q = """
 select max(id) + 1 id, 'exit' name
@@ -61,22 +61,23 @@ from pos
         if 'exit' == menu[pos_id]:
             break
 
-#        try:
-#            db, c = test_connection(db, c)
+        try:
+            db, c = test_connection(db, c)
     
-        if menu[pos_id] == 'Noun':
-            done = noun.prompt_noun(db, c)
-        else:
-            done = common.prompt_word(db, c, pos_id)
-#        except Exception as e:
-#            # connection went away, retry
-#            db = dsn.getConnection()
-#            c = db.cursor(dictionary=True)
-#            print "########## database connection timed out, please reenter:"
-#            if menu[pos_id] == 'Noun':
-#                done = noun.prompt_noun(db, c)
-#            else:
-#                done = common.prompt_word(db, c, menu[pos_id])
+            if menu[pos_id] == 'Noun':
+                done = noun.prompt_noun(db, c)
+            else:
+                done = common.prompt_word(db, c, pos_id)
+        except Exception as e:
+            logging.exception(e)
+            # connection went away, retry
+            db = dsn.getConnection()
+            c = db.cursor(dictionary=True, buffered=True)
+            print "########## database connection timed out, please reenter:"
+            if menu[pos_id] == 'Noun':
+                done = noun.prompt_noun(db, c)
+            else:
+                done = common.prompt_word(db, c, menu[pos_id])
     
     print 'auf wiedersehen'
         
