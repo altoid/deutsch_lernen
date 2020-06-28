@@ -307,7 +307,7 @@ on duplicate key update value=values(value)
     list_id = request.form.get('list_id')
     target = None
     if list_id:
-        target = url_for('single_word', word=request.form['word'], list_id=list_id)
+        target = url_for('wordlist', list_id=list_id)
     else:
         target = url_for('single_word', word=request.form['word'])
 
