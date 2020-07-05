@@ -19,61 +19,61 @@
 <form action="/delete_from_list" method="post">
   <input type="hidden" value="{{wl_row.id}}" name="list_id"></input>
   <table width="100%">
-	<tr valign="top">
-	  <td width>
-		<h2>Bekannte Wörter ({{ known_words_count }})</h2>
-		<table>
-		  <tr valign="top">
-			{% for column in known_words %}
-			<td>
-			  <table>
-				{% for r in column %}
-				<tr valign="top">
-				  <td><input type="checkbox" name="wordlist" value="{{ r.list_word }}"></td>
-				  <td><a href="{{ url_for('single_word', word=r.list_word, list_id=list_id) }}">{{ r.list_word }}</a></td>
-				  <td>{{ r.definition }}</td>
-				</tr>
-				{% endfor %}
-			  </table>
-			</td>
-			{% endfor %}
-		  </tr>
-		</table>
-	  </td>
-	</tr>
-	<tr>
-	  <td width>
-		<h2>Unbekannte Wörter ({{ unknown_words_count }})</h2>
-		<table>
-		  <tr valign="top">
-			{% for column in unknown_words %}
-			<td>
-			  <table>
-				{% for r in column %}
-				<tr valign="top">
-				  <td><input type="checkbox" name="wordlist" value="{{ r.list_word }}"></td>
-				  <td><a href="{{ url_for('add_word', list_id=list_id, word=r.list_word) }}">{{ r.list_word }}</a></td>
-				</tr>
-				{% endfor %}
-			  </table>
-			</td>
-			{% endfor %}
-		  </tr>
-		</table>
-	  </td>
-	</tr>
-	<tr>
-	  <td colspan="2">
-		<input type="submit" value="Delete Selected Words"></input>
-	  </td>
-	</tr>
+    <tr valign="top">
+      <td width>
+	<h2>Bekannte Wörter ({{ known_words_count }})</h2>
+	<table>
+	  <tr valign="top">
+	    {% for column in known_words %}
+	    <td>
+	      <table>
+		{% for r in column %}
+		<tr valign="top">
+		  <td><input type="checkbox" name="wordlist" value="{{ r.list_word }}"></td>
+		  <td><a href="{{ url_for('single_word', word=r.list_word, list_id=list_id) }}">{{ r.list_word }}</a></td>
+		  <td>{{ r.definition }}</td>
+		</tr>
+		{% endfor %}
+	      </table>
+	    </td>
+	    {% endfor %}
+	  </tr>
+	</table>
+      </td>
+    </tr>
+    <tr>
+      <td width>
+	<h2>Unbekannte Wörter ({{ unknown_words_count }})</h2>
+	<table>
+	  <tr valign="top">
+	    {% for column in unknown_words %}
+	    <td>
+	      <table>
+		{% for r in column %}
+		<tr valign="top">
+		  <td><input type="checkbox" name="wordlist" value="{{ r.list_word }}"></td>
+		  <td><a href="{{ url_for('add_word', list_id=list_id, word=r.list_word) }}">{{ r.list_word }}</a></td>
+		</tr>
+		{% endfor %}
+	      </table>
+	    </td>
+	    {% endfor %}
+	  </tr>
+	</table>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2">
+	<input type="submit" value="Delete Selected Words"></input>
+      </td>
+    </tr>
   </table>
 </form>
 <form action="/update_notes" method="post">
   <h2>Notes<h2>
-  <textarea name="notes" rows="50" cols="100">{{ wl_row.notes }}</textarea>
-  <br>
-  <input type="hidden" value="{{wl_row.id}}" name="list_id"></input>
-  <input type="submit" value="Update Notes"></input>
+      <textarea name="notes" rows="50" cols="100">{{ wl_row.notes }}</textarea>
+      <br>
+      <input type="hidden" value="{{wl_row.id}}" name="list_id"></input>
+      <input type="submit" value="Update Notes"></input>
 </form>
 {% endblock %}
