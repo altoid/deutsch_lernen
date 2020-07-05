@@ -136,11 +136,15 @@ ww.wordlist_id,
 ww.word list_word,
 ww.added,
 m.attrvalue definition,
+ifnull(m2.attrvalue, '   ') article,
 m.word dict_word
 from wordlist_word ww
 left join mashup m
 on ww.word = m.word
-and attrkey = 'definition'
+and m.attrkey = 'definition'
+left join mashup m2
+on ww.word = m2.word
+and m2.attrkey = 'article'
 where ww.wordlist_id = %s
 order by ww.word
 """

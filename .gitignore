@@ -7,4 +7,4 @@ ui/config.py
 **/*.bak
 **/*.BAK
 **/x
-
+sql/*.sql
