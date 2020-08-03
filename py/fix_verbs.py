@@ -116,9 +116,9 @@ if __name__ == '__main__':
                 tuples = []
             word_id = r['word_id']
     
-        prompt = "--[%03d][%s, %s]--> " % (rowcount, r['word'], r['attrkey']).encode('utf-8')
-        v = raw_input(prompt)
-        v = unicode(v, 'utf8').strip().lower()
+        prompt = "--[%03d][%s, %s]--> " % (rowcount, r['word'], r['attrkey'])
+        prompt = prompt.encode('utf-8')
+        v = raw_input(prompt).strip()
         if len(v) > 0:
             if (v == 'xxx'):
                 break

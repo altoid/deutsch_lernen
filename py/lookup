@@ -11,8 +11,6 @@ import argparse
 import operator
 import pprint
 
-pp = pprint.PrettyPrinter()
-
 def lookup(word):
     word = word.lower()
 #    word = unicode(word, 'utf8')

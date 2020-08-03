@@ -65,13 +65,9 @@ def add_or_update_word(db, c, word, pos_id):
             if len(d) > 0:
                 input_values.append(d)
 
-        # pprint(input_values)
-        
         # insert into the word_attribute table
         tuples = ["(%s, %s, '%s')" % (iv['attribute_id'], word_id, iv['value']) for iv in input_values]
 
-        # pprint(tuples)
-        
         if len(tuples) > 0:
             q = """
             insert into word_attribute(attribute_id, word_id, value) values %s
