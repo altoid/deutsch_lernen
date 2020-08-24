@@ -22,14 +22,30 @@ adding nouns requires an article
 
 BUGS
 
-looks like there is no way to specify the client collation using MySQLdb.  the connect method doesn't accept
-collation as a keyword.
+when adding a word to a word list, the word list will contain the word
+multiple times if it exists as more than one part of speech.  e.g. rasen.
 
-setting 'read_default_file' to a file with syntax errors causes flask to crash.
-setting 'read_default_file' to a nonexistant file at connect time doesn't do anything.  maybe this error
-is handled by reading the default config.
+fix:  add word_id column to wordlist_word and let it be nullable.  if
+a word in a wordlist does not have a word_id, then it is unbekannt.
+when we render a list of bekannte Wörter, we'll show the word from the
+word table.  for unbekannte wörter we will render the word from
+wordlist_word.
 
-fix:  have to put the collation on the join clause.
+issues:
+- deleting a word from a wordlist should not touch the word table.
+- have to figure out how to populate the word_id column in
+  wordlist_word, esp. for the duplicate words that we are trying to
+  avoid.
+- cases
+-- adding a word to a word list that isn't elsewhere in the
+   dictionary.
+-- adding a word to a word list that does already exist.
+--- if the word exists exactly once, just but its word id into
+    wordlist_word.
+--- if there are multiple choices, present a form that lets you pick one.
+
+looks like there is no way to specify the client collation using
+MySQLdb.  the connect method doesn't accept collation as a keyword.
 
 
 tags:
