@@ -29,7 +29,7 @@
 	      <table>
 		{% for r in column %}
 		<tr valign="top">
-		  <td><input type="checkbox" name="wordlist" value="{{ r.list_word }}"></td>
+		  <td><input type="checkbox" name="known_wordlist" value="{{ r.word_id }}"></td>
 		  <td>{{ r.article }}</td>
 		  <td><a href="{{ url_for('single_word', word=r.list_word, list_id=list_id) }}">{{ r.list_word }}</a></td>
 		  <td>{{ r.definition }}</td>
@@ -52,7 +52,7 @@
 	      <table>
 		{% for r in column %}
 		<tr valign="top">
-		  <td><input type="checkbox" name="wordlist" value="{{ r.list_word }}"></td>
+		  <td><input type="checkbox" name="unknown_wordlist" value="{{ r.list_word }}"></td>
 		  <td><a href="{{ url_for('add_word', list_id=list_id, word=r.list_word) }}">{{ r.list_word }}</a></td>
 		</tr>
 		{% endfor %}

@@ -8,7 +8,7 @@ import argparse
 
 filters = {
     'irregular verbs' : {
-        'join_clauses': ['inner join wordlist_word ww on ww.word =  w.word',
+        'join_clauses': ['inner join wordlist_known_word ww on ww.word_id =  w.id',
                          'inner join wordlist wl on wl.id = ww.wordlist_id'],
         'where_clauses': ["""wl.name = 'irregular verbs'"""]
     },

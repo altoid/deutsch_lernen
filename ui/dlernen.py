@@ -130,15 +130,33 @@ where id = %s
     wl_row = cursor.fetchone()
 
     # join this wordlist with the mashup view
-    sql = """
-select distinct
+    known_words_sql = """
+select
+ww.wordlist_id,
+m.word list_word,
+m.word_id,
+ww.added,
+m.attrvalue definition,
+ifnull(m2.attrvalue, '   ') article
+from wordlist_known_word ww
+left join mashup m
+on ww.word_id = m.word_id
+and m.attrkey = 'definition'
+left join mashup m2
+on ww.word_id = m2.word_id
+and m2.attrkey = 'article'
+where ww.wordlist_id = %s
+order by m.word
+"""
+
+    unknown_words_sql = """
+select
 ww.wordlist_id,
 ww.word list_word,
 ww.added,
-m.attrvalue definition,
-ifnull(m2.attrvalue, '   ') article,
-m.word dict_word
-from wordlist_word ww
+null definition,
+'   ' article
+from wordlist_unknown_word ww
 left join mashup m
 on ww.word = m.word
 and m.attrkey = 'definition'
@@ -149,15 +167,20 @@ where ww.wordlist_id = %s
 order by ww.word
 """
 
-    cursor.execute(sql, (list_id,))
-    rows = cursor.fetchall()
+    cursor.execute(known_words_sql, (list_id,))
+    known_words_rows = cursor.fetchall()
+
+    cursor.execute(unknown_words_sql, (list_id,))
+    unknown_words_rows = cursor.fetchall()
 
     known_words = []
     unknown_words = []
-    if len(rows):
-        known_words = chunkify([x for x in rows if x['dict_word']], nchunks=2)
-        unknown_words = chunkify([x for x in rows if not x['dict_word']], nchunks=2)
+    if len(known_words_rows):
+        known_words = chunkify(known_words_rows, nchunks=2)
 
+    if len(unknown_words_rows):
+        unknown_words = chunkify(unknown_words_rows, nchunks=2)
+        
     source_is_url = False
     if wl_row['source'] and wl_row['source'].startswith('http'):
         source_is_url = True
@@ -166,8 +189,8 @@ order by ww.word
                            source_is_url=source_is_url,
                            list_id=list_id,
                            known_words=known_words,
-                           known_words_count=sum(map(lambda x: len(x), known_words)),
-                           unknown_words_count=sum(map(lambda x: len(x), unknown_words)),
+                           known_words_count=len(known_words_rows),
+                           unknown_words_count=len(unknown_words_rows),
                            unknown_words=unknown_words)
                            
 
@@ -176,15 +199,23 @@ order by ww.word
 def wordlists():
     dbh, cursor = get_conn()
     sql = """
-select name, id, ifnull(c, 0) listcount
+select name, id, ifnull(lcount, 0) listcount
 from wordlist
-left join 
+left join
+(
+    select wordlist_id, sum(c) lcount
+    from
     (
-	select wordlist_id, count(*) c
-	from wordlist_word 
-	group by wordlist_id
-    ) t
-on t.wordlist_id = wordlist.id
+        select wordlist_id, count(*) c
+        from wordlist_unknown_word
+        group by wordlist_id
+        union
+        select wordlist_id, count(*) c
+        from wordlist_known_word
+        group by wordlist_id
+    ) a
+    group by wordlist_id
+) b on b.wordlist_id = wordlist.id
 order by name
 """
     cursor.execute(sql)
@@ -236,12 +267,46 @@ def edit_list():
 def add_to_list():
     dbh, cursor = get_conn()
     word = request.form['word']
-    id = request.form['list_id']
-    sql = "insert ignore into wordlist_word (wordlist_id, word) values (%s, %s)"
-    cursor.execute(sql, (id, word))
-    dbh.commit()
+    list_id = request.form['list_id']
 
-    target = url_for('wordlist', list_id=id)
+    # count the number of times word is in the word table.
+    #
+    # if it is 0, it goes into the unknown word table.
+    # if it is 1, it goes into the known word table.
+    # otherwise, present multiple choice.
+
+    sql = """
+select word, id
+from word
+where word = %s
+"""
+    cursor.execute(sql, (word,))
+    rows = cursor.fetchall()
+    count = len(rows)
+    
+    if count == 0:
+        sql = """
+insert ignore
+into wordlist_unknown_word (wordlist_id, word) 
+values (%s, %s)
+"""
+        cursor.execute(sql, (list_id, word))
+        dbh.commit()
+    elif count == 1:
+        row = rows[0]
+        word_id = row['id']
+        sql = """
+insert ignore
+into wordlist_known_word (wordlist_id, word_id)
+values (%s, %s)
+"""
+        cursor.execute(sql, (list_id, word_id))
+        dbh.commit()
+    else:
+        raise Exception("unimplemented")
+        pass
+
+    target = url_for('wordlist', list_id=list_id)
     return redirect(target)
     # todo:  validate input: word in not bad script, list id is int
 
@@ -261,24 +326,40 @@ def update_notes():
 def delete_from_list():
     dbh, cursor = get_conn()
 
-    id = request.form['list_id']
-    doomed = request.form.getlist('wordlist')
+    list_id = request.form['list_id']
+    known_deleting = request.form.getlist('known_wordlist')
     
-    if len(doomed):
-        format_list = ['%s'] * len(doomed)
+    if len(known_deleting):
+        format_list = ['%s'] * len(known_deleting)
         format_args = ', '.join(format_list)
 
         sql = """
-delete from wordlist_word
+delete from wordlist_known_word
+where wordlist_id = %%s
+and word_id in (%s)
+""" % format_args
+
+        args = [list_id] + known_deleting
+        cursor.execute(sql, args)
+        dbh.commit()
+
+    unknown_deleting = request.form.getlist('unknown_wordlist')
+    
+    if len(unknown_deleting):
+        format_list = ['%s'] * len(unknown_deleting)
+        format_args = ', '.join(format_list)
+
+        sql = """
+delete from wordlist_unknown_word
 where wordlist_id = %%s
 and word in (%s)
 """ % format_args
 
-        args = [id] + doomed
+        args = [list_id] + unknown_deleting
         cursor.execute(sql, args)
         dbh.commit()
 
-    target = url_for('wordlist', list_id=id)
+    target = url_for('wordlist', list_id=list_id)
     return redirect(target)
     # todo:  validate input: word in not bad script, list id is int
 
