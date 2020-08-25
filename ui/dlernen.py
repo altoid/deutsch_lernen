@@ -398,22 +398,21 @@ on duplicate key update value=values(value)
 
     return redirect(target)
 
-@app.route('/add_word')
-def add_word():
-    """
-    display the page to add a word.  word may be in the request, or not.
-    """
-    dbh, cursor = get_conn()
-    word = request.args.get('word')
-    word_id = request.args.get('word_id')
-    list_id = request.args.get('list_id')
 
-    # if the form contains a word, then that word does not exist in the word table.
-    # if the form contains a word_id, then it is in the word table.
-    
-    if not word and not word_id:
-        raise Exception('word and word_id both missing')
+def get_pos_info_for_form(cursor):
+    """
+    get all of the part-of-speech info needed to construct the addword form.
+    the data returned is for POS only and is not specific to any word.
 
+    returns a dictionary that looks like this:
+
+    pos_id => field_key (pos_id-attr_id-attrkey) => {
+         field_key:
+         attrkey:
+         pos_name:
+         sort_order:
+    }
+    """
     sql = """
 select
     p.id pos_id,
@@ -430,13 +429,6 @@ order by p.id, sort_order
     cursor.execute(sql)
     pos_list = cursor.fetchall()
     
-    # pos_id => field_key (pos_id-attr_id-attrkey) => {
-    #      field_key:
-    #      attrkey:
-    #      attrvalue:
-    #      sort_order:
-    # }
-
     form_dict = {}
     for pos in pos_list:
         if not form_dict.get(pos['pos_id']):
@@ -449,14 +441,17 @@ order by p.id, sort_order
             'sort_order': pos['sort_order']
         }
 
-    checked_pos = None
-    if word_id:
-        word_id = int(word_id)
-        # this is harder.  in this case we have an existing word.  we need
-        # to fill in all the attribute values for it, for all parts of
-        # speech for this word that exist in this word list.
+    return form_dict
 
-        sql = """
+
+def populate_form_dict(cursor, form_dict, word_id):
+    """
+    populate the form_dict with attribute values for the given word id
+    """
+    checked_pos = None
+    word = None
+    
+    sql = """
 select
     word_id, word, pos_id, pos_name, attribute_id, attrkey, attrvalue
 from mashup
@@ -468,15 +463,45 @@ where word_id in
 	)
 )
 """
-        cursor.execute(sql, (word_id,))
-        value_rows = cursor.fetchall()
-        for r in value_rows:
-            word = r['word']
-            k = '%s-%s-%s' % (r['pos_id'], r['attribute_id'], r['attrkey'])
-            pos_id = r['pos_id']
-            form_dict[pos_id][k]['attrvalue'] = r['attrvalue']
-            if r['word_id'] == word_id:
-                checked_pos = r['pos_id']
+    cursor.execute(sql, (word_id,))
+    value_rows = cursor.fetchall()
+    for r in value_rows:
+        word = r['word']
+        k = '%s-%s-%s' % (r['pos_id'], r['attribute_id'], r['attrkey'])
+        pos_id = r['pos_id']
+        form_dict[pos_id][k]['attrvalue'] = r['attrvalue']
+        if r['word_id'] == word_id:
+            checked_pos = r['pos_id']
+
+    return checked_pos, word
+
+
+@app.route('/add_word')
+def add_word():
+    """
+    display the page to add a word.  word may be in the request, or not.
+    """
+    dbh, cursor = get_conn()
+    word = request.args.get('word')
+    word_id = request.args.get('word_id')
+    list_id = request.args.get('list_id')
+
+    # if the form contains a word, then that word does not exist in the word table.
+    # if the form contains a word_id, then it is in the word table.
+    
+    if not word and not word_id:
+        raise Exception('word and word_id both missing')
+
+    form_dict = get_pos_info_for_form(cursor)
+    
+    checked_pos = None
+    if word_id:
+        word_id = int(word_id)
+        # this is harder.  in this case we have an existing word.  we need
+        # to fill in all the attribute values for it, for all parts of
+        # speech for this word that exist in this word list.
+
+        checked_pos, word = populate_form_dict(cursor, form_dict, word_id)
                 
     pos_infos = []
     for k in form_dict.keys():
