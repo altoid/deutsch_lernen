@@ -444,14 +444,20 @@ order by p.id, sort_order
     return form_dict
 
 
-def populate_form_dict(cursor, form_dict, word_id):
+def populate_form_dict(cursor, form_dict, **kwargs):
     """
     populate the form_dict with attribute values for the given word id
     """
-    checked_pos = None
-    word = None
+    word_id = kwargs.get('word_id')
+    word = kwargs.get('word')
+
+    if word_id and word:
+        raise Exception("can't have both word_id and word here")
     
-    sql = """
+    checked_pos = None
+
+    if word_id:
+        sql = """
 select
     word_id, word, pos_id, pos_name, attribute_id, attrkey, attrvalue
 from mashup
@@ -463,7 +469,22 @@ where word_id in
 	)
 )
 """
-    cursor.execute(sql, (word_id,))
+        cursor.execute(sql, (word_id,))
+    else:
+        sql = """
+select
+    word_id, word, pos_id, pos_name, attribute_id, attrkey, attrvalue, sort_order
+from mashup
+where word_id in
+(
+	select id from word
+	where word in (
+	      select word from word where word = %s
+	)
+)
+"""
+        cursor.execute(sql, (word,))
+        
     value_rows = cursor.fetchall()
     for r in value_rows:
         word = r['word']
@@ -501,8 +522,10 @@ def add_word():
         # to fill in all the attribute values for it, for all parts of
         # speech for this word that exist in this word list.
 
-        checked_pos, word = populate_form_dict(cursor, form_dict, word_id)
-                
+        checked_pos, word = populate_form_dict(cursor, form_dict, word_id=word_id)
+    else:
+        checked_pos, word = populate_form_dict(cursor, form_dict, word=word)
+
     pos_infos = []
     for k in form_dict.keys():
         pos_fields = [x for x in form_dict[k].values()]
