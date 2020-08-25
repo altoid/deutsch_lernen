@@ -370,8 +370,6 @@ order by p.id, sort_order
     cursor.execute(sql)
     pos_list = cursor.fetchall()
     
-    # create a dict keyed on pos.name
-
     # pos_id => field_key (pos_id-attr_id-attrkey) => {
     #      field_key:
     #      attrkey:
@@ -392,7 +390,9 @@ order by p.id, sort_order
             'sort_order': pos['sort_order']
             }
 
+    checked_pos = None
     if word_id:
+        word_id = int(word_id)
         # this is harder.  in this case we have an existing word.  we need
         # to fill in all the attribute values for it, for all parts of
         # speech for this word that exist in this word list.
@@ -416,7 +416,9 @@ where word_id in
             k = '%s-%s-%s' % (r['pos_id'], r['attribute_id'], r['attrkey'])
             pos_id = r['pos_id']
             form_dict[pos_id][k]['attrvalue'] = r['attrvalue']
-
+            if r['word_id'] == word_id:
+                checked_pos = r['pos_id']
+                
     pos_infos = []
     for k in form_dict.keys():
         pos_fields = [x for x in form_dict[k].values()]
@@ -426,10 +428,13 @@ where word_id in
             'pos_fields': l,
             'pos_name': pos_id_2_name[k]
             }
+        if checked_pos == k:
+            pos_info['checked'] = True
+            
         pos_infos.append(pos_info)
 
     pos_infos = sorted(pos_infos, cmp=lambda x,y: cmp(x['pos_id'], y['pos_id']))
-
+    
     return render_template('addword.html',
                            word=word,
                            list_id=list_id,

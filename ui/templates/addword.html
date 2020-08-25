@@ -20,7 +20,11 @@
     {% for pos_info in pos_infos %}
     <tr>
       <td>
+	{% if pos_info.get('checked') %}
+	<input type="radio" name="pos" value="{{ pos_info['pos_id'] }}" checked>
+	{% else %}
 	<input type="radio" name="pos" value="{{ pos_info['pos_id'] }}">
+	{% endif %}
       </td>
       <td>
 	{{ pos_info.pos_name }}
