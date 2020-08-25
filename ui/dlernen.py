@@ -413,7 +413,7 @@ def add_word():
     
     if not word and not word_id:
         raise Exception('word and word_id both missing')
-    
+
     sql = """
 select
     p.id pos_id,
@@ -438,17 +438,16 @@ order by p.id, sort_order
     # }
 
     form_dict = {}
-    pos_id_2_name = {}
     for pos in pos_list:
         if not form_dict.get(pos['pos_id']):
             form_dict[pos['pos_id']] = {}
         k = '%s-%s-%s' % (pos['pos_id'], pos['attribute_id'], pos['attrkey'])
-        pos_id_2_name[pos['pos_id']] = pos['pos_name']
         form_dict[pos['pos_id']][k] = {
             'field_key': k,
+            'pos_name': pos['pos_name'],
             'attrkey': pos['attrkey'],
             'sort_order': pos['sort_order']
-            }
+        }
 
     checked_pos = None
     if word_id:
@@ -486,7 +485,7 @@ where word_id in
         pos_info = {
             'pos_id': k,
             'pos_fields': l,
-            'pos_name': pos_id_2_name[k]
+            'pos_name': l[0]['pos_name']
             }
         if checked_pos == k:
             pos_info['checked'] = True
