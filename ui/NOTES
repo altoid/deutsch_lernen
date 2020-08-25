@@ -32,17 +32,11 @@ word table.  for unbekannte wörter we will render the word from
 wordlist_word.
 
 issues:
-- deleting a word from a wordlist should not touch the word table.
-- have to figure out how to populate the word_id column in
-  wordlist_word, esp. for the duplicate words that we are trying to
-  avoid.
-- cases
--- adding a word to a word list that isn't elsewhere in the
-   dictionary.
--- adding a word to a word list that does already exist.
---- if the word exists exactly once, just but its word id into
-    wordlist_word.
---- if there are multiple choices, present a form that lets you pick one.
+* adding a word - cases
+** adding a word to a word list when the word isn't in the word table. 
+** adding a word to a word list when the word is in the word table exactly once.
+** adding a word to a word list when the word is in the word table more than once.
+** adding a new part of speech for an existing word.
 
 looks like there is no way to specify the client collation using
 MySQLdb.  the connect method doesn't accept collation as a keyword.

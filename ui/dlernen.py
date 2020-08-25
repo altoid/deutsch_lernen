@@ -129,16 +129,33 @@ where id = %s
     cursor.execute(sql, (list_id,))
     wl_row = cursor.fetchone()
 
-    # join this wordlist with the mashup view
-    sql = """
-select distinct
+    known_words_sql = """
+select
+ww.wordlist_id,
+m.word list_word,
+m.word_id,
+ww.added,
+m.attrvalue definition,
+ifnull(m2.attrvalue, '   ') article
+from wordlist_known_word ww
+left join mashup m
+on ww.word_id = m.word_id
+and m.attrkey = 'definition'
+left join mashup m2
+on ww.word_id = m2.word_id
+and m2.attrkey = 'article'
+where ww.wordlist_id = %s
+order by m.word
+"""
+
+    unknown_words_sql = """
+select
 ww.wordlist_id,
 ww.word list_word,
 ww.added,
-m.attrvalue definition,
-ifnull(m2.attrvalue, '   ') article,
-m.word dict_word
-from wordlist_word ww
+null definition,
+'   ' article
+from wordlist_unknown_word ww
 left join mashup m
 on ww.word = m.word
 and m.attrkey = 'definition'
@@ -149,15 +166,20 @@ where ww.wordlist_id = %s
 order by ww.word
 """
 
-    cursor.execute(sql, (list_id,))
-    rows = cursor.fetchall()
+    cursor.execute(known_words_sql, (list_id,))
+    known_words_rows = cursor.fetchall()
+
+    cursor.execute(unknown_words_sql, (list_id,))
+    unknown_words_rows = cursor.fetchall()
 
     known_words = []
     unknown_words = []
-    if len(rows):
-        known_words = chunkify([x for x in rows if x['dict_word']], nchunks=2)
-        unknown_words = chunkify([x for x in rows if not x['dict_word']], nchunks=2)
+    if len(known_words_rows):
+        known_words = chunkify(known_words_rows, nchunks=2)
 
+    if len(unknown_words_rows):
+        unknown_words = chunkify(unknown_words_rows, nchunks=2)
+        
     source_is_url = False
     if wl_row['source'] and wl_row['source'].startswith('http'):
         source_is_url = True
@@ -166,10 +188,9 @@ order by ww.word
                            source_is_url=source_is_url,
                            list_id=list_id,
                            known_words=known_words,
-                           known_words_count=sum(map(lambda x: len(x), known_words)),
-                           unknown_words_count=sum(map(lambda x: len(x), unknown_words)),
+                           known_words_count=len(known_words_rows),
+                           unknown_words_count=len(unknown_words_rows),
                            unknown_words=unknown_words)
-                           
 
 @app.route('/')
 @app.route('/wordlists')
@@ -324,16 +345,23 @@ def add_word():
     """
     dbh, cursor = get_conn()
     word = request.args.get('word')
+    word_id = request.args.get('word_id')
     list_id = request.args.get('list_id')
 
+    # if the form contains a word, then that word does not exist in the word table.
+    # if the form contains a word_id, then it is in the word table.
+    
+    if not word and not word_id:
+        raise Exception('word and word_id both missing')
+    
     sql = """
 select
     p.id pos_id,
     p.name pos_name,
     a.id attribute_id,
-    a.attrkey
-from
-		pos p
+    a.attrkey,
+    sort_order
+from pos p
 inner join pos_form pf on pf.pos_id = p.id
 inner join attribute a on a.id = pf.attribute_id
 order by p.id, sort_order
@@ -341,22 +369,74 @@ order by p.id, sort_order
 
     cursor.execute(sql)
     pos_list = cursor.fetchall()
-
+    
     # create a dict keyed on pos.name
 
-    pos_dict = {}
+    # pos_id => field_key (pos_id-attr_id-attrkey) => {
+    #      field_key:
+    #      attrkey:
+    #      attrvalue:
+    #      sort_order:
+    # }
+
+    form_dict = {}
+    pos_id_2_name = {}
     for pos in pos_list:
-        if not pos_dict.get(pos['pos_name']):
-            pos_dict[pos['pos_name']] = []
-        pos_dict[pos['pos_name']].append(pos)
+        if not form_dict.get(pos['pos_id']):
+            form_dict[pos['pos_id']] = {}
+        k = '%s-%s-%s' % (pos['pos_id'], pos['attribute_id'], pos['attrkey'])
+        pos_id_2_name[pos['pos_id']] = pos['pos_name']
+        form_dict[pos['pos_id']][k] = {
+            'field_key': k,
+            'attrkey': pos['attrkey'],
+            'sort_order': pos['sort_order']
+            }
+
+    if word_id:
+        # this is harder.  in this case we have an existing word.  we need
+        # to fill in all the attribute values for it, for all parts of
+        # speech for this word that exist in this word list.
+
+        sql = """
+select
+    word_id, word, pos_id, pos_name, attribute_id, attrkey, attrvalue
+from mashup
+where word_id in
+(
+	select id from word
+	where word in (
+	      select word from word where id = %s
+	)
+)
+"""
+        cursor.execute(sql, (word_id,))
+        value_rows = cursor.fetchall()
+        for r in value_rows:
+            word = r['word']
+            k = '%s-%s-%s' % (r['pos_id'], r['attribute_id'], r['attrkey'])
+            pos_id = r['pos_id']
+            form_dict[pos_id][k]['attrvalue'] = r['attrvalue']
+
+    pos_infos = []
+    for k in form_dict.keys():
+        pos_fields = [x for x in form_dict[k].values()]
+        l = sorted(pos_fields, cmp=lambda x,y: cmp(x['sort_order'], y['sort_order']))
+        pos_info = {
+            'pos_id': k,
+            'pos_fields': l,
+            'pos_name': pos_id_2_name[k]
+            }
+        pos_infos.append(pos_info)
+
+    pos_infos = sorted(pos_infos, cmp=lambda x,y: cmp(x['pos_id'], y['pos_id']))
 
     return render_template('addword.html',
                            word=word,
                            list_id=list_id,
                            return_to_list_id=list_id,
-                           pos_dict=pos_dict)
-
-
+                           pos_infos=pos_infos)
+    
+    
 @app.route('/add_to_dict', methods=['POST'])
 def add_to_dict():
     # for user convenience, all the parts of speech and their attributes

@@ -17,24 +17,27 @@
   <br>
 
   <table>
-    {% for pos in pos_dict.keys() %}
+    {% for pos_info in pos_infos %}
     <tr>
       <td>
-	<input type="radio" name="pos" value="{{ pos_dict[pos][0].pos_id }}">
+	<input type="radio" name="pos" value="{{ pos_info['pos_id'] }}">
       </td>
       <td>
-	{{ pos }}
+	{{ pos_info.pos_name }}
       </td>
       <td></td>
     </tr>
-    {% for f in pos_dict[pos] %}
+    {% for f in pos_info.pos_fields %}
     <tr>
       <td></td>
       <td>
 	{{ f.attrkey }}
       </td>
       <td>
-	<input type="text" name="{{f.pos_id}}-{{f.attribute_id}}-{{f.attrkey}}" size="60">
+	<input type="text"
+	       name="{{ f.field_key }}"
+	       value="{{ f.get('attrvalue', '') }}"
+	       size="60">
       </td>
     </tr>
     {% endfor %}
