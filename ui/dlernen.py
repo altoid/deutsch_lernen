@@ -619,6 +619,21 @@ values
 """ % ', '.join(placeholders)
 
     cursor.execute(wa_sql, values)
+
+    # now remove the word from unknown words and put it into known words.
+    del_sql = """
+delete from wordlist_unknown_word
+where word = %s
+and wordlist_id = %s
+"""
+    cursor.execute(del_sql, (word, list_id))
+
+    ins_sql = """
+insert ignore into wordlist_known_word (wordlist_id, word_id)
+values (%s, %s)
+"""
+    cursor.execute(ins_sql, (list_id, word_id))
+    
     dbh.commit()
 
     if list_id:
