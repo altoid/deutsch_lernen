@@ -197,21 +197,30 @@ order by ww.word
 def wordlists():
     dbh, cursor = get_conn()
     sql = """
-select name, id, ifnull(c, 0) listcount
+select name, id, ifnull(lcount, 0) listcount
 from wordlist
-left join 
+left join
+(
+    select wordlist_id, sum(c) lcount
+    from
     (
-	select wordlist_id, count(*) c
-	from wordlist_word 
-	group by wordlist_id
-    ) t
-on t.wordlist_id = wordlist.id
+        select wordlist_id, count(*) c
+        from wordlist_unknown_word
+        group by wordlist_id
+        union
+        select wordlist_id, count(*) c
+        from wordlist_known_word
+        group by wordlist_id
+    ) a
+    group by wordlist_id
+) b on b.wordlist_id = wordlist.id
 order by name
 """
     cursor.execute(sql)
     rows = cursor.fetchall()
 
     return render_template('wordlists.html', rows=rows)
+
 
 @app.route('/addlist', methods=['POST'])
 def addlist():
@@ -257,15 +266,50 @@ def edit_list():
 def add_to_list():
     dbh, cursor = get_conn()
     word = request.form['word']
-    id = request.form['list_id']
-    sql = "insert ignore into wordlist_word (wordlist_id, word) values (%s, %s)"
-    cursor.execute(sql, (id, word))
-    dbh.commit()
+    list_id = request.form['list_id']
 
-    target = url_for('wordlist', list_id=id)
+    # count the number of times word is in the word table.
+    #
+    # if it is 0, it goes into the unknown word table.
+    # if it is 1, it goes into the known word table.
+    # otherwise, present multiple choice.
+
+    sql = """
+select word, id
+from word
+where word = %s
+"""
+    cursor.execute(sql, (word,))
+    rows = cursor.fetchall()
+    count = len(rows)
+    
+    if count == 0:
+        sql = """
+insert ignore
+into wordlist_unknown_word (wordlist_id, word) 
+values (%s, %s)
+"""
+        cursor.execute(sql, (list_id, word))
+        dbh.commit()
+    elif count == 1:
+        row = rows[0]
+        word_id = row['id']
+        sql = """
+insert ignore
+into wordlist_known_word (wordlist_id, word_id)
+values (%s, %s)
+"""
+        cursor.execute(sql, (list_id, word_id))
+        dbh.commit()
+    else:
+        raise Exception("unimplemented")
+        pass
+
+    target = url_for('wordlist', list_id=list_id)
     return redirect(target)
     # todo:  validate input: word in not bad script, list id is int
 
+    
 @app.route('/update_notes', methods=['POST'])
 def update_notes():
     dbh, cursor = get_conn()
@@ -282,24 +326,40 @@ def update_notes():
 def delete_from_list():
     dbh, cursor = get_conn()
 
-    id = request.form['list_id']
-    doomed = request.form.getlist('wordlist')
+    list_id = request.form['list_id']
+    known_deleting = request.form.getlist('known_wordlist')
     
-    if len(doomed):
-        format_list = ['%s'] * len(doomed)
+    if len(known_deleting):
+        format_list = ['%s'] * len(known_deleting)
         format_args = ', '.join(format_list)
 
         sql = """
-delete from wordlist_word
+delete from wordlist_known_word
+where wordlist_id = %%s
+and word_id in (%s)
+""" % format_args
+
+        args = [list_id] + known_deleting
+        cursor.execute(sql, args)
+        dbh.commit()
+
+    unknown_deleting = request.form.getlist('unknown_wordlist')
+    
+    if len(unknown_deleting):
+        format_list = ['%s'] * len(unknown_deleting)
+        format_args = ', '.join(format_list)
+
+        sql = """
+delete from wordlist_unknown_word
 where wordlist_id = %%s
 and word in (%s)
 """ % format_args
 
-        args = [id] + doomed
+        args = [list_id] + unknown_deleting
         cursor.execute(sql, args)
         dbh.commit()
 
-    target = url_for('wordlist', list_id=id)
+    target = url_for('wordlist', list_id=list_id)
     return redirect(target)
     # todo:  validate input: word in not bad script, list id is int
 
