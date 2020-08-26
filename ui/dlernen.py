@@ -588,8 +588,6 @@ where id = %s
 
     cursor.execute(q, (form_pos_id,))
     r = cursor.fetchone()
-    pprint(form_pos_id)
-    pprint(r)
     pos_name = r['name']
     
     word = request.form['word'].strip()
@@ -629,7 +627,6 @@ where pos_id = %s and word = %s
     values = []
     placeholders = []
     for k in request.form.keys():
-        pprint(k)
         splitkey = k.split('-')
         if len(splitkey) < 3:
             continue
@@ -652,8 +649,6 @@ on duplicate key update
 value=values(value)
 """ % ', '.join(placeholders)
 
-        pprint(wa_sql)
-        pprint(values)
         cursor.execute(wa_sql, values)
 
     # now remove the word from unknown words and put it into known words.
