@@ -22,21 +22,15 @@ adding nouns requires an article
 
 BUGS
 
-when adding a word to a word list, the word list will contain the word
-multiple times if it exists as more than one part of speech.  e.g. rasen.
-
-fix:  add word_id column to wordlist_word and let it be nullable.  if
-a word in a wordlist does not have a word_id, then it is unbekannt.
-when we render a list of bekannte Wörter, we'll show the word from the
-word table.  for unbekannte wörter we will render the word from
-wordlist_word.
-
 issues:
 * adding a word - cases
-** adding a word to a word list when the word isn't in the word table. 
+** adding a word to a word list when the word isn't in the word table.
+*** works
 ** adding a word to a word list when the word is in the word table exactly once.
+*** works
 ** adding a word to a word list when the word is in the word table more than once.
 ** adding a new part of speech for an existing word.
+*** works
 
 looks like there is no way to specify the client collation using
 MySQLdb.  the connect method doesn't accept collation as a keyword.

@@ -466,7 +466,8 @@ def populate_form_dict(cursor, form_dict, **kwargs):
     if word_id:
         sql = """
 select
-    word_id, word, pos_id, pos_name, attribute_id, attrkey, attrvalue
+    word_id, word, pos_id, pos_name, attribute_id, attrkey,
+    ifnull(attrvalue, '') attrvalue, sort_order
 from mashup
 where word_id in
 (
@@ -480,7 +481,8 @@ where word_id in
     else:
         sql = """
 select
-    word_id, word, pos_id, pos_name, attribute_id, attrkey, attrvalue, sort_order
+    word_id, word, pos_id, pos_name, attribute_id, attrkey,
+    ifnull(attrvalue, '') attrvalue, sort_order
 from mashup
 where word_id in
 (
@@ -508,9 +510,6 @@ def get_data_for_addword_form(cursor, list_id, **kwargs):
     word = kwargs.get('word')
     word_id = kwargs.get('word_id')
 
-    if word_id and word:
-        raise Exception("can't have both word_id and word here")
-    
     form_dict = get_pos_info_for_form(cursor)
     
     checked_pos = None
@@ -551,8 +550,9 @@ def add_word():
     word_id = request.args.get('word_id')
     list_id = request.args.get('list_id')
 
-    # if the form contains a word, then that word does not exist in the word table.
     # if the form contains a word_id, then it is in the word table.
+    # if the form does NOT contain a word_id, then that word does not exist
+    # in the word table.
     
     if not word and not word_id:
         raise Exception('word and word_id both missing')
@@ -588,6 +588,8 @@ where id = %s
 
     cursor.execute(q, (form_pos_id,))
     r = cursor.fetchone()
+    pprint(form_pos_id)
+    pprint(r)
     pos_name = r['name']
     
     word = request.form['word'].strip()
@@ -609,12 +611,25 @@ values (%s, %s)
     r = cursor.fetchone()
     word_id = r['last_insert_id()']
 
+    # if word_id is 0, then the insert ignore didn't do anything because the
+    # word was already there.  go get it.
+    if word_id == 0:
+        sql = """
+select id
+from word
+where pos_id = %s and word = %s
+"""
+        cursor.execute(sql, (form_pos_id, word))
+        r = cursor.fetchone()
+        word_id = r['id']
+                       
     # all of the text fields have names of the form <pos_id>-<attribute_id>-<attrkey>.
     # look for all the form fields that start with the pos_id.
 
     values = []
     placeholders = []
     for k in request.form.keys():
+        pprint(k)
         splitkey = k.split('-')
         if len(splitkey) < 3:
             continue
@@ -630,12 +645,16 @@ values (%s, %s)
 
     if len(values) > 0:
         wa_sql = """
-insert ignore into word_attribute (word_id, attribute_id, value)
+insert into word_attribute (word_id, attribute_id, value)
 values
 %s
+on duplicate key update
+value=values(value)
 """ % ', '.join(placeholders)
 
-    cursor.execute(wa_sql, values)
+        pprint(wa_sql)
+        pprint(values)
+        cursor.execute(wa_sql, values)
 
     # now remove the word from unknown words and put it into known words.
     del_sql = """

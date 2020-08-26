@@ -31,7 +31,7 @@
 		<tr valign="top">
 		  <td><input type="checkbox" name="known_wordlist" value="{{ r.word_id }}"></td>
 		  <td>{{ r.article }}</td>
-		  <td><a href="{{ url_for('add_word', word_id=r.word_id, list_id=list_id) }}">{{ r.list_word }}</a></td>
+		  <td><a href="{{ url_for('add_word', word_id=r.word_id, word=r.list_word, list_id=list_id) }}">{{ r.list_word }}</a></td>
 		  <td>{{ r.definition }}</td>
 		</tr>
 		{% endfor %}
