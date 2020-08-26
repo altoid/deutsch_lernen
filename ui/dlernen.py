@@ -291,7 +291,10 @@ values (%s, %s)
 """
         cursor.execute(sql, (list_id, word))
         dbh.commit()
-    elif count == 1:
+        target = url_for('wordlist', list_id=list_id)
+        return redirect(target)
+
+    if count == 1:
         row = rows[0]
         word_id = row['id']
         sql = """
@@ -301,12 +304,16 @@ values (%s, %s)
 """
         cursor.execute(sql, (list_id, word_id))
         dbh.commit()
-    else:
-        raise Exception("unimplemented")
-        pass
+        target = url_for('wordlist', list_id=list_id)
+        return redirect(target)
 
-    target = url_for('wordlist', list_id=list_id)
-    return redirect(target)
+    pos_infos = get_data_for_addword_form(cursor, list_id, word=word)
+    
+    return render_template('addword.html',
+                           word=word,
+                           list_id=list_id,
+                           return_to_list_id=list_id,
+                           pos_infos=pos_infos)
     # todo:  validate input: word in not bad script, list id is int
 
     
@@ -497,22 +504,13 @@ where word_id in
     return checked_pos, word
 
 
-@app.route('/add_word')
-def add_word():
-    """
-    display the page to add a word.  word may be in the request, or not.
-    """
-    dbh, cursor = get_conn()
-    word = request.args.get('word')
-    word_id = request.args.get('word_id')
-    list_id = request.args.get('list_id')
+def get_data_for_addword_form(cursor, list_id, **kwargs):
+    word = kwargs.get('word')
+    word_id = kwargs.get('word_id')
 
-    # if the form contains a word, then that word does not exist in the word table.
-    # if the form contains a word_id, then it is in the word table.
+    if word_id and word:
+        raise Exception("can't have both word_id and word here")
     
-    if not word and not word_id:
-        raise Exception('word and word_id both missing')
-
     form_dict = get_pos_info_for_form(cursor)
     
     checked_pos = None
@@ -541,6 +539,25 @@ def add_word():
         pos_infos.append(pos_info)
 
     pos_infos = sorted(pos_infos, cmp=lambda x,y: cmp(x['pos_id'], y['pos_id']))
+    return pos_infos
+
+@app.route('/add_word')
+def add_word():
+    """
+    display the page to add a word.  word may be in the request, or not.
+    """
+    dbh, cursor = get_conn()
+    word = request.args.get('word')
+    word_id = request.args.get('word_id')
+    list_id = request.args.get('list_id')
+
+    # if the form contains a word, then that word does not exist in the word table.
+    # if the form contains a word_id, then it is in the word table.
+    
+    if not word and not word_id:
+        raise Exception('word and word_id both missing')
+
+    pos_infos = get_data_for_addword_form(cursor, list_id, word=word, word_id=word_id)
     
     return render_template('addword.html',
                            word=word,
@@ -582,7 +599,7 @@ where id = %s
 
     list_id = request.form.get('list_id')
     w_sql = """
-insert into word (pos_id, word)
+insert ignore into word (pos_id, word)
 values (%s, %s)
 """
     cursor.execute(w_sql, (form_pos_id, word))
@@ -613,7 +630,7 @@ values (%s, %s)
 
     if len(values) > 0:
         wa_sql = """
-insert into word_attribute (word_id, attribute_id, value)
+insert ignore into word_attribute (word_id, attribute_id, value)
 values
 %s
 """ % ', '.join(placeholders)
