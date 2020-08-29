@@ -72,6 +72,8 @@
 </form>
 <form action="/update_notes" method="post">
   <h2>Notes<h2>
+      <input type="submit" value="Update Notes"></input>
+      <br>
       <textarea name="notes" rows="50" cols="100">{{ wl_row.notes }}</textarea>
       <br>
       <input type="hidden" value="{{wl_row.id}}" name="list_id"></input>
