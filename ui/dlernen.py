@@ -48,60 +48,6 @@ def chunkify(arr, **kwargs):
     return result
 
 
-@app.route('/word/<string:word>')
-def single_word(word):
-    dbh, cursor = get_conn()
-
-    list_id = request.args.get('list_id')
-    sql = """
-select
-pos_name,
-word_id,
-word,
-attribute_id,
-attrkey,
-ifnull(attrvalue, '') attrvalue
-from mashup
-where word = %s
-order by word_id, sort_order
-"""
-    cursor.execute(sql, (word,))
-    rows = cursor.fetchall()
-    dict_result = {}
-    for r in rows:
-        if not dict_result.get(r['word_id']):
-            dict_result[r['word_id']] = []
-        dict_result[r['word_id']].append(r)
-        
-    return render_template('word.html', dict_result=dict_result, list_id=list_id, return_to_list_id=list_id)
-
-@app.route('/word/<int:word_id>')
-def single_word_id(word_id):
-    dbh, cursor = get_conn()
-
-    list_id = request.args.get('list_id')
-    sql = """
-select
-pos_name,
-word_id,
-word,
-attribute_id,
-attrkey,
-ifnull(attrvalue, '') attrvalue
-from mashup
-where word_id = %s
-order by word_id, sort_order
-"""
-    cursor.execute(sql, (word_id,))
-    rows = cursor.fetchall()
-    dict_result = {}
-    for r in rows:
-        if not dict_result.get(r['word_id']):
-            dict_result[r['word_id']] = []
-        dict_result[r['word_id']].append(r)
-        
-    return render_template('word.html', dict_result=dict_result, list_id=list_id)
-
 @app.route('/list_details/<int:list_id>')
 def list_details(list_id):
     dbh, cursor = get_conn()
