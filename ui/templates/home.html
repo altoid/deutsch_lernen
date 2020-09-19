@@ -2,8 +2,9 @@
 	  "http://www.w3.org/TR/html4/strict.dtd">
 <html>
   <head>
-	{% block title %}
-	{% endblock %}
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    {% block title %}
+    {% endblock %}
   </head>
   <body>
 	<table>
