@@ -30,6 +30,7 @@ def get_article(db):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-l', '--listid',
+                        nargs='+',
                         type=int,
                         help='id of word list to use')
     cl_args = parser.parse_args()
@@ -37,7 +38,8 @@ if __name__ == '__main__':
     q = None
     args = None
     if cl_args.listid:
-        subquery = """select w.id word_id from wordlist_known_word ww inner join word w on w.id = ww.word_id where ww.wordlist_id = %s""" % cl_args.listid
+        list_ids = ','.join(map(lambda x: str(x), cl_args.listid))
+        subquery = """select w.id word_id from wordlist_known_word ww inner join word w on w.id = ww.word_id where ww.wordlist_id in (%s)""" % list_ids
         filter = ["    inner join (%s) t on w.id = t.word_id" % subquery]
     else:
         filter = []
