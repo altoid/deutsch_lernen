@@ -167,7 +167,7 @@ def update_word(db, c, word_attributes):
             continue
 
         prompt = "--[%s]--> [%s]:" % (r['attrkey'], '' if r['value'] is None else r['value'])
-
+        prompt = prompt.encode('utf-8')
         value = raw_input(prompt).strip().lower()
         value = unicode(value, 'utf8')
         if len(value) > 0 and r['value'] != value:
