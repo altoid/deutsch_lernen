@@ -8,8 +8,11 @@
 <h1>New Word</h1>
 {% endif %}
 <form action="/add_to_dict" method="post">
-  {% if word %}
+  {% if list_id %}
   <input type="hidden" name="list_id" value="{{list_id}}">
+  {% endif %}
+
+  {% if word %}
   <input type="text" name="word" value="{{word}}">
   {% else %}
   <input type="text" name="word">

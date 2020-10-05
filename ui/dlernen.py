@@ -253,7 +253,7 @@ values (%s, %s)
         target = url_for('wordlist', list_id=list_id)
         return redirect(target)
 
-    pos_infos = get_data_for_addword_form(cursor, list_id, word=word)
+    pos_infos = get_data_for_addword_form(cursor, word=word)
     
     return render_template('addword.html',
                            word=word,
@@ -452,7 +452,7 @@ where word_id in
     return checked_pos, word
 
 
-def get_data_for_addword_form(cursor, list_id, **kwargs):
+def get_data_for_addword_form(cursor, **kwargs):
     word = kwargs.get('word')
     word_id = kwargs.get('word_id')
 
@@ -494,16 +494,13 @@ def add_word():
     dbh, cursor = get_conn()
     word = request.args.get('word')
     word_id = request.args.get('word_id')
-    list_id = request.args.get('list_id')
+    list_id = request.args.get('list_id', 0)
 
     # if the form contains a word_id, then it is in the word table.
     # if the form does NOT contain a word_id, then that word does not exist
     # in the word table.
     
-    if not word and not word_id:
-        raise Exception('word and word_id both missing')
-
-    pos_infos = get_data_for_addword_form(cursor, list_id, word=word, word_id=word_id)
+    pos_infos = get_data_for_addword_form(cursor, word=word, word_id=word_id)
     
     return render_template('addword.html',
                            word=word,
@@ -598,18 +595,19 @@ value=values(value)
         cursor.execute(wa_sql, values)
 
     # now remove the word from unknown words and put it into known words.
-    del_sql = """
+    if list_id:
+        del_sql = """
 delete from wordlist_unknown_word
 where word = %s
 and wordlist_id = %s
 """
-    cursor.execute(del_sql, (word, list_id))
+        cursor.execute(del_sql, (word, list_id))
 
-    ins_sql = """
+        ins_sql = """
 insert ignore into wordlist_known_word (wordlist_id, word_id)
 values (%s, %s)
 """
-    cursor.execute(ins_sql, (list_id, word_id))
+        cursor.execute(ins_sql, (list_id, word_id))
     
     dbh.commit()
 
