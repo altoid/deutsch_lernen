@@ -52,7 +52,8 @@ def chunkify(arr, **kwargs):
 def list_details(list_id):
     dbh, cursor = get_conn()
     sql = """
-select * from wordlist
+select 
+id, name, source, ifnull(code, '') code from wordlist
 where id = %s
 """
     cursor.execute(sql, (list_id,))
@@ -200,9 +201,10 @@ def edit_list():
     dbh, cursor = get_conn()
     name = request.form['name']
     source = request.form['source']
+    code = request.form['code']
     id = request.form['list_id']
-    sql = "update wordlist set name = %s, source = %s where id = %s"
-    cursor.execute(sql, (name, source, id))
+    sql = "update wordlist set name = %s, source = %s, code = %s where id = %s"
+    cursor.execute(sql, (name, source, code, id))
     dbh.commit()
 
     target = url_for('wordlist', list_id=id)
