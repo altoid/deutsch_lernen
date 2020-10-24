@@ -9,6 +9,7 @@ from pprint import pprint
 
 logging.basicConfig(level=logging.INFO)
 
+
 def test_connection(db, c):
     try:
         c.execute("select 1")
@@ -18,7 +19,8 @@ def test_connection(db, c):
         c = db.cursor(dictionary=True, buffered=True)
 
     return db, c
-    
+
+
 if __name__ == '__main__':
     db = dsn.getConnection()
     c = db.cursor(dictionary=True, buffered=True)
@@ -29,7 +31,7 @@ from pos
 """
     c.execute(q)
     results = c.fetchall()
-    
+
     q = """
 select id, name
 from pos
@@ -38,32 +40,32 @@ from pos
     results = c.fetchall() + results
     results = sorted(results, key=lambda x: x['id'])
 
-    menu = {x['id']:x['name'] for x in results}
+    menu = {x['id']: x['name'] for x in results}
 
     done = False
-    
+
     while not done:
-    
+
         for k, v in menu.iteritems():
             print k, v
-    
+
         while True:
             pos_id = raw_input('---> ').strip()
-    
+
             try:
                 pos_id = int(pos_id)
             except ValueError:
                 continue
-    
+
             if pos_id in menu.keys():
                 break
-    
+
         if 'exit' == menu[pos_id]:
             break
 
         try:
             db, c = test_connection(db, c)
-    
+
             if menu[pos_id] == 'Noun':
                 done = noun.prompt_noun(db, c)
             else:
@@ -78,8 +80,8 @@ from pos
                 done = noun.prompt_noun(db, c)
             else:
                 done = common.prompt_word(db, c, menu[pos_id])
-    
+
     print 'auf wiedersehen'
-        
+
     c.close()
     db.close()

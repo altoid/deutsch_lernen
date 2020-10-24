@@ -14,38 +14,37 @@ def get_max_width(word_attributes):
 
 
 def add_or_update_word(db, c, word, pos_id):
-
     try:
         # start transaction
         c.execute("start transaction")
 
-        # insert the word to get a word id
         q = """
-        insert ignore into word (pos_id, word) values (%s, '%s')
+        select id word_id
+        from word 
+        where pos_id = %s and word = '%s'
         """ % (pos_id, word)
-        c.execute(q)
 
-        # fetch the word id
-        q = """
-        select last_insert_id() as word_id
-        """
         c.execute(q)
-
         row = c.fetchone()
+        if not row:
+            # word doesn't exist
+
+            # insert the word to get a word id
+            q = """
+            insert ignore into word (pos_id, word) values (%s, '%s')
+            """ % (pos_id, word)
+            c.execute(q)
+
+            # fetch the word id
+            q = """
+            select last_insert_id() as word_id
+            """
+            c.execute(q)
+
+            row = c.fetchone()
+
         word_id = row['word_id']
 
-        if word_id == 0:
-            # no rows inserted, which means the word is already there.
-            q = """
-            select id word_id
-            from word 
-            where pos_id = %s and word = '%s'
-            """ % (pos_id, word)
-
-            c.execute(q)
-            row = c.fetchone()
-            word_id = row['word_id']
-            
         word_attributes = get_word_attributes(c, pos_id, word_id)
         max_width = get_max_width(word_attributes)
 
@@ -80,7 +79,7 @@ def add_or_update_word(db, c, word, pos_id):
     except Exception as e:
         db.rollback()
         raise
-        
+
 
 def get_word_attributes(c, pos_id, word_id):
     q = """
@@ -95,7 +94,7 @@ def get_word_attributes(c, pos_id, word_id):
     """ % {
         'pos_id': pos_id,
         'word_id': word_id,
-        }
+    }
 
     c.execute(q)
 
@@ -105,11 +104,12 @@ def get_word_attributes(c, pos_id, word_id):
 
     return word_attributes
 
+
 def prompt_word(db, c, pos_id):
     input_string = raw_input('--[word]--> ').strip().lower()
 
     # TODO:  handle the case where multiple words are given as input - treat as error
-    
+
     if len(input_string) == 0:
         return True
 

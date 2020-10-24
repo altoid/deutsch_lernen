@@ -4,13 +4,14 @@ from pprint import pprint
 
 articles = ['der', 'die', 'das']
 
+
 # prompt for article and word
 def get_word_with_article(db, dasWort):
     '''
     returns word and the article in a dictionary,
     keys are 'article' and 'word'
     '''
-    
+
     stuff = dasWort.split()
 
     if len(stuff) != 2:
@@ -22,17 +23,17 @@ def get_word_with_article(db, dasWort):
     article = stuff[0]
     noun = unicode(stuff[1], 'utf8')
 
-    r = {'article' : article,
-         'word' : noun}
+    r = {'article': article,
+         'word': noun}
 
     return r
+
 
 # noundict is the noun info typed in.
 # look for it.  if it's not in the database,
 # return empty dict.  if it is in the 
 # database, return list of dicts with all the attribute values.
 def get_noun_info(c, noundict):
-
     # find the word id of the noun whose word and article are given.
     # using that word id, find all the values for the attributes of that
     # noun.
@@ -74,8 +75,8 @@ where
 
     return r
 
-def insert_word(db, c, input_word):
 
+def insert_word(db, c, input_word):
     # fetch all the attributes for nouns
     q = """
 select
@@ -89,7 +90,7 @@ where
 """
     c.execute(q)
     word_attributes = c.fetchall()
-    
+
     pos_id = word_attributes[0]['pos_id']
 
     input_values = []
@@ -101,7 +102,7 @@ where
             d['value'] = input_word['article']
             d['attribute_id'] = r['attribute_id']
         else:
-            value = raw_input( "--[%s]--> " % (r['attrkey'])).strip().lower()
+            value = raw_input("--[%s]--> " % (r['attrkey'])).strip().lower()
             value = unicode(value, 'utf8')
             if len(value) > 0:
                 if r['attrkey'] == 'plural':
@@ -152,7 +153,6 @@ values
 
 
 def update_word(db, c, word_attributes):
-
     tuples = []
 
     # get the word id - we know it's associated with the article
@@ -173,10 +173,10 @@ def update_word(db, c, word_attributes):
         if len(value) > 0 and r['value'] != value:
             if r['attrkey'] == 'plural':
                 value = value.capitalize()
-                
+
             tmptuple = "(%s, %s, '%s')" % (r['attribute_id'], word_id, value)
             tuples.append(tmptuple)
-            
+
     if len(tuples) == 0:
         print "no new data, returning"
         return
@@ -192,8 +192,8 @@ on duplicate key update value=values(value)
     c.execute(query)
     db.commit()
 
-def prompt_noun(db, c):
 
+def prompt_noun(db, c):
     while True:
         input_string = raw_input('--[noun with article]--> ').strip().lower()
 
@@ -207,7 +207,7 @@ def prompt_noun(db, c):
         print 'falsches input'
 
     word_attributes = get_noun_info(c, input_word)
-    
+
     if len(word_attributes) == 0:
         insert_word(db, c, input_word)
     else:
