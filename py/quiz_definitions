@@ -73,10 +73,13 @@ if __name__ == '__main__':
         word_id_list = ','.join(map(lambda x: str(x), word_ids))
         subquery = """
         select w.id word_id 
-        from word
+        from word w
         where id in (%s)""" % word_id_list
-
-    q = quiz_sql.build_quiz_query('definitions')
+        filter_clause = ["    inner join (%s) t on w.id = t.word_id" % subquery]
+    else:
+        filter_clause = []
+    q = quiz_sql.build_quiz_query('definitions', join_clauses=filter_clause)
+    
     done = False
     counter = 0
     while not done:
