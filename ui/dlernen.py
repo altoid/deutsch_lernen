@@ -140,14 +140,14 @@ where id = %s
     if code:
         words_sql = """
 select
-%s wordlist_id,
+%%s wordlist_id,
 m.word list_word,
 s.word_id,
 m.attrvalue definition,
 ifnull(m2.attrvalue, '   ') article
 from
 (
-select id word_id from word where date(added) = '2015-03-22'
+%s
 ) s
 left join mashup m
 on s.word_id = m.word_id
@@ -156,7 +156,7 @@ left join mashup m2
 on s.word_id = m2.word_id
 and m2.attrkey = 'article'
 order by m.word
-        """
+        """ % code
 
         cursor.execute(words_sql, (list_id,))
         words_rows = cursor.fetchall()
