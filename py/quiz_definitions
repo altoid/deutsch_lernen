@@ -4,6 +4,7 @@ import sys
 import quiz_sql
 import dsn
 import argparse
+from pprint import pprint
 
 
 def get_article(db):
@@ -27,7 +28,35 @@ def get_article(db):
     return article
 
 
+def word_ids_from_wordlist(c, list_id):
+    """
+    return a list of the word ids in the given word list.
+    """
+    sql = """
+    select ifnull(code, '') code
+    from wordlist
+    where id = %s
+    """
+    c.execute(sql, (list_id,))
+    row = c.fetchone()
+    code = row['code']
+    if code:
+        c.execute(code)
+    else:
+        sql2 = """
+        select word_id
+        from wordlist_known_word
+        where wordlist_id = %s
+        """
+        c.execute(sql2, (list_id,))
+    rows = c.fetchall()
+    return map(lambda x: x['word_id'], rows)
+
+
 if __name__ == '__main__':
+    db = dsn.getConnection()
+    c = db.cursor(dictionary=True)
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-l', '--listid',
                         nargs='+',
@@ -38,16 +67,16 @@ if __name__ == '__main__':
     q = None
     args = None
     if cl_args.listid:
-        list_ids = ','.join(map(lambda x: str(x), cl_args.listid))
-        subquery = """select w.id word_id from wordlist_known_word ww inner join word w on w.id = ww.word_id where ww.wordlist_id in (%s)""" % list_ids
-        filter = ["    inner join (%s) t on w.id = t.word_id" % subquery]
-    else:
-        filter = []
-        
-    q = quiz_sql.build_quiz_query('definitions', join_clauses=filter)
-    db = dsn.getConnection()
+        mega = map(lambda x: word_ids_from_wordlist(c, x), cl_args.listid)
+        flattened = reduce(lambda x, y: x + y, mega, [])
+        word_ids = list(set(flattened))
+        word_id_list = ','.join(map(lambda x: str(x), word_ids))
+        subquery = """
+        select w.id word_id 
+        from word
+        where id in (%s)""" % word_id_list
 
-    c = db.cursor(dictionary=True)
+    q = quiz_sql.build_quiz_query('definitions')
     done = False
     counter = 0
     while not done:

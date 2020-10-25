@@ -41,9 +41,9 @@ join_clauses = [
     "inner join word w on qstruct.pos_id = w.pos_id",
     "inner join word_attribute wa on w.id = wa.word_id and wa.attribute_id = qstruct.attribute_id",
     """left join quiz_score qscore on
-	     w.id = qscore.word_id
-	     and qstruct.quiz_id = qscore.quiz_id
-	     and qstruct.attribute_id = qscore.attribute_id"""
+             w.id = qscore.word_id
+             and qstruct.quiz_id = qscore.quiz_id
+             and qstruct.attribute_id = qscore.attribute_id"""
 ]
 
 never_tested_filter = ["""qscore.word_id is null"""]
@@ -60,29 +60,29 @@ next_item_query = """
 -- need quiz_id, word_id, attribute_id from other tables.  these are the PK of quiz_score.
 
 
-	-- never tested
+        -- never tested
 select 
        word, value, quiz_id, word_id, attribute_id,
        ifnull(presentation_count, 0) presentation_count,
        ifnull(correct_count, 0) correct_count,
        'never_tested' method
 from
-	(
-	select
-		w.word,
-		wa.value, 
-		q.id quiz_id,
-		w.id word_id,
-		wa.attribute_id,
-		qscore.presentation_count,
-		qscore.correct_count
-	from quiz q
+        (
+        select
+                w.word,
+                wa.value, 
+                q.id quiz_id,
+                w.id word_id,
+                wa.attribute_id,
+                qscore.presentation_count,
+                qscore.correct_count
+        from quiz q
         {join_clauses}
-	where
+        where
                 {never_tested_filter}
         order by rand()
-	limit 2
-	) never_tested
+        limit 2
+        ) never_tested
 
 union
 
@@ -93,24 +93,24 @@ select
        ifnull(correct_count, 0) correct_count,
        'crappy_score' method
 from
-	(	
-	select
-		w.word,
-		wa.value,
-		q.id quiz_id,
-		w.id word_id,
-		wa.attribute_id,
-		qscore.presentation_count,
-		qscore.correct_count
-	from quiz q
+        (       
+        select
+                w.word,
+                wa.value,
+                q.id quiz_id,
+                w.id word_id,
+                wa.attribute_id,
+                qscore.presentation_count,
+                qscore.correct_count
+        from quiz q
         {join_clauses}
-	where
+        where
               {crappy_score_filter}
-	order by
-	      presentation_count,
-	      (correct_count / presentation_count)
-	limit 2
-	) crappy_score
+        order by
+              presentation_count,
+              (correct_count / presentation_count)
+        limit 2
+        ) crappy_score
 
 union
 
@@ -121,24 +121,24 @@ select
        ifnull(correct_count, 0) correct_count,
        'too_few_attempts' method
 from
-	(	
-	select
-		w.word,
-		wa.value,
-		q.id quiz_id,
-		w.id word_id,
-		wa.attribute_id,
-		qscore.presentation_count,
-		qscore.correct_count
-	from quiz q
+        (       
+        select
+                w.word,
+                wa.value,
+                q.id quiz_id,
+                w.id word_id,
+                wa.attribute_id,
+                qscore.presentation_count,
+                qscore.correct_count
+        from quiz q
         {join_clauses}
-	where
+        where
               {too_few_attempts_filter}
-	order by
-	      presentation_count,
-	      (correct_count / presentation_count)
-	limit 2
-	) too_few_attempts
+        order by
+              presentation_count,
+              (correct_count / presentation_count)
+        limit 2
+        ) too_few_attempts
 
 union
 
@@ -149,34 +149,35 @@ select
        ifnull(correct_count, 0) correct_count,
        'been_too_long' method
 from
-	(
-	select
-		w.word,
-		wa.value,
-		q.id quiz_id,
-		w.id word_id,
-		wa.attribute_id,
-		qscore.presentation_count,
-		qscore.correct_count
-	from quiz q
+        (
+        select
+                w.word,
+                wa.value,
+                q.id quiz_id,
+                w.id word_id,
+                wa.attribute_id,
+                qscore.presentation_count,
+                qscore.correct_count
+        from quiz q
         {join_clauses}
-	where
+        where
               {been_too_long_filter}
-	order by
-	      last_presentation
-	limit 2
-	) been_too_long
+        order by
+              last_presentation
+        limit 2
+        ) been_too_long
 
 order by rand()
 limit 1
 """
+
 
 def build_quiz_query(quizkey, **kwargs):
     global never_tested_filter
     global crappy_score_filter
     global been_too_long_filter
     global too_few_attempts_filter
-    
+
     join_clauses_arg = kwargs.get('join_clauses', [])
     where_clauses = kwargs.get('where_clauses', [])
 
@@ -184,7 +185,7 @@ def build_quiz_query(quizkey, **kwargs):
     j_clauses = ' '.join(j_clauses)
     d1 = {
         'quizkey': quizkey,
-        }
+    }
 
     qkey = "q.quizkey = '{quizkey}'".format(**d1)
     never_tested_filter += [qkey] + where_clauses
@@ -198,6 +199,6 @@ def build_quiz_query(quizkey, **kwargs):
         'crappy_score_filter': ' AND '.join(crappy_score_filter),
         'been_too_long_filter': ' AND '.join(been_too_long_filter),
         'too_few_attempts_filter': ' AND '.join(too_few_attempts_filter),
-        }
+    }
 
     return next_item_query.format(**d2)
