@@ -3,6 +3,9 @@
 {% block body %}
 {{ super() }}
 <h1>Word Lists</h1>
+<br>
+<a href="{{ url_for('add_word') }}">Add a word</a>
+<br>
 <form action="/addlist" method="post">
   <table>
 	<tr>
