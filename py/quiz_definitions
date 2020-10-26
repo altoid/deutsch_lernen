@@ -84,7 +84,12 @@ if __name__ == '__main__':
     counter = 0
     while not done:
         c.execute(q)
-        for row in c.fetchall():
+        rows = c.fetchall()
+        if not rows:
+            print "no more worlds to conquer"
+            break
+        
+        for row in rows:
             # if the word is a noun, get its article.  if it's not a noun, this query retrieves nothing.
             article = get_article(db)
 
