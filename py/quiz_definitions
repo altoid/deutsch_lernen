@@ -58,11 +58,12 @@ if __name__ == '__main__':
     c = db.cursor(dictionary=True)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-l', '--listid',
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-l', '--listid',
                         nargs='+',
                         type=int,
                         help='id of word list to use')
-    parser.add_argument('-r', '--random',
+    group.add_argument('-r', '--random',
                         action='store_true',
                         help='pick 10 words at random and quiz them')
     cl_args = parser.parse_args()
