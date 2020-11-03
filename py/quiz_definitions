@@ -106,7 +106,7 @@ if __name__ == '__main__':
         c.execute(q)
         rows = c.fetchall()
         if not rows:
-            print "es gibt kein Welten mehr zu erobern"
+            print "es gibt keine Welten mehr zu erobern"
             break
         
         for row in rows:
