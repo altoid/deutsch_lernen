@@ -102,7 +102,6 @@ n most recent
         from word w
         where id in (%s)""" % word_id_list
 
-        print subquery
         filter_clause = ["    inner join (%s) t on w.id = t.word_id" % subquery]
     elif cl_args.random:
         n_to_pick = cl_args.nwords if cl_args.nwords else 10
