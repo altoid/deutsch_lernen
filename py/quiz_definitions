@@ -5,7 +5,7 @@ import quiz_sql
 import dsn
 import argparse
 from pprint import pprint
-
+import random
 
 def get_article(db):
     article_cursor = db.cursor(dictionary=True)
@@ -38,6 +38,7 @@ def word_ids_from_wordlist(c, list_id):
     where id = %s
     """
     c.execute(sql, (list_id,))
+
     row = c.fetchone()
     code = row['code']
     if code:
@@ -57,36 +58,76 @@ if __name__ == '__main__':
     db = dsn.getConnection()
     c = db.cursor(dictionary=True)
 
-    parser = argparse.ArgumentParser()
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('-l', '--listid',
+    parser = argparse.ArgumentParser(description="""
+quiz_definitions (no args)
+all words
+
+quiz_definitions -l <list_id> <list_id> ...
+all from a list
+
+quiz_definitions -n <x> -r
+n randomly chosen
+
+quiz_definitions -n <x> -l <list_id> <list_id> ...
+n randomly chosen from lists
+
+quiz_definitions -n <x>
+n most recent
+""")
+
+    parser.add_argument('-l', '--listid',
                         nargs='+',
                         type=int,
                         help='id of word list to use')
-    group.add_argument('-r', '--random',
+    parser.add_argument('-n', '--nwords',
+                        type=int,
+                        help='quiz the n most recently added words')
+    parser.add_argument('-r', '--random',
                         action='store_true',
-                        help='pick 10 words at random and quiz them')
+                        help='pick words at random and quiz them.  defaults to 10 words if -n not given')
     cl_args = parser.parse_args()
 
     q = None
     args = None
     if cl_args.listid:
+        
         mega = map(lambda x: word_ids_from_wordlist(c, x), cl_args.listid)
         flattened = reduce(lambda x, y: x + y, mega, [])
         word_ids = list(set(flattened))
+        if cl_args.nwords:
+            word_ids = random.sample(word_ids, cl_args.nwords)
+        word_id_list = ','.join(map(lambda x: str(x), word_ids))
+        subquery = """
+        select w.id word_id 
+        from word w
+        where id in (%s)""" % word_id_list
+
+        print subquery
+        filter_clause = ["    inner join (%s) t on w.id = t.word_id" % subquery]
+    elif cl_args.random:
+        n_to_pick = cl_args.nwords if cl_args.nwords else 10
+        subquery = """
+        select w.id word_id
+        from word w
+        order by rand()
+        limit %s
+""" % n_to_pick
+        c.execute(subquery)
+        rows = c.fetchall()
+        word_ids = [x['word_id'] for x in rows]
         word_id_list = ','.join(map(lambda x: str(x), word_ids))
         subquery = """
         select w.id word_id 
         from word w
         where id in (%s)""" % word_id_list
         filter_clause = ["    inner join (%s) t on w.id = t.word_id" % subquery]
-    elif cl_args.random:
+    elif cl_args.nwords:
         subquery = """
         select w.id word_id
         from word w
-        order by rand()
-        limit 10
-"""
+        order by w.id desc
+        limit %s
+""" % cl_args.nwords
         c.execute(subquery)
         rows = c.fetchall()
         word_ids = [x['word_id'] for x in rows]
