@@ -58,7 +58,8 @@ if __name__ == '__main__':
     db = dsn.getConnection()
     c = db.cursor(dictionary=True)
 
-    parser = argparse.ArgumentParser(description="""
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
+                                     description="""
 quiz_definitions (no args)
 all words
 
