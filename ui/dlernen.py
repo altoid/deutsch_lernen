@@ -122,6 +122,7 @@ where id = %s
 
 @app.route('/wordlist/<int:list_id>')
 def wordlist(list_id):
+    nchunks = request.args.get('nchunks', 2, type=int)
     dbh, cursor = get_conn()
     sql = """
 select
@@ -220,10 +221,10 @@ order by m.word
         known_words = []
         unknown_words = []
         if len(known_words_rows):
-            known_words = chunkify(known_words_rows, nchunks=2)
+            known_words = chunkify(known_words_rows, nchunks=nchunks)
 
         if len(unknown_words_rows):
-            unknown_words = chunkify(unknown_words_rows, nchunks=2)
+            unknown_words = chunkify(unknown_words_rows, nchunks=nchunks)
 
         source_is_url = False
         if wl_row['source'] and wl_row['source'].startswith('http'):
