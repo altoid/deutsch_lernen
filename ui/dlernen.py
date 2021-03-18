@@ -122,7 +122,7 @@ where id = %s
 
 @app.route('/wordlist/<int:list_id>')
 def wordlist(list_id):
-    nchunks = request.args.get('nchunks', 2, type=int)
+    nchunks = request.args.get('nchunks', app.config['NCHUNKS'], type=int)
     dbh, cursor = get_conn()
     sql = """
 select
