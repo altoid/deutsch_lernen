@@ -8,3 +8,4 @@ ui/config.py
 **/*.BAK
 **/x
 sql/*.sql
+**/.idea

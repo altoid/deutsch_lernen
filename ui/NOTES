@@ -22,19 +22,9 @@ adding nouns requires an article
 
 BUGS
 
-issues:
-* adding a word - cases
-** adding a word to a word list when the word isn't in the word table.
-*** works
-** adding a word to a word list when the word is in the word table exactly once.
-*** works
-** adding a word to a word list when the word is in the word table more than once.
-** adding a new part of speech for an existing word.
-*** works
+list of word lists shows 0 as count for smart word lists
 
-looks like there is no way to specify the client collation using
-MySQLdb.  the connect method doesn't accept collation as a keyword.
-
+FEATURES
 
 tags:
 

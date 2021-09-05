@@ -1,0 +1,30 @@
+quiz_definitions
+
+quiz_definitions (no args)
+all words
+
+quiz_definitions -l <list_id>
+all from a list
+
+quiz_definitions -n <x> -r
+n randomly chosen
+
+quiz_definitions -n <x> -l <list_id>
+n randomly chosen from list
+
+quiz_definitions -n <x>
+n most recent
+
+
+if lists:
+   if nwords:
+   else:
+elif random:
+   if nwords:
+   else:
+	pick 10
+elif nwords:
+   pick n most recent
+else:
+   quiz everything
+   
