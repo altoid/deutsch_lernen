@@ -62,7 +62,7 @@ word,
 attribute_id,
 attrkey,
 ifnull(attrvalue, '') attrvalue
-from mashup
+from mashup_v
 where word = %s
 order by word_id, sort_order
 """
@@ -90,7 +90,7 @@ word,
 attribute_id,
 attrkey,
 ifnull(attrvalue, '') attrvalue
-from mashup
+from mashup_v
 where word_id = %s
 order by word_id, sort_order
 """
@@ -150,10 +150,10 @@ from
 (
 %s
 ) s
-left join mashup m
+left join mashup_v m
 on s.word_id = m.word_id
 and m.attrkey = 'definition'
-left join mashup m2
+left join mashup_v m2
 on s.word_id = m2.word_id
 and m2.attrkey = 'article'
 order by m.word
@@ -185,10 +185,10 @@ order by m.word
     m.attrvalue definition,
     ifnull(m2.attrvalue, '   ') article
     from wordlist_known_word ww
-    left join mashup m
+    left join mashup_v m
     on ww.word_id = m.word_id
     and m.attrkey = 'definition'
-    left join mashup m2
+    left join mashup_v m2
     on ww.word_id = m2.word_id
     and m2.attrkey = 'article'
     where ww.wordlist_id = %s
@@ -202,10 +202,10 @@ order by m.word
     null definition,
     '   ' article
     from wordlist_unknown_word ww
-    left join mashup m
+    left join mashup_v m
     on ww.word = m.word
     and m.attrkey = 'definition'
-    left join mashup m2
+    left join mashup_v m2
     on ww.word = m2.word
     and m2.attrkey = 'article'
     where ww.wordlist_id = %s
@@ -520,7 +520,7 @@ def populate_form_dict(cursor, form_dict, **kwargs):
 select
     word_id, word, pos_id, pos_name, attribute_id, attrkey,
     ifnull(attrvalue, '') attrvalue, sort_order
-from mashup
+from mashup_v
 where word_id in
 (
 	select id from word
@@ -535,7 +535,7 @@ where word_id in
 select
     word_id, word, pos_id, pos_name, attribute_id, attrkey,
     ifnull(attrvalue, '') attrvalue, sort_order
-from mashup
+from mashup_v
 where word_id in
 (
 	select id from word
