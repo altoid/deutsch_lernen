@@ -21,19 +21,19 @@ def add_or_update_word(db, c, word, pos_id):
         q = """
         select id word_id
         from word 
-        where pos_id = %s and word = '%s'
-        """ % (pos_id, word)
+        where pos_id = %s and word = %s
+        """
 
-        c.execute(q)
+        c.execute(q, (pos_id, word))
         row = c.fetchone()
         if not row:
             # word doesn't exist
 
             # insert the word to get a word id
             q = """
-            insert ignore into word (pos_id, word) values (%s, '%s')
-            """ % (pos_id, word)
-            c.execute(q)
+            insert ignore into word (pos_id, word) values (%s, %s)
+            """
+            c.execute(q, (pos_id, word))
 
             # fetch the word id
             q = """
@@ -50,7 +50,6 @@ def add_or_update_word(db, c, word, pos_id):
 
         input_values = []
         for r in word_attributes:
-            d = {}
             prefix = "--[%s]-->" % r['attrkey']
             prompt = string.ljust(prefix, max_width)
             prompt += "[%s]:" % (
@@ -58,23 +57,18 @@ def add_or_update_word(db, c, word, pos_id):
             prompt = prompt.encode('utf-8')
             v = raw_input(prompt).strip()
             if len(v) > 0:
-                d['value'] = v
-                d['attribute_id'] = r['attribute_id']
+                input_values.append((r['attribute_id'], word_id, v))
 
-            if len(d) > 0:
-                input_values.append(d)
-
-        # insert into the word_attribute table
-        tuples = ["(%s, %s, '%s')" % (iv['attribute_id'], word_id, iv['value']) for iv in input_values]
-
-        if len(tuples) > 0:
+        if len(input_values) > 0:
             q = """
-            insert into word_attribute(attribute_id, word_id, value) values %s
+            insert into word_attribute(attribute_id, word_id, value)
+            values (%s, %s, %s)
             on duplicate key update value=values(value)
-            """ % ','.join([t for t in tuples])
+            """
 
             # print q
-            c.execute(q)
+            c.executemany(q, input_values)
+            
         db.commit()
     except Exception as e:
         db.rollback()
@@ -88,15 +82,12 @@ def get_word_attributes(c, pos_id, word_id):
     inner join attribute a on a.id = pf.attribute_id
     left join word_attribute wa
     on wa.attribute_id = pf.attribute_id
-    and wa.word_id = %(word_id)s
-    where pf.pos_id = %(pos_id)s
+    and wa.word_id = %s
+    where pf.pos_id = %s
     order by pf.sort_order
-    """ % {
-        'pos_id': pos_id,
-        'word_id': word_id,
-    }
+    """
 
-    c.execute(q)
+    c.execute(q, (word_id, pos_id))
 
     word_attributes = []
     for row in c.fetchall():

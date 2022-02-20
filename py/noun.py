@@ -52,18 +52,18 @@ left join word_attribute wa on wa.attribute_id = a.id and word_id =
 select w.id from pos pos2, attribute a, word w, word_attribute wa 
 where a.attrkey = 'article' and    
  a.id = wa.attribute_id and 
- wa.value = '%s' and
+ wa.value = %s and
  pos2.name = pos.name and
  pos.id = w.pos_id and
- w.word = '%s' and
+ w.word = %s and
  w.id = wa.word_id
 )
 where
  pos.name = 'Noun'
 
-""" % (noundict['article'], noundict['word'])
+""" 
 
-    c.execute(q)
+    c.execute(q, (noundict['article'], noundict['word']))
 
     r = []
     for row in c.fetchall():
@@ -118,9 +118,9 @@ where
 
     # insert into the word table
     q = """
-insert into word (pos_id, word) values (%s, '%s')
-""" % (pos_id, input_word['word'].capitalize())
-    c.execute(q)
+insert into word (pos_id, word) values (%s, %s)
+"""
+    c.execute(q, (pos_id, input_word['word'].capitalize()))
 
     # fetch the word id
     word_id = None
@@ -129,9 +129,8 @@ select last_insert_id() as word_id
 """
     c.execute(q)
 
-    for row in c.fetchall():
-        word_id = row['word_id']
-        break
+    row = c.fetchone()
+    word_id = row['word_id']
 
     logging.debug("inserted '%s', id = %s" % (
         input_word['word'], word_id))
@@ -139,22 +138,19 @@ select last_insert_id() as word_id
     # insert into the word_attribute table
     tuples = []
     for iv in input_values:
-        t = "(%s, %s, '%s')" % (iv['attribute_id'], word_id, iv['value'])
-        tuples.append(t)
+        tuples.append((iv['attribute_id'], word_id, iv['value']))
 
     q = """
 insert into word_attribute (attribute_id, word_id, value)
 values
-%s
-""" % ','.join([t for t in tuples])
+(%s, %s, %s)
+"""
 
-    c.execute(q)
+    c.executemany(q, tuples)
     db.commit()
 
 
 def update_word(db, c, word_attributes):
-    tuples = []
-
     # get the word id - we know it's associated with the article
     word_id = None
     for r in word_attributes:
@@ -162,6 +158,7 @@ def update_word(db, c, word_attributes):
             word_id = r['word_id']
             break
 
+    tuples = []
     for r in word_attributes:
         if r['attrkey'] == 'article':
             continue
@@ -174,22 +171,21 @@ def update_word(db, c, word_attributes):
             if r['attrkey'] == 'plural':
                 value = value.capitalize()
 
-            tmptuple = "(%s, %s, '%s')" % (r['attribute_id'], word_id, value)
-            tuples.append(tmptuple)
+            tuples.append((r['attribute_id'], word_id, value))
 
     if len(tuples) == 0:
         print "no new data, returning"
         return
 
     # start transaction
-    q = ','.join([x for x in tuples])
 
     query = """
-insert into word_attribute(attribute_id, word_id, value) values %s
+insert into word_attribute(attribute_id, word_id, value) 
+values (%s, %s, %s)
 on duplicate key update value=values(value)
-""" % q
+"""
 
-    c.execute(query)
+    c.executemany(query, tuples)
     db.commit()
 
 
