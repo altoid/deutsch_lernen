@@ -164,7 +164,7 @@ order by m.word
 
         words = []
         if len(words_rows):
-            words = chunkify(words_rows, nchunks=2)
+            words = chunkify(words_rows, nchunks=nchunks)
 
         source_is_url = False
         if wl_row['source'] and wl_row['source'].startswith('http'):
