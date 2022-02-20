@@ -5,15 +5,7 @@ import sys
 import codecs
 import dsn
 
-# https://pythonhosted.org/kitchen/unicode-frustrations.html
-utf8writer = codecs.getwriter('utf8')
-sys.stdout = utf8writer(sys.stdout)
-
-q = quiz_sql.next_item_query % {
-    'quizkey':'genders',
-    'filter' : ''
-    }
-
+q = quiz_sql.build_quiz_query('genders')
 db = dsn.getConnection()
 c = db.cursor(dictionary=True)
 
@@ -42,17 +34,13 @@ while not done:
     insert into quiz_score
     (quiz_id,word_id,attribute_id,presentation_count,correct_count)
     VALUES
-    (%s, %s, %s, %s, %s)
+    (%(quiz_id)s, %(word_id)s, %(attribute_id)s, %(presentation_count)s, %(correct_count)s)
     on duplicate key update
     presentation_count = values(presentation_count),
     correct_count = values(correct_count)
-    """ % (row['quiz_id'],
-           row['word_id'],
-           row['attribute_id'],
-           row['presentation_count'],
-           row['correct_count'])
+    """
     
-        c.execute(u)
+        c.execute(u, row)
         db.commit()
         
 c.close()
