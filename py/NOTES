@@ -34,6 +34,10 @@ installed software as of 9/6/21
 
 NB:  upgrading mysql-connector-python will break everything.
 
+installed mysql-connector-python 8.0.19
+
+mysqldump won't dump views; had to manually extract those and create them.
+ 
 ------------------------------------------------------------
 
 #############################
