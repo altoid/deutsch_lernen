@@ -16,9 +16,9 @@ def get_article(db):
  and wa.attribute_id = a.id 
  and attrkey = 'article' 
  and word_id = %s
-""" % row['word_id']
+"""
 
-    article_cursor.execute(article_query)
+    article_cursor.execute(article_query, (row['word_id'],))
     article = None
     for r1 in article_cursor.fetchall():
         article = r1['value']
@@ -183,19 +183,14 @@ n most recent
 
             u = """
         insert into quiz_score
-        (quiz_id,word_id,attribute_id,presentation_count,correct_count)
+        (quiz_id, word_id, attribute_id, presentation_count, correct_count)
         VALUES
-        (%s, %s, %s, %s, %s)
+        (%(quiz_id)s, %(word_id)s, %(attribute_id)s, %(presentation_count)s, %(correct_count)s)
         on duplicate key update
         presentation_count = values(presentation_count),
         correct_count = values(correct_count)
-        """ % (row['quiz_id'],
-               row['word_id'],
-               row['attribute_id'],
-               row['presentation_count'],
-               row['correct_count'])
-
-            c.execute(u)
+        """
+            c.execute(u, row)
             db.commit()
 
     c.close()
