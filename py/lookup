@@ -9,11 +9,10 @@ import codecs
 import dsn
 import argparse
 import operator
-import pprint
+from pprint import pprint
 
 def lookup(word):
     word = word.lower()
-#    word = unicode(word, 'utf8')
 
     regex_q = """
 select
@@ -93,7 +92,7 @@ where word_id in
             print "%s" % ('=' * 66)
             current_word_id = r['word_id']
             tag = "%s (%s)" % (r['word'], r['pos_name'])
-            matched_ids.append(str(current_word_id))
+            matched_ids.append((current_word_id,))
         else:
             tag = ''
 
@@ -104,10 +103,10 @@ where word_id in
         
     # record this lookup
     q = """
-insert into lookup (word_id) values %s
+insert into lookup (word_id) values (%s)
 on duplicate key update count = count + 1
-""" % ("(%s)" % ('),('.join(matched_ids)))
-    c.execute(q)
+"""
+    c.executemany(q, matched_ids)
     db.commit()
 
 if __name__ == '__main__':
