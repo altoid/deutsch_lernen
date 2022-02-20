@@ -165,11 +165,11 @@ select
      	concat(ifnull(wa.value, '   '), ' ', word) word,
 		attrvalue definition
 from
-		mashup
+		mashup_v
 inner join
-	    lookup on mashup.word_id = lookup.word_id
+	    lookup on mashup_v.word_id = lookup.word_id
 left join
-        word_attribute wa on wa.word_id = mashup.word_id and wa.attribute_id = 1
+        word_attribute wa on wa.word_id = mashup_v.word_id and wa.attribute_id = 1
 where
 		attrkey = 'definition'
 order by `count` desc, lookup.updated desc
@@ -191,11 +191,11 @@ select
      	concat(ifnull(wa.value, '   '), ' ', word) word,
 		attrvalue definition
 from
-		mashup
+		mashup_v
 inner join
-	    lookup on mashup.word_id = lookup.word_id
+	    lookup on mashup_v.word_id = lookup.word_id
 left join
-        word_attribute wa on wa.word_id = mashup.word_id and wa.attribute_id = 1
+        word_attribute wa on wa.word_id = mashup_v.word_id and wa.attribute_id = 1
 where
 		attrkey = 'definition'
 order by lookup.updated desc
