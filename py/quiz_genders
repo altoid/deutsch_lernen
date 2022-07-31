@@ -15,18 +15,18 @@ while not done:
     for row in c.fetchall():
         prompt = "answer, q to quit --[%s]--> " % row['word']
         prompt = prompt.encode('utf-8')
-        answer = raw_input(prompt).strip().lower()
+        answer = input(prompt).strip().lower()
         while len(answer) == 0:
-            answer = raw_input(prompt).strip().lower()
+            answer = input(prompt).strip().lower()
     
         if answer == row['value']:
-            print 'ja'
+            print('ja')
             row['correct_count'] += 1
         elif answer == 'q':
             done = True
             continue
         else:
-            print 'nein:  %s %s' % (row['value'], row['word'])
+            print('nein:  %s %s' % (row['value'], row['word']))
     
         row['presentation_count'] += 1
     
@@ -46,4 +46,4 @@ while not done:
 c.close()
 db.close()
 
-print 'auf wiedersehen'
+print('auf wiedersehen')

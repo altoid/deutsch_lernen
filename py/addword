@@ -46,18 +46,18 @@ from pos
 
     while not done:
 
-        for k, v in menu.iteritems():
-            print k, v
+        for k, v in menu.items():
+            print(k, v)
 
         while True:
-            pos_id = raw_input('---> ').strip()
+            pos_id = input('---> ').strip()
 
             try:
                 pos_id = int(pos_id)
             except ValueError:
                 continue
 
-            if pos_id in menu.keys():
+            if pos_id in list(menu.keys()):
                 break
 
         if 'exit' == menu[pos_id]:
@@ -75,13 +75,13 @@ from pos
             # connection went away, retry
             db = dsn.getConnection()
             c = db.cursor(dictionary=True, buffered=True)
-            print "########## database connection timed out, please reenter:"
+            print("########## database connection timed out, please reenter:")
             if menu[pos_id] == 'Noun':
                 done = noun.prompt_noun(db, c)
             else:
                 done = common.prompt_word(db, c, menu[pos_id])
 
-    print 'auf wiedersehen'
+    print('auf wiedersehen')
 
     c.close()
     db.close()

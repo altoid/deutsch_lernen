@@ -26,13 +26,13 @@ def choose_filter():
         cnt = 0
         default = len(menu) - 1
         for m in menu:
-            print "%s - %s" % (cnt, m)
+            print("%s - %s" % (cnt, m))
             cnt += 1
 
         prompt = '--> [%s - %s] ' % (default,
                                      menu[default])
         try:
-            answer = raw_input(prompt).strip()
+            answer = input(prompt).strip()
             if len(answer) == 0:
                 break
 
@@ -67,12 +67,12 @@ if __name__ == '__main__':
         choices[row['id']] = row
     
     for k in choices:
-        print k, choices[k]['name']
+        print(k, choices[k]['name'])
     
     # pick attributes
     qkey = None
     while True:
-        choice = raw_input('pick attribute, q to quit ---> ').strip()
+        choice = input('pick attribute, q to quit ---> ').strip()
     
         if choice == '':
             continue
@@ -83,7 +83,7 @@ if __name__ == '__main__':
         try:
             choice = int(choice)
     
-            if choice in choices.keys():
+            if choice in list(choices.keys()):
                 qkey = choices[choice]['quizkey']
                 break
     
@@ -91,7 +91,7 @@ if __name__ == '__main__':
             continue
     
     if not qkey:
-        print "no quiz chosen"
+        print("no quiz chosen")
         sys.exit()
 
     filter = choose_filter()
@@ -109,22 +109,22 @@ if __name__ == '__main__':
                 wordcount, row['word'], row['method'])
 
             # apparently raw_input can't handle unicode chars in the prompt
-            print prompt,
-            answer = raw_input(" --> ")
-            answer = unicode(answer, 'utf8').strip().lower()
+            print(prompt, end=' ')
+            answer = input(" --> ")
+            answer = str(answer, 'utf8').strip().lower()
             while len(answer) == 0:
-                print prompt,
-                answer = raw_input(" --> ")
-                answer = unicode(answer, 'utf8').strip().lower()
+                print(prompt, end=' ')
+                answer = input(" --> ")
+                answer = str(answer, 'utf8').strip().lower()
         
             if answer == row['value']:
-                print 'ja'
+                print('ja')
                 row['correct_count'] += 1
             elif answer == 'q':
                 done = True
                 continue
             else:
-                print 'nein:  %s' % (row['value'])
+                print('nein:  %s' % (row['value']))
         
             row['presentation_count'] += 1
         
@@ -150,4 +150,4 @@ if __name__ == '__main__':
     c.close()
     db.close()
     
-    print 'auf wiedersehen'
+    print('auf wiedersehen')

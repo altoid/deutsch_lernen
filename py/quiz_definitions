@@ -6,6 +6,7 @@ import dsn
 import argparse
 from pprint import pprint
 import random
+from functools import reduce
 
 def get_article(db):
     article_cursor = db.cursor(dictionary=True)
@@ -51,7 +52,7 @@ def word_ids_from_wordlist(c, list_id):
         """
         c.execute(sql2, (list_id,))
     rows = c.fetchall()
-    return map(lambda x: x['word_id'], rows)
+    return [x['word_id'] for x in rows]
 
 
 if __name__ == '__main__':
@@ -92,12 +93,12 @@ n most recent
     args = None
     if cl_args.listid:
         
-        mega = map(lambda x: word_ids_from_wordlist(c, x), cl_args.listid)
+        mega = [word_ids_from_wordlist(c, x) for x in cl_args.listid]
         flattened = reduce(lambda x, y: x + y, mega, [])
         word_ids = list(set(flattened))
         if cl_args.nwords:
             word_ids = random.sample(word_ids, cl_args.nwords)
-        word_id_list = ','.join(map(lambda x: str(x), word_ids))
+        word_id_list = ','.join([str(x) for x in word_ids])
         subquery = """
         select w.id word_id 
         from word w
@@ -115,7 +116,7 @@ n most recent
         c.execute(subquery)
         rows = c.fetchall()
         word_ids = [x['word_id'] for x in rows]
-        word_id_list = ','.join(map(lambda x: str(x), word_ids))
+        word_id_list = ','.join([str(x) for x in word_ids])
         subquery = """
         select w.id word_id 
         from word w
@@ -131,7 +132,7 @@ n most recent
         c.execute(subquery)
         rows = c.fetchall()
         word_ids = [x['word_id'] for x in rows]
-        word_id_list = ','.join(map(lambda x: str(x), word_ids))
+        word_id_list = ','.join([str(x) for x in word_ids])
         subquery = """
         select w.id word_id 
         from word w
@@ -147,7 +148,7 @@ n most recent
         c.execute(q)
         rows = c.fetchall()
         if not rows:
-            print "es gibt keine Welten mehr zu erobern"
+            print("es gibt keine Welten mehr zu erobern")
             break
         
         for row in rows:
@@ -155,26 +156,26 @@ n most recent
             article = get_article(db)
 
             counter += 1
-            print "[%s]" % counter,
+            print("[%s]" % counter, end=' ')
 
             if article:
-                print article,
+                print(article, end=' ')
 
-            print unicode(row['word'])
+            print(str(row['word']))
             prompt = "hit return for answer, q to quit:  --> "
-            answer = raw_input(prompt).strip().lower()
+            answer = input(prompt).strip().lower()
 
             if answer.startswith('q'):
                 done = True
                 continue
 
-            print row['value']
+            print(row['value'])
 
             prompt = "correct? --> "
-            answer = raw_input(prompt).strip().lower()
+            answer = input(prompt).strip().lower()
 
             while len(answer) == 0:
-                answer = raw_input(prompt).strip().lower()
+                answer = input(prompt).strip().lower()
 
             if answer.startswith('y'):
                 row['correct_count'] += 1
@@ -196,4 +197,4 @@ n most recent
     c.close()
     db.close()
 
-    print 'bis bald'
+    print('bis bald')

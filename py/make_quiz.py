@@ -35,13 +35,13 @@ for row in c.fetchall():
     choices[row['choice']] = row
 
 for k in choices:
-    print k, choices[k]['pos_name'], choices[k]['attrkey']
+    print(k, choices[k]['pos_name'], choices[k]['attrkey'])
 
 attrs = set()
 
 # pick attributes
 while True:
-    choice = raw_input('pick attribute, empty when done ---> ').strip()
+    choice = input('pick attribute, empty when done ---> ').strip()
 
     if choice == '':
         break
@@ -49,16 +49,16 @@ while True:
     try:
         choice = int(choice)
 
-        if choice in choices.keys():
+        if choice in list(choices.keys()):
             attrs.add(choice)
         else:
-            print 'boo'
+            print('boo')
 
     except ValueError:
         continue
 
 if len(attrs) == 0:
-    print 'no choices, exiting'
+    print('no choices, exiting')
     sys.exit()
     
 # choose quiz name
@@ -78,19 +78,19 @@ for row in c.fetchall():
     quizkeys.add(row[0])
 
 while True:
-    qkey  = raw_input('db key for quiz ---> ').strip()
+    qkey  = input('db key for quiz ---> ').strip()
 
     if qkey == '':
         continue
 
     if qkey in quizkeys:
-        print 'that key exists'
+        print('that key exists')
         continue
 
     break
 
 while True:
-    qname = raw_input('name of your quiz ---> ').strip()
+    qname = input('name of your quiz ---> ').strip()
 
     if qname == '':
         continue

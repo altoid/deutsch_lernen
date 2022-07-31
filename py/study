@@ -15,8 +15,8 @@ def format_and_print_results(results):
     # the first column will be right-justified, the rest are
     # left-justified.
 
-    field_widths = [max(len(y[k]) for y in results) for k in results[0].keys()]
-    field_info = dict(zip(results[0].keys(), field_widths))
+    field_widths = [max(len(y[k]) for y in results) for k in list(results[0].keys())]
+    field_info = dict(list(zip(list(results[0].keys()), field_widths)))
 
     # keys are name, word, definition, and possibly added; we want them in that order
     format = "| %%(%s)%ds " % ('name', field_info['name'])
@@ -33,15 +33,15 @@ def format_and_print_results(results):
     if 'added' in field_info:
         bookend += '-' * (field_info['added'] + 2) + '+'
 
-    print bookend
+    print(bookend)
     for row in results:
         # get max defn length
-        print format % (row)
-    print bookend
-    print "%s results" % len(results)
+        print(format % (row))
+    print(bookend)
+    print("%s results" % len(results))
 
 def handle_regex(regex):
-    regex = unicode(regex, 'utf8')
+    regex = str(regex, 'utf8')
 
     query = """
 select
@@ -77,7 +77,7 @@ order by t.word
     if len(results) > 0:
         format_and_print_results(results)
     else:
-        print "nuthin"
+        print("nuthin")
 
 def handle_session():
     query = """

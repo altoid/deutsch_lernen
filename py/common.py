@@ -55,7 +55,7 @@ def add_or_update_word(db, c, word, pos_id):
             prompt += "[%s]:" % (
                 '' if r['attrvalue'] == None else r['attrvalue'])
             prompt = prompt.encode('utf-8')
-            v = raw_input(prompt).strip()
+            v = input(prompt).strip()
             if len(v) > 0:
                 input_values.append((r['attribute_id'], word_id, v))
 
@@ -97,7 +97,7 @@ def get_word_attributes(c, pos_id, word_id):
 
 
 def prompt_word(db, c, pos_id):
-    input_string = raw_input('--[word]--> ').strip().lower()
+    input_string = input('--[word]--> ').strip().lower()
 
     # TODO:  handle the case where multiple words are given as input - treat as error
 

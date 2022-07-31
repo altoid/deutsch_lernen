@@ -70,7 +70,7 @@ if __name__ == '__main__':
     if args.key:
         attrkey = args.key.strip().lower()
         if not check_key(db, c, attrkey):
-            print "no such key:  %s" % attrkey
+            print("no such key:  %s" % attrkey)
             sys.exit(1)
     
         keyfilter = """ and a.attrkey = '%(attrkey)s' """ % {
@@ -98,16 +98,16 @@ if __name__ == '__main__':
     last_word = None
     verbs_fixed = 0
     
-    print "enter 'xxx' to terminate"
+    print("enter 'xxx' to terminate")
     
     for r in c.fetchall():
         this_word = r['word']
         if not last_word:
             last_word = this_word
     
-        if last_word <> this_word:
+        if last_word != this_word:
             verbs_fixed += 1
-            print "verbs fixed:  %s" % verbs_fixed
+            print("verbs fixed:  %s" % verbs_fixed)
             last_word = this_word
     
         if r['word_id'] != word_id:
@@ -118,7 +118,7 @@ if __name__ == '__main__':
     
         prompt = "--[%03d][%s, %s]--> " % (rowcount, r['word'], r['attrkey'])
         prompt = prompt.encode('utf-8')
-        v = raw_input(prompt).strip()
+        v = input(prompt).strip()
         if len(v) > 0:
             if (v == 'xxx'):
                 break
@@ -129,4 +129,4 @@ if __name__ == '__main__':
     
     jam(db, c, tuples)
     
-    print "bis bald"
+    print("bis bald")

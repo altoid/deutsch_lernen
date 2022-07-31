@@ -2,9 +2,10 @@ from flask import Flask, request, render_template, redirect, url_for
 import os
 from pprint import pprint
 import mysql.connector
+import ui.config
 
 app = Flask(__name__)
-app.config.from_object(os.environ['CONFIG'])
+app.config.from_object(ui.config.Config)
 
 
 def get_conn():
@@ -34,14 +35,14 @@ def chunkify(arr, **kwargs):
     arraysize = len(arr)
     if nchunks:
         # round up array size to nearest multiple of nchunks
-        arraysize = ((arraysize + nchunks - 1) / nchunks) * nchunks
-        chunksize = arraysize / nchunks
+        arraysize = ((arraysize + nchunks - 1) // nchunks) * nchunks
+        chunksize = arraysize // nchunks
 
     # add one more increment of chunksize so that our zip array includes
     # the last elements
-    chunks = [x for x in xrange(0, arraysize + chunksize, chunksize)]
+    chunks = [x for x in range(0, arraysize + chunksize, chunksize)]
 
-    z = zip(chunks, chunks[1:])
+    z = list(zip(chunks, chunks[1:]))
 
     result = []
     for x in z:
@@ -427,7 +428,7 @@ and word in (%s)
 def edit_word():
     dbh, cursor = get_conn()
 
-    attr_id_keys = [x for x in request.form.keys() if x.endswith('_attrid')]
+    attr_id_keys = [x for x in list(request.form.keys()) if x.endswith('_attrid')]
 
     tuples = []
     for k in attr_id_keys:
@@ -436,7 +437,7 @@ def edit_word():
         if v:
             tuples.append("%%(word_id)s, %%(%s)s, %%(%s)s" % (k, attrkey))
 
-    form_copy = [(f[0], f[1].capitalize()) if f[0] == 'plural' else (f[0], f[1]) for f in request.form.items()]
+    form_copy = [(f[0], f[1].capitalize()) if f[0] == 'plural' else (f[0], f[1]) for f in list(request.form.items())]
     form_copy = dict(form_copy)
 
     sql = """
@@ -576,8 +577,8 @@ def get_data_for_addword_form(cursor, list_id, **kwargs):
         checked_pos, word = populate_form_dict(cursor, form_dict, word=word)
 
     pos_infos = []
-    for k in form_dict.keys():
-        pos_fields = [x for x in form_dict[k].values()]
+    for k in list(form_dict.keys()):
+        pos_fields = [x for x in list(form_dict[k].values())]
         l = sorted(pos_fields, cmp=lambda x, y: cmp(x['sort_order'], y['sort_order']))
         pos_info = {
             'pos_id': k,
@@ -679,7 +680,7 @@ where pos_id = %s and word = %s
 
     values = []
     placeholders = []
-    for k in request.form.keys():
+    for k in list(request.form.keys()):
         splitkey = k.split('-')
         if len(splitkey) < 3:
             continue

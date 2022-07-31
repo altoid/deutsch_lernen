@@ -21,7 +21,7 @@ def get_word_with_article(db, dasWort):
         return None
 
     article = stuff[0]
-    noun = unicode(stuff[1], 'utf8')
+    noun = str(stuff[1], 'utf8')
 
     r = {'article': article,
          'word': noun}
@@ -102,8 +102,8 @@ where
             d['value'] = input_word['article']
             d['attribute_id'] = r['attribute_id']
         else:
-            value = raw_input("--[%s]--> " % (r['attrkey'])).strip().lower()
-            value = unicode(value, 'utf8')
+            value = input("--[%s]--> " % (r['attrkey'])).strip().lower()
+            value = str(value, 'utf8')
             if len(value) > 0:
                 if r['attrkey'] == 'plural':
                     value = value.capitalize()
@@ -165,8 +165,8 @@ def update_word(db, c, word_attributes):
 
         prompt = "--[%s]--> [%s]:" % (r['attrkey'], '' if r['value'] is None else r['value'])
         prompt = prompt.encode('utf-8')
-        value = raw_input(prompt).strip().lower()
-        value = unicode(value, 'utf8')
+        value = input(prompt).strip().lower()
+        value = str(value, 'utf8')
         if len(value) > 0 and r['value'] != value:
             if r['attrkey'] == 'plural':
                 value = value.capitalize()
@@ -174,7 +174,7 @@ def update_word(db, c, word_attributes):
             tuples.append((r['attribute_id'], word_id, value))
 
     if len(tuples) == 0:
-        print "no new data, returning"
+        print("no new data, returning")
         return
 
     # start transaction
@@ -191,7 +191,7 @@ on duplicate key update value=values(value)
 
 def prompt_noun(db, c):
     while True:
-        input_string = raw_input('--[noun with article]--> ').strip().lower()
+        input_string = input('--[noun with article]--> ').strip().lower()
 
         if len(input_string) == 0:
             return True
@@ -200,7 +200,7 @@ def prompt_noun(db, c):
         if input_word is not None:
             break
 
-        print 'falsches input'
+        print('falsches input')
 
     word_attributes = get_noun_info(c, input_word)
 

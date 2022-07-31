@@ -70,7 +70,7 @@ where word_id in
         result.append(row)
 
     if len(result) == 0:
-        print "%s NOT FOUND:  %s" % ('#' * 33, word)
+        print("%s NOT FOUND:  %s" % ('#' * 33, word))
         return
 
     result = sorted(result, key=operator.itemgetter('word', 'sort_order'))
@@ -89,16 +89,16 @@ where word_id in
     matched_ids = []
     for r in result:
         if r['word_id'] != current_word_id:
-            print "%s" % ('=' * 66)
+            print("%s" % ('=' * 66))
             current_word_id = r['word_id']
             tag = "%s (%s)" % (r['word'], r['pos_name'])
             matched_ids.append((current_word_id,))
         else:
             tag = ''
 
-        print "%s %s %s" % (string.ljust(tag, max_tag_length + 10),
+        print("%s %s %s" % (string.ljust(tag, max_tag_length + 10),
                             string.ljust(r['attrkey'], max_attr_width),
-                            r['value'])
+                            r['value']))
 
         
     # record this lookup
