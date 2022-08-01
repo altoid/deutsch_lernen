@@ -1,5 +1,5 @@
 import logging
-import common
+from dlernen import common
 from pprint import pprint
 
 articles = ['der', 'die', 'das']

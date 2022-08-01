@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
-import quiz_sql
+from dlernen import quiz_sql
 import sys
 import codecs
-import dsn
+from dlernen import dsn
 
 q = quiz_sql.build_quiz_query('genders')
 db = dsn.getConnection()

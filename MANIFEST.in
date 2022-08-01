@@ -1,0 +1,3 @@
+graft dlernen/ui/templates
+graft dlernen/ui/static
+global-exclude *.pyc

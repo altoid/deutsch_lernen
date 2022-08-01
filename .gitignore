@@ -1,11 +1,12 @@
 venv/
 crontab
 **/*~
-py/dsn.*
 **/*.pyc
 sql/deutsch.sql
-ui/config.py
+config.py
+dsn.py
 **/*.bak
 **/*.BAK
 **/x
 **/.idea
+**.egg-info

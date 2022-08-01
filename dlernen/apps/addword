@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
-import common
-import noun
+from dlernen import common
+from dlernen import noun
 import sys
-import dsn
+from dlernen import dsn
 import logging
 from pprint import pprint
 

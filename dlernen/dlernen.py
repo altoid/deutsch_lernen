@@ -2,10 +2,10 @@ from flask import Flask, request, render_template, redirect, url_for
 import os
 from pprint import pprint
 import mysql.connector
-import ui.config
+from dlernen.config import Config
 
 app = Flask(__name__)
-app.config.from_object(ui.config.Config)
+app.config.from_object(Config)
 
 
 def get_conn():
@@ -579,7 +579,7 @@ def get_data_for_addword_form(cursor, list_id, **kwargs):
     pos_infos = []
     for k in list(form_dict.keys()):
         pos_fields = [x for x in list(form_dict[k].values())]
-        l = sorted(pos_fields, cmp=lambda x, y: cmp(x['sort_order'], y['sort_order']))
+        l = sorted(pos_fields, key=lambda x: x['sort_order'])
         pos_info = {
             'pos_id': k,
             'pos_fields': l,
@@ -590,7 +590,7 @@ def get_data_for_addword_form(cursor, list_id, **kwargs):
 
         pos_infos.append(pos_info)
 
-    pos_infos = sorted(pos_infos, cmp=lambda x, y: cmp(x['pos_id'], y['pos_id']))
+    pos_infos = sorted(pos_infos, key=lambda x: x['pos_id'])
     return pos_infos
 
 

@@ -1,11 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- python -*-
 
 import string
 import sys
-import dsn
+from dlernen import dsn
 import argparse
 import codecs
+
 
 def format_and_print_results(results):
     # construct format string used to print each line.
