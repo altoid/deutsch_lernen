@@ -2,7 +2,6 @@
 
 from dlernen import common
 from dlernen import noun
-import sys
 from dlernen import dsn
 import logging
 from pprint import pprint

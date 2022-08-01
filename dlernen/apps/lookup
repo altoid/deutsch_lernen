@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- python -*-
 
-import string
-import sys
-import codecs
 from dlernen import dsn
 import argparse
 import operator
@@ -18,7 +15,7 @@ select
     pos_name,
     word,
     word_id,
-	concat(attrkey, ':') attrkey,
+    concat(attrkey, ':') attrkey,
     attrvalue value,
     pf.sort_order
 from
@@ -31,18 +28,18 @@ where word_id in
     from
         mashup_v
     where
-    	word like '%%%(word)s%%' or attrvalue like '%%%(word)s%%'
+        word like '%%%(word)s%%' or attrvalue like '%%%(word)s%%'
     )
 """ % {
-        'word' : word
-        }
+        'word': word
+    }
 
     exact_q = """
 select
     pos_name,
     word,
     word_id,
-	concat(attrkey, ':') attrkey,
+        concat(attrkey, ':') attrkey,
     attrvalue value,
     pf.sort_order
 from
@@ -55,19 +52,19 @@ where word_id in
     from
         mashup_v
     where
-    	word = '%(word)s'
+        word = '%(word)s'
     )
 """ % {
-        'word' : word
-        }
+        'word': word
+    }
 
     q = exact_q if args.exact else regex_q
     c.execute(q)
 
-    result = []
-    for row in c.fetchall():
-        result.append(row)
+    result = c.fetchall()
 
+    pprint(result)
+    
     if len(result) == 0:
         print("%s NOT FOUND:  %s" % ('#' * 33, word))
         return
@@ -122,4 +119,3 @@ if __name__ == '__main__':
 
     for word in args.word:
         lookup(word)
-

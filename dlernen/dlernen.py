@@ -1,5 +1,4 @@
 from flask import Flask, request, render_template, redirect, url_for
-import os
 from pprint import pprint
 import mysql.connector
 from dlernen.config import Config

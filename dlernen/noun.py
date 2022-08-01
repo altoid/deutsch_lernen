@@ -1,16 +1,14 @@
 import logging
-from dlernen import common
-from pprint import pprint
 
 articles = ['der', 'die', 'das']
 
 
 # prompt for article and word
 def get_word_with_article(db, dasWort):
-    '''
+    """
     returns word and the article in a dictionary,
     keys are 'article' and 'word'
-    '''
+    """
 
     stuff = dasWort.split()
 
@@ -61,7 +59,7 @@ where a.attrkey = 'article' and
 where
  pos.name = 'Noun'
 
-""" 
+"""
 
     c.execute(q, (noundict['article'], noundict['word']))
 

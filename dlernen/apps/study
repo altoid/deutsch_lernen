@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 # -*- python -*-
 
-import string
-import sys
 from dlernen import dsn
 import argparse
-import codecs
+from pprint import pprint
 
 
 def format_and_print_results(results):
@@ -41,25 +39,26 @@ def format_and_print_results(results):
     print(bookend)
     print("%s results" % len(results))
 
+
 def handle_regex(regex):
     regex = str(regex, 'utf8')
 
     query = """
 select
-	lpad(t.name, 11, ' ') name, -- part of speech
-	concat(ifnull(wa.value, '   '), ' ', t.word) word,
-	t.value definition
+        lpad(t.name, 11, ' ') name, -- part of speech
+        concat(ifnull(wa.value, '   '), ' ', t.word) COLLATE utf8mb3_swedish_ci word,
+        t.value definition
 from
 (
-	select
-		p.name, w.word, w.added, wa.*
-	from
-		word w
-	inner join word_attribute wa on w.id = wa.word_id
-	inner join attribute a on wa.attribute_id = a.id
-	inner join pos p on p.id = w.pos_id
-	where
-		a.attrkey = 'definition'      AND
+        select
+                p.name, w.word, w.added, wa.*
+        from
+                word w
+        inner join word_attribute wa on w.id = wa.word_id
+        inner join attribute a on wa.attribute_id = a.id
+        inner join pos p on p.id = w.pos_id
+        where
+                a.attrkey = 'definition'      AND
         w.word like '%(regex)s'
 ) t
 left join
@@ -80,25 +79,26 @@ order by t.word
     else:
         print("nuthin")
 
+
 def handle_session():
     query = """
 select
-	lpad(t.name, 11, ' ') name, -- part of speech
-	concat(ifnull(wa.value, '   '), ' ', t.word) word,
-	t.value definition,
+    lpad(t.name, 11, ' ') name, -- part of speech
+    concat(ifnull(wa.value, '   '), ' ', t.word) COLLATE utf8mb3_swedish_ci word,
+    t.value definition,
     DATE_FORMAT(t.added, '%Y-%m-%d') AS added
 from
 (
-	select
-		p.name, w.word, w.added, wa.*
-	from
-		word w
-	inner join word_attribute wa on w.id = wa.word_id
-	inner join attribute a on wa.attribute_id = a.id
-	inner join pos p on p.id = w.pos_id
-	where
-		a.attrkey = 'definition'
-        and date(w.added) = (select date(max(added)) from word)
+    select
+            p.name, w.word, w.added, wa.*
+    from
+            word w
+    inner join word_attribute wa on w.id = wa.word_id
+    inner join attribute a on wa.attribute_id = a.id
+    inner join pos p on p.id = w.pos_id
+    where
+            a.attrkey = 'definition'
+    and date(w.added) = (select date(max(added)) from word)
 ) t
 left join
 word_attribute wa
@@ -113,6 +113,7 @@ order by rand()
 
     format_and_print_results(results)
 
+
 def find_words(nwords, latest):
     limit = "limit %d" % nwords
     datecolumn = ""
@@ -125,21 +126,21 @@ def find_words(nwords, latest):
 
     query = """
 select
-	lpad(t.name, 11, ' ') name, -- part of speech
-	concat(ifnull(wa.value, '   '), ' ', t.word) word,
-	t.value definition
+    lpad(t.name, 11, ' ') name, -- part of speech
+    concat(ifnull(wa.value, '   '), ' ', t.word) COLLATE utf8mb3_swedish_ci word,
+    t.value definition
     %(datecolumn)s
 from
 (
-	select
-		p.name, w.word, w.added, wa.*
-	from
-		word w
-	inner join word_attribute wa on w.id = wa.word_id
-	inner join attribute a on wa.attribute_id = a.id
-	inner join pos p on p.id = w.pos_id
-	where
-		a.attrkey = 'definition'
+    select
+        p.name, w.word, w.added, wa.*
+    from
+        word w
+    inner join word_attribute wa on w.id = wa.word_id
+    inner join attribute a on wa.attribute_id = a.id
+    inner join pos p on p.id = w.pos_id
+    where
+        a.attrkey = 'definition'
 ) t
 left join
 word_attribute wa
@@ -159,46 +160,46 @@ on t.word_id = wa.word_id and wa.attribute_id = 1
 
     format_and_print_results(results)
 
+
 def handle_frequency(nwords):
     query = """
 select
-		pos_name name,
-     	concat(ifnull(wa.value, '   '), ' ', word) word,
-		attrvalue definition
+    pos_name name,
+    concat(ifnull(wa.value, '   '), ' ', word) COLLATE utf8mb3_swedish_ci word,
+    attrvalue definition
 from
-		mashup_v
+    mashup_v
 inner join
-	    lookup on mashup_v.word_id = lookup.word_id
+    lookup on mashup_v.word_id = lookup.word_id
 left join
-        word_attribute wa on wa.word_id = mashup_v.word_id and wa.attribute_id = 1
+    word_attribute wa on wa.word_id = mashup_v.word_id and wa.attribute_id = 1
 where
-		attrkey = 'definition'
+    attrkey = 'definition'
 order by `count` desc, lookup.updated desc
 limit %(limit)s
 """ % {
         'limit' : nwords
 }
     c.execute(query)
-    results = []
-    for row in c.fetchall():
-        results.append(row)
+    results = c.fetchall()
 
     format_and_print_results(results)
+
 
 def handle_recent(nwords):
     query = """
 select
-		pos_name name,
-     	concat(ifnull(wa.value, '   '), ' ', word) word,
-		attrvalue definition
+    pos_name name,
+    concat(ifnull(wa.value, '   '), ' ', word) COLLATE utf8mb3_swedish_ci word,
+    attrvalue definition
 from
-		mashup_v
+    mashup_v
 inner join
-	    lookup on mashup_v.word_id = lookup.word_id
+    lookup on mashup_v.word_id = lookup.word_id
 left join
-        word_attribute wa on wa.word_id = mashup_v.word_id and wa.attribute_id = 1
+    word_attribute wa on wa.word_id = mashup_v.word_id and wa.attribute_id = 1
 where
-		attrkey = 'definition'
+    attrkey = 'definition'
 order by lookup.updated desc
 limit %(limit)s
 """ % {
@@ -211,44 +212,42 @@ limit %(limit)s
 
     format_and_print_results(results)
 
-parser = argparse.ArgumentParser(epilog="if the session or regex options are given, -n and -l are ignored")
 
-group = parser.add_mutually_exclusive_group()
-group.add_argument("-s", "--session",
-                   help="select all the words from the last day when words were added",
-                   action="store_true")
-group.add_argument("-r", "--regex",
-                   help="regex to match words")
-group.add_argument("-l", "--latest",
-                   help="select most recently added words instead of random selection",
-                   action="store_true")
-group.add_argument("-f", "--frequency",
-                   help="select the most frequently looked up words",
-                   action="store_true")
-group.add_argument("-c", "--recent",
-                   help="select the most recently looked up words",
-                   action="store_true")
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(epilog="if the session or regex options are given, -n and -l are ignored")
 
-parser.add_argument("-n", "--nwords",
-                    type=int, default=10,
-                    help="select <nwords> words at random from dictionary, default 10")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-s", "--session",
+                       help="select all the words from the last day when words were added",
+                       action="store_true")
+    group.add_argument("-r", "--regex",
+                       help="regex to match words")
+    group.add_argument("-l", "--latest",
+                       help="select most recently added words instead of random selection",
+                       action="store_true")
+    group.add_argument("-f", "--frequency",
+                       help="select the most frequently looked up words",
+                       action="store_true")
+    group.add_argument("-c", "--recent",
+                       help="select the most recently looked up words",
+                       action="store_true")
 
-args = parser.parse_args()
+    parser.add_argument("-n", "--nwords",
+                        type=int, default=10,
+                        help="select <nwords> words at random from dictionary, default 10")
 
-# https://pythonhosted.org/kitchen/unicode-frustrations.html
-utf8writer = codecs.getwriter('utf8')
-sys.stdout = utf8writer(sys.stdout)
+    args = parser.parse_args()
 
-db = dsn.getConnection()
-c = db.cursor(dictionary=True)
+    db = dsn.getConnection()
+    c = db.cursor(dictionary=True)
 
-if args.regex:
-    handle_regex(args.regex)
-elif args.session:
-    handle_session()
-elif args.frequency:
-    handle_frequency(args.nwords)
-elif args.recent:
-    handle_recent(args.nwords)
-else:
-    find_words(args.nwords, args.latest)
+    if args.regex:
+        handle_regex(args.regex)
+    elif args.session:
+        handle_session()
+    elif args.frequency:
+        handle_frequency(args.nwords)
+    elif args.recent:
+        handle_recent(args.nwords)
+    else:
+        find_words(args.nwords, args.latest)

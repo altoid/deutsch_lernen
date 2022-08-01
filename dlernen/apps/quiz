@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import quiz_sql
+from dlernen import quiz_sql
 import sys
-import dsn
-import pprint
+from dlernen import dsn
+from pprint import pprint
 import argparse
 
 filters = {
@@ -14,6 +14,7 @@ filters = {
     },
     'no filter': {}
 }
+
 
 def choose_filter():
     # prepare menu based on the filter keys, with no filter as default
@@ -46,6 +47,7 @@ def choose_filter():
             continue
 
     return filter
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
