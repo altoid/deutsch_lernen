@@ -35,7 +35,7 @@ def format_and_print_results(results):
     print(bookend)
     for row in results:
         # get max defn length
-        print(format % (row))
+        print(format % row)
     print(bookend)
     print("%s results" % len(results))
 
@@ -70,9 +70,7 @@ order by t.word
         }
 
     c.execute(query)
-    results = []
-    for row in c.fetchall():
-        results.append(row)
+    results = c.fetchall()
 
     if len(results) > 0:
         format_and_print_results(results)
@@ -107,9 +105,7 @@ order by rand()
 """
 
     c.execute(query)
-    results = []
-    for row in c.fetchall():
-        results.append(row)
+    results = c.fetchall()
 
     format_and_print_results(results)
 
@@ -154,9 +150,7 @@ on t.word_id = wa.word_id and wa.attribute_id = 1
         "limit" : limit
         }
     c.execute(query)
-    results = []
-    for row in c.fetchall():
-        results.append(row)
+    results = c.fetchall()
 
     format_and_print_results(results)
 
@@ -206,9 +200,7 @@ limit %(limit)s
         'limit' : nwords
 }
     c.execute(query)
-    results = []
-    for row in c.fetchall():
-        results.append(row)
+    results = c.fetchall()
 
     format_and_print_results(results)
 

@@ -89,9 +89,7 @@ def get_word_attributes(c, pos_id, word_id):
 
     c.execute(q, (word_id, pos_id))
 
-    word_attributes = []
-    for row in c.fetchall():
-        word_attributes.append(row)
+    word_attributes = c.fetchall()
 
     return word_attributes
 
