@@ -4,7 +4,6 @@ crontab
 **/*.pyc
 sql/deutsch.sql
 config.py
-dsn.py
 **/*.bak
 **/*.BAK
 **/x
