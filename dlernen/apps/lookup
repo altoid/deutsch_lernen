@@ -63,8 +63,6 @@ where word_id in
 
     result = c.fetchall()
 
-    pprint(result)
-    
     if len(result) == 0:
         print("%s NOT FOUND:  %s" % ('#' * 33, word))
         return
