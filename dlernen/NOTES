@@ -1,3 +1,24 @@
+new features
+
+- show wordlists a word is in
+- test coverage for add_word
+- rest api.  no client should be writing embedded sql
+-- use requests library with URLs, responses in JSON
+
+bugs
+
+- add_word from home page does not work
+------------------
+
+REST API
+
+lookup
+- exact match:  look up word in word table.  multiple matches possible.
+- otherwise:  substring match on words and attribute values
+
+/word/<word>?exact={TF}
+
+------------------
 quiz_definitions
 
 quiz_definitions (no args)
