@@ -39,7 +39,7 @@ select
     pos_name,
     word,
     word_id,
-        concat(attrkey, ':') attrkey,
+    concat(attrkey, ':') attrkey,
     attrvalue value,
     pf.sort_order
 from
