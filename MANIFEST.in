@@ -1,3 +1,4 @@
-graft dlernen/ui/templates
-graft dlernen/ui/static
+graft dlernen/templates
+graft dlernen/static
+graft dlernen/apps
 global-exclude *.pyc
