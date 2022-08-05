@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for
+from flask import Flask, request, render_template, redirect, url_for, jsonify
 from pprint import pprint
 import mysql.connector
 from dlernen.config import Config
@@ -49,60 +49,57 @@ def chunkify(arr, **kwargs):
     return result
 
 
-@app.route('/word/<string:word>')
-def single_word(word):
+@app.route('/api/word/<string:word>')
+def get_word(word):
+    """
+    return attributes for every word that matches <word>.  since (word, pos_id) is a unique key, it is possible
+    to return more than one set of attributes for a given word.  ex:  'braten' is a noun and a verb.
+
+    :param word:
+    :return:
+    """
     dbh, cursor = get_conn()
 
     list_id = request.args.get('list_id')
     sql = """
 select
-pos_name,
-word_id,
-word,
-attribute_id,
-attrkey,
-ifnull(attrvalue, '') attrvalue
-from mashup_v
-where word = %s
-order by word_id, sort_order
+    pos_name,
+    word,
+    word_id,
+    attrkey,
+    attrvalue value,
+    pf.sort_order
+from
+    mashup_v
+inner join pos_form pf on pf.attribute_id = mashup_v.attribute_id and pf.pos_id = mashup_v.pos_id
+where word_id in
+    (
+    select
+        word_id
+    from
+        mashup_v
+    where
+        word = %s
+    )
+order by word_id, pf.sort_order
 """
     cursor.execute(sql, (word,))
     rows = cursor.fetchall()
     dict_result = {}
     for r in rows:
         if not dict_result.get(r['word_id']):
-            dict_result[r['word_id']] = []
-        dict_result[r['word_id']].append(r)
+            dict_result[r['word_id']] = {}
+            dict_result[r['word_id']]['attributes'] = []
+        dict_result[r['word_id']]['word'] = r['word']
+        dict_result[r['word_id']]['word_id'] = r['word_id']
+        dict_result[r['word_id']]['pos_name'] = r['pos_name']
+        dict_result[r['word_id']]['attributes'].append({'key': r['attrkey'], 'value': r['value']})
 
-    return render_template('word.html', dict_result=dict_result, list_id=list_id, return_to_list_id=list_id)
+    result = list(dict_result.values())
+    # use jsonify even if the result looks like json already.  jsonify ensures that the content type and
+    # mime headers are correct.
 
-
-@app.route('/word/<int:word_id>')
-def single_word_id(word_id):
-    dbh, cursor = get_conn()
-
-    list_id = request.args.get('list_id')
-    sql = """
-select
-pos_name,
-word_id,
-word,
-attribute_id,
-attrkey,
-ifnull(attrvalue, '') attrvalue
-from mashup_v
-where word_id = %s
-order by word_id, sort_order
-"""
-    cursor.execute(sql, (word_id,))
-    rows = cursor.fetchall()
-    dict_result = {}
-    for r in rows:
-        if not dict_result.get(r['word_id']):
-            dict_result[r['word_id']] = []
-        dict_result[r['word_id']].append(r)
-
-    return render_template('word.html', dict_result=dict_result, list_id=list_id)
+    return jsonify(result)
 
 
 @app.route('/list_details/<int:list_id>')
@@ -421,41 +418,6 @@ and word in (%s)
     target = url_for('wordlist', list_id=list_id)
     return redirect(target)
     # todo:  validate input: word in not bad script, list id is int
-
-
-@app.route('/edit_word', methods=['POST'])
-def edit_word():
-    dbh, cursor = get_conn()
-
-    attr_id_keys = [x for x in list(request.form.keys()) if x.endswith('_attrid')]
-
-    tuples = []
-    for k in attr_id_keys:
-        attrkey = k.replace('_attrid', '')
-        v = request.form[attrkey].strip()
-        if v:
-            tuples.append("%%(word_id)s, %%(%s)s, %%(%s)s" % (k, attrkey))
-
-    form_copy = [(f[0], f[1].capitalize()) if f[0] == 'plural' else (f[0], f[1]) for f in list(request.form.items())]
-    form_copy = dict(form_copy)
-
-    sql = """
-insert into word_attribute(word_id, attribute_id, value)
-values (%s)
-on duplicate key update value=values(value)
-""" % '), ('.join(tuples)
-
-    cursor.execute(sql, form_copy)
-    dbh.commit()
-
-    list_id = request.form.get('list_id')
-    target = None
-    if list_id:
-        target = url_for('wordlist', list_id=list_id)
-    else:
-        target = url_for('single_word', word=request.form['word'])
-
-    return redirect(target)
 
 
 def get_pos_info_for_form(cursor):

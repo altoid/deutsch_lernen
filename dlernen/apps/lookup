@@ -5,6 +5,8 @@ from dlernen import dsn
 import argparse
 import operator
 from pprint import pprint
+import requests
+from dlernen.config import Config
 
 
 def lookup(word):
@@ -103,6 +105,36 @@ on duplicate key update count = count + 1
     db.commit()
 
 
+def widest_attrkey_len(result):
+    """
+    for output formatting purposes, return the length of the longest attrkey among the attributes in the result.
+
+    :param result:
+    :return:
+    """
+
+    # the attribute with the longest key
+    longest_key = max(result['attributes'], key=lambda x: len(x['key']))
+    return len(longest_key['key']) if longest_key else 0
+
+
+def hanging_tag_width(result):
+    return len("%s (%s)" % (result['word'], result['pos_name']))
+
+
+def display_result(result, tagwidth, keywidth):
+
+    tag = "%s (%s)" % (result['word'], result['pos_name'])
+    print("%s" % ('=' * 66))
+
+    for a in result['attributes']:
+        display_key = "%s:" % a['key']
+        print("%s %s %s" % (tag.ljust(tagwidth + 10),
+                            display_key.ljust(keywidth + 1),  # add 1 for the : appended to the key name
+                            a['value']))
+        tag = ''
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("word",
@@ -110,10 +142,27 @@ if __name__ == '__main__':
                         help="word to look up")
     parser.add_argument("--exact", action='store_true',
                         help="search for word verbatim, no substring matching")
+    parser.add_argument("--api", action='store_true',
+                        help="use REST api")
     args = parser.parse_args()
 
     db = dsn.getConnection()
     c = db.cursor(dictionary=True)
 
-    for word in args.word:
-        lookup(word)
+    if args.api:
+        all_results = []
+        for word in args.word:
+            url = "%s/api/word/%s" % (Config.BASE_URL, word)
+            r = requests.get(url)
+            results = r.json()
+            all_results += results
+        pprint(all_results)
+        keywidth = max([widest_attrkey_len(x) for x in all_results])
+        tagwidth = max([hanging_tag_width(x) for x in all_results])
+
+        for result in all_results:
+            display_result(result, tagwidth, keywidth)
+
+    else:
+        for word in args.word:
+            lookup(word)

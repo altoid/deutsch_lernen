@@ -51,7 +51,7 @@ def add_or_update_word(db, c, word, pos_id):
         input_values = []
         for r in word_attributes:
             prefix = "--[%s]-->" % r['attrkey']
-            prompt = string.ljust(prefix, max_width)
+            prompt = prefix.ljust(max_width)
             prompt += "[%s]:" % (
                 '' if r['attrvalue'] == None else r['attrvalue'])
             prompt = prompt.encode('utf-8')
