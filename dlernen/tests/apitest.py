@@ -1,6 +1,7 @@
 import unittest
 import jsonschema
 import requests
+from dlernen import json_schema
 
 # {
 # 	"word": "verderben",
@@ -42,59 +43,22 @@ SAMPLE_RESULT = {
     "word_id": 702
 }
 
-WORD_SCHEMA = {
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Word",
-    "description": "word with attributes",
-    "type": "object",
-    "properties": {
-        "word": {
-            "type": "string",
-            "minLength": 1
-        },
-        "word_id": {
-            "type": "integer",
-            "minimum": 0
-        },
-        "pos_name": {
-            "type": "string",
-            "minLength": 1
-        },
-        "attributes": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "key": {
-                        "type": "string",
-                        "minLength": 1,
-                    },
-                    "value": {
-                        "type": "string"
-                    }
-                },
-                "required": ["key", "value"]
-            }
-        }
-    },
-    "required": ["word", "word_id", "pos_name", "attributes"]
-}
 
 DB_URL = "http://127.0.0.1:5000/"
 
 
 class MyTestCase(unittest.TestCase):
     def test_schema(self):
-        jsonschema.Draft202012Validator.check_schema(WORD_SCHEMA)
+        jsonschema.Draft202012Validator.check_schema(json_schema.WORD_SCHEMA)
 
     def test_sample(self):
-        jsonschema.validate(SAMPLE_RESULT, WORD_SCHEMA)
+        jsonschema.validate(SAMPLE_RESULT, json_schema.WORD_SCHEMA)
 
     def test_real_word(self):
         r = requests.get(DB_URL + "/api/word/verderben")
         result = r.json()
         self.assertGreater(len(result), 0)
-        jsonschema.validate(result[0], WORD_SCHEMA)
+        jsonschema.validate(result[0], json_schema.WORD_SCHEMA)
 
 
 if __name__ == '__main__':
