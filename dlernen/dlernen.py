@@ -58,10 +58,12 @@ def get_word(word):
     :param word:
     :return:
     """
+
     dbh, cursor = get_conn()
 
-    list_id = request.args.get('list_id')
-    sql = """
+    partial = request.args.get('partial', default='False').lower() == 'true'
+
+    exact_match_sql = """
 select
     pos_name,
     word,
@@ -83,7 +85,39 @@ where word_id in
     )
 order by word_id, pf.sort_order
 """
-    cursor.execute(sql, (word,))
+
+    partial_match_sql = """
+    select
+        pos_name,
+        word,
+        word_id,
+        attrkey,
+        attrvalue value,
+        pf.sort_order
+    from
+        mashup_v
+    inner join pos_form pf on pf.attribute_id = mashup_v.attribute_id and pf.pos_id = mashup_v.pos_id
+    where word_id in
+        (
+        select
+            word_id
+        from
+            mashup_v
+        where
+            word like %s or attrvalue like %s
+        )
+    order by word_id, pf.sort_order
+    """
+
+    if partial:
+        query = partial_match_sql
+        w = "%%%s%%" % word
+        query_args = (w, w)
+    else:
+        query = exact_match_sql
+        query_args = (word,)
+
+    cursor.execute(query, query_args)
     rows = cursor.fetchall()
     dict_result = {}
     for r in rows:
@@ -94,6 +128,8 @@ order by word_id, pf.sort_order
         dict_result[r['word_id']]['word_id'] = r['word_id']
         dict_result[r['word_id']]['pos_name'] = r['pos_name']
         dict_result[r['word_id']]['attributes'].append({'key': r['attrkey'], 'value': r['value']})
+
+    pprint([x for x in dict_result.keys()])
 
     result = list(dict_result.values())
     # use jsonify even if the result looks like json already.  jsonify ensures that the content type and

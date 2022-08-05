@@ -1,7 +1,7 @@
 import unittest
 import jsonschema
 import requests
-from dlernen import json_schema
+from dlernen import json_schema, config
 
 # {
 # 	"word": "verderben",
@@ -44,9 +44,6 @@ SAMPLE_RESULT = {
 }
 
 
-DB_URL = "http://127.0.0.1:5000/"
-
-
 class MyTestCase(unittest.TestCase):
     def test_schema(self):
         jsonschema.Draft202012Validator.check_schema(json_schema.WORD_SCHEMA)
@@ -55,7 +52,7 @@ class MyTestCase(unittest.TestCase):
         jsonschema.validate(SAMPLE_RESULT, json_schema.WORD_SCHEMA)
 
     def test_real_word(self):
-        r = requests.get(DB_URL + "/api/word/verderben")
+        r = requests.get(config.Config.BASE_URL + "/api/word/verderben")
         result = r.json()
         self.assertGreater(len(result), 0)
         jsonschema.validate(result[0], json_schema.WORD_SCHEMA)

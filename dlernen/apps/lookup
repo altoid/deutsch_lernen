@@ -1,108 +1,10 @@
 #!/usr/bin/env python
 # -*- python -*-
 
-from dlernen import dsn
 import argparse
-import operator
 from pprint import pprint
 import requests
 from dlernen.config import Config
-
-
-def lookup(word):
-    word = word.lower()
-
-    regex_q = """
-select
-    pos_name,
-    word,
-    word_id,
-    concat(attrkey, ':') attrkey,
-    attrvalue value,
-    pf.sort_order
-from
-    mashup_v
-inner join pos_form pf on pf.attribute_id = mashup_v.attribute_id and pf.pos_id = mashup_v.pos_id
-where word_id in
-    (
-    select
-        word_id
-    from
-        mashup_v
-    where
-        word like '%%%(word)s%%' or attrvalue like '%%%(word)s%%'
-    )
-""" % {
-        'word': word
-    }
-
-    exact_q = """
-select
-    pos_name,
-    word,
-    word_id,
-    concat(attrkey, ':') attrkey,
-    attrvalue value,
-    pf.sort_order
-from
-    mashup_v
-inner join pos_form pf on pf.attribute_id = mashup_v.attribute_id and pf.pos_id = mashup_v.pos_id
-where word_id in
-    (
-    select
-        word_id
-    from
-        mashup_v
-    where
-        word = '%(word)s'
-    )
-""" % {
-        'word': word
-    }
-
-    q = exact_q if args.exact else regex_q
-    c.execute(q)
-
-    result = c.fetchall()
-
-    if len(result) == 0:
-        print("%s NOT FOUND:  %s" % ('#' * 33, word))
-        return
-
-    result = sorted(result, key=operator.itemgetter('word', 'sort_order'))
-
-    # get the max width of all attr keys
-    max_attr_width = 0
-    max_tag_length = 0
-    for r in result:
-        if len(r['attrkey']) > max_attr_width:
-            max_attr_width = len(r['attrkey'])
-        tag_length = len("%s (%s)" % (r['word'], r['pos_name']))
-        if tag_length > max_tag_length:
-            max_tag_length = tag_length
-
-    current_word_id = -1
-    matched_ids = []
-    for r in result:
-        if r['word_id'] != current_word_id:
-            print("%s" % ('=' * 66))
-            current_word_id = r['word_id']
-            tag = "%s (%s)" % (r['word'], r['pos_name'])
-            matched_ids.append((current_word_id,))
-        else:
-            tag = ''
-
-        print("%s %s %s" % (tag.ljust(max_tag_length + 10),
-                            r['attrkey'].ljust(max_attr_width),
-                            r['value']))
-
-    # record this lookup
-    q = """
-insert into lookup (word_id) values (%s)
-on duplicate key update count = count + 1
-"""
-    c.executemany(q, matched_ids)
-    db.commit()
 
 
 def widest_attrkey_len(result):
@@ -137,32 +39,31 @@ def display_result(result, tagwidth, keywidth):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("word",
-                        nargs='+',
-                        help="word to look up")
-    parser.add_argument("--exact", action='store_true',
+    parser.add_argument("word", nargs='+', help="word to look up")
+    parser.add_argument("--partial", action='store_true',
                         help="search for word verbatim, no substring matching")
-    parser.add_argument("--api", action='store_true',
-                        help="use REST api")
     args = parser.parse_args()
 
-    db = dsn.getConnection()
-    c = db.cursor(dictionary=True)
+    all_results = []
+    for word in args.word:
+        url = "%s/api/word/%s?partial=%s" % (Config.BASE_URL, word, str(args.partial))
+        r = requests.get(url)
+        results = r.json()
+        all_results += results
 
-    if args.api:
-        all_results = []
-        for word in args.word:
-            url = "%s/api/word/%s" % (Config.BASE_URL, word)
-            r = requests.get(url)
-            results = r.json()
-            all_results += results
-        pprint(all_results)
-        keywidth = max([widest_attrkey_len(x) for x in all_results])
-        tagwidth = max([hanging_tag_width(x) for x in all_results])
+    keywidth = max([widest_attrkey_len(x) for x in all_results])
+    tagwidth = max([hanging_tag_width(x) for x in all_results])
 
-        for result in all_results:
-            display_result(result, tagwidth, keywidth)
+    for result in all_results:
+        display_result(result, tagwidth, keywidth)
 
-    else:
-        for word in args.word:
-            lookup(word)
+    # TODO:  record lookups in the lookup table.  need one post request for all word ids looked up.
+    # beware that --partial with multiple args might cause some words to be double-counted, so need
+    # to turn the word_ids into a set before posting.
+    #
+    #     q = """
+    # insert into lookup (word_id) values (%s)
+    # on duplicate key update count = count + 1
+    # """
+    #     c.executemany(q, matched_ids)
+    #     db.commit()
