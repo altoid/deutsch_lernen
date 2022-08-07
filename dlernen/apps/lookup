@@ -49,13 +49,17 @@ if __name__ == '__main__':
         url = "%s/api/word/%s?partial=%s" % (Config.BASE_URL, word, str(args.partial))
         r = requests.get(url)
         results = r.json()
+        if not results:
+            print("%s NOT FOUND:  %s" % ('#' * 33, word))
+
         all_results += results
 
-    keywidth = max([widest_attrkey_len(x) for x in all_results])
-    tagwidth = max([hanging_tag_width(x) for x in all_results])
+    if all_results:
+        keywidth = max([widest_attrkey_len(x) for x in all_results])
+        tagwidth = max([hanging_tag_width(x) for x in all_results])
 
-    for result in all_results:
-        display_result(result, tagwidth, keywidth)
+        for result in all_results:
+            display_result(result, tagwidth, keywidth)
 
     # TODO:  record lookups in the lookup table.  need one post request for all word ids looked up.
     # beware that --partial with multiple args might cause some words to be double-counted, so need
