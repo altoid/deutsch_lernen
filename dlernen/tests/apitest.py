@@ -23,7 +23,7 @@ from dlernen import json_schema, config
 # 	]
 # }
 
-SAMPLE_RESULT = {
+SAMPLE_WORD_RESULT = {
     "attributes": [
         {
             "key": "article",
@@ -43,19 +43,40 @@ SAMPLE_RESULT = {
     "word_id": 702
 }
 
+SAMPLE_WORDLIST_RESULT = {
+    "name": "sample_word_list",
+    "wordlist_id": 1234,
+    "count": 111,
+    "is_smart": True
+}
+
 
 class MyTestCase(unittest.TestCase):
-    def test_schema(self):
+    def test_word_schema(self):
         jsonschema.Draft202012Validator.check_schema(json_schema.WORD_SCHEMA)
 
-    def test_sample(self):
-        jsonschema.validate(SAMPLE_RESULT, json_schema.WORD_SCHEMA)
+    def test_word_sample(self):
+        jsonschema.validate(SAMPLE_WORD_RESULT, json_schema.WORD_SCHEMA)
 
     def test_real_word(self):
         r = requests.get(config.Config.BASE_URL + "/api/word/verderben")
-        result = r.json()
-        self.assertGreater(len(result), 0)
-        jsonschema.validate(result[0], json_schema.WORD_SCHEMA)
+        results = r.json()
+        self.assertGreater(len(results), 0)
+        for result in results:
+            jsonschema.validate(result, json_schema.WORD_SCHEMA)
+
+    def test_wordlist_schema(self):
+        jsonschema.Draft202012Validator.check_schema(json_schema.WORDLIST_SCHEMA)
+
+    def test_wordlist_sample(self):
+        jsonschema.validate(SAMPLE_WORDLIST_RESULT, json_schema.WORDLIST_SCHEMA)
+
+    def test_real_wordlist(self):
+        r = requests.get(config.Config.BASE_URL + "/api/wordlists")
+        results = r.json()
+        self.assertGreater(len(results), 0)
+        for result in results:
+            jsonschema.validate(result, json_schema.WORDLIST_SCHEMA)
 
 
 if __name__ == '__main__':

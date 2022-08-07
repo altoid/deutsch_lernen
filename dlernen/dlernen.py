@@ -129,8 +129,6 @@ order by word_id, pf.sort_order
         dict_result[r['word_id']]['pos_name'] = r['pos_name']
         dict_result[r['word_id']]['attributes'].append({'key': r['attrkey'], 'value': r['value']})
 
-    pprint([x for x in dict_result.keys()])
-
     result = list(dict_result.values())
     # use jsonify even if the result looks like json already.  jsonify ensures that the content type and
     # mime headers are correct.
@@ -270,6 +268,54 @@ order by m.word
                                known_words_count=len(known_words_rows),
                                unknown_words_count=len(unknown_words_rows),
                                unknown_words=unknown_words)
+
+
+@app.route('/api/wordlists')
+def wordlists_api():
+    dbh, cursor = get_conn()
+    sql = """
+    select name, id wordlist_id, cast(ifnull(lcount, 0) as signed) count, code
+    from wordlist
+    left join
+    (
+        select wordlist_id, sum(c) lcount
+        from
+        (
+            select wordlist_id, count(*) c
+            from wordlist_unknown_word
+            group by wordlist_id
+            union
+            select wordlist_id, count(*) c
+            from wordlist_known_word
+            group by wordlist_id
+        ) a
+        group by wordlist_id
+    ) b on b.wordlist_id = wordlist.id
+    order by name
+    """
+    cursor.execute(sql)
+    rows = cursor.fetchall()
+
+    # maps list id to list info
+    dict_result = {}
+
+    # maps list id to code.  for smart lists we'll execute the code
+    # to get the count
+    lists_with_code = {}
+
+    for r in rows:
+        dict_result[r['wordlist_id']] = r
+        dict_result[r['wordlist_id']]['is_smart'] = r['code'] is not None
+
+        if r['code']:
+            lists_with_code[r['wordlist_id']] = r['code']
+
+    for k in lists_with_code.keys():
+        cursor.execute(lists_with_code[k])
+        rows = cursor.fetchall()
+        dict_result[k]['count'] = len(rows)
+
+    return jsonify(list(dict_result.values()))
 
 
 @app.route('/')
