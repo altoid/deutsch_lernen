@@ -28,10 +28,11 @@
             </td>
             <td>
                 {% if r.is_smart %}
-                <a href="{{ url_for('wordlist', list_id=r.wordlist_id) }}">(*) {{ r.name }}</a> ({{ r.count }})
-                {% else %}
-                <a href="{{ url_for('wordlist', list_id=r.wordlist_id) }}">{{ r.name }}</a> ({{ r.count }})
+                (*)
                 {% endif %}
+            </td>
+            <td>
+                <a href="{{ url_for('wordlist', list_id=r.wordlist_id) }}">{{ r.name }}</a> ({{ r.count }})
             </td>
         </tr>
         {% endfor %}
