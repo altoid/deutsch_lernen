@@ -276,7 +276,7 @@ order by m.word
 def wordlists_api():
     dbh, cursor = get_conn()
     sql = """
-    select name, id wordlist_id, cast(ifnull(lcount, 0) as signed) count, code
+    select name, id wordlist_id, ifnull(lcount, 0) count, code
     from wordlist
     left join
     (
@@ -301,22 +301,17 @@ def wordlists_api():
     # maps list id to list info
     dict_result = {}
 
-    # maps list id to code.  for smart lists we'll execute the code
-    # to get the count
-    lists_with_code = {}
-
     for r in rows:
+        # TODO - the connector is returning the count as a string, find out WTF
+        r['count'] = int(r['count'])
         dict_result[r['wordlist_id']] = r
-        dict_result[r['wordlist_id']]['is_smart'] = r['code'] is not None
+        dict_result[r['wordlist_id']]['is_smart'] = bool(r['code'])
 
         if r['code']:
-            lists_with_code[r['wordlist_id']] = r['code']
+            cursor.execute(r['code'])
+            rows = cursor.fetchall()
+            dict_result[r['wordlist_id']]['count'] = len(rows)
             del r['code']
-
-    for k in lists_with_code.keys():
-        cursor.execute(lists_with_code[k])
-        rows = cursor.fetchall()
-        dict_result[k]['count'] = len(rows)
 
     return jsonify(list(dict_result.values()))
 
