@@ -2,6 +2,8 @@ from flask import Flask, request, render_template, redirect, url_for, jsonify
 from pprint import pprint
 import mysql.connector
 from dlernen.config import Config
+import requests
+import json
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -309,6 +311,7 @@ def wordlists_api():
 
         if r['code']:
             lists_with_code[r['wordlist_id']] = r['code']
+            del r['code']
 
     for k in lists_with_code.keys():
         cursor.execute(lists_with_code[k])
@@ -321,31 +324,11 @@ def wordlists_api():
 @app.route('/')
 @app.route('/wordlists')
 def wordlists():
-    dbh, cursor = get_conn()
-    sql = """
-select name, id, ifnull(lcount, 0) listcount
-from wordlist
-left join
-(
-    select wordlist_id, sum(c) lcount
-    from
-    (
-        select wordlist_id, count(*) c
-        from wordlist_unknown_word
-        group by wordlist_id
-        union
-        select wordlist_id, count(*) c
-        from wordlist_known_word
-        group by wordlist_id
-    ) a
-    group by wordlist_id
-) b on b.wordlist_id = wordlist.id
-order by name
-"""
-    cursor.execute(sql)
-    rows = cursor.fetchall()
+    url = "%s/api/wordlists" % Config.DB_URL
+    r = requests.get(url)
+    result = json.loads(r.text)
 
-    return render_template('wordlists.html', rows=rows)
+    return render_template('wordlists.html', rows=result)
 
 
 @app.route('/addlist', methods=['POST'])

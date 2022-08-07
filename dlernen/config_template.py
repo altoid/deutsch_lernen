@@ -5,3 +5,4 @@ class Config(object):
     MYSQL_DB = ''
     NCHUNKS = 3
     BASE_URL = 'http://host:port'
+    DB_URL = 'http://host:port'

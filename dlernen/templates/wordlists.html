@@ -7,35 +7,36 @@
 <a href="{{ url_for('add_word') }}">Add a word</a>
 <br>
 <form action="/addlist" method="post">
-  <table>
-	<tr>
-	  <td>List Name:</td>
-	  <td><input type="text" name="name" size="100"></input></td>
-	</tr>
-	<tr>
-	  <td>Source:</td>
-	  <td><input type="text" name="source" size="100"></input></td>
-	</tr>
-  </table>
-  <input type="submit" value="Add List"></input>
+    <table>
+        <tr>
+            <td>List Name:</td>
+            <td><input type="text" name="name" size="100"></input></td>
+        </tr>
+        <tr>
+            <td>Source:</td>
+            <td><input type="text" name="source" size="100"></input></td>
+        </tr>
+    </table>
+    <input type="submit" value="Add List"></input>
 </form>
 <form action="/deletelist" method="post">
-  <table>
-    {% for r in rows %}
-    <tr>
-      <td>
-	<input type="checkbox" name="deletelist" value="{{ r.id }}">
-      </td>
-      <td>
-	{{ r.id }}
-      </td>
-      <td>
-	<a href="{{ url_for('wordlist', list_id=r.id) }}">{{ r.name }}</a> ({{ r.listcount }})
-      </td>
-    </tr>
-    {% endfor %}
-  </table>
-  <input type="submit" value="Delete Selected Lists"></input>
+    <table>
+        {% for r in rows %}
+        <tr>
+            <td>
+                <input type="checkbox" name="deletelist" value="{{ r.wordlist_id }}">
+            </td>
+            <td>
+                {% if r.is_smart %}
+                <a href="{{ url_for('wordlist', list_id=r.wordlist_id) }}">(*) {{ r.name }}</a> ({{ r.count }})
+                {% else %}
+                <a href="{{ url_for('wordlist', list_id=r.wordlist_id) }}">{{ r.name }}</a> ({{ r.count }})
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <input type="submit" value="Delete Selected Lists"></input>
 </form>
 {% endblock %}
 
