@@ -249,120 +249,30 @@ def wordlist_api(list_id):
 @app.route('/wordlist/<int:list_id>')
 def wordlist(list_id):
     nchunks = request.args.get('nchunks', app.config['NCHUNKS'], type=int)
-    dbh, cursor = get_conn()
-    sql = """
-select
-    id,
-    name,
-    source,
-    ifnull(notes, '') notes,
-    ifnull(code, '') code
-from wordlist
-where id = %s
-"""
-    cursor.execute(sql, (list_id,))
-    wl_row = cursor.fetchone()
-    code = wl_row['code'].strip()
+    url = "%s/api/wordlist/%s" % (Config.DB_URL, list_id)
+    r = requests.get(url)
+    result = json.loads(r.text)
 
-    if code:
-        words_sql = """
-select
-%%s wordlist_id,
-m.word list_word,
-s.word_id,
-m.attrvalue definition,
-ifnull(m2.attrvalue, '   ') article
-from
-(
-%s
-) s
-left join mashup_v m
-on s.word_id = m.word_id
-and m.attrkey = 'definition'
-left join mashup_v m2
-on s.word_id = m2.word_id
-and m2.attrkey = 'article'
-order by m.word
-        """ % code
-
-        cursor.execute(words_sql, (list_id,))
-        words_rows = cursor.fetchall()
-
-        words = []
-        if len(words_rows):
-            words = chunkify(words_rows, nchunks=nchunks)
-
-        source_is_url = False
-        if wl_row['source'] and wl_row['source'].startswith('http'):
-            source_is_url = True
-
-        return render_template('smart_wordlist.html', wl_row=wl_row,
-                               source_is_url=source_is_url,
+    if result['is_smart']:
+        words = chunkify(result['known_words'], nchunks=nchunks)
+        return render_template('smart_wordlist.html',
+                               result=result,
                                list_id=list_id,
                                words=words,
-                               words_count=len(words_rows))
+                               source_is_url=result['source_is_url'],
+                               words_count=len(result['known_words']))
 
-    else:
-        known_words_sql = """
-    select
-    ww.wordlist_id,
-    m.word list_word,
-    m.word_id,
-    m.attrvalue definition,
-    ifnull(m2.attrvalue, '   ') article
-    from wordlist_known_word ww
-    left join mashup_v m
-    on ww.word_id = m.word_id
-    and m.attrkey = 'definition'
-    left join mashup_v m2
-    on ww.word_id = m2.word_id
-    and m2.attrkey = 'article'
-    where ww.wordlist_id = %s
-    order by m.word
-    """
+    known_words = chunkify(result['known_words'], nchunks=nchunks)
+    unknown_words = chunkify(result['unknown_words'], nchunks=nchunks)
 
-        unknown_words_sql = """
-    select
-    ww.wordlist_id,
-    ww.word list_word,
-    null definition,
-    '   ' article
-    from wordlist_unknown_word ww
-    left join mashup_v m
-    on ww.word = m.word
-    and m.attrkey = 'definition'
-    left join mashup_v m2
-    on ww.word = m2.word
-    and m2.attrkey = 'article'
-    where ww.wordlist_id = %s
-    order by ww.word
-    """
-
-        cursor.execute(known_words_sql, (list_id,))
-        known_words_rows = cursor.fetchall()
-
-        cursor.execute(unknown_words_sql, (list_id,))
-        unknown_words_rows = cursor.fetchall()
-
-        known_words = []
-        unknown_words = []
-        if len(known_words_rows):
-            known_words = chunkify(known_words_rows, nchunks=nchunks)
-
-        if len(unknown_words_rows):
-            unknown_words = chunkify(unknown_words_rows, nchunks=nchunks)
-
-        source_is_url = False
-        if wl_row['source'] and wl_row['source'].startswith('http'):
-            source_is_url = True
-
-        return render_template('wordlist.html', wl_row=wl_row,
-                               source_is_url=source_is_url,
-                               list_id=list_id,
-                               known_words=known_words,
-                               known_words_count=len(known_words_rows),
-                               unknown_words_count=len(unknown_words_rows),
-                               unknown_words=unknown_words)
+    return render_template('wordlist.html',
+                           result=result,
+                           list_id=list_id,
+                           source_is_url=result['source_is_url'],
+                           known_words=known_words,
+                           known_words_count=len(result['known_words']),
+                           unknown_words_count=len(result['unknown_words']),
+                           unknown_words=unknown_words)
 
 
 @app.route('/api/wordlists')

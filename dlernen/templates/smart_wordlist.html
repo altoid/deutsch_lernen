@@ -2,44 +2,47 @@
 
 {% block body %}
 {{ super() }}
-<h1><a href="{{ url_for('list_details', list_id=wl_row.id) }}">{{wl_row.name}} ({{wl_row.id}})</a></h1>
+<h1><a href="{{ url_for('list_details', list_id=result.wordlist_id) }}">{{result.name}} ({{result.wordlist_id}})</a>
+</h1>
 {% if source_is_url %}
-<a href="{{ wl_row.source }}">{{ wl_row.source }}</a>
-{% elif wl_row.source %}
-{{ wl_row.source }}
+<a href="{{ result.source }}">{{ result.source }}</a>
+{% elif result.source %}
+{{ result.source }}
 {% endif %}
 <br>
 <table width="100%">
-  <tr valign="top">
-    <td width>
-      <h2>Wörter ({{ words_count }})</h2>
-      <table>
-	<tr valign="top">
-	  {% for column in words %}
-	  <td>
-	    <table>
-	      {% for r in column %}
-	      <tr valign="top">
-		<td>{{ r.article }}</td>
-		<td><a href="{{ url_for('add_word', word_id=r.word_id, word=r.list_word, list_id=list_id) }}">{{ r.list_word }}</a></td>
-		<td>{{ r.definition }}</td>
-	      </tr>
-	      {% endfor %}
-	    </table>
-	  </td>
-	  {% endfor %}
-	</tr>
-      </table>
-    </td>
-  </tr>
+    <tr valign="top">
+        <td width>
+            <h2>Wörter ({{ words_count }})</h2>
+            <table>
+                <tr valign="top">
+                    {% for column in words %}
+                    <td>
+                        <table>
+                            {% for r in column %}
+                            <tr valign="top">
+                                <td>{{ r.article }}</td>
+                                <td>
+                                    <a href="{{ url_for('add_word', word_id=r.word_id, word=r.list_word, list_id=list_id) }}">{{
+                                        r.word }}</a></td>
+                                <td>{{ r.definition }}</td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    </td>
+                    {% endfor %}
+                </tr>
+            </table>
+        </td>
+    </tr>
 </table>
 <form action="/update_notes" method="post">
-  <h2>Notes<h2>
-      <input type="submit" value="Update Notes"></input>
-      <br>
-      <textarea name="notes" rows="50" cols="100">{{ wl_row.notes }}</textarea>
-      <br>
-      <input type="hidden" value="{{wl_row.id}}" name="list_id"></input>
-      <input type="submit" value="Update Notes"></input>
+    <h2>Notes<h2>
+        <input type="submit" value="Update Notes"></input>
+        <br>
+        <textarea name="notes" rows="50" cols="100">{{ result.notes }}</textarea>
+        <br>
+        <input type="hidden" value="{{result.wordlist_id}}" name="list_id"></input>
+        <input type="submit" value="Update Notes"></input>
 </form>
 {% endblock %}
