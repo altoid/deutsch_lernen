@@ -50,8 +50,35 @@ SAMPLE_WORDLIST_RESULT = {
     "is_smart": True
 }
 
+SAMPLE_WORDLIST_DETAIL_RESULT = {
+    "name": "sample_word_list",
+    "wordlist_id": 1234,
+    "count": 111,
+    "is_smart": True,
+    "known_words": [
+        {
+            "word": "aoeuaeou",
+            "word_id": 123,
+            "article": "",
+            "definition": "hell if i know"
+        },
+        {
+            "word": "Iethdsenihtd",
+            "word_id": 465,
+            "article": "das",
+            "definition": "an odd noun"
+        }
+    ],
+    "source": "where i got this",
+    "source_is_url": False,
+    "unknown_words": [
+        "othuedtiu", "tehuidntuh", "tuehdinteuh"
+    ],
+    "notes": "lots of stuff"
+}
 
-class MyTestCase(unittest.TestCase):
+
+class APITests(unittest.TestCase):
     def test_word_schema(self):
         jsonschema.Draft202012Validator.check_schema(json_schema.WORD_SCHEMA)
 
@@ -77,6 +104,16 @@ class MyTestCase(unittest.TestCase):
         self.assertGreater(len(results), 0)
         for result in results:
             jsonschema.validate(result, json_schema.WORDLIST_SCHEMA)
+
+    def test_wordlist_detail_sample(self):
+        jsonschema.validate(SAMPLE_WORDLIST_DETAIL_RESULT, json_schema.WORDLIST_DETAIL_SCHEMA)
+
+    def test_real_wordlist_detail(self):
+        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, 6)
+        r = requests.get(url)
+        result = r.json()
+        jsonschema.validate(result, json_schema.WORDLIST_DETAIL_SCHEMA)
+
 
 
 if __name__ == '__main__':

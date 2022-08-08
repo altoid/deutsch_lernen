@@ -153,6 +153,99 @@ where id = %s
     return render_template('list_details.html', wl_row=wl_row)
 
 
+@app.route('/api/wordlist/<int:list_id>')
+def wordlist_api(list_id):
+    dbh, cursor = get_conn()
+    sql = """
+    select
+        id wordlist_id,
+        name,
+        source,
+        ifnull(notes, '') notes,
+        ifnull(code, '') code
+    from wordlist
+    where id = %s
+    """
+    cursor.execute(sql, (list_id,))
+    wl_row = cursor.fetchone()
+    code = wl_row['code'].strip()
+
+    result = dict(wl_row)
+    result['source_is_url'] = result['source'].startswith('http')
+    result['is_smart'] = bool(code)
+
+    known_words = None
+
+    if code:
+        cursor.execute(code)
+        word_ids = cursor.fetchall()
+
+        word_ids = [x['word_id'] for x in word_ids]
+
+        known_words = word_ids
+
+        known_words_sql = """
+        select
+        m.word word,
+        s.word_id,
+        m.attrvalue definition,
+        ifnull(m2.attrvalue, '') article
+        from
+        (
+        %s
+        ) s
+        left join mashup_v m
+        on s.word_id = m.word_id
+        and m.attrkey = 'definition'
+        left join mashup_v m2
+        on s.word_id = m2.word_id
+        and m2.attrkey = 'article'
+        order by m.word        
+        """ % code
+
+        cursor.execute(known_words_sql)
+
+    else:
+        known_words_sql = """
+        select
+            m.word,
+            m.word_id,
+            m.attrvalue definition,
+            ifnull(m2.attrvalue, '') article
+        from wordlist_known_word ww
+        left join mashup_v m
+        on   ww.word_id = m.word_id
+        and  m.attrkey = 'definition'
+        left join mashup_v m2
+        on   ww.word_id = m2.word_id
+        and  m2.attrkey = 'article'
+        where ww.wordlist_id = %s
+        order by m.word
+        """
+
+        cursor.execute(known_words_sql, (list_id,))
+
+    known_words = cursor.fetchall()
+
+    result['known_words'] = known_words
+
+    unknown_words_sql = """
+    select
+    ww.word word
+    from wordlist_unknown_word ww
+    where ww.wordlist_id = %s
+    order by ww.word
+    """
+
+    cursor.execute(unknown_words_sql, (list_id,))
+    unknown_words = cursor.fetchall()
+    unknown_words = [x['word'] for x in unknown_words]
+
+    result['unknown_words'] = unknown_words
+
+    return jsonify(result)
+
+
 @app.route('/wordlist/<int:list_id>')
 def wordlist(list_id):
     nchunks = request.args.get('nchunks', app.config['NCHUNKS'], type=int)
