@@ -1,23 +1,23 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-	  "http://www.w3.org/TR/html4/strict.dtd">
+        "http://www.w3.org/TR/html4/strict.dtd">
 <html>
-  <head>
+<head>
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     {% block title %}
     {% endblock %}
-  </head>
-  <body>
-	<table>
-	  <tr>
-		<td><a href="{{ url_for('wordlists') }}">Home</a></td>
-		{% if return_to_list_id %}
-	  </tr>
-	  </tr>
-		<td><a href="{{ url_for('wordlist', list_id=return_to_list_id) }}">Back to List</a></td>
-		{% endif %}
-	  </tr>
-	</table>
-	{% block body %}
-	{% endblock %}
-  </body>
+</head>
+<body>
+<table>
+    <tr>
+        <td><a href="{{ url_for('wordlists') }}">Home</a></td>
+        {% if return_to_list_id %}
+    </tr>
+    <tr>
+        <td><a href="{{ url_for('wordlist', list_id=return_to_list_id) }}">Back to List</a></td>
+        {% endif %}
+    </tr>
+</table>
+{% block body %}
+{% endblock %}
+</body>
 </html>

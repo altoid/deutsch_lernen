@@ -3,53 +3,53 @@
 {% block body %}
 {{ super() }}
 {% if word %}
-<h1>New Word:  {{ word }}</h1>
+<h1>New Word: {{ word }}</h1>
 {% else %}
 <h1>New Word</h1>
 {% endif %}
 <form action="/add_to_dict" method="post">
-  {% if list_id %}
-  <input type="hidden" name="list_id" value="{{list_id}}">
-  {% endif %}
+    {% if list_id %}
+    <input type="hidden" name="list_id" value="{{list_id}}">
+    {% endif %}
 
-  {% if word %}
-  <input type="text" name="word" value="{{word}}">
-  {% else %}
-  <input type="text" name="word">
-  {% endif %}
-  <br>
+    {% if word %}
+    <input type="text" name="word" value="{{word}}">
+    {% else %}
+    <input type="text" name="word">
+    {% endif %}
+    <br>
 
-  <table>
-    {% for pos_info in pos_infos %}
-    <tr>
-      <td>
-	{% if pos_info.get('checked') %}
-	<input type="radio" name="pos" value="{{ pos_info['pos_id'] }}" checked>
-	{% else %}
-	<input type="radio" name="pos" value="{{ pos_info['pos_id'] }}">
-	{% endif %}
-      </td>
-      <td>
-	{{ pos_info.pos_name }}
-      </td>
-      <td></td>
-    </tr>
-    {% for f in pos_info.pos_fields %}
-    <tr>
-      <td></td>
-      <td>
-	{{ f.attrkey }}
-      </td>
-      <td>
-	<input type="text"
-	       name="{{ f.field_key }}"
-	       value="{{ f.get('attrvalue', '') }}"
-	       size="60">
-      </td>
-    </tr>
-    {% endfor %}
-    {% endfor %}
-  </table>
-  <input type="submit" value="Submit"></input>
+    <table>
+        {% for pos_info in pos_infos %}
+        <tr>
+            <td>
+                {% if pos_info.get('checked') %}
+                <input type="radio" name="pos" value="{{ pos_info['pos_id'] }}" checked>
+                {% else %}
+                <input type="radio" name="pos" value="{{ pos_info['pos_id'] }}">
+                {% endif %}
+            </td>
+            <td>
+                {{ pos_info.pos_name }}
+            </td>
+            <td></td>
+        </tr>
+        {% for f in pos_info.pos_fields %}
+        <tr>
+            <td></td>
+            <td>
+                {{ f.attrkey }}
+            </td>
+            <td>
+                <input type="text"
+                       name="{{ f.field_key }}"
+                       value="{{ f.get('attrvalue', '') }}"
+                       size="60">
+            </td>
+        </tr>
+        {% endfor %}
+        {% endfor %}
+    </table>
+    <input type="submit" value="Submit"/>
 </form>
 {% endblock %}

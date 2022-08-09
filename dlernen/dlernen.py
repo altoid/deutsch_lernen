@@ -174,16 +174,7 @@ def wordlist_api(list_id):
     result['source_is_url'] = result['source'].startswith('http')
     result['is_smart'] = bool(code)
 
-    known_words = None
-
     if code:
-        cursor.execute(code)
-        word_ids = cursor.fetchall()
-
-        word_ids = [x['word_id'] for x in word_ids]
-
-        known_words = word_ids
-
         known_words_sql = """
         select
         m.word word,
