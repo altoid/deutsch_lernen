@@ -51,6 +51,11 @@ def chunkify(arr, **kwargs):
     return result
 
 
+@app.route('/healthcheck')
+def healthcheck():
+    return 'OK'
+
+
 @app.route('/api/word/<string:word>')
 def get_word(word):
     """
