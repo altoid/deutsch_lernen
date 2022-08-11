@@ -173,21 +173,19 @@ def wordlist_api(list_id):
 
         if code:
             known_words_sql = """
+            with matching as ( %s )
             select
-            m.word word,
-            s.word_id,
-            m.attrvalue definition,
-            ifnull(m2.attrvalue, '') article
-            from
-            (
-            %s
-            ) s
-            left join mashup_v m
-            on s.word_id = m.word_id
-            and m.attrkey = 'definition'
-            left join mashup_v m2
-            on s.word_id = m2.word_id
-            and m2.attrkey = 'article'
+                  m.word word,
+                  matching.word_id,
+                  m.attrvalue definition,
+                  ifnull(m2.attrvalue, '') article
+            from  matching
+            left  join mashup_v m
+            on    matching.word_id = m.word_id
+            and   m.attrkey = 'definition'
+            left  join mashup_v m2
+            on    matching.word_id = m2.word_id
+            and   m2.attrkey = 'article'
             order by m.word        
             """ % code
 
@@ -267,24 +265,24 @@ def wordlist(list_id):
 def wordlists_api():
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
-        select name, id wordlist_id, ifnull(lcount, 0) count, code
-        from wordlist
-        left join
-        (
-            select wordlist_id, sum(c) lcount
-            from
-            (
-                select wordlist_id, count(*) c
-                from wordlist_unknown_word
-                group by wordlist_id
-                union
-                select wordlist_id, count(*) c
-                from wordlist_known_word
-                group by wordlist_id
-            ) a
-            group by wordlist_id
-        ) b on b.wordlist_id = wordlist.id
-        order by name
+with wordlist_counts as
+(
+    select wordlist_id, sum(c) lcount from
+    (
+        select wordlist_id, count(*) c
+        from wordlist_unknown_word
+        group by wordlist_id
+        union
+        select wordlist_id, count(*) c
+        from wordlist_known_word
+        group by wordlist_id
+    ) a
+    group by wordlist_id
+)
+select name, id wordlist_id, ifnull(lcount, 0) count
+from wordlist
+left join wordlist_counts wc on wc.wordlist_id = wordlist.id
+order by name
         """
         cursor.execute(sql)
         rows = cursor.fetchall()
