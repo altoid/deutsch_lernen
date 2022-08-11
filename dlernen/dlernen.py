@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template, redirect, url_for, jsonify
 from pprint import pprint
-import mysql.connector
+from mysql.connector import connect
 from dlernen.config import Config
 import requests
 import json
@@ -115,7 +115,7 @@ order by word_id, pf.sort_order
         query = exact_match_sql
         query_args = (word,)
 
-    with closing(mysql.connector.connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         cursor.execute(query, query_args)
         rows = cursor.fetchall()
         dict_result = {}
@@ -137,7 +137,7 @@ order by word_id, pf.sort_order
 
 @app.route('/list_details/<int:list_id>')
 def list_details(list_id):
-    with closing(mysql.connector.connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
     select
         id, name, source, ifnull(code, '') code
@@ -152,7 +152,7 @@ def list_details(list_id):
 
 @app.route('/api/wordlist/<int:list_id>')
 def wordlist_api(list_id):
-    with closing(mysql.connector.connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
         select
             id wordlist_id,
@@ -265,7 +265,7 @@ def wordlist(list_id):
 
 @app.route('/api/wordlists')
 def wordlists_api():
-    with closing(mysql.connector.connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
         select name, id wordlist_id, ifnull(lcount, 0) count, code
         from wordlist
@@ -320,7 +320,7 @@ def wordlists():
 
 @app.route('/addlist', methods=['POST'])
 def addlist():
-    with closing(mysql.connector.connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         newlist = request.form['name']
         source = request.form['source']
         sql = "insert ignore into wordlist (name, source) values (%s, %s)"
@@ -336,7 +336,7 @@ def deletelist():
     doomed = request.form.getlist('deletelist')
 
     if len(doomed):
-        with closing(mysql.connector.connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
             format_list = ['%s'] * len(doomed)
             format_args = ', '.join(format_list)
             sql = "delete from wordlist where id in (%s)" % format_args
@@ -354,7 +354,7 @@ def edit_list():
     code = request.form['code']
     id = request.form['list_id']
     sql = "update wordlist set name = %s, source = %s, code = %s where id = %s"
-    with closing(mysql.connector.connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         cursor.execute(sql, (name, source, code, id))
         dbh.commit()
 
@@ -367,7 +367,7 @@ def add_to_list():
     word = request.form['word']
     list_id = request.form['list_id']
 
-    with closing(mysql.connector.connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         # count the number of times word is in the word table.
         #
         # if it is 0, it goes into the unknown word table.
@@ -419,7 +419,7 @@ def add_to_list():
 
 @app.route('/update_notes', methods=['POST'])
 def update_notes():
-    with closing(mysql.connector.connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         notes = request.form['notes']
         id = request.form['list_id']
         sql = "update wordlist set notes = %s where id = %s"
@@ -435,7 +435,7 @@ def delete_from_list():
     list_id = request.form['list_id']
     known_deleting = request.form.getlist('known_wordlist')
 
-    with closing(mysql.connector.connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         if len(known_deleting):
             format_list = ['%s'] * len(known_deleting)
             format_args = ', '.join(format_list)
@@ -611,7 +611,7 @@ def add_word():
     """
     display the page to add a word.  word may be in the request, or not.
     """
-    with closing(mysql.connector.connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         word = request.args.get('word')
         word_id = request.args.get('word_id')
         list_id = request.args.get('list_id')
@@ -638,7 +638,7 @@ def add_to_dict():
     # can be entered in one form.  extracting the values will be painful.
     # have to look at what POS was selected, then find the form values for it.
 
-    with closing(mysql.connector.connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         if 'pos' not in request.form:
             raise Exception("select something")
 
