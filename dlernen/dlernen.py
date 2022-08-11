@@ -41,9 +41,109 @@ def chunkify(arr, **kwargs):
     return result
 
 
+@app.route('/api/choose_words')
+def choose_words():
+    """
+    request format is
+
+    recent={true|false} - optional, default is false
+    if true, select the word ids by added date, most recent first
+    if false or not specified, selects by rand()
+
+    limit=n - optional.  restrict the number of word ids.  if not specified, select all matching words.
+
+    list_ids=n,n,n - optional.  restrict the word ids to those in the given lists.
+
+    NOTE
+
+    with no args in the request, returns ALL word ids.
+    """
+
+    recent = request.args.get('recent', default='False').lower() == 'true'
+    limit = int(request.args.get('limit', default='0'))
+    list_ids = request.args.get('list_ids', [])
+    if list_ids:
+        list_ids = list_ids.split(',')
+        list_ids = list(map(lambda x: int(x), list_ids))
+
+        word_ids = get_word_ids_from_list_ids(limit, list_ids, recent)
+    else:
+        word_ids = get_word_ids(limit, recent)
+
+    return jsonify(word_ids)
+
+
+def get_word_ids(limit, recent):
+    query = """
+        select w.id word_id from word w
+        """
+    if recent:
+        order_by = " order by w.added desc "
+    else:
+        order_by = " order by rand() "
+    query += order_by
+    limit_clause = " limit %s " % limit if limit else ""
+    query += limit_clause
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        cursor.execute(query)
+        query_result = cursor.fetchall()
+        return [x['word_id'] for x in query_result]
+
+
+def get_word_ids_from_list_ids(limit, list_ids, recent):
+    results = []
+    for list_id in list_ids:
+        # use the API so we don't have to worry about whether any are smart lists
+        url = "%s/api/wordlist/%s" % (Config.DB_URL, list_id)
+        r = requests.get(url)
+        result = json.loads(r.text)
+        results.append(result)
+
+    # dig the word_ids out of the list results
+    word_ids = []
+    for result in results:
+        word_ids += [x['word_id'] for x in result['known_words']]
+
+    # remove any duplicates
+    word_ids = list(set(word_ids))
+
+    # we'll have to apply the recent and limit filters here in software
+    if len(word_ids):
+        query = """
+            select w.id word_id from word w
+            where w.id in (%s)
+            """ % (','.join(['%s'] * len(word_ids)))
+
+        if recent:
+            order_by = " order by w.added desc "
+        else:
+            order_by = " order by rand() "
+
+        query += order_by
+
+        limit_clause = " limit %s " % limit if limit else ""
+
+        query += limit_clause
+
+        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            cursor.execute(query, word_ids)
+
+            query_result = cursor.fetchall()
+
+            word_ids = [x['word_id'] for x in query_result]
+
+    return word_ids
+
+
 @app.route('/healthcheck')
 def healthcheck():
     return 'OK'
+
+
+@app.route('/dbcheck')
+def dbcheck():
+    # TODO: have to disable mysql server autostart to test no-connection condition
+    pass
 
 
 @app.route('/api/word/<string:word>')
@@ -152,6 +252,7 @@ def list_details(list_id):
 
 @app.route('/api/wordlist/<int:list_id>')
 def wordlist_api(list_id):
+    # uses WORDLIST_DETAIL_SCHEMA
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
         select
@@ -279,7 +380,7 @@ with wordlist_counts as
     ) a
     group by wordlist_id
 )
-select name, id wordlist_id, ifnull(lcount, 0) count
+select name, id wordlist_id, ifnull(lcount, 0) count, code
 from wordlist
 left join wordlist_counts wc on wc.wordlist_id = wordlist.id
 order by name
@@ -310,7 +411,6 @@ order by name
 def wordlists():
     url = "%s/api/wordlists" % Config.DB_URL
     r = requests.get(url)
-    pprint(r)
     result = json.loads(r.text)
 
     return render_template('wordlists.html', rows=result)
