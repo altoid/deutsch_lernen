@@ -10,12 +10,7 @@ app.config.from_object(Config)
 
 
 def get_conn():
-    dbh = mysql.connector.connect(
-        host=app.config['MYSQL_HOST'],
-        user=app.config['MYSQL_USER'],
-        passwd=app.config['MYSQL_PASS'],
-        db=app.config['MYSQL_DB'])
-
+    dbh = mysql.connector.connect(**app.config['DSN'])
     cursor = dbh.cursor(dictionary=True)
     return dbh, cursor
 
@@ -320,6 +315,7 @@ def wordlists_api():
 def wordlists():
     url = "%s/api/wordlists" % Config.DB_URL
     r = requests.get(url)
+    pprint(r)
     result = json.loads(r.text)
 
     return render_template('wordlists.html', rows=result)
