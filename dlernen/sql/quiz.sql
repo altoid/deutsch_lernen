@@ -17,6 +17,12 @@ testable_attributes as (
 select * from
 attrs_for_quiz,
 given_words
+),
+testable_attrs_and_values as (
+select ta.*,
+mashup_v.word, mashup_v.attrvalue
+from testable_attributes ta
+inner join mashup_v on ta.word_id = mashup_v.word_id and ta.attribute_id = mashup_v.attribute_id
 )
 
 -- word has been presented 5 or fewer times (or not at all)
@@ -25,10 +31,12 @@ select
 ta.quiz_id,
 ta.attribute_id,
 ta.word_id,
+ta.word,
+ta.attrvalue,
 ifnull(v.presentation_count, 0) presentation_count,
 ifnull(v.correct_count, 0) correct_count,
 v.last_presentation
-from testable_attributes ta
+from testable_attrs_and_values ta
 left join quiz_v v
 on ta.word_id = v.word_id
 and ta.quiz_id = v.quiz_id
@@ -44,10 +52,12 @@ select
 ta.quiz_id,
 ta.attribute_id,
 ta.word_id,
+ta.word,
+ta.attrvalue,
 ifnull(v.presentation_count, 0) presentation_count,
 ifnull(v.correct_count, 0) correct_count,
 v.last_presentation
-from testable_attributes ta
+from testable_attrs_and_values ta
 inner join quiz_v v
 on ta.word_id = v.word_id
 and ta.quiz_id = v.quiz_id
@@ -64,10 +74,12 @@ select
 ta.quiz_id,
 ta.attribute_id,
 ta.word_id,
+ta.word,
+ta.attrvalue,
 ifnull(v.presentation_count, 0) presentation_count,
 ifnull(v.correct_count, 0) correct_count,
 v.last_presentation
-from testable_attributes ta
+from testable_attrs_and_values ta
 inner join quiz_v v
 on ta.word_id = v.word_id
 and ta.quiz_id = v.quiz_id
