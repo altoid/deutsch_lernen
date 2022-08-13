@@ -1,63 +1,48 @@
 #!/usr/bin/env python
 
-from dlernen import quiz_sql
+from dlernen import config
 import argparse
+import json
+import requests
 from pprint import pprint
-import random
-from functools import reduce
 
 
-def get_article(db):
-    article_cursor = db.cursor(dictionary=True)
-    article_query = """
- select wa.value 
- from word w, word_attribute wa, attribute a 
- where w.id = wa.word_id 
- and wa.attribute_id = a.id 
- and attrkey = 'article' 
- and word_id = %s
-"""
+def get_quiz_data():
+    url = "%s/api/quiz_data" % config.Config.DB_URL
+    payload = {
+        "quizkey": "definitions",
+        "word_ids": json.dumps(chosen_words['word_ids'])
+    }
+    r = requests.put(url, data=payload)
+    quiz_data = json.loads(r.text)
 
-    article_cursor.execute(article_query, (row['word_id'],))
-    article = None
-    for r1 in article_cursor.fetchall():
-        article = r1['value']
-        break
+    # dig the word_ids out of the result and then find the articles for each word that is a noun.
+    word_ids = [x['word_id'] for x in quiz_data]
+    word_ids_str = json.dumps(word_ids)
+    url = "%s/api/words" % config.Config.DB_URL
+    payload = {
+        "word_ids": word_ids_str
+    }
+    r = requests.put(url, data=payload)
+    word_attributes = json.loads(r.text)
 
-    article_cursor.close()
-    return article
+    # enrich the quiz_data by adding the articles
+    word_id_to_article = {}
+    for wa in word_attributes:
+        if 'article' not in wa:
+            continue
 
+        word_id_to_article[wa['word_id']] = wa['article']
 
-def word_ids_from_wordlist(c, list_id):
-    """
-    return a list of the word ids in the given word list.
-    """
-    sql = """
-    select ifnull(code, '') code
-    from wordlist
-    where id = %s
-    """
-    c.execute(sql, (list_id,))
+    for qd in quiz_data:
+        if qd['word_id'] in word_id_to_article:
+            qd['article'] = word_id_to_article[qd['word_id']]
 
-    row = c.fetchone()
-    code = row['code']
-    if code:
-        c.execute(code)
-    else:
-        sql2 = """
-        select word_id
-        from wordlist_known_word
-        where wordlist_id = %s
-        """
-        c.execute(sql2, (list_id,))
-    rows = c.fetchall()
-    return [x['word_id'] for x in rows]
+    # TODO:  the word ids in quiz_data have to be in the same order as what is returned by /choose_words
+    return quiz_data
 
 
 if __name__ == '__main__':
-    db = dsn.getConnection()
-    c = db.cursor(dictionary=True)
-
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                      description="""
 quiz_definitions (no args)
@@ -76,89 +61,44 @@ quiz_definitions -n <x>
 n most recent
 """)
 
-    parser.add_argument('-l', '--listid',
+    parser.add_argument('-l', '--listids',
                         nargs='+',
                         type=int,
                         help='id of word list to use')
     parser.add_argument('-n', '--nwords',
                         type=int,
-                        help='quiz the n most recently added words')
-    parser.add_argument('-r', '--random',
+                        default=10,
+                        help='quiz the n most recently added words.  defaults to 10.')
+    parser.add_argument('-r', '--recent',
                         action='store_true',
-                        help='pick words at random and quiz them.  defaults to 10 words if -n not given')
+                        help='pick most recently added words and quiz them.')
     cl_args = parser.parse_args()
 
-    q = None
-    args = None
-    if cl_args.listid:
+    url = "%s/api/choose_words" % config.Config.DB_URL
+    url = "%s?limit=%s&recent=%s" % (url, cl_args.nwords, cl_args.recent)
+    pprint(url)
+    if cl_args.listids:
+        listids = map(str, cl_args.listids)
+        url = "%s&list_ids=%s" % (url, ','.join(listids))
 
-        mega = [word_ids_from_wordlist(c, x) for x in cl_args.listid]
-        flattened = reduce(lambda x, y: x + y, mega, [])
-        word_ids = list(set(flattened))
-        if cl_args.nwords:
-            word_ids = random.sample(word_ids, cl_args.nwords)
-        word_id_list = ','.join([str(x) for x in word_ids])
-        subquery = """
-        select w.id word_id 
-        from word w
-        where id in (%s)""" % word_id_list
-
-        filter_clause = ["    inner join (%s) t on w.id = t.word_id" % subquery]
-    elif cl_args.random:
-        n_to_pick = cl_args.nwords if cl_args.nwords else 10
-        subquery = """
-        select w.id word_id
-        from word w
-        order by rand()
-        limit %s
-""" % n_to_pick
-        c.execute(subquery)
-        rows = c.fetchall()
-        word_ids = [x['word_id'] for x in rows]
-        word_id_list = ','.join([str(x) for x in word_ids])
-        subquery = """
-        select w.id word_id 
-        from word w
-        where id in (%s)""" % word_id_list
-        filter_clause = ["    inner join (%s) t on w.id = t.word_id" % subquery]
-    elif cl_args.nwords:
-        subquery = """
-        select w.id word_id
-        from word w
-        order by w.id desc
-        limit %s
-""" % cl_args.nwords
-        c.execute(subquery)
-        rows = c.fetchall()
-        word_ids = [x['word_id'] for x in rows]
-        word_id_list = ','.join([str(x) for x in word_ids])
-        subquery = """
-        select w.id word_id 
-        from word w
-        where id in (%s)""" % word_id_list
-        filter_clause = ["    inner join (%s) t on w.id = t.word_id" % subquery]
-    else:
-        filter_clause = []
-    q = quiz_sql.build_quiz_query('definitions', join_clauses=filter_clause)
+    r = requests.get(url)
+    chosen_words = json.loads(r.text)
 
     done = False
     counter = 0
     while not done:
-        c.execute(q)
-        rows = c.fetchall()
+        rows = get_quiz_data()
+
         if not rows:
             print("es gibt keine Welten mehr zu erobern")
             break
 
         for row in rows:
-            # if the word is a noun, get its article.  if it's not a noun, this query retrieves nothing.
-            article = get_article(db)
-
             counter += 1
             print("[%s]" % counter, end=' ')
 
-            if article:
-                print(article, end=' ')
+            if 'article' in row:
+                print(row['article'], end=' ')
 
             print(str(row['word']))
             prompt = "hit return for answer, q to quit:  --> "
@@ -168,7 +108,7 @@ n most recent
                 done = True
                 continue
 
-            print(row['value'])
+            print(row['attrvalue'])
 
             prompt = "correct? --> "
             answer = input(prompt).strip().lower()
@@ -181,19 +121,7 @@ n most recent
 
             row['presentation_count'] += 1
 
-            u = """
-        insert into quiz_score
-        (quiz_id, word_id, attribute_id, presentation_count, correct_count)
-        VALUES
-        (%(quiz_id)s, %(word_id)s, %(attribute_id)s, %(presentation_count)s, %(correct_count)s)
-        on duplicate key update
-        presentation_count = values(presentation_count),
-        correct_count = values(correct_count)
-        """
-            c.execute(u, row)
-            db.commit()
-
-    c.close()
-    db.close()
+            url = "%s/api/quiz_data" % config.Config.DB_URL
+            r = requests.post(url, data=row)
 
     print('bis bald')

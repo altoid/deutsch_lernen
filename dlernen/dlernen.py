@@ -103,7 +103,7 @@ def choose_words():
     return jsonify(result)
 
 
-@app.route('/api/quiz_data', methods=['PUT'])
+@app.route('/api/quiz_data', methods=['PUT', 'POST'])
 def quiz_data():
     """
     given a quiz key and a list of word_ids, get all of the attribute values quizzed for each of the words.
@@ -113,18 +113,35 @@ def quiz_data():
 
     the word IDs come in as a stringified list of ints:  "[1, 2, 3]"
     """
-    quizkey = request.form.get('quizkey')
-    word_ids = request.form.get('word_ids', '[]')
-    word_ids = json.loads(word_ids)
-    word_ids = list(map(str, word_ids))
-    word_ids = ','.join(word_ids)
-    result = []
-    if word_ids:
-        query = quiz_sql.build_quiz_query(quizkey, word_ids)
-        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            cursor.execute(query)
-            result = cursor.fetchall()
-    return jsonify(result)
+    if request.method == 'PUT':
+        quizkey = request.form.get('quizkey')
+        word_ids = request.form.get('word_ids', '[]')
+        word_ids = json.loads(word_ids)
+        word_ids = list(map(str, word_ids))
+        word_ids = ','.join(word_ids)
+        result = []
+        if word_ids:
+            query = quiz_sql.build_quiz_query(quizkey, word_ids)
+            with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+                cursor.execute(query)
+                result = cursor.fetchall()
+        return jsonify(result)
+
+    update = """
+        insert into quiz_score
+        (quiz_id, word_id, attribute_id, presentation_count, correct_count)
+        VALUES
+        ({quiz_id}, {word_id}, {attribute_id}, {presentation_count}, {correct_count})
+        on duplicate key update
+        presentation_count = values(presentation_count),
+        correct_count = values(correct_count)
+        """.format(**request.form)
+
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        cursor.execute(update)
+        dbh.commit()
+
+    return jsonify('OK')
 
 
 def get_word_ids(limit, recent):
