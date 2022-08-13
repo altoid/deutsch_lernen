@@ -3,7 +3,7 @@
 
 # quiz - stores name and id of quiz along with a mnemonic.
 #
-# quiz_structure - (quiz_id, pos_id, attribute_id)
+# quiz_structure - (quiz_id, attribute_id)
 # for each quiz, specify the part of speech and the attributes that 
 # are tested.
 #
@@ -114,6 +114,7 @@ and ta.attribute_id = v.attribute_id
 
 where curdate() - interval 30 day > last_presentation
 
+order by field(word_id, {word_ids})
 """
 
 

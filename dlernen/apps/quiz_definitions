@@ -38,7 +38,6 @@ def get_quiz_data():
         if qd['word_id'] in word_id_to_article:
             qd['article'] = word_id_to_article[qd['word_id']]
 
-    # TODO:  the word ids in quiz_data have to be in the same order as what is returned by /choose_words
     return quiz_data
 
 
@@ -106,7 +105,7 @@ n most recent
 
             if answer.startswith('q'):
                 done = True
-                continue
+                break
 
             print(row['attrvalue'])
 

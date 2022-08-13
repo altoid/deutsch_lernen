@@ -131,14 +131,14 @@ def quiz_data():
         insert into quiz_score
         (quiz_id, word_id, attribute_id, presentation_count, correct_count)
         VALUES
-        ({quiz_id}, {word_id}, {attribute_id}, {presentation_count}, {correct_count})
+        (%(quiz_id)s, %(word_id)s, %(attribute_id)s, %(presentation_count)s, %(correct_count)s)
         on duplicate key update
         presentation_count = values(presentation_count),
         correct_count = values(correct_count)
-        """.format(**request.form)
+        """
 
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        cursor.execute(update)
+        cursor.execute(update, request.form)
         dbh.commit()
 
     return jsonify('OK')
