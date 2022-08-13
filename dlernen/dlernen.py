@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, redirect, url_for, jsonify
 from pprint import pprint
 from mysql.connector import connect
 from dlernen.config import Config
+from dlernen import quiz_sql
 import requests
 import json
 from contextlib import closing
@@ -41,6 +42,32 @@ def chunkify(arr, **kwargs):
     return result
 
 
+@app.route('/api/post_test', methods=['POST'])
+def post_test():
+    """
+    apparently you can't use requests to send true JSON objects in a post request.  i.e. this did not work:
+
+    IDS = [1, 2, 3, 4, 5]
+    DATA = {
+        "key": "value",
+        "arr": IDS,     <== this is valid json but only the first item in the array is sent.
+        "a": "aoeu"
+    }
+
+    but this did:
+
+    IDS = [1, 2, 3, 4, 5]
+    DATA = {
+        "key": "value",
+        "arr": json.dumps(IDS),  <== have to stringify the array before sending it over.
+        "a": "aoeu"
+    }
+    """
+    ids = json.loads(request.form.get('arr'))
+    pprint(ids)
+    return jsonify(request.form)
+
+
 @app.route('/api/choose_words')
 def choose_words():
     """
@@ -50,17 +77,17 @@ def choose_words():
     if true, select the word ids by added date, most recent first
     if false or not specified, selects by rand()
 
-    limit=n - optional.  restrict the number of word ids.  if not specified, select all matching words.
+    limit=n - optional.  restrict the number of word ids.  defaults to 10 if not specified.
 
     list_ids=n,n,n - optional.  restrict the word ids to those in the given lists.
 
-    NOTE
+    returns a list of all of the word_ids that match the constraints.  the ids are unique but the order is undefined.
 
-    with no args in the request, returns ALL word ids.
+    TODO: sanity check the value of limit
     """
 
     recent = request.args.get('recent', default='False').lower() == 'true'
-    limit = int(request.args.get('limit', default='0'))
+    limit = int(request.args.get('limit', default='10'))
     list_ids = request.args.get('list_ids', [])
     if list_ids:
         list_ids = list_ids.split(',')
@@ -71,6 +98,29 @@ def choose_words():
         word_ids = get_word_ids(limit, recent)
 
     return jsonify(word_ids)
+
+
+@app.route('/api/quiz_data', methods=['PUT'])
+def quiz_data():
+    """
+    given a quiz key and a list of word_ids, get all of the attribute values quizzed for each of the words.
+
+    although this is invoked with a PUT request, this doesn't actually change the state of the server.  we
+    use PUT so that we can have longer list of word ids than we can put into a GET url, so the request is idempotent.
+
+    the word IDs come in as a stringified list of ints:  "[1, 2, 3]"
+    """
+    pprint(request.form)
+    quizkey = request.form.get('quizkey')
+    word_ids = request.form.get('word_ids')
+    word_ids = json.loads(word_ids)
+    word_ids = list(map(str, word_ids))
+    word_ids = ','.join(word_ids)
+    query = quiz_sql.build_quiz_query(quizkey, word_ids)
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        cursor.execute(query)
+        result = cursor.fetchall()
+        return jsonify(result)
 
 
 def get_word_ids(limit, recent):
@@ -91,6 +141,10 @@ def get_word_ids(limit, recent):
 
 
 def get_word_ids_from_list_ids(limit, list_ids, recent):
+    """
+    returns a list containing 0 or more unique list ids.
+    """
+
     results = []
     for list_id in list_ids:
         # use the API so we don't have to worry about whether any are smart lists
