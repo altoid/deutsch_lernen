@@ -97,7 +97,10 @@ def choose_words():
     else:
         word_ids = get_word_ids(limit, recent)
 
-    return jsonify(word_ids)
+    result = {
+        "word_ids": word_ids
+    }
+    return jsonify(result)
 
 
 @app.route('/api/quiz_data', methods=['PUT'])

@@ -161,9 +161,9 @@ class APITests(unittest.TestCase):
         url = "%s?limit=%s&list_ids=%s" % (url, 5, 93)
         r = requests.get(url)
 
-        payload = {
-            'word_ids': r.text
-        }
+        payload = json.loads(r.text)
+        payload['word_ids'] = json.dumps(payload['word_ids'])
+
         url = "%s/api/words" % config.Config.DB_URL
         r = requests.put(url, data=payload)
         results = json.loads(r.text)
