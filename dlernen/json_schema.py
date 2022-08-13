@@ -124,7 +124,7 @@ WORD_SCHEMA = {
                         "minLength": 1,
                     },
                     "value": {
-                        "type": "string"
+                        "type": ["string", "null"]
                     }
                 },
                 "required": ["key", "value"]

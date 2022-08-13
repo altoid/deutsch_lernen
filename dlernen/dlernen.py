@@ -110,17 +110,18 @@ def quiz_data():
 
     the word IDs come in as a stringified list of ints:  "[1, 2, 3]"
     """
-    pprint(request.form)
     quizkey = request.form.get('quizkey')
-    word_ids = request.form.get('word_ids')
+    word_ids = request.form.get('word_ids', '[]')
     word_ids = json.loads(word_ids)
     word_ids = list(map(str, word_ids))
     word_ids = ','.join(word_ids)
-    query = quiz_sql.build_quiz_query(quizkey, word_ids)
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        cursor.execute(query)
-        result = cursor.fetchall()
-        return jsonify(result)
+    result = []
+    if word_ids:
+        query = quiz_sql.build_quiz_query(quizkey, word_ids)
+        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            cursor.execute(query)
+            result = cursor.fetchall()
+    return jsonify(result)
 
 
 def get_word_ids(limit, recent):
@@ -200,6 +201,64 @@ def dbcheck():
     pass
 
 
+@app.route('/api/words', methods=['PUT'])
+def get_words():
+    """
+    given a list of word_ids, get the details for each word:  word, attributes, etc.
+
+    the word IDs come in as a stringified list of ints:  "[1, 2, 3]"
+    """
+
+    sql = """
+    select
+        pos_name,
+        word,
+        word_id,
+        attrkey,
+        attrvalue value,
+        pf.sort_order
+    from
+        mashup_v
+    inner join pos_form pf on pf.attribute_id = mashup_v.attribute_id and 
+    pf.pos_id = mashup_v.pos_id
+    where word_id in
+        (
+        select
+            word_id
+        from
+            mashup_v
+        where
+            word_id in ({word_ids})
+        )
+    """
+    word_ids = request.form.get('word_ids', '[]')
+    word_ids = json.loads(word_ids)
+    word_ids = list(map(str, word_ids))
+    word_ids = ','.join(word_ids)
+    result = []
+    if word_ids:
+        d = {
+            "word_ids": word_ids
+        }
+        query = sql.format(**d)
+        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            dict_result = {}
+            for r in rows:
+                if not dict_result.get(r['word_id']):
+                    dict_result[r['word_id']] = {}
+                    dict_result[r['word_id']]['attributes'] = []
+                dict_result[r['word_id']]['word'] = r['word']
+                dict_result[r['word_id']]['word_id'] = r['word_id']
+                dict_result[r['word_id']]['pos_name'] = r['pos_name']
+                dict_result[r['word_id']]['attributes'].append({'key': r['attrkey'], 'value': r['value']})
+
+            result = list(dict_result.values())
+
+    return jsonify(result)
+
+
 @app.route('/api/word/<string:word>')
 def get_word(word):
     """
@@ -225,7 +284,8 @@ select
     pf.sort_order
 from
     mashup_v
-inner join pos_form pf on pf.attribute_id = mashup_v.attribute_id and pf.pos_id = mashup_v.pos_id
+inner join pos_form pf on pf.attribute_id = mashup_v.attribute_id and 
+pf.pos_id = mashup_v.pos_id
 where word_id in
     (
     select

@@ -2,6 +2,8 @@ import unittest
 import jsonschema
 import requests
 from dlernen import json_schema, config
+import json
+from pprint import pprint
 
 # {
 # 	"word": "verderben",
@@ -113,6 +115,62 @@ class APITests(unittest.TestCase):
         r = requests.get(url)
         result = r.json()
         jsonschema.validate(result, json_schema.WORDLIST_DETAIL_SCHEMA)
+
+    def test_quiz_data_empty_list_1(self):
+        url = "%s/api/quiz_data" % config.Config.DB_URL
+        payload = {
+            "quizkey": "definitions"
+        }
+
+        r = requests.put(url, data=payload)
+        result = json.loads(r.text)
+        self.assertEqual([], result)
+
+    def test_quiz_data_empty_list_2(self):
+        url = "%s/api/quiz_data" % config.Config.DB_URL
+        payload = {
+            "quizkey": "definitions",
+            "word_ids": "[]"
+        }
+
+        r = requests.put(url, data=payload)
+        result = json.loads(r.text)
+        self.assertEqual([], result)
+
+    def test_get_words_empty_list_1(self):
+        url = "%s/api/words" % config.Config.DB_URL
+        payload = {
+        }
+
+        r = requests.put(url, data=payload)
+        result = json.loads(r.text)
+        self.assertEqual([], result)
+
+    def test_get_words_empty_list_2(self):
+        url = "%s/api/words" % config.Config.DB_URL
+        payload = {
+            "word_ids": "[]"
+        }
+
+        r = requests.put(url, data=payload)
+        result = json.loads(r.text)
+        self.assertEqual([], result)
+
+    def test_get_words(self):
+        url = "%s/api/choose_words" % config.Config.DB_URL
+        url = "%s?limit=%s&list_ids=%s" % (url, 5, 93)
+        r = requests.get(url)
+
+        payload = {
+            'word_ids': r.text
+        }
+        url = "%s/api/words" % config.Config.DB_URL
+        r = requests.put(url, data=payload)
+        results = json.loads(r.text)
+        self.assertGreater(len(results), 0)
+        for result in results:
+            jsonschema.validate(result, json_schema.WORD_SCHEMA)
+
 
 
 
