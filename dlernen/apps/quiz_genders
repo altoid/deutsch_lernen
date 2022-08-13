@@ -1,47 +1,99 @@
 #!/usr/bin/env python
 
-from dlernen import quiz_sql
-from dlernen import dsn
+from dlernen import config
+import argparse
+import json
+import requests
+from pprint import pprint
 
-q = quiz_sql.build_quiz_query('genders')
-db = dsn.getConnection()
-c = db.cursor(dictionary=True)
 
-done = False
-while not done:
-    c.execute(q)
-    for row in c.fetchall():
-        prompt = "answer, q to quit --[%s]--> " % row['word']
-        prompt = prompt.encode('utf-8')
-        answer = input(prompt).strip().lower()
-        while len(answer) == 0:
+def get_quiz_data():
+    url = "%s/api/quiz_data" % config.Config.DB_URL
+    payload = {
+        "quizkey": "genders",
+        "word_ids": json.dumps(chosen_words['word_ids'])
+    }
+    r = requests.put(url, data=payload)
+    quiz_data = json.loads(r.text)
+
+    return quiz_data
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
+                                     description="""
+quiz_definitions (no args)
+all words
+
+quiz_definitions -l <list_id> <list_id> ...
+all from a list
+
+quiz_definitions -n <x> -r
+n randomly chosen
+
+quiz_definitions -n <x> -l <list_id> <list_id> ...
+n randomly chosen from lists
+
+quiz_definitions -n <x>
+n most recent
+""")
+
+    parser.add_argument('-l', '--listids',
+                        nargs='+',
+                        type=int,
+                        help='id of word list to use')
+    parser.add_argument('-n', '--nwords',
+                        type=int,
+                        default=10,
+                        help='quiz the n most recently added words.  defaults to 10.')
+    parser.add_argument('-r', '--recent',
+                        action='store_true',
+                        help='pick most recently added words and quiz them.')
+    cl_args = parser.parse_args()
+
+    url = "%s/api/choose_words" % config.Config.DB_URL
+    url = "%s?limit=%s&recent=%s" % (url, cl_args.nwords, cl_args.recent)
+    pprint(url)
+    if cl_args.listids:
+        listids = map(str, cl_args.listids)
+        url = "%s&list_ids=%s" % (url, ','.join(listids))
+
+    r = requests.get(url)
+    chosen_words = json.loads(r.text)
+
+    done = False
+    counter = 0
+    while not done:
+        rows = get_quiz_data()
+
+        if not rows:
+            print("es gibt keine Welten mehr zu erobern")
+            break
+
+        for row in rows:
+            counter += 1
+            print("[%s]" % counter, end=' ')
+
+            if 'article' in row:
+                print(row['article'], end=' ')
+
+            print(str(row['word']))
+            prompt = "type correct article, q to quit:  --> "
             answer = input(prompt).strip().lower()
-    
-        if answer == row['value']:
-            print('ja')
-            row['correct_count'] += 1
-        elif answer == 'q':
-            done = True
-            continue
-        else:
-            print('nein:  %s %s' % (row['value'], row['word']))
-    
-        row['presentation_count'] += 1
-    
-        u = """
-    insert into quiz_score
-    (quiz_id,word_id,attribute_id,presentation_count,correct_count)
-    VALUES
-    (%(quiz_id)s, %(word_id)s, %(attribute_id)s, %(presentation_count)s, %(correct_count)s)
-    on duplicate key update
-    presentation_count = values(presentation_count),
-    correct_count = values(correct_count)
-    """
-    
-        c.execute(u, row)
-        db.commit()
-        
-c.close()
-db.close()
 
-print('auf wiedersehen')
+            if answer.startswith('q'):
+                done = True
+                break
+
+            if answer == row['attrvalue']:
+                print("ja")
+                row['correct_count'] += 1
+            else:
+                print("nein:  %s" % row['attrvalue'])
+
+            row['presentation_count'] += 1
+
+            url = "%s/api/quiz_data" % config.Config.DB_URL
+            r = requests.post(url, data=row)
+
+    print('bis bald')
