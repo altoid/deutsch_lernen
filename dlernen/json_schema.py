@@ -114,22 +114,41 @@ WORD_SCHEMA = {
             "type": "string",
             "minLength": 1
         },
-        "attributes": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "key": {
-                        "type": "string",
-                        "minLength": 1,
-                    },
-                    "value": {
-                        "type": ["string", "null"]
-                    }
-                },
-                "required": ["key", "value"]
-            }
+
+        "article": {
+            "type": ["string", "null"]
+        },
+        "definition": {
+            "type": ["string", "null"]
+        },
+        "first_person_plural": {
+            "type": ["string", "null"]
+        },
+        "first_person_singular": {
+            "type": ["string", "null"]
+        },
+        "past_participle": {
+            "type": ["string", "null"]
+        },
+        "plural": {
+            "type": ["string", "null"]
+        },
+        "second_person_plural": {
+            "type": ["string", "null"]
+        },
+        "second_person_singular": {
+            "type": ["string", "null"]
+        },
+        "third_person_past": {
+            "type": ["string", "null"]
+        },
+        "third_person_plural": {
+            "type": ["string", "null"]
+        },
+        "third_person_singular": {
+            "type": ["string", "null"]
         }
     },
-    "required": ["word", "word_id", "pos_name", "attributes"]
+    "required": ["word", "word_id", "pos_name"]
+    # the attributes - article, definition, etc. - are all optional.
 }

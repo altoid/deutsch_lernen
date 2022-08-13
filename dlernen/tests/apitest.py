@@ -158,7 +158,7 @@ class APITests(unittest.TestCase):
 
     def test_get_words(self):
         url = "%s/api/choose_words" % config.Config.DB_URL
-        url = "%s?limit=%s&list_ids=%s" % (url, 5, 93)
+        url = "%s?limit=%s&list_ids=%s" % (url, 5, "93,114")
         r = requests.get(url)
 
         payload = json.loads(r.text)
@@ -170,8 +170,6 @@ class APITests(unittest.TestCase):
         self.assertGreater(len(results), 0)
         for result in results:
             jsonschema.validate(result, json_schema.WORD_SCHEMA)
-
-
 
 
 if __name__ == '__main__':
