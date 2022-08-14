@@ -22,7 +22,7 @@
     <table width="100%">
         <tr valign="top">
             <td width>
-                <h2>Bekannte Wörter ({{ known_words_count }})</h2>
+                <h2>Bekannte Worte ({{ known_words_count }})</h2>
                 <table>
                     <tr valign="top">
                         {% for column in known_words %}
@@ -33,7 +33,7 @@
                                     <td><input type="checkbox" name="known_wordlist" value="{{ r.word_id }}"></td>
                                     <td>{{ r.article }}</td>
                                     <td>
-                                        <a href="{{ url_for('add_word', word_id=r.word_id, word=r.word, list_id=list_id) }}">{{
+                                        <a href="{{ url_for('update_word_by_id', word_id=r.word_id, list_id=list_id) }}">{{
                                             r.word }}</a></td>
                                     <td>{{ r.definition }}</td>
                                 </tr>
@@ -47,7 +47,7 @@
         </tr>
         <tr>
             <td width>
-                <h2>Unbekannte Wörter ({{ unknown_words_count }})</h2>
+                <h2>Unbekannte Worte ({{ unknown_words_count }})</h2>
                 <table>
                     <tr valign="top">
                         {% for column in unknown_words %}
@@ -56,7 +56,7 @@
                                 {% for r in column %}
                                 <tr valign="top">
                                     <td><input type="checkbox" name="unknown_wordlist" value="{{ r }}"></td>
-                                    <td><a href="{{ url_for('add_word', list_id=list_id, word=r) }}">{{ r }}</a></td>
+                                    <td><a href="{{ url_for('update_word', list_id=list_id, word=r) }}">{{ r }}</a></td>
                                 </tr>
                                 {% endfor %}
                             </table>

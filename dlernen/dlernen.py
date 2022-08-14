@@ -12,14 +12,6 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 
-def error_handler(e):
-    pprint("error handler>>>>>>>>>>>>>>>>>>>>>>>>>")
-    return str(e), 400
-
-
-app.register_error_handler(500, error_handler)
-
-
 def chunkify(arr, **kwargs):
     if not arr:
         return []
@@ -722,7 +714,7 @@ def add_to_list():
             target = url_for('wordlist', list_id=list_id)
             return redirect(target)
 
-        pos_infos = get_data_for_addword_form(cursor, list_id, word=word)
+        pos_infos, word = get_data_for_addword_form(word=word)
 
         return render_template('addword.html',
                                word=word,
@@ -838,8 +830,8 @@ def populate_form_dict(cursor, form_dict, **kwargs):
     word_id = kwargs.get('word_id')
     word = kwargs.get('word')
 
-    if word_id and word:
-        raise Exception("can't have both word_id and word here")
+    if bool(word_id) == bool(word):
+        raise Exception("exactly one of word_id and word must be set")
 
     checked_pos = None
 
@@ -886,65 +878,72 @@ where word_id in
     return checked_pos, word
 
 
-def get_data_for_addword_form(cursor, list_id, **kwargs):
+def get_data_for_addword_form(**kwargs):
     word = kwargs.get('word')
     word_id = kwargs.get('word_id')
 
-    form_dict = get_pos_info_for_form(cursor)
-
-    checked_pos = None
-    if word_id:
-        word_id = int(word_id)
-        # this is harder.  in this case we have an existing word.  we need
-        # to fill in all the attribute values for it, for all parts of
-        # speech for this word that exist in this word list.
-
-        checked_pos, word = populate_form_dict(cursor, form_dict, word_id=word_id)
-    else:
-        checked_pos, word = populate_form_dict(cursor, form_dict, word=word)
-
-    pos_infos = []
-    for k in list(form_dict.keys()):
-        pos_fields = [x for x in list(form_dict[k].values())]
-        l = sorted(pos_fields, key=lambda x: x['sort_order'])
-        pos_info = {
-            'pos_id': k,
-            'pos_fields': l,
-            'pos_name': l[0]['pos_name']
-        }
-        if checked_pos == k:
-            pos_info['checked'] = True
-
-        pos_infos.append(pos_info)
-
-    pos_infos = sorted(pos_infos, key=lambda x: x['pos_id'])
-    return pos_infos
-
-
-@app.route('/add_word')
-def add_word():
-    """
-    display the page to add a word.  word may be in the request, or not.
-    """
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        word = request.args.get('word')
-        word_id = request.args.get('word_id')
-        list_id = request.args.get('list_id')
+        form_dict = get_pos_info_for_form(cursor)
 
-        # if the form contains a word_id, then it is in the word table.
-        # if the form does NOT contain a word_id, then that word does not exist
-        # in the word table.
+        if word_id:
+            word_id = int(word_id)
+            # this is harder.  in this case we have an existing word.  we need
+            # to fill in all the attribute values for it, for all parts of
+            # speech for this word that exist in this word list.
 
-        if not word and not word_id:
-            raise Exception('word and word_id both missing')
+            checked_pos, word = populate_form_dict(cursor, form_dict, word_id=word_id)
+        elif word:
+            checked_pos, word = populate_form_dict(cursor, form_dict, word=word)
+        else:
+            checked_pos = word = None
 
-        pos_infos = get_data_for_addword_form(cursor, list_id, word=word, word_id=word_id)
+        pos_infos = []
+        for k in list(form_dict.keys()):
+            pos_fields = [x for x in list(form_dict[k].values())]
+            l = sorted(pos_fields, key=lambda x: x['sort_order'])
+            pos_info = {
+                'pos_id': k,
+                'pos_fields': l,
+                'pos_name': l[0]['pos_name']
+            }
+            if checked_pos == k:
+                pos_info['checked'] = True
 
-        return render_template('addword.html',
-                               word=word,
-                               list_id=list_id,
-                               return_to_list_id=list_id,
-                               pos_infos=pos_infos)
+            pos_infos.append(pos_info)
+
+        pos_infos = sorted(pos_infos, key=lambda x: x['pos_id'])
+        return pos_infos, word
+
+
+@app.route('/word')
+def add_word():
+    pos_infos, word = get_data_for_addword_form()
+    return render_template('addword.html',
+                           pos_infos=pos_infos)
+
+
+@app.route('/word/<int:word_id>')
+def update_word_by_id(word_id):
+    list_id = request.args.get('list_id')
+
+    pos_infos, word = get_data_for_addword_form(word_id=word_id)
+    return render_template('addword.html',
+                           word=word,
+                           list_id=list_id,
+                           return_to_list_id=list_id,
+                           pos_infos=pos_infos)
+
+
+@app.route('/word/<string:word>')
+def update_word(word):
+    list_id = request.args.get('list_id')
+
+    pos_infos, word = get_data_for_addword_form(word=word)
+    return render_template('addword.html',
+                           word=word,
+                           list_id=list_id,
+                           return_to_list_id=list_id,
+                           pos_infos=pos_infos)
 
 
 @app.route('/add_to_dict', methods=['POST'])
@@ -1051,6 +1050,7 @@ def add_to_dict():
         if list_id:
             target = url_for('wordlist', list_id=list_id)
         else:
-            target = url_for('add_word')
+            # if we didn't add a word to any list, return to the editing form for this word.
+            target = url_for('update_word_by_id', word_id=word_id)
 
         return redirect(target)

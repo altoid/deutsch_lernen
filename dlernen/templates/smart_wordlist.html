@@ -23,7 +23,7 @@
                             <tr valign="top">
                                 <td>{{ r.article }}</td>
                                 <td>
-                                    <a href="{{ url_for('add_word', word_id=r.word_id, word=r.list_word, list_id=list_id) }}">{{
+                                    <a href="{{ url_for('update_word_by_id', word_id=r.word_id, list_id=list_id) }}">{{
                                         r.word }}</a></td>
                                 <td>{{ r.definition }}</td>
                             </tr>
