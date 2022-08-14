@@ -416,8 +416,6 @@ def create_wordlist():
             cursor.execute('rollback')
             raise e
 
-    # todo:  implement bulk delete of multiple lists using this endpoint.
-
 
 @app.route('/api/wordlist/<int:list_id>', methods=['GET', 'PUT', 'DELETE'])
 def wordlist_api(list_id):
@@ -569,8 +567,21 @@ def wordlist(list_id):
                            unknown_words=unknown_words)
 
 
-@app.route('/api/wordlists')
+@app.route('/api/wordlists', methods=['GET', 'DELETE'])
 def wordlists_api():
+    if request.method == 'DELETE':
+        doomed = request.form.getlist('deletelist')
+        if len(doomed):
+            with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+                format_list = ['%s'] * len(doomed)
+                format_args = ', '.join(format_list)
+                sql = "delete from wordlist where id in (%s)" % format_args
+                args = [int(x) for x in doomed]
+                cursor.execute(sql, args)
+                dbh.commit()
+
+        return 'OK'
+
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
 with wordlist_counts as
@@ -640,17 +651,15 @@ def addlist():
 @app.route('/deletelist', methods=['POST'])
 def deletelist():
     doomed = request.form.getlist('deletelist')
+    url = "%s/api/wordlists" % Config.DB_URL
+    payload = {
+        'deletelist': doomed
+    }
 
-    if len(doomed):
-        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            format_list = ['%s'] * len(doomed)
-            format_args = ', '.join(format_list)
-            sql = "delete from wordlist where id in (%s)" % format_args
-            args = [int(x) for x in doomed]
-            cursor.execute(sql, args)
-            dbh.commit()
-
-    return redirect('/wordlists')
+    r = requests.delete(url, data=payload)
+    if r.status_code == 200:
+        return redirect('/wordlists')
+    raise Exception("something went wrong in /api/wordlists")
 
 
 @app.route('/edit_list', methods=['POST'])
