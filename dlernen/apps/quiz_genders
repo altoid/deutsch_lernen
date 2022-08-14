@@ -11,9 +11,9 @@ def get_quiz_data():
     url = "%s/api/quiz_data" % config.Config.DB_URL
     payload = {
         "quizkey": "genders",
-        "word_ids": json.dumps(chosen_words['word_ids'])
+        "word_ids": chosen_words['word_ids']
     }
-    r = requests.put(url, data=payload)
+    r = requests.put(url, json=payload)
     quiz_data = json.loads(r.text)
 
     return quiz_data

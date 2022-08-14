@@ -72,9 +72,10 @@ def post_test():
         "a": "aoeu"
     }
     """
-    ids = json.loads(request.form.get('arr'))
-    pprint(ids)
-    return jsonify(request.form)
+
+    j = request.get_json()
+    pprint(j)
+    return jsonify(j)
 
 
 @app.route('/api/choose_words')
@@ -97,11 +98,8 @@ def choose_words():
 
     recent = request.args.get('recent', default='False').lower() == 'true'
     limit = int(request.args.get('limit', default='10'))
-    list_ids = request.args.get('list_ids', [])
+    list_ids = request.args.getlist('list_id')
     if list_ids:
-        list_ids = list_ids.split(',')
-        list_ids = list(map(lambda x: int(x), list_ids))
-
         word_ids = get_word_ids_from_list_ids(limit, list_ids, recent)
     else:
         word_ids = get_word_ids(limit, recent)
@@ -123,9 +121,10 @@ def quiz_data():
     the word IDs come in as a stringified list of ints:  "[1, 2, 3]"
     """
     if request.method == 'PUT':
-        quizkey = request.form.get('quizkey')
-        word_ids = request.form.get('word_ids', '[]')
-        word_ids = json.loads(word_ids)
+        payload = request.get_json()
+
+        quizkey = payload['quizkey']
+        word_ids = payload.get('word_ids', [])
         word_ids = list(map(str, word_ids))
         word_ids = ','.join(word_ids)
         result = []
@@ -260,8 +259,9 @@ def get_words():
             word_id in ({word_ids})
         )
     """
-    word_ids = request.form.get('word_ids', '[]')
-    word_ids = json.loads(word_ids)
+    payload = request.get_json()
+
+    word_ids = payload.get('word_ids', [])
     word_ids = list(map(str, word_ids))
     word_ids = ','.join(word_ids)
     result = []

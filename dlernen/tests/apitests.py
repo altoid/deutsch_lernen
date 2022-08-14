@@ -124,7 +124,7 @@ class APITests(unittest.TestCase):
             "quizkey": "definitions"
         }
 
-        r = requests.put(url, data=payload)
+        r = requests.put(url, json=payload)
         result = json.loads(r.text)
         self.assertEqual([], result)
 
@@ -132,10 +132,10 @@ class APITests(unittest.TestCase):
         url = "%s/api/quiz_data" % config.Config.DB_URL
         payload = {
             "quizkey": "definitions",
-            "word_ids": "[]"
+            "word_ids": []
         }
 
-        r = requests.put(url, data=payload)
+        r = requests.put(url, json=payload)
         result = json.loads(r.text)
         self.assertEqual([], result)
 
@@ -144,30 +144,32 @@ class APITests(unittest.TestCase):
         payload = {
         }
 
-        r = requests.put(url, data=payload)
+        r = requests.put(url, json=payload)
         result = json.loads(r.text)
         self.assertEqual([], result)
 
     def test_get_words_empty_list_2(self):
         url = "%s/api/words" % config.Config.DB_URL
         payload = {
-            "word_ids": "[]"
+            "word_ids": []
         }
 
-        r = requests.put(url, data=payload)
+        r = requests.put(url, json=payload)
         result = json.loads(r.text)
         self.assertEqual([], result)
 
     def test_get_words(self):
+        list_ids = [93, 114]
+        args = ["list_id=%s" % str(x) for x in list_ids]
+
         url = "%s/api/choose_words" % config.Config.DB_URL
-        url = "%s?limit=%s&list_ids=%s" % (url, 5, "93,114")
+        url = "%s?limit=%s&%s" % (url, 5, '&'.join(args))
         r = requests.get(url)
 
         payload = json.loads(r.text)
-        payload['word_ids'] = json.dumps(payload['word_ids'])
 
         url = "%s/api/words" % config.Config.DB_URL
-        r = requests.put(url, data=payload)
+        r = requests.put(url, json=payload)
         results = json.loads(r.text)
         self.assertGreater(len(results), 0)
         for result in results:

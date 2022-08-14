@@ -11,19 +11,18 @@ def get_quiz_data():
     url = "%s/api/quiz_data" % config.Config.DB_URL
     payload = {
         "quizkey": "definitions",
-        "word_ids": json.dumps(chosen_words['word_ids'])
+        "word_ids": chosen_words['word_ids']
     }
-    r = requests.put(url, data=payload)
+    r = requests.put(url, json=payload)
     quiz_data = json.loads(r.text)
 
     # dig the word_ids out of the result and then find the articles for each word that is a noun.
     word_ids = [x['word_id'] for x in quiz_data]
-    word_ids_str = json.dumps(word_ids)
     url = "%s/api/words" % config.Config.DB_URL
     payload = {
-        "word_ids": word_ids_str
+        "word_ids": word_ids
     }
-    r = requests.put(url, data=payload)
+    r = requests.put(url, json=payload)
     word_attributes = json.loads(r.text)
 
     # enrich the quiz_data by adding the articles
