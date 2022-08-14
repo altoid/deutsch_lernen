@@ -971,23 +971,22 @@ def add_to_dict():
         pos_name = r['name']
 
         word = request.form['word'].strip()
-        if pos_name == 'Noun':
-            word = word.capitalize()
-
         if not word:
             raise Exception("no word")
 
-        list_id = request.form.get('list_id')
+        if pos_name == 'Noun':
+            word = word.capitalize()
+
         w_sql = """
     insert ignore into word (pos_id, word)
     values (%s, %s)
     """
         cursor.execute(w_sql, (form_pos_id, word))
 
-        id_sql = "select last_insert_id()"
+        id_sql = "select last_insert_id() word_id"
         cursor.execute(id_sql)
         r = cursor.fetchone()
-        word_id = r['last_insert_id()']
+        word_id = r['word_id']
 
         # if word_id is 0, then the insert ignore didn't do anything because the
         # word was already there.  go get it.
@@ -1032,6 +1031,7 @@ def add_to_dict():
             cursor.execute(wa_sql, values)
 
         # now remove the word from unknown words and put it into known words.
+        list_id = request.form.get('list_id')
         del_sql = """
     delete from wordlist_unknown_word
     where word = %s
