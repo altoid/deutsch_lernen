@@ -7,7 +7,7 @@ import requests
 from pprint import pprint
 
 
-def get_quiz_data():
+def get_next_word_to_test():
     url = "%s/api/quiz_data" % config.Config.DB_URL
     payload = {
         "quizkey": "definitions",
@@ -86,41 +86,42 @@ n most recent
     done = False
     counter = 0
     while not done:
-        rows = get_quiz_data()
+        # returns at most one result - query has LIMIT 1
+        rows = get_next_word_to_test()
 
         if not rows:
             print("es gibt keine Welten mehr zu erobern")
             break
 
-        for row in rows:
-            counter += 1
-            print("[%s]" % counter, end=' ')
+        row = rows[0]
+        counter += 1
+        print("[%s]" % counter, end=' ')
 
-            if 'article' in row:
-                print(row['article'], end=' ')
+        if 'article' in row:
+            print(row['article'], end=' ')
 
-            print(str(row['word']))
-            prompt = "hit return for answer, q to quit:  --> "
+        print(str(row['word']))
+        prompt = "hit return for answer, q to quit:  --> "
+        answer = input(prompt).strip().lower()
+
+        if answer.startswith('q'):
+            done = True
+            break
+
+        print(row['attrvalue'])
+
+        prompt = "correct? --> "
+        answer = input(prompt).strip().lower()
+
+        while len(answer) == 0:
             answer = input(prompt).strip().lower()
 
-            if answer.startswith('q'):
-                done = True
-                break
+        if answer.startswith('y'):
+            row['correct_count'] += 1
 
-            print(row['attrvalue'])
+        row['presentation_count'] += 1
 
-            prompt = "correct? --> "
-            answer = input(prompt).strip().lower()
-
-            while len(answer) == 0:
-                answer = input(prompt).strip().lower()
-
-            if answer.startswith('y'):
-                row['correct_count'] += 1
-
-            row['presentation_count'] += 1
-
-            url = "%s/api/quiz_data" % config.Config.DB_URL
-            r = requests.post(url, data=row)
+        url = "%s/api/quiz_data" % config.Config.DB_URL
+        r = requests.post(url, data=row)
 
     print('bis bald')

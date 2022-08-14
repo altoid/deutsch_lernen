@@ -114,7 +114,9 @@ and ta.attribute_id = v.attribute_id
 
 where curdate() - interval 30 day > last_presentation
 
-order by field(word_id, {word_ids})
+order by rand()
+
+limit 1
 """
 
 

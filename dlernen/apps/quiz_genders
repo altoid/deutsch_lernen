@@ -16,6 +16,7 @@ def get_quiz_data():
     r = requests.put(url, json=payload)
     quiz_data = json.loads(r.text)
 
+    # returns an array of 0 or 1 items - query has LIMIT 1
     return quiz_data
 
 
@@ -71,30 +72,30 @@ n most recent
             print("es gibt keine Welten mehr zu erobern")
             break
 
-        for row in rows:
-            counter += 1
-            print("[%s]" % counter, end=' ')
+        row = rows[0]
+        counter += 1
+        print("[%s]" % counter, end=' ')
 
-            if 'article' in row:
-                print(row['article'], end=' ')
+        if 'article' in row:
+            print(row['article'], end=' ')
 
-            print(str(row['word']))
-            prompt = "type correct article, q to quit:  --> "
-            answer = input(prompt).strip().lower()
+        print(str(row['word']))
+        prompt = "type correct article, q to quit:  --> "
+        answer = input(prompt).strip().lower()
 
-            if answer.startswith('q'):
-                done = True
-                break
+        if answer.startswith('q'):
+            done = True
+            break
 
-            if answer == row['attrvalue']:
-                print("ja")
-                row['correct_count'] += 1
-            else:
-                print("nein:  %s" % row['attrvalue'])
+        if answer == row['attrvalue']:
+            print("ja")
+            row['correct_count'] += 1
+        else:
+            print("nein:  %s" % row['attrvalue'])
 
-            row['presentation_count'] += 1
+        row['presentation_count'] += 1
 
-            url = "%s/api/quiz_data" % config.Config.DB_URL
-            r = requests.post(url, data=row)
+        url = "%s/api/quiz_data" % config.Config.DB_URL
+        r = requests.post(url, data=row)
 
     print('bis bald')
