@@ -9,7 +9,7 @@ WORDLIST_SCHEMA = {
         # name
         # list_id
         # count
-        # whether it is a spart playlist
+        # whether it is a smart word list
         # optional:  list of word ids.
         "name": {
             "type": "string",
@@ -40,7 +40,7 @@ WORDLIST_DETAIL_SCHEMA = {
         # name
         # list_id
         # count
-        # whether it is a spart playlist
+        # whether it is a smart word list
         # optional:  list of word ids.
         "name": {
             "type": "string",

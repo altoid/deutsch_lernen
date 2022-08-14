@@ -1,3 +1,4 @@
+import werkzeug.exceptions
 from flask import Flask, request, render_template, redirect, url_for, jsonify
 from pprint import pprint
 from mysql.connector import connect
@@ -9,6 +10,14 @@ from contextlib import closing
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+
+def error_handler(e):
+    pprint("error handler>>>>>>>>>>>>>>>>>>>>>>>>>")
+    return str(e), 400
+
+
+app.register_error_handler(500, error_handler)
 
 
 def chunkify(arr, **kwargs):
@@ -382,8 +391,71 @@ def list_details(list_id):
         return render_template('list_details.html', wl_row=wl_row)
 
 
-@app.route('/api/wordlist/<int:list_id>')
+@app.route('/api/wordlist', methods=['POST'])
+def create_wordlist():
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        name = request.form.get('name')
+        source = request.form.get('source')
+        code = request.form.get('code')
+
+        if not name:
+            raise Exception("can't create list with empty name")
+
+        # this is well-behaved if source and code are not given.
+
+        try:
+            cursor.execute('start transaction')
+
+            sql = "insert into wordlist (name, source, code) values (%s, %s, %s)"
+            cursor.execute(sql, (name, source, code))
+            cursor.execute("select last_insert_id() list_id")
+            result = cursor.fetchone()
+            dbh.commit()
+            return jsonify(result)
+        except Exception as e:
+            cursor.execute('rollback')
+            raise e
+
+    # todo:  implement bulk delete of multiple lists using this endpoint.
+
+
+@app.route('/api/wordlist/<int:list_id>', methods=['GET', 'PUT', 'DELETE'])
 def wordlist_api(list_id):
+    if request.method == 'PUT':
+        name = request.form.get('name')
+        source = request.form.get('source')
+        code = request.form.get('code')
+        notes = request.form.get('notes')
+
+        if not name:
+            raise Exception("can't set list name to be empty string")
+
+        sql = """
+        update wordlist
+        set name = %(name)s, source = %(source)s, code = %(code)s, notes = %(notes)s
+        where id = %(list_id)s"""
+
+        args = {
+            'name': name,
+            'source': source,
+            'code': code,
+            'notes': notes,
+            'list_id': list_id
+        }
+        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            cursor.execute(sql, args)
+            dbh.commit()
+
+        return 'OK'
+
+    if request.method == 'DELETE':
+        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            sql = "delete from wordlist where id = %s"
+            cursor.execute(sql, (list_id,))
+            dbh.commit()
+
+        return 'OK'
+
     # uses WORDLIST_DETAIL_SCHEMA
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
@@ -398,10 +470,13 @@ def wordlist_api(list_id):
         """
         cursor.execute(sql, (list_id,))
         wl_row = cursor.fetchone()
+        if not wl_row:
+            return jsonify({})
+
         code = wl_row['code'].strip()
 
         result = dict(wl_row)
-        result['source_is_url'] = result['source'].startswith('http')
+        result['source_is_url'] = result['source'].startswith('http') if result['source'] else False
         result['is_smart'] = bool(code)
 
         if code:
@@ -535,6 +610,7 @@ order by name
                 dict_result[r['wordlist_id']]['count'] = len(rows)
                 del r['code']
 
+        # json_schema.WORDLIST_DETAIL_SCHEMA
         return jsonify(list(dict_result.values()))
 
 
