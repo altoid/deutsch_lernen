@@ -74,10 +74,11 @@ n most recent
 
     url = "%s/api/choose_words" % config.Config.DB_URL
     url = "%s?limit=%s&recent=%s" % (url, cl_args.nwords, cl_args.recent)
-    pprint(url)
     if cl_args.listids:
-        listids = map(str, cl_args.listids)
-        url = "%s&list_ids=%s" % (url, ','.join(listids))
+        listids = ["list_id=%s" % x for x in cl_args.listids]
+        url = "%s&%s" % (url, '&'.join(listids))
+
+    pprint(url)
 
     r = requests.get(url)
     chosen_words = json.loads(r.text)
