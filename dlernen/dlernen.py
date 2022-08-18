@@ -109,8 +109,6 @@ def quiz_data():
 
     although this is invoked with a PUT request, this doesn't actually change the state of the server.  we
     use PUT so that we can have longer list of word ids than we can put into a GET url, so the request is idempotent.
-
-    the word IDs come in as a stringified list of ints:  "[1, 2, 3]"
     """
     if request.method == 'PUT':
         payload = request.get_json()
@@ -225,8 +223,6 @@ def dbcheck():
 def get_words():
     """
     given a list of word_ids, get the details for each word:  word, attributes, etc.
-
-    the word IDs come in as a stringified list of ints:  "[1, 2, 3]"
     """
 
     sql = """
