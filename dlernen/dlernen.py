@@ -83,7 +83,8 @@ def choose_words():
 
     list_ids=n,n,n - optional.  restrict the word ids to those in the given lists.
 
-    returns a list of all of the word_ids that match the constraints.  the ids are unique but the order is undefined.
+    returns a list of all of the word_ids that match the constraints.
+    the ids are unique but the order is undefined.
 
     TODO: sanity check the value of limit
     """
@@ -265,10 +266,11 @@ def get_words():
             for r in rows:
                 if not dict_result.get(r['word_id']):
                     dict_result[r['word_id']] = {}
+                    dict_result[r['word_id']]['attributes'] = {}
                 dict_result[r['word_id']]['word'] = r['word']
                 dict_result[r['word_id']]['word_id'] = r['word_id']
                 dict_result[r['word_id']]['pos_name'] = r['pos_name']
-                dict_result[r['word_id']][r['attrkey']] = r['value']
+                dict_result[r['word_id']]['attributes'][r['attrkey']] = r['value']
 
             result = list(dict_result.values())
 
@@ -352,10 +354,11 @@ order by word_id, pf.sort_order
         for r in rows:
             if not dict_result.get(r['word_id']):
                 dict_result[r['word_id']] = {}
+                dict_result[r['word_id']]['attributes'] = {}
             dict_result[r['word_id']]['word'] = r['word']
             dict_result[r['word_id']]['word_id'] = r['word_id']
             dict_result[r['word_id']]['pos_name'] = r['pos_name']
-            dict_result[r['word_id']][r['attrkey']] = r['value']
+            dict_result[r['word_id']]['attributes'][r['attrkey']] = r['value']
 
         result = list(dict_result.values())
         # use jsonify even if the result looks like json already.  jsonify ensures that the content type and

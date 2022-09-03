@@ -7,41 +7,12 @@ from pprint import pprint
 import random
 import string
 
-# {
-# 	"word": "verderben",
-# 	"word_id": 1234,
-# 	"pos_name": "verb",
-# 	"attributes": [{
-# 			"key": "definition",
-# 			"value": "to spoil, deteriorate, go bad"
-# sort order is not needed, attributes will be sorted anyway
-# 		},
-# 		{
-# 			"key": "first_person_singular",
-# 			"value": "verderbe"
-# 		},
-# 		{
-# 			"key": "key_with_no_set_value",
-# 			"value": null
-# 		}
-# 	]
-# }
-
 SAMPLE_WORD_RESULT = {
-    "attributes": [
-        {
-            "key": "article",
-            "value": "der"
-        },
-        {
-            "key": "definition",
-            "value": "a roast"
-        },
-        {
-            "key": "plural",
-            "value": "braten"
-        }
-    ],
+    "attributes": {
+        "article": "der",
+        "definition": "a roast",
+        "plural": "braten"
+    },
     "pos_name": "Noun",
     "word": "Braten",
     "word_id": 702
@@ -297,7 +268,6 @@ class APITests(unittest.TestCase):
         url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
         r = requests.delete(url)
         self.assertEqual(200, r.status_code)
-
 
 
 if __name__ == '__main__':

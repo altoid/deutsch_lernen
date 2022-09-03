@@ -16,12 +16,11 @@ def widest_attrkey_len(result):
     """
 
     # the attribute with the longest key
-    longest_key = max(result['attributes'], key=lambda x: len(x['key']))
-    return len(longest_key['key']) if longest_key else 0
+    return 30
 
 
 def hanging_tag_width(result):
-    return len("%s (%s)" % (result['word'], result['pos_name']))
+    return 20
 
 
 def display_result(result, tagwidth, keywidth):
@@ -29,11 +28,12 @@ def display_result(result, tagwidth, keywidth):
     tag = "%s (%s)" % (result['word'], result['pos_name'])
     print("%s" % ('=' * 66))
 
-    for a in result['attributes']:
-        display_key = "%s:" % a['key']
+    attrs = result['attributes']
+    for k, v in attrs.items():
+        display_key = "%s:" % k
         print("%s %s %s" % (tag.ljust(tagwidth + 10),
                             display_key.ljust(keywidth + 1),  # add 1 for the : appended to the key name
-                            a['value']))
+                            v if v else ''))
         tag = ''
 
 

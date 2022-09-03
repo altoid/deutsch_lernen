@@ -30,7 +30,6 @@ WORDLIST_SCHEMA = {
     "required": ["name", "wordlist_id", "count", "is_smart"]
 }
 
-
 WORDLIST_DETAIL_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
@@ -95,7 +94,6 @@ WORDLIST_DETAIL_SCHEMA = {
                  "notes", "source_is_url"]
 }
 
-
 WORD_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Word",
@@ -114,41 +112,45 @@ WORD_SCHEMA = {
             "type": "string",
             "minLength": 1
         },
-
-        "article": {
-            "type": ["string", "null"]
-        },
-        "definition": {
-            "type": ["string", "null"]
-        },
-        "first_person_plural": {
-            "type": ["string", "null"]
-        },
-        "first_person_singular": {
-            "type": ["string", "null"]
-        },
-        "past_participle": {
-            "type": ["string", "null"]
-        },
-        "plural": {
-            "type": ["string", "null"]
-        },
-        "second_person_plural": {
-            "type": ["string", "null"]
-        },
-        "second_person_singular": {
-            "type": ["string", "null"]
-        },
-        "third_person_past": {
-            "type": ["string", "null"]
-        },
-        "third_person_plural": {
-            "type": ["string", "null"]
-        },
-        "third_person_singular": {
-            "type": ["string", "null"]
+        "attributes": {
+            "type": "object",
+            "properties": {
+                "article": {
+                    "type": ["string", "null"]
+                },
+                "definition": {
+                    "type": ["string", "null"]
+                },
+                "first_person_plural": {
+                    "type": ["string", "null"]
+                },
+                "first_person_singular": {
+                    "type": ["string", "null"]
+                },
+                "past_participle": {
+                    "type": ["string", "null"]
+                },
+                "plural": {
+                    "type": ["string", "null"]
+                },
+                "second_person_plural": {
+                    "type": ["string", "null"]
+                },
+                "second_person_singular": {
+                    "type": ["string", "null"]
+                },
+                "third_person_past": {
+                    "type": ["string", "null"]
+                },
+                "third_person_plural": {
+                    "type": ["string", "null"]
+                },
+                "third_person_singular": {
+                    "type": ["string", "null"]
+                }
+            }
         }
     },
-    "required": ["word", "word_id", "pos_name"]
-    # the attributes - article, definition, etc. - are all optional.
+    "required": ["word", "word_id", "pos_name", "attributes"]
+    # the attributes - article, definition, etc. - are all optional but the attribute keyword is not.
 }
