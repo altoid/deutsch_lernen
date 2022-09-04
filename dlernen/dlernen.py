@@ -616,6 +616,52 @@ order by name
         return jsonify(list(dict_result.values()))
 
 
+@app.route('/api/wordlists/<int:word_id>')
+def get_wordlists_for_word(word_id):
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        result = {}
+        # find static lists that this word is in
+        sql = """
+        select
+        name, wl.id list_id
+        from wordlist wl
+        inner join wordlist_known_word wkw
+        on wkw.wordlist_id = wl.id
+        where word_id = %s
+        order by wl.name
+        """
+        cursor.execute(sql, (word_id,))
+        rows = cursor.fetchall()
+        static_lists = rows
+
+        # find smart lists that this word is in!
+        # get all the sql
+        sql = """
+        select name, code, id list_id
+        from wordlist
+        where code is not null
+        """
+
+        smart_lists = []
+        cursor.execute(sql)
+        code_results = cursor.fetchall()
+        for r in code_results:
+            code = r['code'].strip()
+            if not code:
+                continue
+
+            cursor.execute(r['code'])
+            results_for_list = cursor.fetchall()
+            results_for_list = [x['word_id'] for x in results_for_list]
+            if word_id in results_for_list:
+                smart_lists.append({"name": r["name"], "list_id": r['list_id']})
+
+        result = static_lists + smart_lists
+        result = sorted(result, key=lambda x: x['name'].casefold())
+
+        return jsonify(result)
+
+
 @app.route('/')
 @app.route('/wordlists')
 def wordlists():
