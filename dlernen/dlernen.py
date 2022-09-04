@@ -971,11 +971,16 @@ def add_word():
 def update_word_by_id(word_id):
     list_id = request.args.get('list_id')
 
+    url = "%s/api/wordlists/%s" % (Config.DB_URL, word_id)
+    r = requests.get(url)
+    wordlists = json.loads(r.text)
+
     pos_infos, word = get_data_for_addword_form(word_id=word_id)
     return render_template('addword.html',
                            word=word,
                            list_id=list_id,
                            return_to_list_id=list_id,
+                           wordlists=wordlists,
                            pos_infos=pos_infos)
 
 
