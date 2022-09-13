@@ -1,0 +1,4 @@
+to do local development install:
+
+python -m pip install -e .
+
