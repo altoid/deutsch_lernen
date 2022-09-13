@@ -10,11 +10,11 @@
 <body>
 <table>
     <tr>
-        <td><a href="{{ url_for('wordlists') }}">Home</a></td>
+        <td><a href="{{ url_for('wordlists') }}">Startseite</a></td>
         {% if return_to_list_id %}
     </tr>
     <tr>
-        <td><a href="{{ url_for('wordlist', list_id=return_to_list_id) }}">Back to List</a></td>
+        <td><a href="{{ url_for('wordlist', list_id=return_to_list_id) }}">zum List zurückkehren</a></td>
         {% endif %}
     </tr>
 </table>
