@@ -584,8 +584,22 @@ def delete_wordlists():
 
 @app.route('/api/wordlists', methods=['GET'])
 def get_wordlists():
+    """
+    request format is
+
+    ?list_id=n,n,n ... - optional.  only return info for the given lists.
+
+    """
 
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        list_ids = request.args.get('list_id')
+        if list_ids:
+            list_ids = list_ids.split(',')
+            list_ids = list(set(list_ids))
+            where_clause = "where wordlist.id in (%s)" % (','.join(['%s'] * len(list_ids)))
+        else:
+            where_clause = ''
+
         sql = """
 with wordlist_counts as
 (
@@ -604,9 +618,13 @@ with wordlist_counts as
 select name, id wordlist_id, ifnull(lcount, 0) count, code
 from wordlist
 left join wordlist_counts wc on wc.wordlist_id = wordlist.id
+%(where_clause)s
 order by name
-        """
-        cursor.execute(sql)
+        """ % {
+        'where_clause': where_clause
+        }
+
+        cursor.execute(sql, list_ids)
         rows = cursor.fetchall()
 
         # maps list id to list info
@@ -638,7 +656,7 @@ def get_wordlists_for_word(word_id):
         # find static lists that this word is in
         sql = """
         select
-        name, wl.id list_id
+        wl.id list_id
         from wordlist wl
         inner join wordlist_known_word wkw
         on wkw.wordlist_id = wl.id
@@ -647,7 +665,7 @@ def get_wordlists_for_word(word_id):
         """
         cursor.execute(sql, (word_id,))
         rows = cursor.fetchall()
-        static_lists = rows
+        static_lists = [r['list_id'] for r in rows]
 
         # find smart lists that this word is in!
         # get all the sql
@@ -669,9 +687,17 @@ def get_wordlists_for_word(word_id):
             results_for_list = cursor.fetchall()
             results_for_list = [x['word_id'] for x in results_for_list]
             if word_id in results_for_list:
-                smart_lists.append({"name": r["name"], "list_id": r['list_id']})
+                smart_lists.append(r['list_id'])
 
-        result = static_lists + smart_lists
+        list_ids = static_lists + smart_lists
+
+        args = ','.join([str(x) for x in list_ids])
+        url = url_for('get_wordlists', list_id=args)
+        url = "%s/%s" % (Config.DB_URL, url)
+        r = requests.get(url)
+        # validation happens in get_wordlists so we don't need to do it here.
+
+        result = json.loads(r.text)
         result = sorted(result, key=lambda x: x['name'].casefold())
 
         return jsonify(result)
