@@ -75,8 +75,7 @@ n most recent
     url = "%s/api/choose_words" % config.Config.DB_URL
     url = "%s?limit=%s&recent=%s" % (url, cl_args.nwords, cl_args.recent)
     if cl_args.listids:
-        listids = ["list_id=%s" % x for x in cl_args.listids]
-        url = "%s&%s" % (url, '&'.join(listids))
+        url = "%s&list_id=%s" % (url, ','.join([str(x) for x in cl_args.listids]))
 
     pprint(url)
 

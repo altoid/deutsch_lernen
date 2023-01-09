@@ -155,10 +155,12 @@ class APITests(unittest.TestCase):
 
     def test_get_words(self):
         list_ids = [93, 114]
-        args = ["list_id=%s" % str(x) for x in list_ids]
+        args = [str(x) for x in list_ids]
 
         url = "%s/api/choose_words" % config.Config.DB_URL
         url = "%s?limit=%s&%s" % (url, 5, '&'.join(args))
+        url = "%s&list_id=%s" % (url, ','.join(args))
+
         r = requests.get(url)
 
         payload = json.loads(r.text)

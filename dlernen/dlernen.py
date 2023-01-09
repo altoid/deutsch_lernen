@@ -93,8 +93,9 @@ def choose_words():
 
     recent = request.args.get('recent', default='False').lower() == 'true'
     limit = int(request.args.get('limit', default='10'))
-    list_ids = request.args.getlist('list_id')
+    list_ids = request.args.get('list_id')
     if list_ids:
+        list_ids = list_ids.split(',')
         word_ids = get_word_ids_from_list_ids(limit, list_ids, recent)
     else:
         word_ids = get_word_ids(limit, recent)
