@@ -97,45 +97,48 @@ WORDLIST_DETAIL_SCHEMA = {
                  "notes", "source_is_url"]
 }
 
-WORD_SCHEMA = {
+WORDS_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Word",
-    "description": "word with attributes",
-    "type": "object",
-    "properties": {
-        "word": {
-            "type": "string",
-            "minLength": 1
-        },
-        "word_id": {
-            "type": "integer",
-            "minimum": 1
-        },
-        "pos_name": {
-            "type": "string",
-            "minLength": 1
-        },
-        "attributes": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "required": ["attrkey", "sort_order", "value"],
-                "properties": {
-                    "attrkey": {
-                        "type": "string",
-                        "minLength": 1
-                    },
-                    "sort_order": {
-                        "type": "integer",
-                        "minimum": 0
-                    },
-                    "value": {
-                        "type": ["string", "null"]
+    "description": "list of words with attributes",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "required": ["word", "word_id", "pos_name", "attributes"],
+        "properties": {
+            "word": {
+                "type": "string",
+                "minLength": 1
+            },
+            "word_id": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "pos_name": {
+                "type": "string",
+                "minLength": 1
+            },
+            "attributes": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": ["attrkey", "sort_order", "value"],
+                    "properties": {
+                        "attrkey": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "sort_order": {
+                            "type": "integer",
+                            "minimum": 0
+                        },
+                        "value": {
+                            "type": ["string", "null"]
+                        }
                     }
                 }
             }
         }
-    },
-    "required": ["word", "word_id", "pos_name", "attributes"]
+    }
     # the attributes - article, definition, etc. - are all optional but the attribute keyword is not.
 }

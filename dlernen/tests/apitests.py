@@ -7,38 +7,40 @@ from pprint import pprint
 import random
 import string
 
-SAMPLE_WORD_RESULT = {
-    "attributes": [{'attrkey': 'definition',
-                    'sort_order': 5,
-                    'value': 'to spoil, deteriorate, go bad'},
-                   {'attrkey': 'first_person_singular',
-                    'sort_order': 6,
-                    'value': 'verderbe'},
-                   {'attrkey': 'second_person_singular',
-                    'sort_order': 7,
-                    'value': 'verdirbst'},
-                   {'attrkey': 'third_person_singular',
-                    'sort_order': 8,
-                    'value': 'verdirbt'},
-                   {'attrkey': 'first_person_plural',
-                    'sort_order': 9,
-                    'value': 'verderben'},
-                   {'attrkey': 'second_person_plural',
-                    'sort_order': 10,
-                    'value': 'verderbt'},
-                   {'attrkey': 'third_person_plural',
-                    'sort_order': 11,
-                    'value': 'verderben'},
-                   {'attrkey': 'third_person_past',
-                    'sort_order': 16,
-                    'value': 'verdarb'},
-                   {'attrkey': 'past_participle',
-                    'sort_order': 17,
-                    'value': 'verdorben'}],
-    "pos_name": "Verb",
-    "word": "verderben",
-    "word_id": 2267
-}
+SAMPLE_WORDS_RESULT = [
+    {
+        "attributes": [{'attrkey': 'definition',
+                        'sort_order': 5,
+                        'value': 'to spoil, deteriorate, go bad'},
+                       {'attrkey': 'first_person_singular',
+                        'sort_order': 6,
+                        'value': 'verderbe'},
+                       {'attrkey': 'second_person_singular',
+                        'sort_order': 7,
+                        'value': 'verdirbst'},
+                       {'attrkey': 'third_person_singular',
+                        'sort_order': 8,
+                        'value': 'verdirbt'},
+                       {'attrkey': 'first_person_plural',
+                        'sort_order': 9,
+                        'value': 'verderben'},
+                       {'attrkey': 'second_person_plural',
+                        'sort_order': 10,
+                        'value': 'verderbt'},
+                       {'attrkey': 'third_person_plural',
+                        'sort_order': 11,
+                        'value': 'verderben'},
+                       {'attrkey': 'third_person_past',
+                        'sort_order': 16,
+                        'value': 'verdarb'},
+                       {'attrkey': 'past_participle',
+                        'sort_order': 17,
+                        'value': 'verdorben'}],
+        "pos_name": "Verb",
+        "word": "verderben",
+        "word_id": 2267
+    }
+]
 
 SAMPLE_WORDLISTS_RESULT = [
     {
@@ -79,17 +81,16 @@ SAMPLE_WORDLIST_DETAIL_RESULT = {
 
 class APITests(unittest.TestCase):
     def test_word_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORD_SCHEMA)
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDS_SCHEMA)
 
     def test_word_sample(self):
-        jsonschema.validate(SAMPLE_WORD_RESULT, dlernen_json_schema.WORD_SCHEMA)
+        jsonschema.validate(SAMPLE_WORDS_RESULT, dlernen_json_schema.WORDS_SCHEMA)
 
     def test_real_word(self):
         r = requests.get(config.Config.BASE_URL + "/api/word/verderben")
         results = r.json()
         self.assertGreater(len(results), 0)
-        for result in results:
-            jsonschema.validate(result, dlernen_json_schema.WORD_SCHEMA)
+        jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
 
     def test_wordlist_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLISTS_SCHEMA)
@@ -166,8 +167,7 @@ class APITests(unittest.TestCase):
         r = requests.put(url, json=payload)
         results = json.loads(r.text)
         self.assertGreater(len(results), 0)
-        for result in results:
-            jsonschema.validate(result, dlernen_json_schema.WORD_SCHEMA)
+        jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
 
     def test_wordlist_operations_name_only(self):
         list_name = ''.join(random.choices(string.ascii_lowercase, k=20))

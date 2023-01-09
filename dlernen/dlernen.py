@@ -287,8 +287,7 @@ def get_words():
             rows = cursor.fetchall()
             result = process_word_query_result(rows)
 
-            for r in result:
-                jsonschema.validate(r, dlernen.dlernen_json_schema.WORD_SCHEMA)
+            jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
 
     return jsonify(result)
 
@@ -371,8 +370,7 @@ order by word_id, pf.sort_order
         # use jsonify even if the result looks like json already.  jsonify ensures that the content type and
         # mime headers are correct.
 
-        for r in result:
-            jsonschema.validate(r, dlernen.dlernen_json_schema.WORD_SCHEMA)
+        jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
 
         return jsonify(result)
 
