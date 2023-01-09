@@ -5,6 +5,8 @@ import argparse
 from pprint import pprint
 import requests
 from dlernen.config import Config
+from dlernen import dlernen_json_schema
+import jsonschema
 
 
 def widest_attrkey_len(result):
@@ -51,6 +53,8 @@ if __name__ == '__main__':
         results = r.json()
         if not results:
             print("%s NOT FOUND:  %s" % ('#' * 33, word))
+
+        jsonschema.validate(results[0], dlernen_json_schema.WORD_SCHEMA)
 
         all_results += results
 
