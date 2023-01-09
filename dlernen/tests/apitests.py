@@ -40,7 +40,7 @@ SAMPLE_WORD_RESULT = {
     "word_id": 2267
 }
 
-SAMPLE_WORDLIST_RESULT = [
+SAMPLE_WORDLISTS_RESULT = [
     {
         "name": "sample_word_list",
         "wordlist_id": 1234,
@@ -92,16 +92,16 @@ class APITests(unittest.TestCase):
             jsonschema.validate(result, dlernen_json_schema.WORD_SCHEMA)
 
     def test_wordlist_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_SCHEMA)
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLISTS_SCHEMA)
 
     def test_wordlist_sample(self):
-        jsonschema.validate(SAMPLE_WORDLIST_RESULT, dlernen_json_schema.WORDLIST_SCHEMA)
+        jsonschema.validate(SAMPLE_WORDLISTS_RESULT, dlernen_json_schema.WORDLISTS_SCHEMA)
 
     def test_real_wordlist(self):
         r = requests.get(config.Config.BASE_URL + "/api/wordlists")
         results = r.json()
         self.assertGreater(len(results), 0)
-        jsonschema.validate(results, dlernen_json_schema.WORDLIST_SCHEMA)
+        jsonschema.validate(results, dlernen_json_schema.WORDLISTS_SCHEMA)
 
     def test_wordlist_detail_sample(self):
         jsonschema.validate(SAMPLE_WORDLIST_DETAIL_RESULT, dlernen_json_schema.WORDLIST_DETAIL_SCHEMA)

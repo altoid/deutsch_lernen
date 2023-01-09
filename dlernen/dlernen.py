@@ -625,9 +625,9 @@ order by name
                 smartlist_rows = cursor.fetchall()
                 dict_result[r['wordlist_id']]['count'] = len(smartlist_rows)
 
-        # json_schema.WORDLIST_SCHEMA
+        # json_schema.WORDLISTS_SCHEMA
         result = list(dict_result.values())
-        jsonschema.validate(result, dlernen.dlernen_json_schema.WORDLIST_SCHEMA)
+        jsonschema.validate(result, dlernen.dlernen_json_schema.WORDLISTS_SCHEMA)
         return jsonify(result)
 
 

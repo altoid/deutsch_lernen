@@ -1,6 +1,6 @@
 import jsonschema
 
-WORDLIST_SCHEMA = {
+WORDLISTS_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
     "description": "wordlist and basic properties",
