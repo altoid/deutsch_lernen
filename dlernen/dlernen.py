@@ -222,6 +222,25 @@ def dbcheck():
     pass
 
 
+def process_word_query_result(rows):
+    dict_result = {}
+    for r in rows:
+        if not dict_result.get(r['word_id']):
+            dict_result[r['word_id']] = {}
+            dict_result[r['word_id']]['attributes'] = []
+        attr = {
+            "attrkey": r['attrkey'],
+            "value": r['value'],
+            "sort_order": r['sort_order']
+        }
+        dict_result[r['word_id']]['word'] = r['word']
+        dict_result[r['word_id']]['word_id'] = r['word_id']
+        dict_result[r['word_id']]['pos_name'] = r['pos_name']
+        dict_result[r['word_id']]['attributes'].append(attr)
+    result = list(dict_result.values())
+    return result
+
+
 @app.route('/api/words', methods=['PUT'])
 def get_words():
     """
@@ -264,22 +283,7 @@ def get_words():
         with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
             cursor.execute(query)
             rows = cursor.fetchall()
-            dict_result = {}
-            for r in rows:
-                if not dict_result.get(r['word_id']):
-                    dict_result[r['word_id']] = {}
-                    dict_result[r['word_id']]['attributes'] = []
-                attr = {
-                    "attrkey": r['attrkey'],
-                    "value": r['value'],
-                    "sort_order": r['sort_order']
-                }
-                dict_result[r['word_id']]['word'] = r['word']
-                dict_result[r['word_id']]['word_id'] = r['word_id']
-                dict_result[r['word_id']]['pos_name'] = r['pos_name']
-                dict_result[r['word_id']]['attributes'].append(attr)
-
-            result = list(dict_result.values())
+            result = process_word_query_result(rows)
 
             for r in result:
                 jsonschema.validate(r, dlernen.dlernen_json_schema.WORD_SCHEMA)
@@ -360,22 +364,8 @@ order by word_id, pf.sort_order
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         cursor.execute(query, query_args)
         rows = cursor.fetchall()
-        dict_result = {}
-        for r in rows:
-            if not dict_result.get(r['word_id']):
-                dict_result[r['word_id']] = {}
-                dict_result[r['word_id']]['attributes'] = []
-            attr = {
-                "attrkey": r['attrkey'],
-                "value": r['value'],
-                "sort_order": r['sort_order']
-            }
-            dict_result[r['word_id']]['word'] = r['word']
-            dict_result[r['word_id']]['word_id'] = r['word_id']
-            dict_result[r['word_id']]['pos_name'] = r['pos_name']
-            dict_result[r['word_id']]['attributes'].append(attr)
+        result = process_word_query_result(rows)
 
-        result = list(dict_result.values())
         # use jsonify even if the result looks like json already.  jsonify ensures that the content type and
         # mime headers are correct.
 
