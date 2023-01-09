@@ -567,20 +567,23 @@ def wordlist(list_id):
                            unknown_words=unknown_words)
 
 
-@app.route('/api/wordlists', methods=['GET', 'DELETE'])
-def wordlists_api():
-    if request.method == 'DELETE':
-        doomed = request.form.getlist('deletelist')
-        if len(doomed):
-            with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-                format_list = ['%s'] * len(doomed)
-                format_args = ', '.join(format_list)
-                sql = "delete from wordlist where id in (%s)" % format_args
-                args = [int(x) for x in doomed]
-                cursor.execute(sql, args)
-                dbh.commit()
+@app.route('/api/wordlists', methods=['DELETE'])
+def delete_wordlists():
+    doomed = request.form.getlist('deletelist')
+    if len(doomed):
+        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            format_list = ['%s'] * len(doomed)
+            format_args = ', '.join(format_list)
+            sql = "delete from wordlist where id in (%s)" % format_args
+            args = [int(x) for x in doomed]
+            cursor.execute(sql, args)
+            dbh.commit()
 
-        return 'OK'
+    return 'OK'
+
+
+@app.route('/api/wordlists', methods=['GET'])
+def get_wordlists():
 
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
