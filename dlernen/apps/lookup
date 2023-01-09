@@ -5,7 +5,6 @@ import argparse
 from pprint import pprint
 import requests
 from dlernen.config import Config
-from dlernen import dlernen_json_schema
 
 
 def widest_attrkey_len(result):
