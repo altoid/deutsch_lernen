@@ -53,8 +53,7 @@ WORDLIST_DETAIL_SCHEMA = {
             "type": "boolean"
         },
         "source": {
-            "type": "string",
-            "minLength": 1
+            "type": ["string", "null"]
         },
         "source_is_url": {
             "type": "boolean"
@@ -63,6 +62,7 @@ WORDLIST_DETAIL_SCHEMA = {
             "type": "array",
             "items": {
                 "type": "object",
+                "required": ["word", "word_id"],
                 "properties": {
                     "word": {
                         "type": "string",

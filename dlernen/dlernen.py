@@ -243,6 +243,8 @@ def process_word_query_result(rows):
 
 @app.route('/api/words', methods=['PUT'])
 def get_words():
+    # this is for PUT requests because we have to send in the list of words ids as a payload.
+    # if we try to put the word_ids into a GET URL, the URL might be too long.
     """
     given a list of word_ids, get the details for each word:  word, attributes, etc.
     """
@@ -533,6 +535,7 @@ def wordlist_api(list_id):
         unknown_words = [x['word'] for x in unknown_words]
 
         result['unknown_words'] = unknown_words
+        jsonschema.validate(result, dlernen.dlernen_json_schema.WORDLIST_DETAIL_SCHEMA)
 
         return jsonify(result)
 
