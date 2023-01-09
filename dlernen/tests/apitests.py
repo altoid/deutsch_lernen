@@ -1,7 +1,7 @@
 import unittest
 import jsonschema
 import requests
-from dlernen import json_schema, config
+from dlernen import dlernen_json_schema, config
 import json
 from pprint import pprint
 import random
@@ -55,39 +55,39 @@ SAMPLE_WORDLIST_DETAIL_RESULT = {
 
 class APITests(unittest.TestCase):
     def test_word_schema(self):
-        jsonschema.Draft202012Validator.check_schema(json_schema.WORD_SCHEMA)
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORD_SCHEMA)
 
     def test_word_sample(self):
-        jsonschema.validate(SAMPLE_WORD_RESULT, json_schema.WORD_SCHEMA)
+        jsonschema.validate(SAMPLE_WORD_RESULT, dlernen_json_schema.WORD_SCHEMA)
 
     def test_real_word(self):
         r = requests.get(config.Config.BASE_URL + "/api/word/verderben")
         results = r.json()
         self.assertGreater(len(results), 0)
         for result in results:
-            jsonschema.validate(result, json_schema.WORD_SCHEMA)
+            jsonschema.validate(result, dlernen_json_schema.WORD_SCHEMA)
 
     def test_wordlist_schema(self):
-        jsonschema.Draft202012Validator.check_schema(json_schema.WORDLIST_SCHEMA)
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_SCHEMA)
 
     def test_wordlist_sample(self):
-        jsonschema.validate(SAMPLE_WORDLIST_RESULT, json_schema.WORDLIST_SCHEMA)
+        jsonschema.validate(SAMPLE_WORDLIST_RESULT, dlernen_json_schema.WORDLIST_SCHEMA)
 
     def test_real_wordlist(self):
         r = requests.get(config.Config.BASE_URL + "/api/wordlists")
         results = r.json()
         self.assertGreater(len(results), 0)
         for result in results:
-            jsonschema.validate(result, json_schema.WORDLIST_SCHEMA)
+            jsonschema.validate(result, dlernen_json_schema.WORDLIST_SCHEMA)
 
     def test_wordlist_detail_sample(self):
-        jsonschema.validate(SAMPLE_WORDLIST_DETAIL_RESULT, json_schema.WORDLIST_DETAIL_SCHEMA)
+        jsonschema.validate(SAMPLE_WORDLIST_DETAIL_RESULT, dlernen_json_schema.WORDLIST_DETAIL_SCHEMA)
 
     def test_real_wordlist_detail(self):
         url = "%s/api/wordlist/%s" % (config.Config.DB_URL, 6)
         r = requests.get(url)
         result = r.json()
-        jsonschema.validate(result, json_schema.WORDLIST_DETAIL_SCHEMA)
+        jsonschema.validate(result, dlernen_json_schema.WORDLIST_DETAIL_SCHEMA)
 
     def test_quiz_data_empty_list_1(self):
         url = "%s/api/quiz_data" % config.Config.DB_URL
@@ -144,7 +144,7 @@ class APITests(unittest.TestCase):
         results = json.loads(r.text)
         self.assertGreater(len(results), 0)
         for result in results:
-            jsonschema.validate(result, json_schema.WORD_SCHEMA)
+            jsonschema.validate(result, dlernen_json_schema.WORD_SCHEMA)
 
     def test_wordlist_operations_name_only(self):
         list_name = ''.join(random.choices(string.ascii_lowercase, k=20))
