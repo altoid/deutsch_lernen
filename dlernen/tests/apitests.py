@@ -40,12 +40,14 @@ SAMPLE_WORD_RESULT = {
     "word_id": 2267
 }
 
-SAMPLE_WORDLIST_RESULT = {
-    "name": "sample_word_list",
-    "wordlist_id": 1234,
-    "count": 111,
-    "is_smart": True
-}
+SAMPLE_WORDLIST_RESULT = [
+    {
+        "name": "sample_word_list",
+        "wordlist_id": 1234,
+        "count": 111,
+        "is_smart": True
+    }
+]
 
 SAMPLE_WORDLIST_DETAIL_RESULT = {
     "name": "sample_word_list",
@@ -99,8 +101,7 @@ class APITests(unittest.TestCase):
         r = requests.get(config.Config.BASE_URL + "/api/wordlists")
         results = r.json()
         self.assertGreater(len(results), 0)
-        for result in results:
-            jsonschema.validate(result, dlernen_json_schema.WORDLIST_SCHEMA)
+        jsonschema.validate(results, dlernen_json_schema.WORDLIST_SCHEMA)
 
     def test_wordlist_detail_sample(self):
         jsonschema.validate(SAMPLE_WORDLIST_DETAIL_RESULT, dlernen_json_schema.WORDLIST_DETAIL_SCHEMA)

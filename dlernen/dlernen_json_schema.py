@@ -3,31 +3,34 @@ import jsonschema
 WORDLIST_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
-    "description": "wordlist and basic properties, optionally with word_ids",
-    "type": "object",
-    "properties": {
-        # name
-        # list_id
-        # count
-        # whether it is a smart word list
-        # optional:  list of word ids.
-        "name": {
-            "type": "string",
-            "minLength": 1
+    "description": "wordlist and basic properties",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            # name
+            # list_id
+            # count
+            # whether it is a smart word list
+            # optional:  list of word ids.
+            "name": {
+                "type": "string",
+                "minLength": 1
+            },
+            "wordlist_id": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "count": {
+                "type": "integer",
+                "minimum": 0,
+            },
+            "is_smart": {
+                "type": "boolean"
+            }
         },
-        "wordlist_id": {
-            "type": "integer",
-            "minimum": 1
-        },
-        "count": {
-            "type": "integer",
-            "minimum": 0,
-        },
-        "is_smart": {
-            "type": "boolean"
-        }
-    },
-    "required": ["name", "wordlist_id", "count", "is_smart"]
+        "required": ["name", "wordlist_id", "count", "is_smart"]
+    }
 }
 
 WORDLIST_DETAIL_SCHEMA = {

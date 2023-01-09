@@ -627,8 +627,7 @@ order by name
 
         # json_schema.WORDLIST_SCHEMA
         result = list(dict_result.values())
-        for r in result:
-            jsonschema.validate(r, dlernen.dlernen_json_schema.WORDLIST_SCHEMA)
+        jsonschema.validate(result, dlernen.dlernen_json_schema.WORDLIST_SCHEMA)
         return jsonify(result)
 
 
