@@ -613,24 +613,28 @@ order by name
 
         for r in rows:
             # TODO - the connector is returning the count as a string, find out WTF
-            r['count'] = int(r['count'])
-            dict_result[r['wordlist_id']] = r
+
+            dict_result[r['wordlist_id']] = {}
+            dict_result[r['wordlist_id']]['name'] = r['name']
+            dict_result[r['wordlist_id']]['wordlist_id'] = r['wordlist_id']
             dict_result[r['wordlist_id']]['is_smart'] = bool(r['code'])
+            dict_result[r['wordlist_id']]['count'] = int(r['count'])
 
             if r['code']:
                 cursor.execute(r['code'])
-                rows = cursor.fetchall()
-                dict_result[r['wordlist_id']]['count'] = len(rows)
-                del r['code']
+                smartlist_rows = cursor.fetchall()
+                dict_result[r['wordlist_id']]['count'] = len(smartlist_rows)
 
-        # json_schema.WORDLIST_DETAIL_SCHEMA
-        return jsonify(list(dict_result.values()))
+        # json_schema.WORDLIST_SCHEMA
+        result = list(dict_result.values())
+        for r in result:
+            jsonschema.validate(r, dlernen.dlernen_json_schema.WORDLIST_SCHEMA)
+        return jsonify(result)
 
 
 @app.route('/api/wordlists/<int:word_id>')
 def get_wordlists_for_word(word_id):
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        result = {}
         # find static lists that this word is in
         sql = """
         select
