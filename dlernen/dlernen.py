@@ -268,13 +268,21 @@ def get_words():
             for r in rows:
                 if not dict_result.get(r['word_id']):
                     dict_result[r['word_id']] = {}
-                    dict_result[r['word_id']]['attributes'] = {}
+                    dict_result[r['word_id']]['attributes'] = []
+                attr = {
+                    "attrkey": r['attrkey'],
+                    "value": r['value'],
+                    "sort_order": r['sort_order']
+                }
                 dict_result[r['word_id']]['word'] = r['word']
                 dict_result[r['word_id']]['word_id'] = r['word_id']
                 dict_result[r['word_id']]['pos_name'] = r['pos_name']
-                dict_result[r['word_id']]['attributes'][r['attrkey']] = r['value']
+                dict_result[r['word_id']]['attributes'].append(attr)
 
             result = list(dict_result.values())
+
+            for r in result:
+                jsonschema.validate(r, dlernen.dlernen_json_schema.WORD_SCHEMA)
 
     return jsonify(result)
 
@@ -356,11 +364,16 @@ order by word_id, pf.sort_order
         for r in rows:
             if not dict_result.get(r['word_id']):
                 dict_result[r['word_id']] = {}
-                dict_result[r['word_id']]['attributes'] = {}
+                dict_result[r['word_id']]['attributes'] = []
+            attr = {
+                "attrkey": r['attrkey'],
+                "value": r['value'],
+                "sort_order": r['sort_order']
+            }
             dict_result[r['word_id']]['word'] = r['word']
             dict_result[r['word_id']]['word_id'] = r['word_id']
             dict_result[r['word_id']]['pos_name'] = r['pos_name']
-            dict_result[r['word_id']]['attributes'][r['attrkey']] = r['value']
+            dict_result[r['word_id']]['attributes'].append(attr)
 
         result = list(dict_result.values())
         # use jsonify even if the result looks like json already.  jsonify ensures that the content type and

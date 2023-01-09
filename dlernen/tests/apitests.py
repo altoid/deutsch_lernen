@@ -8,14 +8,36 @@ import random
 import string
 
 SAMPLE_WORD_RESULT = {
-    "attributes": {
-        "article": "der",
-        "definition": "a roast",
-        "plural": "braten"
-    },
-    "pos_name": "Noun",
-    "word": "Braten",
-    "word_id": 702
+    "attributes": [{'attrkey': 'definition',
+                    'sort_order': 5,
+                    'value': 'to spoil, deteriorate, go bad'},
+                   {'attrkey': 'first_person_singular',
+                    'sort_order': 6,
+                    'value': 'verderbe'},
+                   {'attrkey': 'second_person_singular',
+                    'sort_order': 7,
+                    'value': 'verdirbst'},
+                   {'attrkey': 'third_person_singular',
+                    'sort_order': 8,
+                    'value': 'verdirbt'},
+                   {'attrkey': 'first_person_plural',
+                    'sort_order': 9,
+                    'value': 'verderben'},
+                   {'attrkey': 'second_person_plural',
+                    'sort_order': 10,
+                    'value': 'verderbt'},
+                   {'attrkey': 'third_person_plural',
+                    'sort_order': 11,
+                    'value': 'verderben'},
+                   {'attrkey': 'third_person_past',
+                    'sort_order': 16,
+                    'value': 'verdarb'},
+                   {'attrkey': 'past_participle',
+                    'sort_order': 17,
+                    'value': 'verdorben'}],
+    "pos_name": "Verb",
+    "word": "verderben",
+    "word_id": 2267
 }
 
 SAMPLE_WORDLIST_RESULT = {

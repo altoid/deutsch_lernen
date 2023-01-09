@@ -113,40 +113,22 @@ WORD_SCHEMA = {
             "minLength": 1
         },
         "attributes": {
-            "type": "object",
-            "properties": {
-                "article": {
-                    "type": ["string", "null"]
-                },
-                "definition": {
-                    "type": ["string", "null"]
-                },
-                "first_person_plural": {
-                    "type": ["string", "null"]
-                },
-                "first_person_singular": {
-                    "type": ["string", "null"]
-                },
-                "past_participle": {
-                    "type": ["string", "null"]
-                },
-                "plural": {
-                    "type": ["string", "null"]
-                },
-                "second_person_plural": {
-                    "type": ["string", "null"]
-                },
-                "second_person_singular": {
-                    "type": ["string", "null"]
-                },
-                "third_person_past": {
-                    "type": ["string", "null"]
-                },
-                "third_person_plural": {
-                    "type": ["string", "null"]
-                },
-                "third_person_singular": {
-                    "type": ["string", "null"]
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["attrkey", "sort_order", "value"],
+                "properties": {
+                    "attrkey": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "sort_order": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "value": {
+                        "type": ["string", "null"]
+                    }
                 }
             }
         }
