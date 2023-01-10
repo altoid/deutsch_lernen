@@ -692,14 +692,16 @@ def get_wordlists_for_word(word_id):
 
         list_ids = static_lists + smart_lists
 
-        args = ','.join([str(x) for x in list_ids])
-        url = url_for('get_wordlists', list_id=args)
-        url = "%s/%s" % (Config.DB_URL, url)
-        r = requests.get(url)
-        # validation happens in get_wordlists so we don't need to do it here.
+        result = []
+        if list_ids:
+            args = ','.join([str(x) for x in list_ids])
+            url = url_for('get_wordlists', list_id=args)
+            url = "%s/%s" % (Config.DB_URL, url)
+            r = requests.get(url)
+            # validation happens in get_wordlists so we don't need to do it here.
 
-        result = json.loads(r.text)
-        result = sorted(result, key=lambda x: x['name'].casefold())
+            result = json.loads(r.text)
+            result = sorted(result, key=lambda x: x['name'].casefold())
 
         return jsonify(result)
 
