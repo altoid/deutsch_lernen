@@ -42,6 +42,21 @@ SAMPLE_WORDS_RESULT = [
     }
 ]
 
+SAMPLE_WORDIDS_RESULT = {
+  "word_ids": [
+    1339,
+    3429,
+    1197,
+    3193,
+    3086,
+    4822,
+    1892,
+    212,
+    3346,
+    1616
+  ]
+}
+
 SAMPLE_WORDLISTS_RESULT = [
     {
         "name": "sample_word_list",
@@ -80,6 +95,18 @@ SAMPLE_WORDLIST_DETAIL_RESULT = {
 
 
 class APITests(unittest.TestCase):
+    def test_wordids_schema(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDIDS_SCHEMA)
+
+    def test_wordids_sample(self):
+        jsonschema.validate(SAMPLE_WORDIDS_RESULT, dlernen_json_schema.WORDIDS_SCHEMA)
+
+    def test_real_wordids(self):
+        r = requests.get(config.Config.BASE_URL + "/api/choose_words")
+        results = r.json()
+        self.assertGreater(len(results), 0)
+        jsonschema.validate(results, dlernen_json_schema.WORDIDS_SCHEMA)
+
     def test_word_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDS_SCHEMA)
 

@@ -1,5 +1,20 @@
 import jsonschema
 
+WORDIDS_SCHEMA = {
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "WordIDList",
+    "description": "list of word ids",
+    "type": "object",
+    "properties": {
+        "word_ids": {
+            "type": "array",
+            "items": {
+                "type": "integer"
+            }
+        }
+    }
+}
+
 WORDLISTS_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",

@@ -103,6 +103,9 @@ def choose_words():
     result = {
         "word_ids": word_ids
     }
+
+    jsonschema.validate(result, dlernen.dlernen_json_schema.WORDIDS_SCHEMA)
+
     return jsonify(result)
 
 
