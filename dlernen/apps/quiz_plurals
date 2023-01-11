@@ -23,19 +23,19 @@ def get_quiz_data():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                      description="""
-quiz_genders (no args)
+quiz_definitions (no args)
 all words
 
-quiz_genders -l <list_id> <list_id> ...
+quiz_definitions -l <list_id> <list_id> ...
 all from a list
 
-quiz_genders -n <x> -r
+quiz_definitions -n <x> -r
 n randomly chosen
 
-quiz_genders -n <x> -l <list_id> <list_id> ...
+quiz_definitions -n <x> -l <list_id> <list_id> ...
 n randomly chosen from lists
 
-quiz_genders -n <x>
+quiz_definitions -n <x>
 n most recent
 """)
 
