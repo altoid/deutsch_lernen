@@ -27,7 +27,6 @@ WORDLISTS_SCHEMA = {
             # list_id
             # count
             # whether it is a smart word list
-            # optional:  list of word ids.
             "name": {
                 "type": "string",
                 "minLength": 1
