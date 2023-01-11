@@ -165,7 +165,7 @@ def get_word_ids(limit, recent):
 
 def get_word_ids_from_list_ids(limit, list_ids, recent):
     """
-    returns a list containing 0 or more unique list ids.
+    returns a list containing 0 or more unique word ids.
     """
 
     results = []
