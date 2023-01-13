@@ -10,7 +10,7 @@ from pprint import pprint
 def get_quiz_data():
     url = "%s/api/quiz_data" % config.Config.DB_URL
     payload = {
-        "quizkey": "genders",
+        "quizkey": "plurals",
         "word_ids": chosen_words['word_ids']
     }
     r = requests.put(url, json=payload)
@@ -23,19 +23,19 @@ def get_quiz_data():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                      description="""
-quiz_definitions (no args)
+quiz_plurals (no args)
 all words
 
-quiz_definitions -l <list_id> <list_id> ...
+quiz_plurals -l <list_id> <list_id> ...
 all from a list
 
-quiz_definitions -n <x> -r
+quiz_plurals -n <x> -r
 n randomly chosen
 
-quiz_definitions -n <x> -l <list_id> <list_id> ...
+quiz_plurals -n <x> -l <list_id> <list_id> ...
 n randomly chosen from lists
 
-quiz_definitions -n <x>
+quiz_plurals -n <x>
 n most recent
 """)
 
@@ -52,7 +52,7 @@ n most recent
                         help='pick most recently added words and quiz them.')
     cl_args = parser.parse_args()
 
-    url = "%s/api/choose_words" % config.Config.DB_URL
+    url = "%s/api/choose_words/plural" % config.Config.DB_URL
     url = "%s?limit=%s&recent=%s" % (url, cl_args.nwords, cl_args.recent)
     if cl_args.listids:
         url = "%s&list_id=%s" % (url, ','.join([str(x) for x in cl_args.listids]))
@@ -61,6 +61,7 @@ n most recent
 
     r = requests.get(url)
     chosen_words = json.loads(r.text)
+    #pprint(chosen_words)
 
     done = False
     counter = 0
@@ -72,6 +73,7 @@ n most recent
             break
 
         row = rows[0]
+        #print(row)
         counter += 1
         print("[%s]" % counter, end=' ')
 
@@ -79,8 +81,8 @@ n most recent
             print(row['article'], end=' ')
 
         print(str(row['word']))
-        prompt = "type correct article, q to quit:  --> "
-        answer = input(prompt).strip().lower()
+        prompt = "type correct plural, q to quit:  --> "
+        answer = input(prompt).strip()
 
         if answer.startswith('q'):
             done = True

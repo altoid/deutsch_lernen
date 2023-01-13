@@ -72,7 +72,7 @@ n most recent
                         help='pick most recently added words and quiz them.')
     cl_args = parser.parse_args()
 
-    url = "%s/api/choose_words" % config.Config.DB_URL
+    url = "%s/api/choose_words/definition" % config.Config.DB_URL
     url = "%s?limit=%s&recent=%s" % (url, cl_args.nwords, cl_args.recent)
     if cl_args.listids:
         url = "%s&list_id=%s" % (url, ','.join([str(x) for x in cl_args.listids]))
