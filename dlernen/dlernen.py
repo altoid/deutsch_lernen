@@ -72,8 +72,8 @@ def post_test():
     return jsonify(j)
 
 
-@app.route('/api/choose_words')
-def choose_words():
+@app.route('/api/choose_words/<string:attrkey>')
+def choose_words_attrkey(attrkey):
     """
     request format is
 
@@ -83,30 +83,44 @@ def choose_words():
 
     limit=n - optional.  restrict the number of word ids.  defaults to 10 if not specified.
 
-    list_ids=n,n,n - optional.  restrict the word ids to those in the given lists.
+    list_id=n,n,n - optional.  restrict the word ids to those in the given lists.
 
     returns a list of all of the word_ids that match the constraints.
     the ids are unique but the order is undefined.
-
-    TODO: sanity check the value of limit
     """
 
-    recent = request.args.get('recent', default='False').lower() == 'true'
-    limit = int(request.args.get('limit', default='10'))
-    list_ids = request.args.get('list_id')
-    if list_ids:
-        list_ids = list_ids.split(',')
-        word_ids = get_word_ids_from_list_ids(limit, list_ids, recent)
-    else:
-        word_ids = get_word_ids(limit, recent)
+    # check that the attrkey exists
+    sql = """
+    select attrkey from attribute
+    """
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        cursor.execute(sql)
+        query_result = cursor.fetchall()
+        keys = {x['attrkey'] for x in query_result}
+        if attrkey not in keys:
+            return "attrkey %s not found" % attrkey, 404
 
-    result = {
-        "word_ids": word_ids
-    }
+        recent = request.args.get('recent', default='False').lower() == 'true'
+        try:
+            limit = int(request.args.get('limit', default='10'))
+            if limit < 1:
+                return "bad value for limit", 400
+        except ValueError as dammit:
+            return "bad value for limit", 400
 
-    jsonschema.validate(result, dlernen.dlernen_json_schema.WORDIDS_SCHEMA)
+        list_ids = request.args.get('list_id')
+        if list_ids:
+            word_ids = get_word_ids_from_list_ids(limit, list_ids, recent, attrkey)
+        else:
+            word_ids = get_word_ids(limit, recent, attrkey)
 
-    return jsonify(result)
+        result = {
+            "word_ids": word_ids
+        }
+
+        jsonschema.validate(result, dlernen.dlernen_json_schema.WORDIDS_SCHEMA)
+
+        return jsonify(result)
 
 
 @app.route('/api/quiz_data', methods=['PUT', 'POST'])
@@ -149,64 +163,77 @@ def quiz_data():
     return jsonify('OK')
 
 
-def get_word_ids(limit, recent):
+def get_word_ids(limit, recent, attrkey):
     query = """
-        select w.id word_id from word w
+        select word_id
+        from mashup_v m
+        where attrkey = %(attrkey)s
+        and attrvalue is not null 
         """
     if recent:
-        order_by = " order by w.added desc "
+        order_by = "order by m.added desc "
     else:
-        order_by = " order by rand() "
+        order_by = "order by rand() "
     query += order_by
-    limit_clause = " limit %s " % limit if limit else ""
+    limit_clause = "limit %(limit)s " if limit else ""
     query += limit_clause
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        cursor.execute(query)
+        args = {
+            "limit": limit,
+            "attrkey": attrkey
+        }
+        cursor.execute(query, args)
         query_result = cursor.fetchall()
         return [x['word_id'] for x in query_result]
 
 
-def get_word_ids_from_list_ids(limit, list_ids, recent):
+def get_word_ids_from_list_ids(limit, list_ids, recent, attrkey):
     """
     returns a list containing 0 or more unique word ids.
     """
 
     results = []
+    list_ids = list_ids.split(',')
+
     for list_id in list_ids:
         # use the API so we don't have to worry about whether any are smart lists
         url = "%s/api/wordlist/%s" % (Config.DB_URL, list_id)
         r = requests.get(url)
         result = json.loads(r.text)
-        results.append(result)
+        if result:
+            results.append(result)
 
     # dig the word_ids out of the list results
     word_ids = []
     for result in results:
-        word_ids += [x['word_id'] for x in result['known_words']]
+        word_ids += [x['word_id'] for x in result.get('known_words')]
 
-    # remove any duplicates
     word_ids = list(set(word_ids))
 
     # we'll have to apply the recent and limit filters here in software
     if len(word_ids):
         query = """
-            select w.id word_id from word w
-            where w.id in (%s)
+            select word_id
+            from mashup_v
+            where attrkey = %%s
+            and attrvalue is not null
+            and word_id in (%s)
             """ % (','.join(['%s'] * len(word_ids)))
 
         if recent:
-            order_by = " order by w.added desc "
+            order_by = " order by mashup_v.added desc "
         else:
             order_by = " order by rand() "
 
         query += order_by
 
-        limit_clause = " limit %s " % limit if limit else ""
+        limit_clause = " limit %s "
 
         query += limit_clause
 
         with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            cursor.execute(query, word_ids)
+            args = [attrkey] + word_ids + [limit]
+            cursor.execute(query, args)
 
             query_result = cursor.fetchall()
 

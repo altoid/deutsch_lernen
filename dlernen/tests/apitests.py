@@ -102,7 +102,7 @@ class APITests(unittest.TestCase):
         jsonschema.validate(SAMPLE_WORDIDS_RESULT, dlernen_json_schema.WORDIDS_SCHEMA)
 
     def test_real_wordids(self):
-        r = requests.get(config.Config.BASE_URL + "/api/choose_words")
+        r = requests.get(config.Config.BASE_URL + "/api/choose_words/article")
         results = r.json()
         self.assertGreater(len(results), 0)
         jsonschema.validate(results, dlernen_json_schema.WORDIDS_SCHEMA)
@@ -139,6 +139,12 @@ class APITests(unittest.TestCase):
         r = requests.get(url)
         result = r.json()
         jsonschema.validate(result, dlernen_json_schema.WORDLIST_DETAIL_SCHEMA)
+
+    def test_unreal_wordlist_detail(self):
+        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, 6666666)
+        r = requests.get(url)
+        result = r.json()
+        self.assertFalse(bool(result))
 
     def test_quiz_data_empty_list_1(self):
         url = "%s/api/quiz_data" % config.Config.DB_URL
@@ -184,7 +190,7 @@ class APITests(unittest.TestCase):
         list_ids = [93, 114]
         args = [str(x) for x in list_ids]
 
-        url = "%s/api/choose_words" % config.Config.DB_URL
+        url = "%s/api/choose_words/plural" % config.Config.DB_URL
         url = "%s?limit=%s&%s" % (url, 5, '&'.join(args))
         url = "%s&list_id=%s" % (url, ','.join(args))
 
