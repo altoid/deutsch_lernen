@@ -72,8 +72,8 @@ def post_test():
     return jsonify(j)
 
 
-@app.route('/api/choose_words/<string:attrkey>')
-def choose_words_attrkey(attrkey):
+@app.route('/api/words/<string:attrkey>')
+def words_attrkey(attrkey):
     """
     request format is
 
