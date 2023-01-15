@@ -47,7 +47,7 @@ given_words
 ),
 attrs_and_values as (
 select ta.*,
-mashup_v.word, mashup_v.attrvalue
+mashup_v.word, mashup_v.attrvalue, mashup_v.attrkey
 from testable_attributes ta
 inner join mashup_v on ta.word_id = mashup_v.word_id and ta.attribute_id = mashup_v.attribute_id
 ),
@@ -64,6 +64,7 @@ where word_id not in (
 select
 ta.quiz_id,
 ta.attribute_id,
+ta.attrkey,
 ta.word_id,
 ta.word,
 ta.attrvalue,
@@ -85,6 +86,7 @@ union
 select
 ta.quiz_id,
 ta.attribute_id,
+ta.attrkey,
 ta.word_id,
 ta.word,
 ta.attrvalue,
@@ -107,6 +109,7 @@ union
 select
 ta.quiz_id,
 ta.attribute_id,
+ta.attrkey,
 ta.word_id,
 ta.word,
 ta.attrvalue,

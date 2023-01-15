@@ -121,6 +121,26 @@ class APITests(unittest.TestCase):
     def test_quiz_data_sample(self):
         jsonschema.validate(SAMPLE_QUIZ_DATA_RESULT, dlernen_json_schema.QUIZ_DATA_SCHEMA)
 
+    def test_real_quiz_data(self):
+        url = "%s/api/quiz_data" % config.Config.DB_URL
+        payload = {
+            "quizkey": "plurals",
+            "word_ids": [2175, 3230, 4803]
+        }
+        r = requests.put(url, json=payload)
+        quiz_data = json.loads(r.text)
+        jsonschema.validate(quiz_data, dlernen_json_schema.QUIZ_DATA_SCHEMA)
+
+    def test_empty_quiz_data(self):
+        url = "%s/api/quiz_data" % config.Config.DB_URL
+        payload = {
+            "quizkey": "plurals",
+            "word_ids": []
+        }
+        r = requests.put(url, json=payload)
+        quiz_data = json.loads(r.text)
+        jsonschema.validate(quiz_data, dlernen_json_schema.QUIZ_DATA_SCHEMA)
+
     def test_wordids_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDIDS_SCHEMA)
 

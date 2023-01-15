@@ -143,7 +143,23 @@ def quiz_data():
             query = quiz_sql.build_quiz_query(quizkey, word_ids)
             with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
                 cursor.execute(query)
-                result = cursor.fetchall()
+                rows = cursor.fetchall()
+                results_dict = {}
+
+                for row in rows:
+                    if row['word_id'] not in results_dict:
+                        results_dict[row['word_id']] = {}
+                    results_dict[row['word_id']]['quiz_id'] = row['quiz_id']
+                    results_dict[row['word_id']]['word_id'] = row['word_id']
+                    results_dict[row['word_id']]['word'] = row['word']
+                    if row['attrkey'] not in results_dict[row['word_id']]:
+                        results_dict[row['word_id']][row['attrkey']] = {}
+                    results_dict[row['word_id']][row['attrkey']]['correct_count'] = row['correct_count']
+                    results_dict[row['word_id']][row['attrkey']]['presentation_count'] = row['presentation_count']
+                    results_dict[row['word_id']][row['attrkey']]['attrvalue'] = row['attrvalue']
+                    results_dict[row['word_id']][row['attrkey']]['last_presentation'] = row['last_presentation']
+                result = list(results_dict.values())
+
         return jsonify(result)
 
     update = """
