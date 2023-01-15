@@ -73,12 +73,14 @@ SAMPLE_QUIZ_DATA_RESULT = [
         'word': 'Tarnung',
         'article': {
             'attrvalue': 'die',
+            'attribute_id': 1,
             'correct_count': 0,
             'last_presentation': None,
             'presentation_count': 0,
         },
         'plural': {
             'attrvalue': 'Tarnungen',
+            'attribute_id': 3,
             'correct_count': 0,
             'last_presentation': None,
             'presentation_count': 0,

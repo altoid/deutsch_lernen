@@ -16,8 +16,11 @@ def get_quiz_data(chosen_words):
     r = requests.put(url, json=payload)
     quiz_data = json.loads(r.text)
 
+    if not quiz_data:
+        return None
+
     # returns an array of 0 or 1 items - query has LIMIT 1
-    return quiz_data
+    return quiz_data[0]
 
 
 if __name__ == '__main__':
@@ -61,26 +64,21 @@ n most recent
 
     r = requests.get(url)
     chosen_words = json.loads(r.text)
-    #pprint(chosen_words)
+    pprint(chosen_words)
 
     done = False
     counter = 0
     while not done:
-        rows = get_quiz_data(chosen_words)
-        pprint(rows)
-        print(len(rows))
-        if not rows:
+        row = get_quiz_data(chosen_words)
+        if not row:
             print("es gibt keine Welten mehr zu erobern")
             break
 
-        row = rows[0]
+        # pprint(row)
         counter += 1
         print("[%s]" % counter, end=' ')
 
-        if 'article' in row:
-            print(row['article'], end=' ')
-
-        print(str(row['word']))
+        print("%s %s" % (row['article']['attrvalue'], row['word']))
         prompt = "type correct plural, q to quit:  --> "
         answer = input(prompt).strip()
 
@@ -88,15 +86,23 @@ n most recent
             done = True
             break
 
-        if answer == row['attrvalue']:
-            print("ja")
-            row['correct_count'] += 1
-        else:
-            print("nein:  %s" % row['attrvalue'])
+        payload = {
+            "quiz_id": row['quiz_id'],
+            "word_id": row['word_id'],
+            "attribute_id": row['plural']['attribute_id'],
+            "presentation_count": row['plural']['presentation_count'],
+            "correct_count": row['plural']['correct_count']
+        }
 
-        row['presentation_count'] += 1
+        if answer == row['plural']['attrvalue']:
+            print("ja")
+            payload['correct_count'] += 1
+        else:
+            print("nein:  %s" % row['plural']['attrvalue'])
+
+        payload['presentation_count'] += 1
 
         url = "%s/api/quiz_data" % config.Config.DB_URL
-        r = requests.post(url, data=row)
+        r = requests.post(url, data=payload)
 
     print('bis bald')

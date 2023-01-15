@@ -31,6 +31,30 @@ QUIZ_DATA_SCHEMA = {
             },
             "plural": {
                 "$ref": "#/$defs/quiz_attribute"
+            },
+            "definition": {
+                "$ref": "#/$defs/quiz_attribute"
+            },
+            "first_person_singular": {
+                "$ref": "#/$defs/quiz_attribute"
+            },
+            "second_person_singular": {
+                "$ref": "#/$defs/quiz_attribute"
+            },
+            "third_person_singular": {
+                "$ref": "#/$defs/quiz_attribute"
+            },
+            "first_person_plural": {
+                "$ref": "#/$defs/quiz_attribute"
+            },
+            "second_person_plural": {
+                "$ref": "#/$defs/quiz_attribute"
+            },
+            "third_person_plural": {
+                "$ref": "#/$defs/quiz_attribute"
+            },
+            "past_participle": {
+                "$ref": "#/$defs/quiz_attribute"
             }
         }
     },
@@ -51,12 +75,17 @@ QUIZ_DATA_SCHEMA = {
                     "type": "integer",
                     "minimum": 0
                 },
+                "attribute_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
                 "last_presentation": {
                     "type": ["string", "null"]
                 }
             },
             "required": [
                 "attrvalue",
+                "attribute_id",
                 "correct_count",
                 "presentation_count",
                 "last_presentation"

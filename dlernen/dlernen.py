@@ -157,6 +157,7 @@ def quiz_data():
                     results_dict[row['word_id']][row['attrkey']]['correct_count'] = row['correct_count']
                     results_dict[row['word_id']][row['attrkey']]['presentation_count'] = row['presentation_count']
                     results_dict[row['word_id']][row['attrkey']]['attrvalue'] = row['attrvalue']
+                    results_dict[row['word_id']][row['attrkey']]['attribute_id'] = row['attribute_id']
                     results_dict[row['word_id']][row['attrkey']]['last_presentation'] = row['last_presentation']
                 result = list(results_dict.values())
 
