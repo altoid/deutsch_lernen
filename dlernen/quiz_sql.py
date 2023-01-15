@@ -45,11 +45,18 @@ select * from
 attrs_for_quiz,
 given_words
 ),
-testable_attrs_and_values as (
+attrs_and_values as (
 select ta.*,
 mashup_v.word, mashup_v.attrvalue
 from testable_attributes ta
 inner join mashup_v on ta.word_id = mashup_v.word_id and ta.attribute_id = mashup_v.attribute_id
+),
+testable_attrs_and_values as (
+select * from attrs_and_values	
+where word_id not in (
+    select word_id from attrs_and_values
+    where attrvalue	is null
+    )
 )
 
 -- word has been presented 5 or fewer times (or not at all)
@@ -116,7 +123,7 @@ where curdate() - interval 30 day > last_presentation
 
 order by rand()
 
-limit 1
+-- limit 1
 """
 
 
