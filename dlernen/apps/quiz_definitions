@@ -7,7 +7,7 @@ import requests
 from pprint import pprint
 
 
-def get_next_word_to_test():
+def get_next_word_to_test(chosen_words):
     url = "%s/api/quiz_data" % config.Config.DB_URL
     payload = {
         "quizkey": "definitions",
@@ -15,6 +15,8 @@ def get_next_word_to_test():
     }
     r = requests.put(url, json=payload)
     quiz_data = json.loads(r.text)
+    if not quiz_data:
+        return None
 
     # dig the word_ids out of the result and then find the articles for each word that is a noun.
     word_ids = [x['word_id'] for x in quiz_data]
@@ -28,16 +30,16 @@ def get_next_word_to_test():
     # enrich the quiz_data by adding the articles
     word_id_to_article = {}
     for wa in word_attributes:
-        if 'article' not in wa:
-            continue
-
-        word_id_to_article[wa['word_id']] = wa['article']
+        for a in wa['attributes']:
+            if a['attrkey'] == 'article':
+                word_id_to_article[wa['word_id']] = a['value']
 
     for qd in quiz_data:
         if qd['word_id'] in word_id_to_article:
             qd['article'] = word_id_to_article[qd['word_id']]
 
-    return quiz_data
+    # pprint(quiz_data)
+    return quiz_data[0]
 
 
 if __name__ == '__main__':
@@ -85,21 +87,19 @@ n most recent
     done = False
     counter = 0
     while not done:
-        # returns at most one result - query has LIMIT 1
-        rows = get_next_word_to_test()
+        row = get_next_word_to_test(chosen_words)
 
-        if not rows:
+        if not row:
             print("es gibt keine Welten mehr zu erobern")
             break
 
-        row = rows[0]
         counter += 1
         print("[%s]" % counter, end=' ')
 
         if 'article' in row:
             print(row['article'], end=' ')
 
-        print(str(row['word']))
+        print(row['word'])
         prompt = "hit return for answer, q to quit:  --> "
         answer = input(prompt).strip().lower()
 
@@ -107,20 +107,28 @@ n most recent
             done = True
             break
 
-        print(row['attrvalue'])
+        print(row['definition']['attrvalue'])
 
         prompt = "correct? --> "
         answer = input(prompt).strip().lower()
+
+        payload = {
+            "quiz_id": row['quiz_id'],
+            "word_id": row['word_id'],
+            "attribute_id": row['definition']['attribute_id'],
+            "presentation_count": row['definition']['presentation_count'],
+            "correct_count": row['definition']['correct_count']
+        }
 
         while len(answer) == 0:
             answer = input(prompt).strip().lower()
 
         if answer.startswith('y'):
-            row['correct_count'] += 1
+            payload['correct_count'] += 1
 
-        row['presentation_count'] += 1
+        payload['presentation_count'] += 1
 
         url = "%s/api/quiz_data" % config.Config.DB_URL
-        r = requests.post(url, data=row)
+        r = requests.post(url, data=payload)
 
     print('bis bald')
