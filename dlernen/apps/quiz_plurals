@@ -19,7 +19,6 @@ def get_quiz_data(chosen_words):
     if not quiz_data:
         return None
 
-    # returns an array of 0 or 1 items - query has LIMIT 1
     return quiz_data[0]
 
 
