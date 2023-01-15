@@ -7,7 +7,7 @@ import requests
 from pprint import pprint
 
 
-def get_quiz_data():
+def get_quiz_data(chosen_words):
     url = "%s/api/quiz_data" % config.Config.DB_URL
     payload = {
         "quizkey": "genders",
@@ -16,8 +16,10 @@ def get_quiz_data():
     r = requests.put(url, json=payload)
     quiz_data = json.loads(r.text)
 
-    # returns an array of 0 or 1 items - query has LIMIT 1
-    return quiz_data
+    if not quiz_data:
+        return None
+
+    return quiz_data[0]
 
 
 if __name__ == '__main__':
@@ -65,20 +67,17 @@ n most recent
     done = False
     counter = 0
     while not done:
-        rows = get_quiz_data()
+        row = get_quiz_data(chosen_words)
 
-        if not rows:
+        if not row:
             print("es gibt keine Welten mehr zu erobern")
             break
 
-        row = rows[0]
+        # pprint(row)
         counter += 1
         print("[%s]" % counter, end=' ')
 
-        if 'article' in row:
-            print(row['article'], end=' ')
-
-        print(str(row['word']))
+        print(row['word'])
         prompt = "type correct article, q to quit:  --> "
         answer = input(prompt).strip().lower()
 
@@ -86,15 +85,22 @@ n most recent
             done = True
             break
 
-        if answer == row['attrvalue']:
+        payload = {
+            "quiz_id": row['quiz_id'],
+            "word_id": row['word_id'],
+            "attribute_id": row['article']['attribute_id'],
+            "presentation_count": row['article']['presentation_count'],
+            "correct_count": row['article']['correct_count']
+        }
+        if answer == row['article']['attrvalue']:
             print("ja")
-            row['correct_count'] += 1
+            payload['correct_count'] += 1
         else:
-            print("nein:  %s" % row['attrvalue'])
+            print("nein:  %s" % row['article']['attrvalue'])
 
-        row['presentation_count'] += 1
+        payload['presentation_count'] += 1
 
         url = "%s/api/quiz_data" % config.Config.DB_URL
-        r = requests.post(url, data=row)
+        r = requests.post(url, data=payload)
 
     print('bis bald')

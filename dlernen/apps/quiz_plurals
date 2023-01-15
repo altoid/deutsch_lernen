@@ -63,7 +63,6 @@ n most recent
 
     r = requests.get(url)
     chosen_words = json.loads(r.text)
-    pprint(chosen_words)
 
     done = False
     counter = 0
