@@ -1,5 +1,70 @@
 import jsonschema
 
+QUIZ_DATA_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/quiz_data",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Quiz Data List",
+    "description": "list of quiz query results",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "required": [
+            "quiz_id",
+            "word_id",
+            "word"
+        ],
+        "properties": {
+            "quiz_id": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "word_id": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "word": {
+                "type": "string",
+                "minLength": 1
+            },
+            "article": {
+                "$ref": "#/$defs/quiz_attribute"
+            },
+            "plural": {
+                "$ref": "#/$defs/quiz_attribute"
+            }
+        }
+    },
+
+    "$defs": {
+        "quiz_attribute": {
+            "type": "object",
+            "properties": {
+                "attrvalue": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "correct_count": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "presentation_count": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "last_presentation": {
+                    "type": ["string", "null"]
+                }
+            },
+            "required": [
+                "attrvalue",
+                "correct_count",
+                "presentation_count",
+                "last_presentation"
+            ]
+        }
+    }
+}
+
 WORDIDS_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "WordIDList",
@@ -43,7 +108,12 @@ WORDLISTS_SCHEMA = {
                 "type": "boolean"
             }
         },
-        "required": ["name", "wordlist_id", "count", "is_smart"]
+        "required": [
+            "name",
+            "wordlist_id",
+            "count",
+            "is_smart"
+        ]
     }
 }
 

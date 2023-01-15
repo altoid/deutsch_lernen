@@ -43,18 +43,18 @@ SAMPLE_WORDS_RESULT = [
 ]
 
 SAMPLE_WORDIDS_RESULT = {
-  "word_ids": [
-    1339,
-    3429,
-    1197,
-    3193,
-    3086,
-    4822,
-    1892,
-    212,
-    3346,
-    1616
-  ]
+    "word_ids": [
+        1339,
+        3429,
+        1197,
+        3193,
+        3086,
+        4822,
+        1892,
+        212,
+        3346,
+        1616
+    ]
 }
 
 SAMPLE_WORDLISTS_RESULT = [
@@ -63,6 +63,26 @@ SAMPLE_WORDLISTS_RESULT = [
         "wordlist_id": 1234,
         "count": 111,
         "is_smart": True
+    }
+]
+
+SAMPLE_QUIZ_DATA_RESULT = [
+    {
+        'quiz_id': 3,
+        'word_id': 868,
+        'word': 'Tarnung',
+        'article': {
+            'attrvalue': 'die',
+            'correct_count': 0,
+            'last_presentation': None,
+            'presentation_count': 0,
+        },
+        'plural': {
+            'attrvalue': 'Tarnungen',
+            'correct_count': 0,
+            'last_presentation': None,
+            'presentation_count': 0,
+        }
     }
 ]
 
@@ -95,6 +115,12 @@ SAMPLE_WORDLIST_DETAIL_RESULT = {
 
 
 class APITests(unittest.TestCase):
+    def test_quiz_data_schema(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.QUIZ_DATA_SCHEMA)
+
+    def test_quiz_data_sample(self):
+        jsonschema.validate(SAMPLE_QUIZ_DATA_RESULT, dlernen_json_schema.QUIZ_DATA_SCHEMA)
+
     def test_wordids_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDIDS_SCHEMA)
 

@@ -7,7 +7,7 @@ import requests
 from pprint import pprint
 
 
-def get_quiz_data():
+def get_quiz_data(chosen_words):
     url = "%s/api/quiz_data" % config.Config.DB_URL
     payload = {
         "quizkey": "plurals",
@@ -66,14 +66,14 @@ n most recent
     done = False
     counter = 0
     while not done:
-        rows = get_quiz_data()
-
+        rows = get_quiz_data(chosen_words)
+        pprint(rows)
+        print(len(rows))
         if not rows:
             print("es gibt keine Welten mehr zu erobern")
             break
 
         row = rows[0]
-        #print(row)
         counter += 1
         print("[%s]" % counter, end=' ')
 
