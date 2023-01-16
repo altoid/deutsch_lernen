@@ -149,6 +149,7 @@ def quiz_data():
                 for row in rows:
                     if row['word_id'] not in results_dict:
                         results_dict[row['word_id']] = {}
+                    results_dict[row['word_id']]['qname'] = row['qname']
                     results_dict[row['word_id']]['quiz_id'] = row['quiz_id']
                     results_dict[row['word_id']]['word_id'] = row['word_id']
                     results_dict[row['word_id']]['word'] = row['word']

@@ -62,6 +62,7 @@ where word_id not in (
 -- word has been presented 5 or fewer times (or not at all)
 
 select
+'QUERY1' qname,
 ta.quiz_id,
 ta.attribute_id,
 ta.attrkey,
@@ -84,6 +85,7 @@ union
 -- crappy score (<= 80% in 10 or more presentations
 
 select
+'QUERY2' qname,
 ta.quiz_id,
 ta.attribute_id,
 ta.attrkey,
@@ -107,6 +109,7 @@ union
 -- word hasn't been quizzed in more than 30 days
 
 select
+'QUERY3' qname,
 ta.quiz_id,
 ta.attribute_id,
 ta.attrkey,

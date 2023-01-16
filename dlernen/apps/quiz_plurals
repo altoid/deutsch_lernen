@@ -7,7 +7,7 @@ import requests
 from pprint import pprint
 
 
-def get_quiz_data(chosen_words):
+def get_next_word_to_test(chosen_words):
     url = "%s/api/quiz_data" % config.Config.DB_URL
     payload = {
         "quizkey": "plurals",
@@ -15,10 +15,30 @@ def get_quiz_data(chosen_words):
     }
     r = requests.put(url, json=payload)
     quiz_data = json.loads(r.text)
-
     if not quiz_data:
         return None
 
+    # dig the word_ids out of the result and then find the articles for each word that is a noun.
+    word_ids = [x['word_id'] for x in quiz_data]
+    url = "%s/api/words" % config.Config.DB_URL
+    payload = {
+        "word_ids": word_ids
+    }
+    r = requests.put(url, json=payload)
+    word_attributes = json.loads(r.text)
+
+    # enrich the quiz_data by adding the articles
+    word_id_to_article = {}
+    for wa in word_attributes:
+        for a in wa['attributes']:
+            if a['attrkey'] == 'article':
+                word_id_to_article[wa['word_id']] = a['value']
+
+    for qd in quiz_data:
+        if qd['word_id'] in word_id_to_article:
+            qd['article'] = word_id_to_article[qd['word_id']]
+
+    # pprint(quiz_data)
     return quiz_data[0]
 
 
@@ -67,16 +87,16 @@ n most recent
     done = False
     counter = 0
     while not done:
-        row = get_quiz_data(chosen_words)
+        row = get_next_word_to_test(chosen_words)
         if not row:
             print("es gibt keine Welten mehr zu erobern")
             break
 
-        # pprint(row)
+        pprint(row)
         counter += 1
         print("[%s]" % counter, end=' ')
 
-        print("%s %s" % (row['article']['attrvalue'], row['word']))
+        print("%s %s" % (row['article'], row['word']))
         prompt = "type correct plural, q to quit:  --> "
         answer = input(prompt).strip()
 

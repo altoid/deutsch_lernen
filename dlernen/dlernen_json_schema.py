@@ -22,6 +22,10 @@ QUIZ_DATA_SCHEMA = {
                 "type": "integer",
                 "minimum": 1
             },
+            "qname": {
+                "type": "string",
+                "minLength": 1
+            },
             "word": {
                 "type": "string",
                 "minLength": 1
