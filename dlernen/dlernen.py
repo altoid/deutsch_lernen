@@ -431,8 +431,8 @@ order by word_id, pf.sort_order
         return jsonify(result)
 
 
-@app.route('/list_details/<int:list_id>')
-def list_details(list_id):
+@app.route('/api/list_attributes/<int:list_id>')
+def get_list_attributes(list_id):
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
     select
@@ -443,7 +443,18 @@ def list_details(list_id):
         cursor.execute(sql, (list_id,))
         wl_row = cursor.fetchone()
 
-        return render_template('list_details.html', wl_row=wl_row)
+        jsonschema.validate(wl_row, dlernen.dlernen_json_schema.WORDLIST_ATTRIBUTE_SCHEMA)
+
+        return jsonify(wl_row)
+
+
+@app.route('/list_attributes/<int:list_id>')
+def list_attributes(list_id):
+    url = "%s/api/list_attributes/%s" % (Config.DB_URL, list_id)
+    r = requests.get(url)
+    result = json.loads(r.text)
+
+    return render_template('list_attributes.html', wl_row=result)
 
 
 @app.route('/api/wordlist', methods=['POST'])

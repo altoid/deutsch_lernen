@@ -57,6 +57,13 @@ SAMPLE_WORDIDS_RESULT = {
     ]
 }
 
+SAMPLE_WORDLIST_ATTRIBUTE_RESULT = {
+    "code": "select distinct word_id\r\nfrom mashup_v\r\nwhere pos_name = 'verb'\r\nand word like '%gehe%'",
+    "id": 126,
+    "name": "verbs like *geh*",
+    "source": ""
+}
+
 SAMPLE_WORDLISTS_RESULT = [
     {
         "name": "sample_word_list",
@@ -117,6 +124,18 @@ SAMPLE_WORDLIST_DETAIL_RESULT = {
 
 
 class APITests(unittest.TestCase):
+    def test_list_attribute_schema(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_ATTRIBUTE_SCHEMA)
+
+    def test_list_attribute_sample(self):
+        jsonschema.validate(SAMPLE_WORDLIST_ATTRIBUTE_RESULT, dlernen_json_schema.WORDLIST_ATTRIBUTE_SCHEMA)
+
+    def test_real_list_attribute_data(self):
+        url = "%s/api/list_attributes/%s" % (config.Config.DB_URL, 126)
+        r = requests.get(url)
+        result = json.loads(r.text)
+        jsonschema.validate(result, dlernen_json_schema.WORDLIST_ATTRIBUTE_SCHEMA)
+
     def test_quiz_data_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.QUIZ_DATA_SCHEMA)
 

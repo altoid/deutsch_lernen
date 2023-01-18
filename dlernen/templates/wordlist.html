@@ -2,7 +2,7 @@
 
 {% block body %}
 {{ super() }}
-<h1><a href="{{ url_for('list_details', list_id=result.wordlist_id) }}">{{result.name}} ({{result.wordlist_id}})</a>
+<h1><a href="{{ url_for('list_attributes', list_id=result.wordlist_id) }}">{{result.name}} ({{result.wordlist_id}})</a>
 </h1>
 {% if source_is_url %}
 <a href="{{ result.source }}">{{ result.source }}</a>

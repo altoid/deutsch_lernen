@@ -150,6 +150,39 @@ WORDLISTS_SCHEMA = {
     }
 }
 
+
+WORDLIST_ATTRIBUTE_SCHEMA = {
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Wordlist",
+    "description": "wordlist and basic properties, optionally with word_ids",
+    "type": "object",
+    "required": [
+        "id",
+        "name",
+        "code",
+        "source"
+    ],
+    "properties": {
+        "name": {
+            "type": "string",
+            "minLength": 1
+        },
+        "code": {
+            "type": "string",
+            "minLength": 0
+        },
+        "source": {
+            "type": "string",
+            "minLength": 0
+        },
+        "id": {
+            "type": "integer",
+            "minimum": 1
+        }
+    }
+}
+
+
 WORDLIST_DETAIL_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
