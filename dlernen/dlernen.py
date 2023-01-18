@@ -147,19 +147,26 @@ def quiz_data():
                 results_dict = {}
 
                 for row in rows:
+                    keez = row.keys()
                     if row['word_id'] not in results_dict:
-                        results_dict[row['word_id']] = {}
-                    results_dict[row['word_id']]['qname'] = row['qname']
-                    results_dict[row['word_id']]['quiz_id'] = row['quiz_id']
-                    results_dict[row['word_id']]['word_id'] = row['word_id']
-                    results_dict[row['word_id']]['word'] = row['word']
+                        results_dict[row['word_id']] = {
+                            k: row.get(k) for k in keez & {
+                                'qname',
+                                'quiz_id',
+                                'word_id',
+                                'word'
+                            }
+                        }
                     if row['attrkey'] not in results_dict[row['word_id']]:
-                        results_dict[row['word_id']][row['attrkey']] = {}
-                    results_dict[row['word_id']][row['attrkey']]['correct_count'] = row['correct_count']
-                    results_dict[row['word_id']][row['attrkey']]['presentation_count'] = row['presentation_count']
-                    results_dict[row['word_id']][row['attrkey']]['attrvalue'] = row['attrvalue']
-                    results_dict[row['word_id']][row['attrkey']]['attribute_id'] = row['attribute_id']
-                    results_dict[row['word_id']][row['attrkey']]['last_presentation'] = row['last_presentation']
+                        results_dict[row['word_id']][row['attrkey']] = {
+                            k: row.get(k) for k in keez & {
+                                'correct_count',
+                                'presentation_count',
+                                'attrvalue',
+                                'attribute_id',
+                                'last_presentation'
+                            }
+                        }
                 result = list(results_dict.values())
 
         return jsonify(result)
@@ -670,7 +677,7 @@ left join wordlist_counts wc on wc.wordlist_id = wordlist.id
 %(where_clause)s
 order by name
         """ % {
-        'where_clause': where_clause
+            'where_clause': where_clause
         }
 
         cursor.execute(sql, list_ids)
