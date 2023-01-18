@@ -92,7 +92,7 @@ n most recent
             print("es gibt keine Welten mehr zu erobern")
             break
 
-        pprint(row)
+        # pprint(row)
         counter += 1
         print("[%s]" % counter, end=' ')
 
