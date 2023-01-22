@@ -2,10 +2,7 @@
 
 {% block body %}
 {{ super() }}
-<h1>Word Lists</h1>
-<a href="{{ url_for('add_word') }}">Add a word</a>
-<br>
-<br>
+<h1>Create a List</h1>
 <form action="/addlist" method="post">
     <table>
         <tr>
@@ -19,6 +16,7 @@
     </table>
     <input type="submit" value="Add List"/>
 </form>
+<h1>Word Lists</h1>
 <form action="/deletelist" method="post">
     <table>
         {% for r in rows %}

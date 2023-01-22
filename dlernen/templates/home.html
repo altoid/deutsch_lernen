@@ -17,6 +17,9 @@
         <td><a href="{{ url_for('wordlist', list_id=return_to_list_id) }}">zur Liste zurückkehren</a></td>
         {% endif %}
     </tr>
+    <td>
+      <a href="{{ url_for('add_word') }}">Add a word</a>
+    </td>
 </table>
 {% block body %}
 {% endblock %}
