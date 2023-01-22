@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+
+from dlernen import config
+import argparse
+import json
+import requests
+from pprint import pprint
+import random
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+
+    cl_args = parser.parse_args()
+
+    url = "%s/api/gender_rules" % config.Config.DB_URL
+
+    r = requests.get(url)
+    rules = json.loads(r.text)
+
+    done = False
+    counter = 0
+    while not done:
+        rule_to_test = random.choice(rules)
+
+        print("%s" % (rule_to_test['rule']))
+        prompt = "type correct article, q to quit:  --> "
+        answer = input(prompt).strip()
+
+        if answer.startswith('q'):
+            done = True
+            break
+
+        if answer == rule_to_test['article']:
+            print("ja")
+        else:
+            print("nein:  %s" % rule_to_test['article'])
+
+    print('bis bald')

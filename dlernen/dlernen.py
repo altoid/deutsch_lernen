@@ -348,6 +348,18 @@ def get_words():
     return jsonify(result)
 
 
+@app.route('/api/gender_rules')
+def gender_rules():
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        query = """
+        select article, rule
+        from gender_rules
+        """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        return jsonify(rows)
+
+
 @app.route('/api/word/<string:word>')
 def get_word(word):
     """
