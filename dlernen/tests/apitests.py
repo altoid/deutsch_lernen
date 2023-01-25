@@ -234,6 +234,11 @@ class APITestsWordPOST(unittest.TestCase):
         self.assertNotEqual(r.status_code, 200)
 
     # payload not json
+    def test_payload_not_json(self):
+        payload = "this is some bullshit right here"
+        r = requests.post(config.Config.BASE_URL + "/api/word", data=payload)
+        self.assertNotEqual(r.status_code, 200)
+
     # word is 0-length
     def test_zero_length_word(self):
         payload = {
@@ -339,6 +344,12 @@ class APITestsWordPUT(unittest.TestCase):
 
     def test_updateword_payload_sample(self):
         jsonschema.validate(SAMPLE_UPDATEWORD_PAYLOAD, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
+
+    # error conditions
+    # bullshit word id
+    # bullshit attr keys
+    # zero-length word
+    # payload not json
 
 
 class APITestsWordEndToEnd(unittest.TestCase):
