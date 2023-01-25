@@ -44,31 +44,40 @@ SAMPLE_WORDS_RESULT = [
     {
         "attributes": [{'attrkey': 'definition',
                         'sort_order': 5,
-                        'value': 'to spoil, deteriorate, go bad'},
+                        'attrvalue_id': 111,
+                        'attrvalue': 'to spoil, deteriorate, go bad'},
                        {'attrkey': 'first_person_singular',
                         'sort_order': 6,
-                        'value': 'verderbe'},
+                        'attrvalue_id': 111,
+                        'attrvalue': 'verderbe'},
                        {'attrkey': 'second_person_singular',
                         'sort_order': 7,
-                        'value': 'verdirbst'},
+                        'attrvalue_id': 111,
+                        'attrvalue': 'verdirbst'},
                        {'attrkey': 'third_person_singular',
                         'sort_order': 8,
-                        'value': 'verdirbt'},
+                        'attrvalue_id': 111,
+                        'attrvalue': 'verdirbt'},
                        {'attrkey': 'first_person_plural',
                         'sort_order': 9,
-                        'value': 'verderben'},
+                        'attrvalue_id': 111,
+                        'attrvalue': 'verderben'},
                        {'attrkey': 'second_person_plural',
                         'sort_order': 10,
-                        'value': 'verderbt'},
+                        'attrvalue_id': 111,
+                        'attrvalue': 'verderbt'},
                        {'attrkey': 'third_person_plural',
                         'sort_order': 11,
-                        'value': 'verderben'},
+                        'attrvalue_id': 111,
+                        'attrvalue': 'verderben'},
                        {'attrkey': 'third_person_past',
                         'sort_order': 16,
-                        'value': 'verdarb'},
+                        'attrvalue_id': 111,
+                        'attrvalue': 'verdarb'},
                        {'attrkey': 'past_participle',
                         'sort_order': 17,
-                        'value': 'verdorben'}],
+                        'attrvalue_id': 111,
+                        'attrvalue': 'verdorben'}],
         "pos_name": "Verb",
         "word": "verderben",
         "word_id": 2267
@@ -224,6 +233,12 @@ class APITests(unittest.TestCase):
 
     def test_word_sample(self):
         jsonschema.validate(SAMPLE_WORDS_RESULT, dlernen_json_schema.WORDS_SCHEMA)
+
+    def test_get_word(self):
+        r = requests.get(config.Config.BASE_URL + "/api/word/14")
+        results = r.json()
+        self.assertGreater(len(results), 0)
+        jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
 
     def test_real_word(self):
         r = requests.get(config.Config.BASE_URL + "/api/word/verderben")

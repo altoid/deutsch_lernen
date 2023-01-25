@@ -72,6 +72,85 @@ def post_test():
     return jsonify(j)
 
 
+def get_word_ids(limit, recent, attrkey):
+    query = """
+        select word_id
+        from mashup_v m
+        where attrkey = %(attrkey)s
+        and attrvalue is not null 
+        """
+    if recent:
+        order_by = "order by m.added desc "
+    else:
+        order_by = "order by rand() "
+    query += order_by
+    limit_clause = "limit %(limit)s " if limit else ""
+    query += limit_clause
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        args = {
+            "limit": limit,
+            "attrkey": attrkey
+        }
+        cursor.execute(query, args)
+        query_result = cursor.fetchall()
+        return [x['word_id'] for x in query_result]
+
+
+def get_word_ids_from_list_ids(limit, list_ids, recent, attrkey):
+    """
+    returns a list containing 0 or more unique word ids.
+    """
+
+    results = []
+    list_ids = list_ids.split(',')
+
+    for list_id in list_ids:
+        # use the API so we don't have to worry about whether any are smart lists
+        url = "%s/api/wordlist/%s" % (Config.DB_URL, list_id)
+        r = requests.get(url)
+        result = json.loads(r.text)
+        if result:
+            results.append(result)
+
+    # dig the word_ids out of the list results
+    word_ids = []
+    for result in results:
+        word_ids += [x['word_id'] for x in result.get('known_words')]
+
+    word_ids = list(set(word_ids))
+
+    # we'll have to apply the recent and limit filters here in software
+    if len(word_ids):
+        query = """
+            select word_id
+            from mashup_v
+            where attrkey = %%s
+            and attrvalue is not null
+            and word_id in (%s)
+            """ % (','.join(['%s'] * len(word_ids)))
+
+        if recent:
+            order_by = " order by mashup_v.added desc "
+        else:
+            order_by = " order by rand() "
+
+        query += order_by
+
+        limit_clause = " limit %s "
+
+        query += limit_clause
+
+        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            args = [attrkey] + word_ids + [limit]
+            cursor.execute(query, args)
+
+            query_result = cursor.fetchall()
+
+            word_ids = [x['word_id'] for x in query_result]
+
+    return word_ids
+
+
 @app.route('/api/words/<string:attrkey>')
 def words_attrkey(attrkey):
     """
@@ -188,85 +267,6 @@ def quiz_data():
     return jsonify('OK')
 
 
-def get_word_ids(limit, recent, attrkey):
-    query = """
-        select word_id
-        from mashup_v m
-        where attrkey = %(attrkey)s
-        and attrvalue is not null 
-        """
-    if recent:
-        order_by = "order by m.added desc "
-    else:
-        order_by = "order by rand() "
-    query += order_by
-    limit_clause = "limit %(limit)s " if limit else ""
-    query += limit_clause
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        args = {
-            "limit": limit,
-            "attrkey": attrkey
-        }
-        cursor.execute(query, args)
-        query_result = cursor.fetchall()
-        return [x['word_id'] for x in query_result]
-
-
-def get_word_ids_from_list_ids(limit, list_ids, recent, attrkey):
-    """
-    returns a list containing 0 or more unique word ids.
-    """
-
-    results = []
-    list_ids = list_ids.split(',')
-
-    for list_id in list_ids:
-        # use the API so we don't have to worry about whether any are smart lists
-        url = "%s/api/wordlist/%s" % (Config.DB_URL, list_id)
-        r = requests.get(url)
-        result = json.loads(r.text)
-        if result:
-            results.append(result)
-
-    # dig the word_ids out of the list results
-    word_ids = []
-    for result in results:
-        word_ids += [x['word_id'] for x in result.get('known_words')]
-
-    word_ids = list(set(word_ids))
-
-    # we'll have to apply the recent and limit filters here in software
-    if len(word_ids):
-        query = """
-            select word_id
-            from mashup_v
-            where attrkey = %%s
-            and attrvalue is not null
-            and word_id in (%s)
-            """ % (','.join(['%s'] * len(word_ids)))
-
-        if recent:
-            order_by = " order by mashup_v.added desc "
-        else:
-            order_by = " order by rand() "
-
-        query += order_by
-
-        limit_clause = " limit %s "
-
-        query += limit_clause
-
-        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            args = [attrkey] + word_ids + [limit]
-            cursor.execute(query, args)
-
-            query_result = cursor.fetchall()
-
-            word_ids = [x['word_id'] for x in query_result]
-
-    return word_ids
-
-
 @app.route('/healthcheck')
 def healthcheck():
     return 'OK'
@@ -286,7 +286,8 @@ def process_word_query_result(rows):
             dict_result[r['word_id']]['attributes'] = []
         attr = {
             "attrkey": r['attrkey'],
-            "value": r['value'],
+            "attrvalue": r['attrvalue'],
+            "attrvalue_id": r['attrvalue_id'],
             "sort_order": r['sort_order']
         }
         dict_result[r['word_id']]['word'] = r['word']
@@ -297,26 +298,19 @@ def process_word_query_result(rows):
     return result
 
 
-@app.route('/api/words', methods=['PUT'])
-def get_words():
-    # this is for PUT requests because we have to send in the list of words ids as a payload.
-    # if we try to put the word_ids into a GET URL, the URL might be too long.
-    """
-    given a list of word_ids, get the details for each word:  word, attributes, etc.
-    """
-
+def get_words_from_word_ids(word_ids):
     sql = """
     select
         pos_name,
         word,
         word_id,
         attrkey,
-        attrvalue value,
+        attrvalue,
+        attrvalue_id,
         pf.sort_order
     from
         mashup_v
-    inner join pos_form pf on pf.attribute_id = mashup_v.attribute_id and 
-    pf.pos_id = mashup_v.pos_id
+    inner join pos_form pf on pf.attribute_id = mashup_v.attribute_id and pf.pos_id = mashup_v.pos_id
     where word_id in
         (
         select
@@ -327,11 +321,6 @@ def get_words():
             word_id in ({word_ids})
         )
     """
-    payload = request.get_json()
-
-    word_ids = payload.get('word_ids', [])
-    word_ids = list(map(str, word_ids))
-    word_ids = ','.join(word_ids)
     result = []
     if word_ids:
         d = {
@@ -343,7 +332,36 @@ def get_words():
             rows = cursor.fetchall()
             result = process_word_query_result(rows)
 
-            jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
+    return result
+
+
+@app.route('/api/word/<int:word_id>')
+def get_word_by_id(word_id):
+    word_ids = str(word_id)
+    result = get_words_from_word_ids(word_ids)
+
+    jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
+
+    return jsonify(result)
+
+
+@app.route('/api/words', methods=['PUT'])
+def get_words():
+    # this is for PUT requests because we have to send in the list of words ids as a payload.
+    # if we try to put the word_ids into a GET URL, the URL might be too long.
+    """
+    given a list of word_ids, get the details for each word:  word, attributes, etc.
+    """
+
+    payload = request.get_json()
+
+    word_ids = payload.get('word_ids', [])
+    word_ids = list(map(str, word_ids))
+    word_ids = ','.join(word_ids)
+
+    result = get_words_from_word_ids(word_ids)
+
+    jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
 
     return jsonify(result)
 

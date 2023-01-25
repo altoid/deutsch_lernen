@@ -354,7 +354,7 @@ WORDS_SCHEMA = {
                 "type": "array",
                 "items": {
                     "type": "object",
-                    "required": ["attrkey", "sort_order", "value"],
+                    "required": ["attrkey", "sort_order", "attrvalue", "attrvalue_id"],
                     "properties": {
                         "attrkey": {
                             "type": "string",
@@ -364,13 +364,16 @@ WORDS_SCHEMA = {
                             "type": "integer",
                             "minimum": 0
                         },
-                        "value": {
+                        "attrvalue": {
                             "type": ["string", "null"]
+                        },
+                        "attrvalue_id": {
+                            "type": ["integer", "null"]
                         }
                     }
                 }
             }
         }
     }
-    # the attributes - article, definition, etc. - are all optional but the attribute keyword is not.
+    # the attributes - article, definition, etc. - are all optional but the attributes keyword is not.
 }
