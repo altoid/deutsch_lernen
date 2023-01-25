@@ -156,7 +156,22 @@ SAMPLE_WORDLIST_DETAIL_RESULT = {
 }
 
 
-class APITestsWord(unittest.TestCase):
+class APITestsWordGET(unittest.TestCase):
+    def test_word_schema(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDS_SCHEMA)
+
+    def test_word_sample(self):
+        jsonschema.validate(SAMPLE_WORDS_RESULT, dlernen_json_schema.WORDS_SCHEMA)
+
+    # TODO:  remove this when end-to-end test is implemented
+    def test_get_word_by_id(self):
+        r = requests.get(config.Config.BASE_URL + "/api/word/14")
+        results = r.json()
+        self.assertGreater(len(results), 0)
+        jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
+
+
+class APITestsWordPOST(unittest.TestCase):
     # tests for all methods on /api/word
     def test_addword_payload_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA)
@@ -164,36 +179,177 @@ class APITestsWord(unittest.TestCase):
     def test_addword_payload_sample(self):
         jsonschema.validate(SAMPLE_ADDWORD_PAYLOAD, dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA)
 
+    # error conditions:
+    # word not in payload
+    def test_word_not_in_payload(self):
+        payload = {
+            "pos_name": "noun",
+            "attributes": [
+                {
+                    "attrkey": "article",
+                    "attrvalue": "der"
+                },
+                {
+                    "attrkey": "plural",
+                    "attrvalue": "Xxxxxxxxxx"
+                },
+                {
+                    "attrkey": "definition",
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+        r = requests.post(config.Config.BASE_URL + "/api/word", data=payload)
+        self.assertNotEqual(r.status_code, 200)
+
+    # pos not in payload
+    def test_pos_not_in_payload(self):
+        payload = {
+            "word": "aonsetuhasoentuh",
+            "attributes": [
+                {
+                    "attrkey": "article",
+                    "attrvalue": "der"
+                },
+                {
+                    "attrkey": "plural",
+                    "attrvalue": "Xxxxxxxxxx"
+                },
+                {
+                    "attrkey": "definition",
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+        r = requests.post(config.Config.BASE_URL + "/api/word", data=payload)
+        self.assertNotEqual(r.status_code, 200)
+
+    # attributes not in payload
+    def test_attribute_not_in_payload(self):
+        payload = {
+            "word": "blahblah",
+            "pos_name": "noun"
+        }
+        r = requests.post(config.Config.BASE_URL + "/api/word", data=payload)
+        self.assertNotEqual(r.status_code, 200)
+
+    # payload not json
+    # word is 0-length
+    def test_zero_length_word(self):
+        payload = {
+            "word": "",
+            "pos_name": "noun",
+            "attributes": [
+                {
+                    "attrkey": "article",
+                    "attrvalue": "der"
+                },
+                {
+                    "attrkey": "plural",
+                    "attrvalue": "Xxxxxxxxxx"
+                },
+                {
+                    "attrkey": "definition",
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+        r = requests.post(config.Config.BASE_URL + "/api/word", data=payload)
+        self.assertNotEqual(r.status_code, 200)
+
+    # pos is 0-length
+    def test_zero_length_pos(self):
+        payload = {
+            "word": "aeioeauaoeu",
+            "pos_name": "",
+            "attributes": [
+                {
+                    "attrkey": "article",
+                    "attrvalue": "der"
+                },
+                {
+                    "attrkey": "plural",
+                    "attrvalue": "Xxxxxxxxxx"
+                },
+                {
+                    "attrkey": "definition",
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+        r = requests.post(config.Config.BASE_URL + "/api/word", data=payload)
+        self.assertNotEqual(r.status_code, 200)
+
+    # attr keys are bullshit
+    def test_bullshit_attrkeys(self):
+        payload = {
+            "word": "aoeiaoueaou",
+            "pos_name": "noun",
+            "attributes": [
+                {
+                    "attrkey": "stinky",
+                    "attrvalue": "der"
+                },
+                {
+                    "attrkey": "foofoo",
+                    "attrvalue": "Xxxxxxxxxx"
+                },
+                {
+                    "attrkey": "definition",
+                    "attrvalue": "legal attrkey here"
+                }
+            ]
+        }
+        r = requests.post(config.Config.BASE_URL + "/api/word", data=payload)
+        self.assertNotEqual(r.status_code, 200)
+
+    # part of speech is bullshit
+    def test_bullshit_pos(self):
+        payload = {
+            "word": "aeioeauaoeu",
+            "pos_name": "uiauiauoeu",
+            "attributes": [
+                {
+                    "attrkey": "article",
+                    "attrvalue": "der"
+                },
+                {
+                    "attrkey": "plural",
+                    "attrvalue": "Xxxxxxxxxx"
+                },
+                {
+                    "attrkey": "definition",
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+        r = requests.post(config.Config.BASE_URL + "/api/word", data=payload)
+        self.assertNotEqual(r.status_code, 200)
+
+
+class APITestsWordDelete(unittest.TestCase):
+    # deleting nonexistent word_id is not an error
+    # real-world delete tests are in the EndToEnd class.
+    pass
+
+
+class APITestsWordPUT(unittest.TestCase):
     def test_updateword_payload_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
 
     def test_updateword_payload_sample(self):
         jsonschema.validate(SAMPLE_UPDATEWORD_PAYLOAD, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
 
-    def test_get_word_by_id(self):
-        r = requests.get(config.Config.BASE_URL + "/api/word/14")
-        results = r.json()
-        self.assertGreater(len(results), 0)
-        jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
 
+class APITestsWordEndToEnd(unittest.TestCase):
     # end-to-end test:  add a word, verify existence, update it (attr values and the word itself),
-    # verify edits, delete it, verify deletion.  remove test_get_word_by_id when this is implemented.
+    # verify edits, delete it, verify deletion.
 
     # another end-to-end test, but without giving any attribute values.
 
     # adding the same word twice is ok, should have different word ids.
 
-    # deleting nonexistent word_id is not an error
-
-    # error conditions:
-    # word not in payload
-    # pos not in payload
-    # attributes not in payload
-    # payload not json
-    # word is 0-length
-    # pos is 0-length
-    # attr keys are bullshit
-    # part of speech is bullshit
+    pass
 
 
 class APITests(unittest.TestCase):
@@ -246,12 +402,6 @@ class APITests(unittest.TestCase):
         results = r.json()
         self.assertGreater(len(results), 0)
         jsonschema.validate(results, dlernen_json_schema.WORDIDS_SCHEMA)
-
-    def test_word_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDS_SCHEMA)
-
-    def test_word_sample(self):
-        jsonschema.validate(SAMPLE_WORDS_RESULT, dlernen_json_schema.WORDS_SCHEMA)
 
     def test_get_word_by_word_exact(self):
         r = requests.get(config.Config.BASE_URL + "/api/word/verderben")
