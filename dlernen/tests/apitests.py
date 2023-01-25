@@ -234,14 +234,20 @@ class APITests(unittest.TestCase):
     def test_word_sample(self):
         jsonschema.validate(SAMPLE_WORDS_RESULT, dlernen_json_schema.WORDS_SCHEMA)
 
-    def test_get_word(self):
+    def test_get_word_by_id(self):
         r = requests.get(config.Config.BASE_URL + "/api/word/14")
         results = r.json()
         self.assertGreater(len(results), 0)
         jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
 
-    def test_real_word(self):
+    def test_get_word_by_word_exact(self):
         r = requests.get(config.Config.BASE_URL + "/api/word/verderben")
+        results = r.json()
+        self.assertGreater(len(results), 0)
+        jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
+
+    def test_get_word_by_word_partial(self):
+        r = requests.get(config.Config.BASE_URL + "/api/word/geh?partial=true")
         results = r.json()
         self.assertGreater(len(results), 0)
         jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
