@@ -1,6 +1,9 @@
+create or replace view words_x_attributes_v as
 select
-	pf.pos_id AS pos_id,
-	pf.attribute_id AS attribute_id,
-	w.id AS word_id from (pos_form pf join word w on((pf.pos_id = w.pos_id)))
+	w.pos_id,
+	w.id word_id,
+	nwa.attribute_id,
+	nwa.attrvalue_id
+from word w
+join word_attribute nwa on w.id = nwa.word_id
 ;
-
