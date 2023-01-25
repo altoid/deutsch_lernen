@@ -299,6 +299,8 @@ def process_word_query_result(rows):
 
 
 def get_words_from_word_ids(word_ids):
+    format_args = ['%s'] * len(word_ids)
+    format_args = ', '.join(format_args)
     sql = """
     select
         pos_name,
@@ -318,17 +320,14 @@ def get_words_from_word_ids(word_ids):
         from
             mashup_v
         where
-            word_id in ({word_ids})
+            word_id in (%s)
         )
-    """
+    """ % format_args
+
     result = []
     if word_ids:
-        d = {
-            "word_ids": word_ids
-        }
-        query = sql.format(**d)
         with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            cursor.execute(query)
+            cursor.execute(sql, word_ids)
             rows = cursor.fetchall()
             result = process_word_query_result(rows)
 
@@ -337,7 +336,7 @@ def get_words_from_word_ids(word_ids):
 
 @app.route('/api/word/<int:word_id>')
 def get_word_by_id(word_id):
-    word_ids = str(word_id)
+    word_ids = [word_id]
     result = get_words_from_word_ids(word_ids)
 
     jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
@@ -356,8 +355,6 @@ def get_words():
     payload = request.get_json()
 
     word_ids = payload.get('word_ids', [])
-    word_ids = list(map(str, word_ids))
-    word_ids = ','.join(word_ids)
 
     result = get_words_from_word_ids(word_ids)
 
@@ -399,7 +396,8 @@ select
     word,
     word_id,
     attrkey,
-    attrvalue value,
+    attrvalue,
+    attrvalue_id,
     pf.sort_order
 from
     mashup_v
@@ -423,7 +421,8 @@ order by word_id, pf.sort_order
         word,
         word_id,
         attrkey,
-        attrvalue value,
+        attrvalue,
+        attrvalue_id,
         pf.sort_order
     from
         mashup_v
