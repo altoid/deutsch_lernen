@@ -72,7 +72,7 @@ def post_test():
     return jsonify(j)
 
 
-def get_word_ids(limit, recent, attrkey):
+def get_word_ids_for_attrkey(limit, recent, attrkey):
     query = """
         select word_id
         from mashup_v m
@@ -191,7 +191,7 @@ def words_attrkey(attrkey):
         if list_ids:
             word_ids = get_word_ids_from_list_ids(limit, list_ids, recent, attrkey)
         else:
-            word_ids = get_word_ids(limit, recent, attrkey)
+            word_ids = get_word_ids_for_attrkey(limit, recent, attrkey)
 
         result = {
             "word_ids": word_ids
@@ -1099,7 +1099,7 @@ def get_data_for_addword_form(**kwargs):
 
 
 @app.route('/word')
-def add_word():
+def add_word_from_form():
     pos_infos, word = get_data_for_addword_form()
     return render_template('addword.html',
                            pos_infos=pos_infos)
@@ -1123,7 +1123,7 @@ def update_word_by_id(word_id):
 
 
 @app.route('/word/<string:word>')
-def update_word(word):
+def update_word_from_form(word):
     list_id = request.args.get('list_id')
 
     pos_infos, word = get_data_for_addword_form(word=word)

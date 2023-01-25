@@ -56,7 +56,7 @@
                                 {% for r in column %}
                                 <tr valign="top">
                                     <td><input type="checkbox" name="unknown_wordlist" value="{{ r }}"></td>
-                                    <td><a href="{{ url_for('update_word', list_id=list_id, word=r) }}">{{ r }}</a></td>
+                                    <td><a href="{{ url_for('update_word_from_form', list_id=list_id, word=r) }}">{{ r }}</a></td>
                                 </tr>
                                 {% endfor %}
                             </table>

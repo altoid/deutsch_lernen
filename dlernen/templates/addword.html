@@ -4,7 +4,7 @@
 {{ super() }}
 {% if word %}
 <h1>{{ word }}</h1>
-<a href="{{ url_for('add_word') }}">Add another word</a>
+<a href="{{ url_for('add_word_from_form') }}">Add another word</a>
 <br>
 <br>
 {% else %}
