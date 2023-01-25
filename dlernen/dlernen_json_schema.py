@@ -1,5 +1,87 @@
 import jsonschema
 
+ADDWORD_PAYLOAD_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/addword_payload",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Payload for add word",
+    "description": "Payload for add word",
+    "type": "object",
+    "required": [
+        "word",
+        "pos_name",
+        "attributes"
+    ],
+    "properties": {
+        "word": {
+            "type": "string",
+            "minLength": 1
+        },
+        "pos_name": {
+            "type": "string",
+            "minLength": 1
+        },
+        "attributes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "attrkey",
+                    "attrvalue"
+                ],
+                "properties": {
+                    "attrkey": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "attrvalue": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                }
+            }
+        }
+    }
+}
+
+UPDATEWORD_PAYLOAD_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/updateword_payload",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Payload for update word",
+    "description": "Payload for update word",
+    "type": "object",
+    "required": [
+        # "word" not required for update
+        "attributes"
+    ],
+    "properties": {
+        "word": {
+            # this is optional
+            "type": "string",
+            "minLength": 1
+        },
+        "attributes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "attrvalue_id",
+                    "attrvalue"
+                ],
+                "properties": {
+                    "attrvalue_id": {
+                        "type": "integer",
+                        "minimun": 1
+                    },
+                    "attrvalue": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                }
+            }
+        }
+    }
+}
+
 QUIZ_DATA_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/quiz_data",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],

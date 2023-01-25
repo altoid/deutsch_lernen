@@ -7,6 +7,39 @@ from pprint import pprint
 import random
 import string
 
+SAMPLE_ADDWORD_PAYLOAD = {
+    "word": "Tag",  # required, nonempty
+    "pos_name": "noun",  # name not id, makes existence check easier
+    "attributes": [
+        {
+            "attrkey": "article",
+            "attrvalue": "der"
+        },
+        {
+            "attrkey": "plural",
+            "attrvalue": "Tage"
+        },
+        {
+            "attrkey": "definition",
+            "attrvalue": "a day"
+        }
+    ]
+}
+
+SAMPLE_UPDATEWORD_PAYLOAD = {
+    "word": "blah",  # in case we need to change spelling.  optional.
+    "attributes": [  # required but can be empty.
+        {
+            "attrvalue_id": 123,
+            "attrvalue": "der"  # cannot be empty string.
+        },
+        {
+            "attrvalue_id": 246,
+            "attrvalue": "Foofoo"
+        }
+    ]
+}
+
 SAMPLE_WORDS_RESULT = [
     {
         "attributes": [{'attrkey': 'definition',
@@ -124,6 +157,18 @@ SAMPLE_WORDLIST_DETAIL_RESULT = {
 
 
 class APITests(unittest.TestCase):
+    def test_addword_payload_schema(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA)
+
+    def test_addword_payload_sample(self):
+        jsonschema.validate(SAMPLE_ADDWORD_PAYLOAD, dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA)
+
+    def test_updateword_payload_schema(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
+
+    def test_updateword_payload_sample(self):
+        jsonschema.validate(SAMPLE_UPDATEWORD_PAYLOAD, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
+
     def test_list_attribute_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_ATTRIBUTE_SCHEMA)
 
