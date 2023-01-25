@@ -287,6 +287,7 @@ def process_word_query_result(rows):
         attr = {
             "attrkey": r['attrkey'],
             "attrvalue": r['attrvalue'],
+            "attrvalue_id": r['attrvalue_id'],
             "sort_order": r['sort_order']
         }
         dict_result[r['word_id']]['word'] = r['word']
@@ -307,6 +308,7 @@ def get_words_from_word_ids(word_ids):
         word_id,
         attrkey,
         attrvalue,
+        attrvalue_id,
         pf.sort_order
     from
         mashup_v
@@ -364,6 +366,7 @@ select
     word_id,
     attrkey,
     attrvalue,
+    attrvalue_id,
     pf.sort_order
 from
     mashup_v
@@ -388,6 +391,7 @@ order by word_id, pf.sort_order
         word_id,
         attrkey,
         attrvalue,
+        attrvalue_id,
         pf.sort_order
     from
         mashup_v
@@ -509,7 +513,6 @@ def add_word():
             cursor.execute('commit')
 
         except Exception as e:
-            pprint(e)
             cursor.execute('rollback')
 
     return 'OK'
@@ -525,7 +528,7 @@ def gender_rules():
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         query = """
         select article, rule
-        from gender_rules
+        from gender_rule
         """
         cursor.execute(query)
         rows = cursor.fetchall()

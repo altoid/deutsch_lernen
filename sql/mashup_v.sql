@@ -10,6 +10,7 @@ select
 	a.id AS attribute_id,
 	a.attrkey AS attrkey,
 	pf.sort_order AS sort_order,
+	wa.id as attrvalue_id,
 	wa.attrvalue AS attrvalue
 
 from pos

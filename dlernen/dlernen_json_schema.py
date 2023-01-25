@@ -366,6 +366,9 @@ WORDS_SCHEMA = {
                         },
                         "attrvalue": {
                             "type": ["string", "null"]
+                        },
+                        "attrvalue_id": {
+                            "type": ["integer", "null"]
                         }
                     }
                 }
