@@ -287,7 +287,6 @@ def process_word_query_result(rows):
         attr = {
             "attrkey": r['attrkey'],
             "attrvalue": r['attrvalue'],
-            "attrvalue_id": r['attrvalue_id'],
             "sort_order": r['sort_order']
         }
         dict_result[r['word_id']]['word'] = r['word']
@@ -308,7 +307,6 @@ def get_words_from_word_ids(word_ids):
         word_id,
         attrkey,
         attrvalue,
-        attrvalue_id,
         pf.sort_order
     from
         mashup_v
@@ -366,7 +364,6 @@ select
     word_id,
     attrkey,
     attrvalue,
-    attrvalue_id,
     pf.sort_order
 from
     mashup_v
@@ -391,7 +388,6 @@ order by word_id, pf.sort_order
         word_id,
         attrkey,
         attrvalue,
-        attrvalue_id,
         pf.sort_order
     from
         mashup_v
@@ -445,6 +441,83 @@ def get_words():
     jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
 
     return jsonify(result)
+
+
+@app.route('/api/word', methods=['POST'])
+def add_word():
+    try:
+        payload = request.get_json()
+        jsonschema.validate(payload, dlernen.dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA)
+    except jsonschema.ValidationError as e:
+        return "bad payload: %s" % e.message, 400
+
+    # checks:
+    # - pos_name is valid
+    # - attrkeys are valid for the POS
+    # note:  adding a word with no attributes is allowed
+
+    #pprint(payload)
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        try:
+            cursor.execute('start transaction')
+            check_sql = """
+            select distinct attrkey, attribute_id, pos_id
+            from mashup_v
+            where pos_name = %(pos_name)s
+            """
+
+            d = {
+                'pos_name': payload['pos_name']
+            }
+
+            cursor.execute(check_sql, d)
+            rows = cursor.fetchall()
+
+            # maps attr keys to attr ids
+            attrdict = {r['attrkey']: r['attribute_id'] for r in rows}
+
+            if len(attrdict) == 0:
+                return "unknown part of speech:  %s" % payload['pos_name'], 400
+
+            pos_id = rows[0]['pos_id']
+            defined_attrkeys = set(attrdict.keys())
+
+            request_attrkeys = {a['attrkey'] for a in payload['attributes']}
+            undefined_attrkeys = request_attrkeys - defined_attrkeys
+            if len(undefined_attrkeys) > 0:
+                message = "attribute keys not defined:  %s" % ', '.join(list(undefined_attrkeys))
+                return message, 400
+
+            sql = "insert into word (word, pos_id) values (%s, %s)"
+            cursor.execute(sql, (payload['word'], pos_id))
+            cursor.execute("select last_insert_id() word_id")
+            result = cursor.fetchone()
+            word_id = result['word_id']
+
+            for a in payload['attributes']:
+                link_d = {
+                    "word_id": word_id,
+                    "attribute_id": attrdict[a['attrkey']],
+                    "attrvalue": a['attrvalue']
+                }
+
+                sql = """insert into word_attribute (word_id, attribute_id, attrvalue)
+                values (%(word_id)s, %(attribute_id)s, %(attrvalue)s)
+                """
+                cursor.execute(sql, link_d)
+
+            cursor.execute('commit')
+
+        except Exception as e:
+            pprint(e)
+            cursor.execute('rollback')
+
+    return 'OK'
+
+
+@app.route('/api/word/<int:word_id>', methods=['PUT'])
+def update_word(word_id):
+    pass
 
 
 @app.route('/api/gender_rules')

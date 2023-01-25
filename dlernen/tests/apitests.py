@@ -27,14 +27,14 @@ SAMPLE_ADDWORD_PAYLOAD = {
 }
 
 SAMPLE_UPDATEWORD_PAYLOAD = {
-    "word": "blah",  # in case we need to change spelling.  optional.
+    "word": "blah",  # in case we need to change spelling.  optional.  word id is in the URL.
     "attributes": [  # required but can be empty.
         {
-            "attrvalue_id": 123,
+            "attrkey": "article",
             "attrvalue": "der"  # cannot be empty string.
         },
         {
-            "attrvalue_id": 246,
+            "attrkey": "plural",
             "attrvalue": "Foofoo"
         }
     ]
@@ -44,39 +44,30 @@ SAMPLE_WORDS_RESULT = [
     {
         "attributes": [{'attrkey': 'definition',
                         'sort_order': 5,
-                        'attrvalue_id': 111,
                         'attrvalue': 'to spoil, deteriorate, go bad'},
                        {'attrkey': 'first_person_singular',
                         'sort_order': 6,
-                        'attrvalue_id': 111,
                         'attrvalue': 'verderbe'},
                        {'attrkey': 'second_person_singular',
                         'sort_order': 7,
-                        'attrvalue_id': 111,
                         'attrvalue': 'verdirbst'},
                        {'attrkey': 'third_person_singular',
                         'sort_order': 8,
-                        'attrvalue_id': 111,
                         'attrvalue': 'verdirbt'},
                        {'attrkey': 'first_person_plural',
                         'sort_order': 9,
-                        'attrvalue_id': 111,
                         'attrvalue': 'verderben'},
                        {'attrkey': 'second_person_plural',
                         'sort_order': 10,
-                        'attrvalue_id': 111,
                         'attrvalue': 'verderbt'},
                        {'attrkey': 'third_person_plural',
                         'sort_order': 11,
-                        'attrvalue_id': 111,
                         'attrvalue': 'verderben'},
                        {'attrkey': 'third_person_past',
                         'sort_order': 16,
-                        'attrvalue_id': 111,
                         'attrvalue': 'verdarb'},
                        {'attrkey': 'past_participle',
                         'sort_order': 17,
-                        'attrvalue_id': 111,
                         'attrvalue': 'verdorben'}],
         "pos_name": "Verb",
         "word": "verderben",
@@ -165,7 +156,8 @@ SAMPLE_WORDLIST_DETAIL_RESULT = {
 }
 
 
-class APITests(unittest.TestCase):
+class APITestsWord(unittest.TestCase):
+    # tests for all methods on /api/word
     def test_addword_payload_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA)
 
@@ -178,6 +170,33 @@ class APITests(unittest.TestCase):
     def test_updateword_payload_sample(self):
         jsonschema.validate(SAMPLE_UPDATEWORD_PAYLOAD, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
 
+    def test_get_word_by_id(self):
+        r = requests.get(config.Config.BASE_URL + "/api/word/14")
+        results = r.json()
+        self.assertGreater(len(results), 0)
+        jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
+
+    # end-to-end test:  add a word, verify existence, update it (attr values and the word itself),
+    # verify edits, delete it, verify deletion.  remove test_get_word_by_id when this is implemented.
+
+    # another end-to-end test, but without giving any attribute values.
+
+    # adding the same word twice is ok, should have different word ids.
+
+    # deleting nonexistent word_id is not an error
+
+    # error conditions:
+    # word not in payload
+    # pos not in payload
+    # attributes not in payload
+    # payload not json
+    # word is 0-length
+    # pos is 0-length
+    # attr keys are bullshit
+    # part of speech is bullshit
+
+
+class APITests(unittest.TestCase):
     def test_list_attribute_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_ATTRIBUTE_SCHEMA)
 
@@ -233,12 +252,6 @@ class APITests(unittest.TestCase):
 
     def test_word_sample(self):
         jsonschema.validate(SAMPLE_WORDS_RESULT, dlernen_json_schema.WORDS_SCHEMA)
-
-    def test_get_word_by_id(self):
-        r = requests.get(config.Config.BASE_URL + "/api/word/14")
-        results = r.json()
-        self.assertGreater(len(results), 0)
-        jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
 
     def test_get_word_by_word_exact(self):
         r = requests.get(config.Config.BASE_URL + "/api/word/verderben")
