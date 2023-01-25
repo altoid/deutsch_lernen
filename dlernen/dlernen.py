@@ -344,37 +344,6 @@ def get_word_by_id(word_id):
     return jsonify(result)
 
 
-@app.route('/api/words', methods=['PUT'])
-def get_words():
-    # this is for PUT requests because we have to send in the list of words ids as a payload.
-    # if we try to put the word_ids into a GET URL, the URL might be too long.
-    """
-    given a list of word_ids, get the details for each word:  word, attributes, etc.
-    """
-
-    payload = request.get_json()
-
-    word_ids = payload.get('word_ids', [])
-
-    result = get_words_from_word_ids(word_ids)
-
-    jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
-
-    return jsonify(result)
-
-
-@app.route('/api/gender_rules')
-def gender_rules():
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        query = """
-        select article, rule
-        from gender_rules
-        """
-        cursor.execute(query)
-        rows = cursor.fetchall()
-        return jsonify(rows)
-
-
 @app.route('/api/word/<string:word>')
 def get_word(word):
     """
@@ -458,6 +427,36 @@ order by word_id, pf.sort_order
         jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
 
         return jsonify(result)
+
+
+@app.route('/api/words', methods=['PUT'])
+def get_words():
+    # this is for PUT requests because we have to send in the list of words ids as a payload.
+    # if we try to put the word_ids into a GET URL, the URL might be too long.
+    """
+    given a list of word_ids, get the details for each word:  word, attributes, etc.
+    """
+
+    payload = request.get_json()
+
+    word_ids = payload.get('word_ids', [])
+    result = get_words_from_word_ids(word_ids)
+
+    jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
+
+    return jsonify(result)
+
+
+@app.route('/api/gender_rules')
+def gender_rules():
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        query = """
+        select article, rule
+        from gender_rules
+        """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        return jsonify(rows)
 
 
 @app.route('/api/list_attributes/<int:list_id>')
