@@ -64,13 +64,13 @@ UPDATEWORD_PAYLOAD_SCHEMA = {
             "items": {
                 "type": "object",
                 "required": [
-                    "attrkey",
-                    "attrvalue"
+                    "attrvalue",
+                    "attrvalue_id"
                 ],
                 "properties": {
-                    "attrkey": {
-                        "type": "string",
-                        "minLength": 1
+                    "attrvalue_id": {
+                        "type": "integer",
+                        "minimum": 1
                     },
                     "attrvalue": {
                         "type": "string",
@@ -354,7 +354,7 @@ WORDS_SCHEMA = {
                 "type": "array",
                 "items": {
                     "type": "object",
-                    "required": ["attrkey", "sort_order", "attrvalue"],
+                    "required": ["attrkey", "sort_order", "attrvalue", "attrvalue_id"],
                     "properties": {
                         "attrkey": {
                             "type": "string",

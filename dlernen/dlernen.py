@@ -299,6 +299,9 @@ def process_word_query_result(rows):
 
 
 def get_words_from_word_ids(word_ids):
+    """
+    returns word object for every valid word id.  returns empty list if no word_id was found.
+    """
     format_args = ['%s'] * len(word_ids)
     format_args = ', '.join(format_args)
     sql = """
@@ -336,12 +339,18 @@ def get_words_from_word_ids(word_ids):
 
 @app.route('/api/word/<int:word_id>')
 def get_word_by_id(word_id):
+    """
+    returns word object, or {} if word_id not found.
+    """
     word_ids = [word_id]
-    result = get_words_from_word_ids(word_ids)
+    words = get_words_from_word_ids(word_ids)
 
-    jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
+    jsonschema.validate(words, dlernen.dlernen_json_schema.WORDS_SCHEMA)
 
-    return jsonify(result)
+    if words:
+        return jsonify(words[0])
+
+    return jsonify({})
 
 
 @app.route('/api/word/<string:word>')
@@ -429,24 +438,6 @@ order by word_id, pf.sort_order
         return jsonify(result)
 
 
-@app.route('/api/words', methods=['PUT'])
-def get_words():
-    # this is for PUT requests because we have to send in the list of words ids as a payload.
-    # if we try to put the word_ids into a GET URL, the URL might be too long.
-    """
-    given a list of word_ids, get the details for each word:  word, attributes, etc.
-    """
-
-    payload = request.get_json()
-
-    word_ids = payload.get('word_ids', [])
-    result = get_words_from_word_ids(word_ids)
-
-    jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
-
-    return jsonify(result)
-
-
 @app.route('/api/word', methods=['POST'])
 def add_word():
     try:
@@ -481,6 +472,7 @@ def add_word():
             attrdict = {r['attrkey']: r['attribute_id'] for r in rows}
 
             if len(attrdict) == 0:
+                cursor.execute('rollback')
                 return "unknown part of speech:  %s" % payload['pos_name'], 400
 
             pos_id = rows[0]['pos_id']
@@ -490,6 +482,7 @@ def add_word():
             undefined_attrkeys = request_attrkeys - defined_attrkeys
             if len(undefined_attrkeys) > 0:
                 message = "attribute keys not defined:  %s" % ', '.join(list(undefined_attrkeys))
+                cursor.execute('rollback')
                 return message, 400
 
             sql = "insert into word (word, pos_id) values (%s, %s)"
@@ -521,7 +514,127 @@ def add_word():
 
 @app.route('/api/word/<int:word_id>', methods=['PUT'])
 def update_word(word_id):
-    pass
+    try:
+        payload = request.get_json()
+        jsonschema.validate(payload, dlernen.dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
+    except jsonschema.ValidationError as e:
+        return "bad payload: %s" % e.message, 400
+
+    # checks:
+    # word_id exists
+    # word is nonempty if present
+    # zero-length attribute list is ok
+    # attrvalue ids exist and belong to the word
+    # new attrvalues are all strings len > 0.
+
+    # pprint(payload)
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        try:
+            cursor.execute('start transaction')
+
+            sql = """
+            select attrvalue_id
+            from mashup_v
+            where word_id = %(word_id)s
+            and attrvalue_id is not null
+            """
+            cursor.execute(sql, {'word_id': word_id})
+            rows = cursor.fetchall()
+            defined_attrvalue_ids = {r['attrvalue_id'] for r in rows}
+
+            if len(defined_attrvalue_ids) == 0:
+                # word_id is bogus
+                message = "word_id %s not found" % word_id
+                cursor.execute('rollback')
+                return message, 404
+
+            payload_attrvalue_ids = {a['attrvalue_id'] for a in payload['attributes']}
+            undefined_attrvalue_ids = payload_attrvalue_ids - defined_attrvalue_ids
+            if len(undefined_attrvalue_ids) > 0:
+                message = "attrvalue_ids not defined:  %s" % ', '.join(list(undefined_attrvalue_ids))
+                cursor.execute('rollback')
+                return message, 400
+
+            word = None
+            if 'word' in payload:
+                word = payload['word']
+            if word == '':
+                message = 'word cannot be empty string'
+                return message, 400
+
+            # check that attrvalues are all strings len > 0
+            payload_attrvalues = {a['attrvalue'] for a in payload['attributes']}
+            bad_attrvalues = list(filter(lambda x: not bool(x), payload_attrvalues))
+            if len(bad_attrvalues) > 0:
+                message = "attribute values cannot be empty strings"
+                cursor.execute('rollback')
+                return message, 400
+
+            # checks complete, let's do this.
+
+            if word:
+                sql = """
+                update word set word = %(word)s
+                where id = %(word_id)s
+                """
+                d = {
+                    'word': word,
+                    'word_id': word_id
+                }
+                cursor.execute(sql, d)
+
+            sql = """
+            update word_attribute
+            set attrvalue = %(attrvalue)s
+            where id = %(attrvalue_id)s
+            """
+            for a in payload['attributes']:
+                d = {
+                    'attrvalue': a['attrvalue'],
+                    'attrvalue_id': a['attrvalue_id']
+                }
+                cursor.execute(sql, d)
+
+            cursor.execute('commit')
+
+            return get_word_by_id(word_id)  # this is already validated and jsonified
+
+        except Exception as e:
+            cursor.execute('rollback')
+            return "error, transaction rolled back", 500
+
+
+@app.route('/api/word/<int:word_id>', methods=['DELETE'])
+def delete_word(word_id):
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        try:
+            sql = """
+            delete from word
+            where id = %(word_id)s
+            """
+            cursor.execute(sql, {'word_id': word_id})
+            cursor.execute('commit')
+            return 'OK'
+        except Exception as e:
+            return 'error deleting word_id %s' % word_id, 500
+
+
+@app.route('/api/words', methods=['PUT'])
+def get_words():
+    # this is for PUT requests because we have to send in the list of words ids as a payload.
+    # if we try to put the word_ids into a GET URL, the URL might be too long.
+    """
+    given a list of word_ids, get the details for each word:  word, attributes, etc.
+    """
+
+    payload = request.get_json()
+
+    word_ids = payload.get('word_ids', [])
+    result = get_words_from_word_ids(word_ids)
+
+    jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
+
+    return jsonify(result)
 
 
 @app.route('/api/gender_rules')
