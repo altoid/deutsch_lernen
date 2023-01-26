@@ -512,10 +512,11 @@ def add_word():
 
             cursor.execute('commit')
 
+            return get_word_by_id(word_id)  # this is already validated and jsonified
+
         except Exception as e:
             cursor.execute('rollback')
-
-    return 'OK'
+            return "error, transaction rolled back", 500
 
 
 @app.route('/api/word/<int:word_id>', methods=['PUT'])
