@@ -26,6 +26,19 @@ SAMPLE_ADDWORD_PAYLOAD = {
     ]
 }
 
+SAMPLE_ADDATTRIBUTES_PAYLOAD = {
+    "attributes": [
+        {
+            "attrkey": "article",
+            "attrvalue": "der"
+        },
+        {
+            "attrkey": "plural",
+            "attrvalue": "Blahs"
+        }
+    ]
+}
+
 SAMPLE_UPDATEWORD_PAYLOAD = {
     "word": "blah",  # in case we need to change spelling.  optional.  word id is in the URL.
     "attributes": [  # required but can be empty.
@@ -365,7 +378,7 @@ class APITestsWordPUT(unittest.TestCase):
     def test_updateword_payload_sample(self):
         jsonschema.validate(SAMPLE_UPDATEWORD_PAYLOAD, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
 
-    # error conditions
+    # TODO:  implement tests for error conditions:
     # bullshit word id
     # missing word is ok.
     # attr ids that don't belong to the word.
@@ -374,11 +387,15 @@ class APITestsWordPUT(unittest.TestCase):
     # payload not json
 
 
+# TODO:  make sure proper cleanup happens if any assertions fail on status code values.  setup/teardown?
+
+# TODO:  wordlist tests go in their own class
+
 class APITestsWordEndToEnd(unittest.TestCase):
     # end-to-end test:  add a word, verify existence, update it (attr values and the word itself),
     # verify edits, delete it, verify deletion.  delete it again, should be no errors.
 
-    def test1(self):
+    def test_basic(self):
         add_payload = {
             "word": "end_to_end_test1",
             "pos_name": "noun",
@@ -445,8 +462,82 @@ class APITestsWordEndToEnd(unittest.TestCase):
 
     # another end-to-end test, but without giving any attribute values.  add attributes to the word.  retrieve
     # word, new attributes should be there.
-    def test_update_attrs(self):
-        pass
+    def test_add_attrs(self):
+        add_payload = {
+            "word": "test_add_attrs",
+            "pos_name": "noun",
+            "attributes": [
+                # {
+                #     "attrkey": "article",
+                #     "attrvalue": "der"
+                # },
+                # {
+                #     "attrkey": "plural",
+                #     "attrvalue": "Xxxxxxxxxx"
+                # },
+                # {
+                #     "attrkey": "definition",
+                #     "attrvalue": "feelthy"
+                # }
+            ]
+        }
+        r = requests.post("%s/api/word" % config.Config.BASE_URL, json=add_payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+        word_id = obj['word_id']
+
+        add_attr_payload = {
+            "attributes": [
+                {
+                    "attrkey": "article",
+                    "attrvalue": "der"
+                },
+                {
+                    "attrkey": "plural",
+                    "attrvalue": "Xxxxxxxxxx"
+                },
+                {
+                    "attrkey": "definition",
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+
+        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, word_id), json=add_attr_payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+
+        attrdict = {r['attrkey']: r['attrvalue'] for r in obj['attributes']}
+        attrkeys = set(attrdict.keys())
+
+        self.assertEqual({'article', 'plural', 'definition'}, attrkeys)
+        self.assertEqual("der", attrdict['article'])
+        self.assertEqual("Xxxxxxxxxx", attrdict['plural'])
+        self.assertEqual("feelthy", attrdict['definition'])
+
+        # add again but with empty attribute list
+
+        add_attr_payload = {
+            "attributes": [
+            ]
+        }
+
+        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, word_id), json=add_attr_payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+
+        self.assertEqual(3, len(obj['attributes']))
+
+        attrdict = {r['attrkey']: r['attrvalue'] for r in obj['attributes']}
+        attrkeys = set(attrdict.keys())
+
+        self.assertEqual({'article', 'plural', 'definition'}, attrkeys)
+        self.assertEqual("der", attrdict['article'])
+        self.assertEqual("Xxxxxxxxxx", attrdict['plural'])
+        self.assertEqual("feelthy", attrdict['definition'])
+
+        r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, word_id))
+        self.assertEqual(r.status_code, 200)
 
     # adding the same word twice is ok, should have different word ids.
     def test_add_twice(self):
@@ -522,6 +613,117 @@ class APITestsWordEndToEnd(unittest.TestCase):
 
         r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, word_id))
         self.assertEqual(r.status_code, 200)
+
+
+class APITestsAttributePOST(unittest.TestCase):
+    def test_add_attributes_payload_schema(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)
+
+    def test_add_attributes_payload_sample(self):
+        jsonschema.validate(SAMPLE_ADDATTRIBUTES_PAYLOAD, dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)
+
+    # tests
+    # bullshit word id
+    def test_bullshit_word_id(self):
+        payload = {
+            "attributes": [
+                {
+                    "attrkey": "article",
+                    "attrvalue": "der"
+                },
+                {
+                    "attrkey": "plural",
+                    "attrvalue": "Xxxxxxxxxx"
+                },
+                {
+                    "attrkey": "definition",
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, 66666666), data=payload)
+        self.assertNotEqual(r.status_code, 200)
+
+    # attributes keyword missing
+    def test_attributes_keyword_missing(self):
+        payload = {
+        }
+        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, 66666666), data=payload)
+        self.assertNotEqual(r.status_code, 200)
+
+    # attrkey keyword missing
+    def test_attrkey_keyword_missing(self):
+        payload = {
+            "attributes": [
+                {
+                    "attrvalue": "der"
+                }
+            ]
+        }
+        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, 66666666), data=payload)
+        self.assertNotEqual(r.status_code, 200)
+
+    # attrvalue keyword missing
+    def test_attrvalue_keyword_missing(self):
+        payload = {
+            "attributes": [
+                {
+                    "attrkey": "definition"
+                }
+            ]
+        }
+        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, 66666666), data=payload)
+        self.assertNotEqual(r.status_code, 200)
+
+    # payload not JSON
+    def test_payload_not_json(self):
+        payload = "bullshit payload"
+        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, 66666666), data=payload)
+        self.assertNotEqual(r.status_code, 200)
+
+    # attrkeys wrong for word/pos
+    def test_wrong_attrkeys(self):
+        payload = {
+            "attributes": [
+                {
+                    "attrkey": "euioeuioeu",
+                    "attrvalue": "der"
+                },
+                {
+                    "attrkey": "plural",
+                    "attrvalue": "Xxxxxxxxxx"
+                },
+                {
+                    "attrkey": "definition",
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, 66666666), data=payload)
+        self.assertNotEqual(r.status_code, 200)
+
+    # zero-length attribute values
+    def test_empty_attrvalue(self):
+        payload = {
+            "attributes": [
+                {
+                    "attrkey": "article",
+                    "attrvalue": ""
+                },
+                {
+                    "attrkey": "plural",
+                    "attrvalue": "Xxxxxxxxxx"
+                },
+                {
+                    "attrkey": "definition",
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, 66666666), data=payload)
+        self.assertNotEqual(r.status_code, 200)
+
+    # TODO: empty attribute list is ok.
 
 
 class APITests(unittest.TestCase):

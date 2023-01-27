@@ -1,5 +1,38 @@
 import jsonschema
 
+ADDATTRIBUTES_PAYLOAD_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/addattributes_payload",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Payload for add attributes",
+    "description": "Payload for add attributes",
+    "type": "object",
+    "required": [
+        "attributes"
+    ],
+    "properties": {
+        "attributes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "attrkey",
+                    "attrvalue"
+                ],
+                "properties": {
+                    "attrkey": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "attrvalue": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                }
+            }
+        }
+    }
+}
+
 ADDWORD_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/addword_payload",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
@@ -232,7 +265,6 @@ WORDLISTS_SCHEMA = {
     }
 }
 
-
 WORDLIST_ATTRIBUTE_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
@@ -263,7 +295,6 @@ WORDLIST_ATTRIBUTE_SCHEMA = {
         }
     }
 }
-
 
 WORDLIST_DETAIL_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],

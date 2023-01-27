@@ -527,7 +527,6 @@ def update_word(word_id):
     # attrvalue ids exist and belong to the word
     # new attrvalues are all strings len > 0.
 
-    # pprint(payload)
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
@@ -616,6 +615,7 @@ def delete_word(word_id):
             cursor.execute('commit')
             return 'OK'
         except Exception as e:
+            cursor.execute('rollback')
             return 'error deleting word_id %s' % word_id, 500
 
 
@@ -635,6 +635,78 @@ def get_words():
     jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
 
     return jsonify(result)
+
+
+@app.route('/api/<int:word_id>/attribute', methods=['POST'])
+def add_attributes(word_id):
+    try:
+        payload = request.get_json()
+        jsonschema.validate(payload, dlernen.dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)
+    except jsonschema.ValidationError as e:
+        return "bad payload: %s" % e.message, 400
+
+    # checks:
+    # word_id exists
+    # zero-length attribute list is ok
+    # attrvalue ids exist and belong to the word
+    # new attrvalues are all strings len > 0.
+
+    # pprint(payload)
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        try:
+            cursor.execute('start transaction')
+
+            sql = """
+            select attrkey, attribute_id
+            from mashup_v where word_id = %(word_id)s
+            """
+            cursor.execute(sql, {'word_id': word_id})
+            rows = cursor.fetchall()
+            if len(rows) == 0:
+                cursor.execute('rollback')
+                return "no such word id:  %s" % word_id, 400
+
+            defined_attrkeys = {r['attrkey'] for r in rows}
+            payload_attrkeys = {a['attrkey'] for a in payload['attributes']}
+
+            undefined_attrkeys = payload_attrkeys - defined_attrkeys
+            if len(undefined_attrkeys) > 0:
+                wtf = ', '.join(undefined_attrkeys)
+                message = "invalid attrkeys:  %s" % wtf
+                cursor.execute('rollback')
+                return message, 400
+
+            payload_attrvalues = [a['attrvalue'] for a in payload['attributes']]
+            bad_attrvalues = list(filter(lambda x: not bool(x), payload_attrvalues))
+            if len(bad_attrvalues) > 0:
+                message = "attribute values cannot be empty strings"
+                cursor.execute('rollback')
+                return message, 400
+
+            # checks complete, let's do this
+            print("checks complete, let's do this")
+            rows_to_insert = []
+            attrdict = {r['attrkey']: r['attribute_id'] for r in rows}
+            for a in payload['attributes']:
+                t = (attrdict[a['attrkey']], word_id, a['attrvalue'])
+                rows_to_insert.append(t)
+
+            if rows_to_insert:
+                pprint(rows_to_insert)
+                sql = """
+                insert into word_attribute (attribute_id, word_id, attrvalue)
+                values (%s, %s, %s)
+                """
+                cursor.executemany(sql, rows_to_insert)
+
+            cursor.execute('commit')
+
+            return get_word_by_id(word_id)  # this is already validated and jsonified
+
+        except Exception as e:
+            pprint(e)
+            cursor.execute('rollback')
+            return 'error adding attributes to word_id %s' % word_id, 500
 
 
 @app.route('/api/gender_rules')
