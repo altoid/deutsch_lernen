@@ -1,5 +1,5 @@
 import werkzeug.exceptions
-from flask import Flask, request, render_template, redirect, url_for, jsonify
+from flask import Flask, request, render_template, redirect, url_for
 from pprint import pprint
 from mysql.connector import connect
 from dlernen.config import Config
@@ -69,7 +69,7 @@ def post_test():
 
     j = request.get_json()
     pprint(j)
-    return jsonify(j)
+    return j
 
 
 def get_word_ids_for_attrkey(limit, recent, attrkey):
@@ -199,7 +199,7 @@ def words_attrkey(attrkey):
 
         jsonschema.validate(result, dlernen.dlernen_json_schema.WORDIDS_SCHEMA)
 
-        return jsonify(result)
+        return result
 
 
 @app.route('/api/quiz_data', methods=['PUT', 'POST'])
@@ -248,7 +248,7 @@ def quiz_data():
                         }
                 result = list(results_dict.values())
 
-        return jsonify(result)
+        return result
 
     update = """
         insert into quiz_score
@@ -264,7 +264,7 @@ def quiz_data():
         cursor.execute(update, request.form)
         dbh.commit()
 
-    return jsonify('OK')
+    return 'OK'
 
 
 @app.route('/healthcheck')
@@ -348,9 +348,9 @@ def get_word_by_id(word_id):
     jsonschema.validate(words, dlernen.dlernen_json_schema.WORDS_SCHEMA)
 
     if words:
-        return jsonify(words[0])
+        return words[0]
 
-    return jsonify({})
+    return {}
 
 
 @app.route('/api/word/<string:word>')
@@ -430,12 +430,9 @@ order by word_id, pf.sort_order
         rows = cursor.fetchall()
         result = process_word_query_result(rows)
 
-        # use jsonify even if the result looks like json already.  jsonify ensures that the content type and
-        # mime headers are correct.
-
         jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
 
-        return jsonify(result)
+        return result
 
 
 @app.route('/api/word', methods=['POST'])
@@ -634,7 +631,7 @@ def get_words():
 
     jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
 
-    return jsonify(result)
+    return result
 
 
 @app.route('/api/<int:word_id>/attribute', methods=['POST'])
@@ -718,7 +715,7 @@ def gender_rules():
         """
         cursor.execute(query)
         rows = cursor.fetchall()
-        return jsonify(rows)
+        return rows
 
 
 @app.route('/api/list_attributes/<int:list_id>')
@@ -735,7 +732,7 @@ def get_list_attributes(list_id):
 
         jsonschema.validate(wl_row, dlernen.dlernen_json_schema.WORDLIST_ATTRIBUTE_SCHEMA)
 
-        return jsonify(wl_row)
+        return wl_row
 
 
 @app.route('/list_attributes/<int:list_id>')
@@ -767,7 +764,7 @@ def create_wordlist():
             cursor.execute("select last_insert_id() list_id")
             result = cursor.fetchone()
             dbh.commit()
-            return jsonify(result)
+            return result
         except Exception as e:
             cursor.execute('rollback')
             raise e
@@ -825,7 +822,7 @@ def wordlist_api(list_id):
         cursor.execute(sql, (list_id,))
         wl_row = cursor.fetchone()
         if not wl_row:
-            return jsonify({})
+            return {}
 
         code = wl_row['code'].strip()
 
@@ -892,7 +889,7 @@ def wordlist_api(list_id):
         result['unknown_words'] = unknown_words
         jsonschema.validate(result, dlernen.dlernen_json_schema.WORDLIST_DETAIL_SCHEMA)
 
-        return jsonify(result)
+        return result
 
 
 @app.route('/wordlist/<int:list_id>')
@@ -1004,7 +1001,7 @@ order by name
         # json_schema.WORDLISTS_SCHEMA
         result = list(dict_result.values())
         jsonschema.validate(result, dlernen.dlernen_json_schema.WORDLISTS_SCHEMA)
-        return jsonify(result)
+        return result
 
 
 @app.route('/api/wordlists/<int:word_id>')
@@ -1059,7 +1056,7 @@ def get_wordlists_for_word(word_id):
             result = json.loads(r.text)
             result = sorted(result, key=lambda x: x['name'].casefold())
 
-        return jsonify(result)
+        return result
 
 
 @app.route('/')
