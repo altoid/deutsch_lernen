@@ -244,11 +244,6 @@ class SchemaTests(unittest.TestCase):
         jsonschema.validate(SAMPLE_WORDLIST_DETAIL_RESULT, dlernen_json_schema.WORDLIST_DETAIL_SCHEMA)
 
 
-class APITestsWordGET(unittest.TestCase):
-    # TODO implement tests here
-    pass
-
-
 class APITestsWordPOST(unittest.TestCase):
     # tests for all methods on /api/word
     # error conditions:
@@ -420,15 +415,223 @@ class APITestsWordPOST(unittest.TestCase):
 
 
 class APITestsWordPUT(unittest.TestCase):
-    # TODO:  implement tests for error conditions:
-    # bullshit word id
-    # missing word is ok.
-    # attr ids that don't belong to the word.
-    # zero-length word
-    # zero-length attribute value
-    # payload not json
+    def setUp(self):
+        self.word = "APITestsWordPut"
+        add_payload = {
+            "word": self.word,
+            "pos_name": "noun",
+            "attributes": [
+                {
+                    "attrkey": "article",
+                    "attrvalue": "der"
+                },
+                {
+                    "attrkey": "plural",
+                    "attrvalue": "Xxxxxxxxxx"
+                },
+                {
+                    "attrkey": "definition",
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
 
-    pass
+        r = requests.post("%s/api/word" % config.Config.BASE_URL, json=add_payload)
+        self.obj = r.json()
+        self.word_id = self.obj['word_id']
+
+    def tearDown(self):
+        requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id))
+
+    # bullshit word id
+    def test_bullshit_word_id(self):
+        update_payload = {
+            "word": "blah",
+            "attributes": [
+                {
+                    "attrvalue_id": self.obj['attributes'][0]['attrvalue_id'],
+                    "attrvalue": "der"
+                },
+                {
+                    "attrvalue_id": self.obj['attributes'][1]['attrvalue_id'],
+                    "attrvalue": "Foofoo"
+                }
+            ]
+        }
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, 5555555555), json=update_payload)
+        self.assertNotEqual(200, r.status_code)
+
+    # bullshit attr ids
+    def test_bullshit_attrids(self):
+        update_payload = {
+            "word": "blah",
+            "attributes": [
+                {
+                    "attrvalue_id": 5555555555555,
+                    "attrvalue": "der"
+                },
+                {
+                    "attrvalue_id": 666666666666666,
+                    "attrvalue": "Foofoo"
+                }
+            ]
+        }
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=update_payload)
+        self.assertNotEqual(200, r.status_code)
+
+    # zero-length word
+    def test_zero_length_word(self):
+        # updating with word = "" not allowed.
+        update_payload = {
+            "word": "",
+            "attributes": [
+                {
+                    "attrvalue_id": self.obj['attributes'][0]['attrvalue_id'],
+                    "attrvalue": "der"
+                },
+                {
+                    "attrvalue_id": self.obj['attributes'][1]['attrvalue_id'],
+                    "attrvalue": "Foofoo"
+                }
+            ]
+        }
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=update_payload)
+        self.assertNotEqual(200, r.status_code)
+
+    # zero-length attribute value
+    def test_zero_length_attrvalue(self):
+        # updating with attrvalue = "" not allowed.
+        update_payload = {
+            "word": "aoeuoae",
+            "attributes": [
+                {
+                    "attrvalue_id": self.obj['attributes'][0]['attrvalue_id'],
+                    "attrvalue": ""
+                },
+                {
+                    "attrvalue_id": self.obj['attributes'][1]['attrvalue_id'],
+                    "attrvalue": "Foofoo"
+                }
+            ]
+        }
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=update_payload)
+        self.assertNotEqual(200, r.status_code)
+
+    # attrvalue keyword missing
+    def test_attrvalue_keyword_missing(self):
+        update_payload = {
+            "word": "aoeuoae",
+            "attributes": [
+                {
+                    "attrvalue_id": self.obj['attributes'][0]['attrvalue_id']
+                },
+                {
+                    "attrvalue_id": self.obj['attributes'][1]['attrvalue_id'],
+                    "attrvalue": "Foofoo"
+                }
+            ]
+        }
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=update_payload)
+        self.assertNotEqual(200, r.status_code)
+
+    # attrvalue_id keyword missing
+    def test_attrvalue_id_keyword_missing(self):
+        update_payload = {
+            "word": "aoeuoae",
+            "attributes": [
+                {
+                    "attrvalue": "turnips"
+                },
+                {
+                    "attrvalue_id": self.obj['attributes'][1]['attrvalue_id'],
+                    "attrvalue": "Foofoo"
+                }
+            ]
+        }
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=update_payload)
+        self.assertNotEqual(200, r.status_code)
+
+    # attributes keyword missing
+    def test_attributes_keyword_missing(self):
+        update_payload = {
+            "word": "aoeuoae"
+        }
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=update_payload)
+        self.assertNotEqual(200, r.status_code)
+
+    # payload not json
+    def test_payload_not_json(self):
+        update_payload = "serious bullshit right here"
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=update_payload)
+        self.assertNotEqual(200, r.status_code)
+
+    # changing the spelling of a word works.
+    def test_change_spelling(self):
+        new_word = 'aoeuaeouoeau'
+        update_payload = {
+            'word': new_word,
+            'attributes': []
+        }
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=update_payload)
+        self.assertEqual(r.status_code, 200)
+
+        r = requests.get("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id))
+        obj = r.json()
+        self.assertEqual(new_word, obj['word'])
+
+    # updating attribute values works.
+    def test_update_attrs(self):
+        victim = self.obj['attributes'][0]['attrvalue_id']
+        new_value = 'changed to this'
+        new_word = 'respell_word_succeeded'
+        update_payload = {
+            'word': new_word,
+            'attributes': [
+                {
+                    'attrvalue_id': victim,
+                    'attrvalue': new_value
+                }
+            ]
+        }
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=update_payload)
+        self.assertEqual(r.status_code, 200)
+
+        r = requests.get("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id))
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+
+        self.assertEqual(new_word, obj['word'])
+        a = list(filter(lambda x: x['attrvalue_id'] == victim, obj['attributes']))
+        self.assertEqual(1, len(a))
+        self.assertEqual(new_value, a[0]['attrvalue'])
+
+    # trivial no-op payload is ok.
+    def test_noop_update(self):
+        update_payload = {
+            'attributes': []
+        }
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=update_payload)
+        self.assertEqual(r.status_code, 200)
+
+        r = requests.get("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id))
+        obj = r.json()
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(3, len(obj['attributes']))
+        self.assertEqual(self.word, obj['word'])
+
+    # other tests from end-to-end might be appropriate here.
+
 
 # TODO:  make sure proper cleanup happens if any assertions fail on status code values.  setup/teardown?
 
@@ -436,8 +639,8 @@ class APITestsWordPUT(unittest.TestCase):
 
 
 class APITestsWordEndToEnd(unittest.TestCase):
-    # end-to-end test:  add a word, verify existence, update it (attr values and the word itself),
-    # verify edits, delete it, verify deletion.  delete it again, should be no errors.
+    # end-to-end test:  add a word, verify existence, delete it, verify deletion.
+    # delete it again, should be no errors.
 
     def test_basic(self):
         add_payload = {
@@ -467,31 +670,6 @@ class APITestsWordEndToEnd(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         obj = r.json()
         self.assertTrue('word_id' in obj)
-
-        victim = obj['attributes'][0]['attrvalue_id']
-        new_value = 'changed to this'
-        new_word = 'respell_word_succeeded'
-        update_payload = {
-            'word': new_word,
-            'attributes': [
-                {
-                    'attrvalue_id': victim,
-                    'attrvalue': new_value
-                }
-            ]
-        }
-
-        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, word_id), json=update_payload)
-        self.assertEqual(r.status_code, 200)
-
-        r = requests.get("%s/api/word/%s" % (config.Config.BASE_URL, word_id))
-        self.assertEqual(r.status_code, 200)
-        obj = r.json()
-
-        self.assertEqual(new_word, obj['word'])
-        a = list(filter(lambda x: x['attrvalue_id'] == victim, obj['attributes']))
-        self.assertEqual(1, len(a))
-        self.assertEqual(new_value, a[0]['attrvalue'])
 
         r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, word_id))
         self.assertEqual(r.status_code, 200)
@@ -618,45 +796,6 @@ class APITestsWordEndToEnd(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
 
         r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, word_id_2))
-        self.assertEqual(r.status_code, 200)
-
-    # update payload with empty attribute list and no word - this is ok and should do nothing.
-    def test_put_nothing(self):
-        add_payload = {
-            "word": "test_put_nothing",
-            "pos_name": "noun",
-            "attributes": [
-                {
-                    "attrkey": "article",
-                    "attrvalue": "der"
-                },
-                {
-                    "attrkey": "plural",
-                    "attrvalue": "Xxxxxxxxxx"
-                },
-                {
-                    "attrkey": "definition",
-                    "attrvalue": "feelthy"
-                }
-            ]
-        }
-        r = requests.post(config.Config.BASE_URL + "/api/word", json=add_payload)
-        obj = r.json()
-        word_id = obj['word_id']
-
-        update_payload = {
-            'attributes': []
-        }
-
-        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, word_id), json=update_payload)
-        self.assertEqual(r.status_code, 200)
-
-        r = requests.get("%s/api/word/%s" % (config.Config.BASE_URL, word_id))
-        obj = r.json()
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(3, len(obj['attributes']))
-
-        r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, word_id))
         self.assertEqual(r.status_code, 200)
 
 
