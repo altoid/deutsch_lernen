@@ -178,31 +178,76 @@ SAMPLE_WORDLIST_DETAIL_RESULT = {
 }
 
 
-class APITestsWordGET(unittest.TestCase):
+class SchemaTests(unittest.TestCase):
+    """
+    checks on json schema objects are all done in one class here.
+
+    we do this because we don't want to do this in test classes that have setup and teardown methods
+    which depend on these schema definitions being correct.
+    """
+
     def test_word_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDS_SCHEMA)
 
     def test_word_sample(self):
         jsonschema.validate(SAMPLE_WORDS_RESULT, dlernen_json_schema.WORDS_SCHEMA)
 
-    # TODO:  remove this when end-to-end test is implemented
-    def test_get_word_by_id(self):
-        r = requests.get(config.Config.BASE_URL + "/api/word/14")
-        results = r.json()
-        # get request returns a single word object, but the schema validates a list of this, so fake it.
-        results = [results]
-        self.assertGreater(len(results), 0)
-        jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
-
-
-class APITestsWordPOST(unittest.TestCase):
-    # tests for all methods on /api/word
     def test_addword_payload_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA)
 
     def test_addword_payload_sample(self):
         jsonschema.validate(SAMPLE_ADDWORD_PAYLOAD, dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA)
 
+    def test_updateword_payload_schema(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
+
+    def test_updateword_payload_sample(self):
+        jsonschema.validate(SAMPLE_UPDATEWORD_PAYLOAD, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
+
+    def test_add_attributes_payload_schema(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)
+
+    def test_add_attributes_payload_sample(self):
+        jsonschema.validate(SAMPLE_ADDATTRIBUTES_PAYLOAD, dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)
+
+    def test_list_attribute_schema(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_ATTRIBUTE_SCHEMA)
+
+    def test_list_attribute_sample(self):
+        jsonschema.validate(SAMPLE_WORDLIST_ATTRIBUTE_RESULT, dlernen_json_schema.WORDLIST_ATTRIBUTE_SCHEMA)
+
+    def test_quiz_data_schema(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.QUIZ_DATA_SCHEMA)
+
+    def test_quiz_data_sample(self):
+        jsonschema.validate(SAMPLE_QUIZ_DATA_RESULT, dlernen_json_schema.QUIZ_DATA_SCHEMA)
+
+    def test_wordids_schema(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDIDS_SCHEMA)
+
+    def test_wordids_sample(self):
+        jsonschema.validate(SAMPLE_WORDIDS_RESULT, dlernen_json_schema.WORDIDS_SCHEMA)
+
+    def test_wordlist_schema(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLISTS_SCHEMA)
+
+    def test_wordlist_sample(self):
+        jsonschema.validate(SAMPLE_WORDLISTS_RESULT, dlernen_json_schema.WORDLISTS_SCHEMA)
+
+    def test_wordlist_detail_schema(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_DETAIL_SCHEMA)
+
+    def test_wordlist_detail_sample(self):
+        jsonschema.validate(SAMPLE_WORDLIST_DETAIL_RESULT, dlernen_json_schema.WORDLIST_DETAIL_SCHEMA)
+
+
+class APITestsWordGET(unittest.TestCase):
+    # TODO implement tests here
+    pass
+
+
+class APITestsWordPOST(unittest.TestCase):
+    # tests for all methods on /api/word
     # error conditions:
     # word not in payload
     def test_word_not_in_payload(self):
@@ -372,12 +417,6 @@ class APITestsWordPOST(unittest.TestCase):
 
 
 class APITestsWordPUT(unittest.TestCase):
-    def test_updateword_payload_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
-
-    def test_updateword_payload_sample(self):
-        jsonschema.validate(SAMPLE_UPDATEWORD_PAYLOAD, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
-
     # TODO:  implement tests for error conditions:
     # bullshit word id
     # missing word is ok.
@@ -385,11 +424,12 @@ class APITestsWordPUT(unittest.TestCase):
     # zero-length word
     # zero-length attribute value
     # payload not json
-
+    pass
 
 # TODO:  make sure proper cleanup happens if any assertions fail on status code values.  setup/teardown?
 
 # TODO:  wordlist tests go in their own class
+
 
 class APITestsWordEndToEnd(unittest.TestCase):
     # end-to-end test:  add a word, verify existence, update it (attr values and the word itself),
@@ -616,12 +656,6 @@ class APITestsWordEndToEnd(unittest.TestCase):
 
 
 class APITestsAttributePOST(unittest.TestCase):
-    def test_add_attributes_payload_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)
-
-    def test_add_attributes_payload_sample(self):
-        jsonschema.validate(SAMPLE_ADDATTRIBUTES_PAYLOAD, dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)
-
     # tests
     # bullshit word id
     def test_bullshit_word_id(self):
@@ -727,23 +761,11 @@ class APITestsAttributePOST(unittest.TestCase):
 
 
 class APITests(unittest.TestCase):
-    def test_list_attribute_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_ATTRIBUTE_SCHEMA)
-
-    def test_list_attribute_sample(self):
-        jsonschema.validate(SAMPLE_WORDLIST_ATTRIBUTE_RESULT, dlernen_json_schema.WORDLIST_ATTRIBUTE_SCHEMA)
-
     def test_real_list_attribute_data(self):
         url = "%s/api/list_attributes/%s" % (config.Config.DB_URL, 126)
         r = requests.get(url)
         result = json.loads(r.text)
         jsonschema.validate(result, dlernen_json_schema.WORDLIST_ATTRIBUTE_SCHEMA)
-
-    def test_quiz_data_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.QUIZ_DATA_SCHEMA)
-
-    def test_quiz_data_sample(self):
-        jsonschema.validate(SAMPLE_QUIZ_DATA_RESULT, dlernen_json_schema.QUIZ_DATA_SCHEMA)
 
     def test_real_quiz_data(self):
         url = "%s/api/quiz_data" % config.Config.DB_URL
@@ -765,12 +787,6 @@ class APITests(unittest.TestCase):
         quiz_data = json.loads(r.text)
         jsonschema.validate(quiz_data, dlernen_json_schema.QUIZ_DATA_SCHEMA)
 
-    def test_wordids_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDIDS_SCHEMA)
-
-    def test_wordids_sample(self):
-        jsonschema.validate(SAMPLE_WORDIDS_RESULT, dlernen_json_schema.WORDIDS_SCHEMA)
-
     def test_real_wordids(self):
         r = requests.get(config.Config.BASE_URL + "/api/words/article")
         results = r.json()
@@ -789,20 +805,11 @@ class APITests(unittest.TestCase):
         self.assertGreater(len(results), 0)
         jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
 
-    def test_wordlist_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLISTS_SCHEMA)
-
-    def test_wordlist_sample(self):
-        jsonschema.validate(SAMPLE_WORDLISTS_RESULT, dlernen_json_schema.WORDLISTS_SCHEMA)
-
     def test_real_wordlist(self):
         r = requests.get(config.Config.BASE_URL + "/api/wordlists")
         results = r.json()
         self.assertGreater(len(results), 0)
         jsonschema.validate(results, dlernen_json_schema.WORDLISTS_SCHEMA)
-
-    def test_wordlist_detail_sample(self):
-        jsonschema.validate(SAMPLE_WORDLIST_DETAIL_RESULT, dlernen_json_schema.WORDLIST_DETAIL_SCHEMA)
 
     def test_real_wordlist_detail(self):
         url = "%s/api/wordlist/%s" % (config.Config.DB_URL, 6)
