@@ -8,7 +8,12 @@ import random
 import string
 
 # TODO:  post-delete verification should check for status code 404
-# TODO:  passing payload to requests.post should use json= keyword, not data=
+
+SAMPLE_WORDLIST_PAYLOAD = {
+    "name": "saetuasasue",
+    "source": "anteohusntaeo",
+    "code": "n;sercisr;cih"
+}
 
 SAMPLE_ADDWORD_PAYLOAD = {
     "word": "Tag",  # required, nonempty
@@ -189,6 +194,12 @@ class SchemaTests(unittest.TestCase):
     which depend on these schema definitions being correct.
     """
 
+    def test_wordlist_schema(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_PAYLOAD_SCHEMA)
+
+    def test_wordlist_payload_samples(self):
+        jsonschema.validate(SAMPLE_WORDLIST_PAYLOAD, dlernen_json_schema.WORDLIST_PAYLOAD_SCHEMA)
+
     def test_word_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDS_SCHEMA)
 
@@ -245,7 +256,6 @@ class SchemaTests(unittest.TestCase):
 
 
 class APITestsWordPOST(unittest.TestCase):
-    # tests for all methods on /api/word
     # error conditions:
     # word not in payload
     def test_word_not_in_payload(self):
@@ -762,8 +772,9 @@ class APITestsWordEndToEnd(unittest.TestCase):
 
     # adding the same word twice is ok, should have different word ids.
     def test_add_twice(self):
+        word = "test_add_twice_%s" % ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
-            "word": "test_add_twice",
+            "word": word,
             "pos_name": "noun",
             "attributes": [
                 {
@@ -791,6 +802,11 @@ class APITestsWordEndToEnd(unittest.TestCase):
         word_id_2 = obj['word_id']
 
         self.assertNotEqual(word_id_1, word_id_2)
+
+        # get word by name
+        r = requests.get("%s/api/word/%s" % (config.Config.BASE_URL, word))
+        obj = r.json()
+        self.assertEqual(2, len(obj))
 
         r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, word_id_1))
         self.assertEqual(r.status_code, 200)
@@ -1003,29 +1019,15 @@ class APITests(unittest.TestCase):
         self.assertGreater(len(results), 0)
         jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
 
+    def test_get_word_no_match(self):
+        r = requests.get(config.Config.BASE_URL + "/api/word/anehuintaoedhunateohdu")
+        self.assertEqual(404, r.status_code)
+
     def test_get_word_by_word_partial(self):
         r = requests.get(config.Config.BASE_URL + "/api/word/geh?partial=true")
         results = r.json()
         self.assertGreater(len(results), 0)
         jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
-
-    def test_real_wordlist(self):
-        r = requests.get(config.Config.BASE_URL + "/api/wordlists")
-        results = r.json()
-        self.assertGreater(len(results), 0)
-        jsonschema.validate(results, dlernen_json_schema.WORDLISTS_SCHEMA)
-
-    def test_real_wordlist_detail(self):
-        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, 6)
-        r = requests.get(url)
-        result = r.json()
-        jsonschema.validate(result, dlernen_json_schema.WORDLIST_DETAIL_SCHEMA)
-
-    def test_unreal_wordlist_detail(self):
-        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, 6666666)
-        r = requests.get(url)
-        result = r.json()
-        self.assertFalse(bool(result))
 
     def test_quiz_data_empty_list_1(self):
         url = "%s/api/quiz_data" % config.Config.DB_URL
@@ -1085,6 +1087,38 @@ class APITests(unittest.TestCase):
         self.assertGreater(len(results), 0)
         jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
 
+
+class APIWordlist(unittest.TestCase):
+    # TODO:  wordlist tests
+    # add list
+    # update list
+    # delete list
+    # add word to list
+    # add word to list if it's there already --> noop
+    # remove word from list
+    # get all word lists
+
+    # error conditions
+    # add list with existing name
+    # add list with empty name
+    # update list with empty name
+    def test_real_wordlist(self):
+        r = requests.get(config.Config.BASE_URL + "/api/wordlists")
+        results = r.json()
+        self.assertGreater(len(results), 0)
+        jsonschema.validate(results, dlernen_json_schema.WORDLISTS_SCHEMA)
+
+    def test_real_wordlist_detail(self):
+        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, 6)
+        r = requests.get(url)
+        result = r.json()
+        jsonschema.validate(result, dlernen_json_schema.WORDLIST_DETAIL_SCHEMA)
+
+    def test_get_bullshit_wordlist_id(self):
+        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, 6666666)
+        r = requests.get(url)
+        self.assertEqual(404, r.status_code)
+
     def test_wordlist_operations_name_only(self):
         list_name = ''.join(random.choices(string.ascii_lowercase, k=20))
 
@@ -1094,7 +1128,7 @@ class APITests(unittest.TestCase):
         payload = {
             'name': list_name
         }
-        r = requests.post(create_url, data=payload)
+        r = requests.post(create_url, json=payload)
         result = json.loads(r.text)
         list_id = result['list_id']
 
@@ -1102,7 +1136,7 @@ class APITests(unittest.TestCase):
         payload = {
             'name': list_name
         }
-        r = requests.post(create_url, data=payload)
+        r = requests.post(create_url, json=payload)
         self.assertNotEqual(r.status_code, 200)
 
         # fetch it
@@ -1120,7 +1154,7 @@ class APITests(unittest.TestCase):
             'name': new_name,
             'source': source
         }
-        r = requests.put(url, data=payload)
+        r = requests.put(url, json=payload)
 
         # verify the change
 
@@ -1139,12 +1173,9 @@ class APITests(unittest.TestCase):
 
         # verify that it's gone
 
-        # TODO:  should this be 404?
         url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
         r = requests.get(url)
-        self.assertEqual(200, r.status_code)
-        result = json.loads(r.text)
-        self.assertEqual({}, result)
+        self.assertEqual(404, r.status_code)
 
         # delete it again - should do nothing
 
@@ -1158,7 +1189,7 @@ class APITests(unittest.TestCase):
         payload = {
             'name': new_name
         }
-        r = requests.post(create_url, data=payload)
+        r = requests.post(create_url, json=payload)
         self.assertEqual(200, r.status_code)
         result = json.loads(r.text)
         list_id = result['list_id']
@@ -1169,6 +1200,7 @@ class APITests(unittest.TestCase):
         r = requests.delete(url)
         self.assertEqual(200, r.status_code)
 
+    # TODO need json schema for word list payloads
     def test_wordlist_operations_empty_name(self):
         # don't allow create or update with empty name
 
@@ -1178,14 +1210,14 @@ class APITests(unittest.TestCase):
         payload = {
             'name': ''
         }
-        r = requests.post(create_url, data=payload)
-        self.assertNotEqual(200, r.status_code)
+        r = requests.post(create_url, json=payload)
+        self.assertEqual(400, r.status_code)
 
         list_name = ''.join(random.choices(string.ascii_lowercase, k=20))
         payload = {
             'name': list_name
         }
-        r = requests.post(create_url, data=payload)
+        r = requests.post(create_url, json=payload)
         self.assertEqual(200, r.status_code)
         result = json.loads(r.text)
         list_id = result['list_id']
@@ -1196,7 +1228,7 @@ class APITests(unittest.TestCase):
         payload = {
             'name': ''
         }
-        r = requests.put(url, data=payload)
+        r = requests.put(url, json=payload)
         self.assertNotEqual(r.status_code, 200)
 
         # make sure the list name wasn't changed
@@ -1211,7 +1243,6 @@ class APITests(unittest.TestCase):
         url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
         r = requests.delete(url)
         self.assertEqual(200, r.status_code)
-
 
 if __name__ == '__main__':
     unittest.main()

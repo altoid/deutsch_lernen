@@ -361,6 +361,8 @@ def get_word(word):
     one set of attributes for a given word.  ex: 'braten' is a noun
     and a verb.
 
+    URL:  /api/word/<word>    optioral ?partial={true|false}  -- default is false, meaning exact match.
+
     :param word:
     :return:
 
@@ -429,6 +431,8 @@ order by word_id, pf.sort_order
         cursor.execute(query, query_args)
         rows = cursor.fetchall()
         result = process_word_query_result(rows)
+        if not result:
+            return "no match for %s" % word, 404
 
         jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
 
@@ -743,14 +747,20 @@ def list_attributes(list_id):
 
 
 @app.route('/api/wordlist', methods=['POST'])
-def create_wordlist():
+def add_wordlist():
+    try:
+        payload = request.get_json()
+        jsonschema.validate(payload, dlernen.dlernen_json_schema.WORDLIST_PAYLOAD_SCHEMA)
+    except jsonschema.ValidationError as e:
+        return "bad payload: %s" % e.message, 400
+
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        name = request.form.get('name')
-        source = request.form.get('source')
-        code = request.form.get('code')
+        name = payload.get('name')
+        source = payload.get('source')
+        code = payload.get('code')
 
         if not name:
-            raise Exception("can't create list with empty name")
+            return "can't create list with empty name", 400
 
         # this is well-behaved if source and code are not given.
 
@@ -764,47 +774,51 @@ def create_wordlist():
             dbh.commit()
             return result
         except Exception as e:
+            pprint(e)
             cursor.execute('rollback')
-            raise e
 
 
-@app.route('/api/wordlist/<int:list_id>', methods=['GET', 'PUT', 'DELETE'])
-def wordlist_api(list_id):
-    if request.method == 'PUT':
-        name = request.form.get('name')
-        source = request.form.get('source')
-        code = request.form.get('code')
-        notes = request.form.get('notes')
+@app.route('/api/wordlist/<int:list_id>', methods=['DELETE'])
+def delete_wordlist(list_id):
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        sql = "delete from wordlist where id = %s"
+        cursor.execute(sql, (list_id,))
+        dbh.commit()
 
-        if not name:
-            raise Exception("can't set list name to be empty string")
+    return 'OK'
 
-        sql = """
-        update wordlist
-        set name = %(name)s, source = %(source)s, code = %(code)s, notes = %(notes)s
-        where id = %(list_id)s"""
 
-        args = {
-            'name': name,
-            'source': source,
-            'code': code,
-            'notes': notes,
-            'list_id': list_id
-        }
-        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            cursor.execute(sql, args)
-            dbh.commit()
+@app.route('/api/wordlist/<int:list_id>', methods=['PUT'])
+def update_wordlist(list_id):
+    name = request.form.get('name')
+    source = request.form.get('source')
+    code = request.form.get('code')
+    notes = request.form.get('notes')
 
-        return 'OK'
+    if not name:
+        raise Exception("can't set list name to be empty string")
 
-    if request.method == 'DELETE':
-        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            sql = "delete from wordlist where id = %s"
-            cursor.execute(sql, (list_id,))
-            dbh.commit()
+    sql = """
+    update wordlist
+    set name = %(name)s, source = %(source)s, code = %(code)s, notes = %(notes)s
+    where id = %(list_id)s"""
 
-        return 'OK'
+    args = {
+        'name': name,
+        'source': source,
+        'code': code,
+        'notes': notes,
+        'list_id': list_id
+    }
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        cursor.execute(sql, args)
+        dbh.commit()
 
+    return 'OK'
+
+
+@app.route('/api/wordlist/<int:list_id>')
+def get_wordlist(list_id):
     # uses WORDLIST_DETAIL_SCHEMA
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
@@ -820,7 +834,7 @@ def wordlist_api(list_id):
         cursor.execute(sql, (list_id,))
         wl_row = cursor.fetchone()
         if not wl_row:
-            return {}
+            return "wordlist %s not found" % list_id, 404
 
         code = wl_row['code'].strip()
 

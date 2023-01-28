@@ -1,5 +1,32 @@
 import jsonschema
 
+WORDLIST_PAYLOAD_SCHEMA = {
+    # can be used for add or update of a list.
+    "$id": "https://deutsch-lernen.doug/schemas/addwordlist_payload",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Payload for add wordlist",
+    "description": "Payload for add wordlist",
+    "type": "object",
+    "required": [
+        "name"
+        # others are optional
+    ],
+    "properties": {
+        "name": {
+            "type": "string",
+            "minLength": 1
+        },
+        "source": {
+            "type": "string",
+            "minLength": 1
+        },
+        "code": {
+            "type": "string",
+            "minLength": 1
+        }
+    }
+}
+
 ADDATTRIBUTES_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/addattributes_payload",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
