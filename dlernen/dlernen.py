@@ -340,7 +340,7 @@ def get_words_from_word_ids(word_ids):
 @app.route('/api/word/<int:word_id>')
 def get_word_by_id(word_id):
     """
-    returns word object, or {} if word_id not found.
+    returns word object, or 404 if word_id not found.
     """
     word_ids = [word_id]
     words = get_words_from_word_ids(word_ids)
@@ -350,7 +350,7 @@ def get_word_by_id(word_id):
     if words:
         return words[0]
 
-    return {}
+    return "word id %s not found" % word_id, 404
 
 
 @app.route('/api/word/<string:word>')
@@ -640,6 +640,7 @@ def add_attributes(word_id):
         payload = request.get_json()
         jsonschema.validate(payload, dlernen.dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)
     except jsonschema.ValidationError as e:
+        pprint(e)
         return "bad payload: %s" % e.message, 400
 
     # checks:
@@ -648,11 +649,9 @@ def add_attributes(word_id):
     # attrvalue ids exist and belong to the word
     # new attrvalues are all strings len > 0.
 
-    # pprint(payload)
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
-
             sql = """
             select attrkey, attribute_id
             from mashup_v where word_id = %(word_id)s
@@ -681,7 +680,6 @@ def add_attributes(word_id):
                 return message, 400
 
             # checks complete, let's do this
-            print("checks complete, let's do this")
             rows_to_insert = []
             attrdict = {r['attrkey']: r['attribute_id'] for r in rows}
             for a in payload['attributes']:

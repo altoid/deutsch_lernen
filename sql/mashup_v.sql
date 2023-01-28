@@ -17,7 +17,5 @@ from pos
 join pos_form pf on pos.id = pf.pos_id
 join attribute a on a.id = pf.attribute_id
 left join word w on w.pos_id = pos.id
-left join words_x_attributes_v v on v.pos_id = pos.id and v.attribute_id = a.id and v.word_id = w.id
-left join word_attribute wa on wa.attribute_id = v.attribute_id and wa.word_id = v.word_id
-
+left join word_attribute wa on wa.attribute_id = a.id and wa.word_id = w.id
 ;

@@ -7,6 +7,9 @@ from pprint import pprint
 import random
 import string
 
+# TODO:  post-delete verification should check for status code 404
+# TODO:  passing payload to requests.post should use json= keyword, not data=
+
 SAMPLE_ADDWORD_PAYLOAD = {
     "word": "Tag",  # required, nonempty
     "pos_name": "noun",  # name not id, makes existence check easier
@@ -268,7 +271,7 @@ class APITestsWordPOST(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post(config.Config.BASE_URL + "/api/word", data=payload)
+        r = requests.post(config.Config.BASE_URL + "/api/word", json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # pos not in payload
@@ -290,7 +293,7 @@ class APITestsWordPOST(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post(config.Config.BASE_URL + "/api/word", data=payload)
+        r = requests.post(config.Config.BASE_URL + "/api/word", json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # attributes not in payload
@@ -299,13 +302,13 @@ class APITestsWordPOST(unittest.TestCase):
             "word": "blahblah",
             "pos_name": "noun"
         }
-        r = requests.post(config.Config.BASE_URL + "/api/word", data=payload)
+        r = requests.post(config.Config.BASE_URL + "/api/word", json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # payload not json
     def test_payload_not_json(self):
         payload = "this is some bullshit right here"
-        r = requests.post(config.Config.BASE_URL + "/api/word", data=payload)
+        r = requests.post(config.Config.BASE_URL + "/api/word", json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # word is 0-length
@@ -328,7 +331,7 @@ class APITestsWordPOST(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post(config.Config.BASE_URL + "/api/word", data=payload)
+        r = requests.post(config.Config.BASE_URL + "/api/word", json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # pos is 0-length
@@ -351,7 +354,7 @@ class APITestsWordPOST(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post(config.Config.BASE_URL + "/api/word", data=payload)
+        r = requests.post(config.Config.BASE_URL + "/api/word", json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # attr keys are bullshit
@@ -374,7 +377,7 @@ class APITestsWordPOST(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post(config.Config.BASE_URL + "/api/word", data=payload)
+        r = requests.post(config.Config.BASE_URL + "/api/word", json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # part of speech is bullshit
@@ -397,7 +400,7 @@ class APITestsWordPOST(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post(config.Config.BASE_URL + "/api/word", data=payload)
+        r = requests.post(config.Config.BASE_URL + "/api/word", json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # 0-length attribute
@@ -412,7 +415,7 @@ class APITestsWordPOST(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post(config.Config.BASE_URL + "/api/word", data=payload)
+        r = requests.post(config.Config.BASE_URL + "/api/word", json=payload)
         self.assertNotEqual(r.status_code, 200)
 
 
@@ -424,6 +427,7 @@ class APITestsWordPUT(unittest.TestCase):
     # zero-length word
     # zero-length attribute value
     # payload not json
+
     pass
 
 # TODO:  make sure proper cleanup happens if any assertions fail on status code values.  setup/teardown?
@@ -493,8 +497,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
 
         r = requests.get("%s/api/word/%s" % (config.Config.BASE_URL, word_id))
-        obj = r.json()
-        self.assertTrue('word_id' not in obj)
+        self.assertEqual(404, r.status_code)
 
         # delete it again, should not cause error
         r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, word_id))
@@ -650,13 +653,41 @@ class APITestsWordEndToEnd(unittest.TestCase):
 
         r = requests.get("%s/api/word/%s" % (config.Config.BASE_URL, word_id))
         obj = r.json()
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(3, len(obj['attributes']))
 
         r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, word_id))
         self.assertEqual(r.status_code, 200)
 
 
 class APITestsAttributePOST(unittest.TestCase):
-    # tests
+    def setUp(self):
+        add_payload = {
+            "word": "APITestsAttributePOST",
+            "pos_name": "noun",
+            "attributes": [
+                {
+                    "attrkey": "article",
+                    "attrvalue": "der"
+                },
+                {
+                    "attrkey": "plural",
+                    "attrvalue": "Xxxxxxxxxx"
+                },
+                {
+                    "attrkey": "definition",
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+
+        r = requests.post("%s/api/word" % config.Config.BASE_URL, json=add_payload)
+        obj = r.json()
+        self.word_id = obj['word_id']
+
+    def tearDown(self):
+        requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id))
+
     # bullshit word id
     def test_bullshit_word_id(self):
         payload = {
@@ -675,14 +706,14 @@ class APITestsAttributePOST(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, 66666666), data=payload)
+        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, 66666666), json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # attributes keyword missing
     def test_attributes_keyword_missing(self):
         payload = {
         }
-        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, 66666666), data=payload)
+        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, self.word_id), json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # attrkey keyword missing
@@ -694,7 +725,7 @@ class APITestsAttributePOST(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, 66666666), data=payload)
+        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, self.word_id), json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # attrvalue keyword missing
@@ -706,13 +737,13 @@ class APITestsAttributePOST(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, 66666666), data=payload)
+        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, self.word_id), json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # payload not JSON
     def test_payload_not_json(self):
         payload = "bullshit payload"
-        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, 66666666), data=payload)
+        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, self.word_id), json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # attrkeys wrong for word/pos
@@ -733,7 +764,7 @@ class APITestsAttributePOST(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, 66666666), data=payload)
+        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, self.word_id), json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # zero-length attribute values
@@ -754,10 +785,44 @@ class APITestsAttributePOST(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, 66666666), data=payload)
+        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, self.word_id), json=payload)
         self.assertNotEqual(r.status_code, 200)
 
-    # TODO: empty attribute list is ok.
+    def test_adding_more_values(self):
+        # test that adding additional attribute values is well-behaved
+
+        payload = {
+            "attributes": [
+                {
+                    "attrkey": "article",
+                    "attrvalue": "dee"
+                },
+                {
+                    "attrkey": "plural",
+                    "attrvalue": "Xxxxxxxxxx_another"
+                },
+                {
+                    "attrkey": "definition",
+                    "attrvalue": "feelthier"
+                }
+            ]
+        }
+        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, self.word_id), json=payload)
+        self.assertEqual(200, r.status_code)
+
+        r = requests.get("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id))
+        obj = r.json()
+        self.assertEqual(6, len(obj['attributes']))
+
+        test_dict = {}
+        for a in obj['attributes']:
+            if a['attrkey'] not in test_dict:
+                test_dict[a['attrkey']] = set()
+            test_dict[a['attrkey']].add(a['attrvalue'])
+
+        self.assertEqual({'der', 'dee'}, test_dict['article'])
+        self.assertEqual({'Xxxxxxxxxx', 'Xxxxxxxxxx_another'}, test_dict['plural'])
+        self.assertEqual({'feelthy', 'feelthier'}, test_dict['definition'])
 
 
 class APITests(unittest.TestCase):
@@ -922,6 +987,7 @@ class APITests(unittest.TestCase):
 
         url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
         r = requests.get(url)
+        self.assertEqual(200, r.status_code)
         result = json.loads(r.text)
         self.assertEqual(result['name'], new_name)
         self.assertEqual(result['source'], source)
@@ -930,11 +996,14 @@ class APITests(unittest.TestCase):
 
         url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
         r = requests.delete(url)
+        self.assertEqual(200, r.status_code)
 
         # verify that it's gone
 
+        # TODO:  should this be 404?
         url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
         r = requests.get(url)
+        self.assertEqual(200, r.status_code)
         result = json.loads(r.text)
         self.assertEqual({}, result)
 
