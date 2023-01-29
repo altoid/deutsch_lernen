@@ -1216,6 +1216,8 @@ class APIWordlist(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         obj = r.json()
         # pprint(obj)
+        for k in update_payload.keys():
+            self.assertEqual(update_payload[k], obj[k])
 
         # delete it
         r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))

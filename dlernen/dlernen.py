@@ -996,37 +996,27 @@ def update_wordlist(list_id):
             }
 
             cursor.execute('start transaction')
-            if name:
-                sql = """
-                update wordlist
-                set name = %(name)s
-                where id = %(list_id)s
-                """
-                cursor.execute(sql, update_args)
-
-            if citation:
-                sql = """
-                update wordlist
-                set citation = %(citation)s
-                where id = %(list_id)s
-                """
-                cursor.execute(sql, update_args)
-
-            if notes:
-                sql = """
-                update wordlist
-                set notes = %(notes)s
-                where id = %(list_id)s
-                """
-                cursor.execute(sql, update_args)
-
-            if sqlcode:
-                sql = """
-                update wordlist
-                set sqlcode = %(sqlcode)s
-                where id = %(list_id)s
-                """
-                cursor.execute(sql, update_args)
+            sql = """
+            update wordlist
+            set `name` = case when %(name)s is not null and length(%(name)s) > 0
+                then %(name)s
+                else name
+            end,
+            citation = case when %(citation)s is not null and length(%(citation)s) > 0
+                then %(citation)s
+                else citation
+            end,
+            sqlcode = case when %(sqlcode)s is not null and length(%(sqlcode)s) > 0
+                then %(sqlcode)s
+                else sqlcode
+            end,
+            notes = case when %(notes)s is not null and length(%(notes)s) > 0
+                then %(notes)s
+                else notes
+            end
+            where id = %(list_id)s
+            """
+            cursor.execute(sql, update_args)
 
             cursor.execute('commit')
 
