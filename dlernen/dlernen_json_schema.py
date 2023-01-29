@@ -312,19 +312,19 @@ WORDLIST_METADATA_SCHEMA = {
     "required": [
         "id",
         "name",
-        "code",
-        "source"
+        "sqlcode",
+        "citation"
     ],
     "properties": {
         "name": {
             "type": "string",
             "minLength": 1
         },
-        "code": {
+        "sqlcode": {
             "type": "string",
             "minLength": 0
         },
-        "source": {
+        "citation": {
             "type": "string",
             "minLength": 0
         },

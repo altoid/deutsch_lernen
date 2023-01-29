@@ -1190,6 +1190,37 @@ class APIWordlist(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
 
     # update list
+    def test_update_list(self):
+        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=add_payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        update_payload = {
+            'name': list_name + "__RENAMED",
+            'notes': 'notes here',
+            'sqlcode': 'select id word_id from word where id = 100',
+            'citation': 'some article'
+        }
+
+        r = requests.put("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id), json=update_payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+
+        r = requests.get("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+        # pprint(obj)
+
+        # delete it
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 200)
+
     # add word to list
     def test_add_word_to_list(self):
         pass
@@ -1198,6 +1229,7 @@ class APIWordlist(unittest.TestCase):
     # remove word by word from list -> removes from unknown
     # remove word by id from list
     # update list with empty payload --> noop
+    # create smart list and update every field
 
     # TODO error conditions
     # add list with existing name
@@ -1243,7 +1275,7 @@ class APIWordlist(unittest.TestCase):
     def test_add_code_to_dumb_list(self):
         # not allowed
         pass
-    
+
     # add words to smart list --> not allowed.
     # remove words from smart list --> error
     # get with bullshit wordlist id

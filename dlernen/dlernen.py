@@ -862,17 +862,17 @@ def add_wordlist():
         return "bad payload: %s" % e.message, 400
 
     name = payload.get('name')
-    source = payload.get('source')
-    code = payload.get('code')
+    citation = payload.get('citation')
+    sqlcode = payload.get('sqlcode')
     notes = payload.get('notes')
     words = payload.get('words')
 
-    if code is not None:
-        code = code.strip()
+    if sqlcode is not None:
+        sqlcode = sqlcode.strip()
     if name is not None:
         name = name.strip()
-    if source is not None:
-        source = source.strip()
+    if citation is not None:
+        citation = citation.strip()
     if words is not None:
         words = [w.strip() for w in words]
         words = set(filter(lambda x: bool(x), words))
@@ -880,16 +880,16 @@ def add_wordlist():
     if not name:
         return "can't create list with empty name", 400
 
-    if code and words:
-        return "can't create list with code and words", 400
+    if sqlcode and words:
+        return "can't create list with sqlcode and words", 400
 
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        # this is well-behaved if source and code are not given.
+        # this is well-behaved if citation and sqlcode are not given.
 
         try:
             cursor.execute('start transaction')
             sql = "insert into wordlist (`name`, `citation`, `sqlcode`, `notes`) values (%s, %s, %s, %s)"
-            cursor.execute(sql, (name, source, code, notes))
+            cursor.execute(sql, (name, citation, sqlcode, notes))
             cursor.execute("select last_insert_id() list_id")
             result = cursor.fetchone()
             list_id = result['list_id']
@@ -955,31 +955,89 @@ def delete_wordlist(list_id):
 
 @app.route('/api/wordlist/<int:list_id>', methods=['PUT'])
 def update_wordlist(list_id):
-    name = request.form.get('name')
-    source = request.form.get('source')
-    code = request.form.get('code')
-    notes = request.form.get('notes')
+    try:
+        payload = request.get_json()
+        jsonschema.validate(payload, dlernen.dlernen_json_schema.WORDLIST_PAYLOAD_SCHEMA)
+    except jsonschema.ValidationError as e:
+        return "bad payload: %s" % e.message, 400
 
-    if not name:
-        raise Exception("can't set list name to be empty string")
+    name = payload.get('name')
+    citation = payload.get('citation')
+    sqlcode = payload.get('sqlcode')
+    notes = payload.get('notes')
+    words = payload.get('words')
 
-    sql = """
-    update wordlist
-    set name = %(name)s, source = %(source)s, code = %(code)s, notes = %(notes)s
-    where id = %(list_id)s"""
+    if sqlcode is not None:
+        sqlcode = sqlcode.strip()
+    if name is not None:
+        name = name.strip()
+    if citation is not None:
+        citation = citation.strip()
+    if words is not None:
+        words = [w.strip() for w in words]
+        words = set(filter(lambda x: bool(x), words))
 
-    args = {
-        'name': name,
-        'source': source,
-        'code': code,
-        'notes': notes,
-        'list_id': list_id
-    }
+    if sqlcode and words:
+        return "can't modify list with sqlcode and words", 400
+
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        cursor.execute(sql, args)
-        dbh.commit()
+        # this is well-behaved if citation and sqlcode are not given.
+        cursor.execute('start transaction')
 
-    return 'OK'
+        # TODO have to get by id so we know whether this is a smart list
+
+        try:
+            update_args = {
+                'citation': citation,
+                'notes': notes,
+                'name': name,
+                'sqlcode': sqlcode,
+                'list_id': list_id
+            }
+
+            cursor.execute('start transaction')
+            if name:
+                sql = """
+                update wordlist
+                set name = %(name)s
+                where id = %(list_id)s
+                """
+                cursor.execute(sql, update_args)
+
+            if citation:
+                sql = """
+                update wordlist
+                set citation = %(citation)s
+                where id = %(list_id)s
+                """
+                cursor.execute(sql, update_args)
+
+            if notes:
+                sql = """
+                update wordlist
+                set notes = %(notes)s
+                where id = %(list_id)s
+                """
+                cursor.execute(sql, update_args)
+
+            if sqlcode:
+                sql = """
+                update wordlist
+                set sqlcode = %(sqlcode)s
+                where id = %(list_id)s
+                """
+                cursor.execute(sql, update_args)
+
+            cursor.execute('commit')
+
+            return get_wordlist(list_id)
+        except Exception as e:
+            pprint(e)
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            cursor.execute('rollback')
+            return "create list failed", 500
 
 
 @app.route('/wordlist/<int:list_id>')
