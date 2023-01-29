@@ -1132,7 +1132,7 @@ with wordlist_counts as
     ) a
     group by wordlist_id
 )
-select name, id wordlist_id, ifnull(lcount, 0) count, code
+select name, id wordlist_id, ifnull(lcount, 0) count, sqlcode
 from wordlist
 left join wordlist_counts wc on wc.wordlist_id = wordlist.id
 %(where_clause)s
@@ -1151,9 +1151,9 @@ order by name
             # TODO - the connector is returning the count as a string, find out WTF
 
             list_type = 'empty'
-            if bool(r['code']):
+            if bool(r['sqlcode']):
                 list_type = 'smart'
-            elif count > 0:
+            elif r['count'] > 0:
                 list_type = 'standard'
 
             dict_result[r['wordlist_id']] = {}
@@ -1162,8 +1162,8 @@ order by name
             dict_result[r['wordlist_id']]['list_type'] = list_type
             dict_result[r['wordlist_id']]['count'] = int(r['count'])
 
-            if r['code']:
-                cursor.execute(r['code'])
+            if r['sqlcode']:
+                cursor.execute(r['sqlcode'])
                 smartlist_rows = cursor.fetchall()
                 dict_result[r['wordlist_id']]['count'] = len(smartlist_rows)
 
@@ -1193,20 +1193,20 @@ def get_wordlists_for_word(word_id):
         # find smart lists that this word is in!
         # get all the sql
         sql = """
-        select name, code, id list_id
+        select name, sqlcode, id list_id
         from wordlist
-        where code is not null
+        where sqlcode is not null
         """
 
         smart_lists = []
         cursor.execute(sql)
         code_results = cursor.fetchall()
         for r in code_results:
-            code = r['code'].strip()
+            code = r['sqlcode'].strip()
             if not code:
                 continue
 
-            cursor.execute(r['code'])
+            cursor.execute(r['sqlcode'])
             results_for_list = cursor.fetchall()
             results_for_list = [x['word_id'] for x in results_for_list]
             if word_id in results_for_list:
@@ -1225,6 +1225,7 @@ def get_wordlists_for_word(word_id):
             result = json.loads(r.text)
             result = sorted(result, key=lambda x: x['name'].casefold())
 
+        # TODO - validate the results against json schema object
         return result
 
 
