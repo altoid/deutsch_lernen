@@ -12,7 +12,13 @@ import string
 SAMPLE_WORDLIST_PAYLOAD = {
     "name": "saetuasasue",
     "source": "anteohusntaeo",
-    "code": "n;sercisr;cih"
+    "code": "n;sercisr;cih",
+    "notes": "aoeuaoeu",
+    "words": [
+        "bla",
+        "bazz",
+        "whee"
+    ]
 }
 
 SAMPLE_ADDWORD_PAYLOAD = {
@@ -197,8 +203,11 @@ class SchemaTests(unittest.TestCase):
     def test_wordlist_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_PAYLOAD_SCHEMA)
 
-    def test_wordlist_payload_samples(self):
+    def test_wordlist_payload_sample(self):
         jsonschema.validate(SAMPLE_WORDLIST_PAYLOAD, dlernen_json_schema.WORDLIST_PAYLOAD_SCHEMA)
+
+    def test_wordlist_empty_payload(self):
+        jsonschema.validate({}, dlernen_json_schema.WORDLIST_PAYLOAD_SCHEMA)
 
     def test_word_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDS_SCHEMA)
@@ -225,10 +234,10 @@ class SchemaTests(unittest.TestCase):
         jsonschema.validate(SAMPLE_ADDATTRIBUTES_PAYLOAD, dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)
 
     def test_list_attribute_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_ATTRIBUTE_SCHEMA)
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_METADATA_SCHEMA)
 
     def test_list_attribute_sample(self):
-        jsonschema.validate(SAMPLE_WORDLIST_ATTRIBUTE_RESULT, dlernen_json_schema.WORDLIST_ATTRIBUTE_SCHEMA)
+        jsonschema.validate(SAMPLE_WORDLIST_ATTRIBUTE_RESULT, dlernen_json_schema.WORDLIST_METADATA_SCHEMA)
 
     def test_quiz_data_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.QUIZ_DATA_SCHEMA)
@@ -249,10 +258,10 @@ class SchemaTests(unittest.TestCase):
         jsonschema.validate(SAMPLE_WORDLISTS_RESULT, dlernen_json_schema.WORDLISTS_SCHEMA)
 
     def test_wordlist_detail_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_DETAIL_SCHEMA)
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_SCHEMA)
 
     def test_wordlist_detail_sample(self):
-        jsonschema.validate(SAMPLE_WORDLIST_DETAIL_RESULT, dlernen_json_schema.WORDLIST_DETAIL_SCHEMA)
+        jsonschema.validate(SAMPLE_WORDLIST_DETAIL_RESULT, dlernen_json_schema.WORDLIST_SCHEMA)
 
 
 class APITestsWordPOST(unittest.TestCase):
@@ -985,7 +994,7 @@ class APITests(unittest.TestCase):
         url = "%s/api/list_attributes/%s" % (config.Config.DB_URL, 126)
         r = requests.get(url)
         result = json.loads(r.text)
-        jsonschema.validate(result, dlernen_json_schema.WORDLIST_ATTRIBUTE_SCHEMA)
+        jsonschema.validate(result, dlernen_json_schema.WORDLIST_METADATA_SCHEMA)
 
     def test_real_quiz_data(self):
         url = "%s/api/quiz_data" % config.Config.DB_URL
@@ -1088,32 +1097,156 @@ class APITests(unittest.TestCase):
         jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
 
 
-class APIWordlist(unittest.TestCase):
-    # TODO:  wordlist tests
-    # add list
-    # update list
-    # delete list
-    # add word to list
-    # add word to list if it's there already --> noop
-    # remove word from list
-    # get all word lists
-
-    # error conditions
-    # add list with existing name
-    # add list with empty name
-    # update list with empty name
+class APIWordlists(unittest.TestCase):
+    # TODO - flesh this out
+    # get all wordlists
     def test_real_wordlist(self):
         r = requests.get(config.Config.BASE_URL + "/api/wordlists")
         results = r.json()
         self.assertGreater(len(results), 0)
         jsonschema.validate(results, dlernen_json_schema.WORDLISTS_SCHEMA)
 
-    def test_real_wordlist_detail(self):
-        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, 6)
-        r = requests.get(url)
-        result = r.json()
-        jsonschema.validate(result, dlernen_json_schema.WORDLIST_DETAIL_SCHEMA)
 
+class APIWordlist(unittest.TestCase):
+    # TODO:  wordlist tests
+    # add list with no words, just a name
+    def test_create_empty_list(self):
+        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        payload = {
+            'name': list_name
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        # do a GET - known and unknown lists should be empty
+        r = requests.get("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+
+        # delete it
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 200)
+
+        # do a GET - should be gone
+        r = requests.get("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 404)
+
+    # add list with everything, incl. known and unknown words
+    def test_create_dumb_list(self):
+        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        payload = {
+            'name': list_name,
+            'words': [
+                'werfen', # known
+                'natehdnaoehu' # unknown, hopefully
+            ],
+            'notes': 'important notes',
+            'citation': 'confidential'
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        r = requests.get("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+
+        self.assertEqual(1, len(obj['known_words']))
+        self.assertEqual(1, len(obj['unknown_words']))
+        self.assertFalse(obj['is_smart'])
+
+        # delete it
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 200)
+
+    # add smart list with everything
+    def test_create_smart_list(self):
+        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        payload = {
+            'name': list_name,
+            'notes': 'important notes',
+            'source': 'confidential',
+            'sqlcode': 'mumble'
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        r = requests.get("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+
+        # self.assertTrue(obj['is_smart'])
+
+        # delete it
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 200)
+
+    # update list
+    # add word to list
+    def test_add_word_to_list(self):
+        pass
+
+    # add word to list if it's there already --> noop
+    # remove word by word from list -> removes from unknown
+    # remove word by id from list
+    # update list with empty payload --> noop
+
+    # TODO error conditions
+    # add list with existing name
+    def test_add_existing_name(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        payload = {
+            'name': list_name
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=payload)
+        self.assertEqual(r.status_code, 500)
+
+        # delete it
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 200)
+
+    # add list with empty name
+    def test_add_empty_name(self):
+        list_name = " "
+        payload = {
+            'name': list_name
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=payload)
+        self.assertEqual(r.status_code, 400)
+
+    # add list with empty payload
+    def test_add_empty_payload(self):
+        payload = {
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=payload)
+        self.assertEqual(r.status_code, 400)
+
+    # update list with empty name
+    # add list with code and words --> only one is allowed.
+    # add code to dumb list --> not allowed.
+    def test_add_code_to_dumb_list(self):
+        # not allowed
+        pass
+    
+    # add words to smart list --> not allowed.
+    # remove words from smart list --> error
+    # get with bullshit wordlist id
     def test_get_bullshit_wordlist_id(self):
         url = "%s/api/wordlist/%s" % (config.Config.DB_URL, 6666666)
         r = requests.get(url)
@@ -1152,7 +1285,7 @@ class APIWordlist(unittest.TestCase):
         source = "confidential"
         payload = {
             'name': new_name,
-            'source': source
+            'citation': source
         }
         r = requests.put(url, json=payload)
 
@@ -1163,7 +1296,7 @@ class APIWordlist(unittest.TestCase):
         self.assertEqual(200, r.status_code)
         result = json.loads(r.text)
         self.assertEqual(result['name'], new_name)
-        self.assertEqual(result['source'], source)
+        self.assertEqual(result['citation'], source)
 
         # delete the list
 
@@ -1243,6 +1376,7 @@ class APIWordlist(unittest.TestCase):
         url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
         r = requests.delete(url)
         self.assertEqual(200, r.status_code)
+
 
 if __name__ == '__main__':
     unittest.main()

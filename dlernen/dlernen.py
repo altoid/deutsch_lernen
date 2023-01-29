@@ -1,4 +1,3 @@
-import werkzeug.exceptions
 from flask import Flask, request, render_template, redirect, url_for
 from pprint import pprint
 from mysql.connector import connect
@@ -9,9 +8,13 @@ import json
 from contextlib import closing
 import dlernen.dlernen_json_schema
 import jsonschema
+import sys
+import os
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# TODO strip strings before storing in DB
 
 
 def chunkify(arr, **kwargs):
@@ -449,7 +452,9 @@ def add_word():
 
     # checks:
     # - pos_name is valid
+    # - word is valid (nonempty when stripped)
     # - attrkeys are valid for the POS
+    # - attrvalues are not degenerate
     # note:  adding a word with no attributes is allowed
 
     #pprint(payload)
@@ -462,8 +467,13 @@ def add_word():
             where pos_name = %(pos_name)s
             """
 
+            pos_name = payload['pos_name'].strip()
+            word = payload['word'].strip()
+            if not word:
+                return "word cannot be empty string", 400
+
             d = {
-                'pos_name': payload['pos_name']
+                'pos_name': pos_name
             }
 
             cursor.execute(check_sql, d)
@@ -479,24 +489,34 @@ def add_word():
             pos_id = rows[0]['pos_id']
             defined_attrkeys = set(attrdict.keys())
 
-            request_attrkeys = {a['attrkey'] for a in payload['attributes']}
+            request_attrkeys = {a['attrkey'].strip() for a in payload['attributes']}
             undefined_attrkeys = request_attrkeys - defined_attrkeys
             if len(undefined_attrkeys) > 0:
                 message = "attribute keys not defined:  %s" % ', '.join(list(undefined_attrkeys))
                 cursor.execute('rollback')
                 return message, 400
 
+            # check that attrvalues are all strings len > 0
+            payload_attrvalues = {a['attrvalue'].strip() for a in payload['attributes']}
+            bad_attrvalues = list(filter(lambda x: not bool(x), payload_attrvalues))
+            if len(bad_attrvalues) > 0:
+                message = "attribute values cannot be empty strings"
+                cursor.execute('rollback')
+                return message, 400
+
             sql = "insert into word (word, pos_id) values (%s, %s)"
-            cursor.execute(sql, (payload['word'], pos_id))
+            cursor.execute(sql, (word, pos_id))
             cursor.execute("select last_insert_id() word_id")
             result = cursor.fetchone()
             word_id = result['word_id']
 
             for a in payload['attributes']:
+                attrvalue = a['attrvalue'].strip()
+
                 link_d = {
                     "word_id": word_id,
                     "attribute_id": attrdict[a['attrkey']],
-                    "attrvalue": a['attrvalue']
+                    "attrvalue": attrvalue
                 }
 
                 sql = """insert into word_attribute (word_id, attribute_id, attrvalue)
@@ -557,13 +577,13 @@ def update_word(word_id):
 
             word = None
             if 'word' in payload:
-                word = payload['word']
+                word = payload['word'].strip()
             if word == '':
                 message = 'word cannot be empty string'
                 return message, 400
 
             # check that attrvalues are all strings len > 0
-            payload_attrvalues = {a['attrvalue'] for a in payload['attributes']}
+            payload_attrvalues = {a['attrvalue'].strip() for a in payload['attributes']}
             bad_attrvalues = list(filter(lambda x: not bool(x), payload_attrvalues))
             if len(bad_attrvalues) > 0:
                 message = "attribute values cannot be empty strings"
@@ -590,7 +610,7 @@ def update_word(word_id):
             """
             for a in payload['attributes']:
                 d = {
-                    'attrvalue': a['attrvalue'],
+                    'attrvalue': a['attrvalue'].strip(),
                     'attrvalue_id': a['attrvalue_id']
                 }
                 cursor.execute(sql, d)
@@ -667,7 +687,7 @@ def add_attributes(word_id):
                 return "no such word id:  %s" % word_id, 400
 
             defined_attrkeys = {r['attrkey'] for r in rows}
-            payload_attrkeys = {a['attrkey'] for a in payload['attributes']}
+            payload_attrkeys = {a['attrkey'].strip() for a in payload['attributes']}
 
             undefined_attrkeys = payload_attrkeys - defined_attrkeys
             if len(undefined_attrkeys) > 0:
@@ -676,7 +696,7 @@ def add_attributes(word_id):
                 cursor.execute('rollback')
                 return message, 400
 
-            payload_attrvalues = [a['attrvalue'] for a in payload['attributes']]
+            payload_attrvalues = [a['attrvalue'].strip() for a in payload['attributes']]
             bad_attrvalues = list(filter(lambda x: not bool(x), payload_attrvalues))
             if len(bad_attrvalues) > 0:
                 message = "attribute values cannot be empty strings"
@@ -687,7 +707,7 @@ def add_attributes(word_id):
             rows_to_insert = []
             attrdict = {r['attrkey']: r['attribute_id'] for r in rows}
             for a in payload['attributes']:
-                t = (attrdict[a['attrkey']], word_id, a['attrvalue'])
+                t = (attrdict[a['attrkey']], word_id, a['attrvalue'].strip())
                 rows_to_insert.append(t)
 
             if rows_to_insert:
@@ -732,7 +752,7 @@ def get_list_attributes(list_id):
         cursor.execute(sql, (list_id,))
         wl_row = cursor.fetchone()
 
-        jsonschema.validate(wl_row, dlernen.dlernen_json_schema.WORDLIST_ATTRIBUTE_SCHEMA)
+        jsonschema.validate(wl_row, dlernen.dlernen_json_schema.WORDLIST_METADATA_SCHEMA)
 
         return wl_row
 
@@ -746,88 +766,17 @@ def list_attributes(list_id):
     return render_template('list_attributes.html', wl_row=result)
 
 
-@app.route('/api/wordlist', methods=['POST'])
-def add_wordlist():
-    try:
-        payload = request.get_json()
-        jsonschema.validate(payload, dlernen.dlernen_json_schema.WORDLIST_PAYLOAD_SCHEMA)
-    except jsonschema.ValidationError as e:
-        return "bad payload: %s" % e.message, 400
-
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        name = payload.get('name')
-        source = payload.get('source')
-        code = payload.get('code')
-
-        if not name:
-            return "can't create list with empty name", 400
-
-        # this is well-behaved if source and code are not given.
-
-        try:
-            cursor.execute('start transaction')
-
-            sql = "insert into wordlist (name, source, code) values (%s, %s, %s)"
-            cursor.execute(sql, (name, source, code))
-            cursor.execute("select last_insert_id() list_id")
-            result = cursor.fetchone()
-            dbh.commit()
-            return result
-        except Exception as e:
-            pprint(e)
-            cursor.execute('rollback')
-
-
-@app.route('/api/wordlist/<int:list_id>', methods=['DELETE'])
-def delete_wordlist(list_id):
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        sql = "delete from wordlist where id = %s"
-        cursor.execute(sql, (list_id,))
-        dbh.commit()
-
-    return 'OK'
-
-
-@app.route('/api/wordlist/<int:list_id>', methods=['PUT'])
-def update_wordlist(list_id):
-    name = request.form.get('name')
-    source = request.form.get('source')
-    code = request.form.get('code')
-    notes = request.form.get('notes')
-
-    if not name:
-        raise Exception("can't set list name to be empty string")
-
-    sql = """
-    update wordlist
-    set name = %(name)s, source = %(source)s, code = %(code)s, notes = %(notes)s
-    where id = %(list_id)s"""
-
-    args = {
-        'name': name,
-        'source': source,
-        'code': code,
-        'notes': notes,
-        'list_id': list_id
-    }
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        cursor.execute(sql, args)
-        dbh.commit()
-
-    return 'OK'
-
-
 @app.route('/api/wordlist/<int:list_id>')
 def get_wordlist(list_id):
-    # uses WORDLIST_DETAIL_SCHEMA
+    # uses WORDLIST_SCHEMA
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
         select
             id wordlist_id,
             name,
-            source,
+            citation,
             ifnull(notes, '') notes,
-            ifnull(code, '') code
+            ifnull(sqlcode, '') sqlcode
         from wordlist
         where id = %s
         """
@@ -836,10 +785,10 @@ def get_wordlist(list_id):
         if not wl_row:
             return "wordlist %s not found" % list_id, 404
 
-        code = wl_row['code'].strip()
+        code = wl_row['sqlcode'].strip()
 
         result = dict(wl_row)
-        result['source_is_url'] = result['source'].startswith('http') if result['source'] else False
+        result['source_is_url'] = result['citation'].startswith('http') if result['citation'] else False
         result['is_smart'] = bool(code)
 
         if code:
@@ -899,9 +848,138 @@ def get_wordlist(list_id):
         unknown_words = [x['word'] for x in unknown_words]
 
         result['unknown_words'] = unknown_words
-        jsonschema.validate(result, dlernen.dlernen_json_schema.WORDLIST_DETAIL_SCHEMA)
+        jsonschema.validate(result, dlernen.dlernen_json_schema.WORDLIST_SCHEMA)
 
         return result
+
+
+@app.route('/api/wordlist', methods=['POST'])
+def add_wordlist():
+    try:
+        payload = request.get_json()
+        jsonschema.validate(payload, dlernen.dlernen_json_schema.WORDLIST_PAYLOAD_SCHEMA)
+    except jsonschema.ValidationError as e:
+        return "bad payload: %s" % e.message, 400
+
+    name = payload.get('name')
+    source = payload.get('source')
+    code = payload.get('code')
+    notes = payload.get('notes')
+    words = payload.get('words')
+
+    if code is not None:
+        code = code.strip()
+    if name is not None:
+        name = name.strip()
+    if source is not None:
+        source = source.strip()
+    if words is not None:
+        words = [w.strip() for w in words]
+        words = set(filter(lambda x: bool(x), words))
+
+    if not name:
+        return "can't create list with empty name", 400
+
+    if code and words:
+        return "can't create list with code and words", 400
+
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        # this is well-behaved if source and code are not given.
+
+        try:
+            cursor.execute('start transaction')
+            sql = "insert into wordlist (`name`, `citation`, `sqlcode`, `notes`) values (%s, %s, %s, %s)"
+            cursor.execute(sql, (name, source, code, notes))
+            cursor.execute("select last_insert_id() list_id")
+            result = cursor.fetchone()
+            list_id = result['list_id']
+
+            # figure out which words are known and not known
+            if words:
+                arglist = list(words)
+                format_list = ['%s'] * len(arglist)
+                format_list = ', '.join(format_list)
+
+                sql = """
+                select distinct id word_id, word
+                from word
+                where word in (%s)
+                """ % format_list
+
+                cursor.execute(sql, arglist)
+                rows = cursor.fetchall()
+                known_words = {x['word'] for x in rows}
+                unknown_words = words - known_words
+                wkw_tuples = [(list_id, r['word_id']) for r in rows]
+                if wkw_tuples:
+                    ins_sql = """
+                    insert ignore into wordlist_known_word (wordlist_id, word_id)
+                    values (%s, %s)
+                    """
+                    cursor.executemany(ins_sql, wkw_tuples)
+
+                if unknown_words:
+                    ins_sql = """
+                    insert ignore into wordlist_unknown_word (wordlist_id, word)
+                    values (%s, %s)
+                    """
+                    wuw_tuples = [(list_id, x) for x in unknown_words]
+                    cursor.executemany(ins_sql, wuw_tuples)
+
+            cursor.execute('commit')
+
+            return get_wordlist(list_id)
+        except Exception as e:
+            pprint(e)
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            cursor.execute('rollback')
+            return "create list failed", 500
+
+
+@app.route('/api/wordlist/<int:list_id>', methods=['DELETE'])
+def delete_wordlist(list_id):
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        try:
+            cursor.execute('start transaction')
+            sql = "delete from wordlist where id = %s"
+            cursor.execute(sql, (list_id,))
+            cursor.execute('commit')
+            return "OK"
+        except Exception as e:
+            pprint(e)
+            cursor.execute('rollback')
+            return "delete list failed", 500
+
+
+@app.route('/api/wordlist/<int:list_id>', methods=['PUT'])
+def update_wordlist(list_id):
+    name = request.form.get('name')
+    source = request.form.get('source')
+    code = request.form.get('code')
+    notes = request.form.get('notes')
+
+    if not name:
+        raise Exception("can't set list name to be empty string")
+
+    sql = """
+    update wordlist
+    set name = %(name)s, source = %(source)s, code = %(code)s, notes = %(notes)s
+    where id = %(list_id)s"""
+
+    args = {
+        'name': name,
+        'source': source,
+        'code': code,
+        'notes': notes,
+        'list_id': list_id
+    }
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        cursor.execute(sql, args)
+        dbh.commit()
+
+    return 'OK'
 
 
 @app.route('/wordlist/<int:list_id>')

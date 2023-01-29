@@ -1,32 +1,5 @@
 import jsonschema
 
-WORDLIST_PAYLOAD_SCHEMA = {
-    # can be used for add or update of a list.
-    "$id": "https://deutsch-lernen.doug/schemas/addwordlist_payload",
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Payload for add wordlist",
-    "description": "Payload for add wordlist",
-    "type": "object",
-    "required": [
-        "name"
-        # others are optional
-    ],
-    "properties": {
-        "name": {
-            "type": "string",
-            "minLength": 1
-        },
-        "source": {
-            "type": "string",
-            "minLength": 1
-        },
-        "code": {
-            "type": "string",
-            "minLength": 1
-        }
-    }
-}
-
 ADDATTRIBUTES_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/addattributes_payload",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
@@ -292,7 +265,46 @@ WORDLISTS_SCHEMA = {
     }
 }
 
-WORDLIST_ATTRIBUTE_SCHEMA = {
+WORDLIST_PAYLOAD_SCHEMA = {
+    # can be used for add or update of a list.
+    "$id": "https://deutsch-lernen.doug/schemas/addwordlist_payload",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Payload for add wordlist",
+    "description": "Payload for add wordlist",
+    "type": "object",
+    "required": [
+        # haha, none are required.  string values must be at least 1 char if provided.
+        # for creating a word list a name is of course required, but we will check that
+        # in code, not here.
+    ],
+    "properties": {
+        "name": {
+            "type": "string",
+            "minLength": 1
+        },
+        "citation": {
+            "type": "string",
+            "minLength": 1
+        },
+        "notes": {
+            "type": "string",
+            "minLength": 1
+        },
+        "sqlcode": {
+            "type": "string",
+            "minLength": 1
+        },
+        "words": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "minLength": 1
+            }
+        }
+    }
+}
+
+WORDLIST_METADATA_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
     "description": "wordlist and basic properties, optionally with word_ids",
@@ -323,17 +335,12 @@ WORDLIST_ATTRIBUTE_SCHEMA = {
     }
 }
 
-WORDLIST_DETAIL_SCHEMA = {
+WORDLIST_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
     "description": "wordlist and basic properties, optionally with word_ids",
     "type": "object",
     "properties": {
-        # name
-        # list_id
-        # count
-        # whether it is a smart word list
-        # optional:  list of word ids.
         "name": {
             "type": "string",
             "minLength": 1
@@ -345,7 +352,10 @@ WORDLIST_DETAIL_SCHEMA = {
         "is_smart": {
             "type": "boolean"
         },
-        "source": {
+        "citation": {
+            "type": ["string", "null"]
+        },
+        "notes": {
             "type": ["string", "null"]
         },
         "source_is_url": {
@@ -383,8 +393,16 @@ WORDLIST_DETAIL_SCHEMA = {
             }
         }
     },
-    "required": ["name", "wordlist_id", "is_smart", "source", "known_words", "unknown_words",
-                 "notes", "source_is_url"]
+    "required": [
+        "name",
+        "wordlist_id",
+        "is_smart",
+        "citation",
+        "known_words",
+        "unknown_words",
+        "notes",
+        "source_is_url"
+    ]
 }
 
 WORDS_SCHEMA = {
