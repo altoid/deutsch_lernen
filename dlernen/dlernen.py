@@ -1242,9 +1242,9 @@ def wordlists():
 @app.route('/addlist', methods=['POST'])
 def addlist():
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        newlist = request.form['name']
-        source = request.form['source']
-        sql = "insert ignore into wordlist (name, source) values (%s, %s)"
+        newlist = request.form['name'].strip()
+        source = request.form['source'].strip()
+        sql = "insert ignore into wordlist (name, citation) values (%s, %s)"
         cursor.execute(sql, (newlist, source))
         dbh.commit()
 
@@ -1283,7 +1283,7 @@ def edit_list():
 
 @app.route('/add_to_list', methods=['POST'])
 def add_to_list():
-    word = request.form['word']
+    word = request.form['word'].strip()
     list_id = request.form['list_id']
 
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
@@ -1630,7 +1630,7 @@ def add_to_dict():
             if pos_id == form_pos_id and request.form[k]:
                 placeholder = "(%s, %s, %s)"  # word_id, attr_id, value
                 placeholders.append(placeholder)
-                value = request.form[k]
+                value = request.form[k].strip()
                 if pos_name == 'Noun' and attrkey == 'plural':
                     value = value.capitalize()
 
