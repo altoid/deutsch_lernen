@@ -138,7 +138,7 @@ SAMPLE_WORDLISTS_RESULT = [
         "name": "sample_word_list",
         "wordlist_id": 1234,
         "count": 111,
-        "is_smart": True
+        "list_type": "standard"
     }
 ]
 
@@ -168,7 +168,7 @@ SAMPLE_WORDLIST_DETAIL_RESULT = {
     "name": "sample_word_list",
     "wordlist_id": 1234,
     "count": 111,
-    "is_smart": True,
+    "list_type": "standard",
     "known_words": [
         {
             "word": "aoeuaeou",
@@ -1126,6 +1126,8 @@ class APIWordlist(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         obj = r.json()
 
+        self.assertEqual("empty", obj['list_type'])
+        
         # delete it
         r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
         self.assertEqual(r.status_code, 200)
@@ -1158,7 +1160,7 @@ class APIWordlist(unittest.TestCase):
 
         self.assertEqual(1, len(obj['known_words']))
         self.assertEqual(1, len(obj['unknown_words']))
-        self.assertFalse(obj['is_smart'])
+        self.assertEqual('standard', obj['list_type'])
 
         # delete it
         r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
@@ -1171,7 +1173,7 @@ class APIWordlist(unittest.TestCase):
             'name': list_name,
             'notes': 'important notes',
             'source': 'confidential',
-            'sqlcode': 'mumble'
+            'sqlcode': 'select id word_id from word where id = 124'
         }
 
         r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=payload)
@@ -1183,7 +1185,7 @@ class APIWordlist(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         obj = r.json()
 
-        # self.assertTrue(obj['is_smart'])
+        self.assertEqual("smart", obj['list_type'])
 
         # delete it
         r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
@@ -1215,7 +1217,7 @@ class APIWordlist(unittest.TestCase):
         r = requests.get("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
         self.assertEqual(r.status_code, 200)
         obj = r.json()
-        # pprint(obj)
+
         for k in update_payload.keys():
             self.assertEqual(update_payload[k], obj[k])
 
@@ -1224,13 +1226,79 @@ class APIWordlist(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
 
     # add word to list
-    def test_add_word_to_list(self):
-        pass
+    def test_add_words_to_list(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        gibberish = 'aoeunhatedu'
+        add_payload = {
+            'name': list_name,
+            'words': [
+                'werfen',
+                'geben',
+                gibberish
+            ]
+        }
 
-    # add word to list if it's there already --> noop
-    # remove word by word from list -> removes from unknown
-    # remove word by id from list
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=add_payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        update_payload = {
+            'words': [
+                'wecken',
+                'werfen',  # already there, should be a noop
+                'nachgebend',
+                gibberish
+            ]
+        }
+
+        r = requests.put("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id), json=update_payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+
+        known_words = {x['word'] for x in obj['known_words']}
+        unknown_words = {x for x in obj['unknown_words']}
+
+        self.assertEqual({'wecken', 'nachgebend', 'geben', 'werfen'}, known_words)
+        self.assertEqual({gibberish}, unknown_words)
+
+        # delete it
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 200)
+
     # update list with empty payload --> noop
+    def test_update_list_empty_payload(self):
+        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name,
+            'sqlcode': """select id word_id from word where word = 'geben'"""
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=add_payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        update_payload = {
+        }
+
+        r = requests.put("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id), json=update_payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+
+        r = requests.get("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+
+        for k in add_payload.keys():
+            self.assertEqual(add_payload[k], obj[k])
+
+        self.assertTrue(len(obj['known_words']) > 0)
+
+        # delete it
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 200)
+
     # create smart list and update every field
 
     # TODO error conditions
@@ -1272,103 +1340,9 @@ class APIWordlist(unittest.TestCase):
         self.assertEqual(r.status_code, 400)
 
     # update list with empty name
-    # add list with code and words --> only one is allowed.
-    # add code to dumb list --> not allowed.
-    def test_add_code_to_dumb_list(self):
-        # not allowed
-        pass
+    def test_update_with_empty_name(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
 
-    # add words to smart list --> not allowed.
-    # remove words from smart list --> error
-    # get with bullshit wordlist id
-    def test_get_bullshit_wordlist_id(self):
-        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, 6666666)
-        r = requests.get(url)
-        self.assertEqual(404, r.status_code)
-
-    def test_wordlist_operations_name_only(self):
-        list_name = ''.join(random.choices(string.ascii_lowercase, k=20))
-
-        # create a word list
-
-        create_url = "%s/api/wordlist" % config.Config.DB_URL
-        payload = {
-            'name': list_name
-        }
-        r = requests.post(create_url, json=payload)
-        result = json.loads(r.text)
-        list_id = result['list_id']
-
-        # create new list with same name - should be error
-        payload = {
-            'name': list_name
-        }
-        r = requests.post(create_url, json=payload)
-        self.assertNotEqual(r.status_code, 200)
-
-        # fetch it
-
-        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
-        r = requests.get(url)
-        result = json.loads(r.text)
-        self.assertEqual(result['name'], list_name)
-
-        # change the name/source/code
-
-        new_name = ''.join(random.choices(string.ascii_lowercase, k=20))
-        source = "confidential"
-        payload = {
-            'name': new_name,
-            'citation': source
-        }
-        r = requests.put(url, json=payload)
-
-        # verify the change
-
-        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
-        r = requests.get(url)
-        self.assertEqual(200, r.status_code)
-        result = json.loads(r.text)
-        self.assertEqual(result['name'], new_name)
-        self.assertEqual(result['citation'], source)
-
-        # delete the list
-
-        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
-        r = requests.delete(url)
-        self.assertEqual(200, r.status_code)
-
-        # verify that it's gone
-
-        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
-        r = requests.get(url)
-        self.assertEqual(404, r.status_code)
-
-        # delete it again - should do nothing
-
-        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
-        r = requests.delete(url)
-        self.assertEqual(200, r.status_code)
-
-        # create with same name - should succeed
-
-        create_url = "%s/api/wordlist" % config.Config.DB_URL
-        payload = {
-            'name': new_name
-        }
-        r = requests.post(create_url, json=payload)
-        self.assertEqual(200, r.status_code)
-        result = json.loads(r.text)
-        list_id = result['list_id']
-
-        # delete it again
-
-        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
-        r = requests.delete(url)
-        self.assertEqual(200, r.status_code)
-
-    # TODO need json schema for word list payloads
-    def test_wordlist_operations_empty_name(self):
         # don't allow create or update with empty name
 
         # create a word list
@@ -1380,14 +1354,13 @@ class APIWordlist(unittest.TestCase):
         r = requests.post(create_url, json=payload)
         self.assertEqual(400, r.status_code)
 
-        list_name = ''.join(random.choices(string.ascii_lowercase, k=20))
         payload = {
             'name': list_name
         }
         r = requests.post(create_url, json=payload)
         self.assertEqual(200, r.status_code)
-        result = json.loads(r.text)
-        list_id = result['list_id']
+        obj = r.json()
+        list_id = obj['wordlist_id']
 
         # set list name to empty string - should be error
 
@@ -1410,6 +1383,250 @@ class APIWordlist(unittest.TestCase):
         url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
         r = requests.delete(url)
         self.assertEqual(200, r.status_code)
+
+    # add list with code and words --> only one is allowed.
+    def test_add_list_with_code_and_words(self):
+        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        payload = {
+            'name': list_name,
+            'sqlcode': 'select id word_id from word where id = 666',
+            'words': [
+                'werfen',
+                'aoeuaoeu'
+            ]
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=payload)
+        self.assertEqual(r.status_code, 400)
+
+    # add code to dumb list --> not allowed if list has words, ok if empty
+    def test_add_code_to_dumb_list(self):
+        # not allowed
+        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name,
+            'words': [
+                'werfen',
+                'aoeuaoeu'
+            ]
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=add_payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        update_payload = {
+            'sqlcode': 'select id word_id from word where id = 555'
+        }
+
+        r = requests.put("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id), json=update_payload)
+        self.assertEqual(400, r.status_code)
+
+        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
+        r = requests.delete(url)
+        self.assertEqual(200, r.status_code)
+
+    # add words to smart list --> not allowed.
+    def test_add_words_to_smart_list(self):
+        # not allowed
+        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name,
+            'sqlcode': 'select id word_id from word where id = 555'
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=add_payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        update_payload = {
+            'words': [
+                'werfen',
+                'aoeuaoeu'
+            ]
+        }
+
+        r = requests.put("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id), json=update_payload)
+        self.assertEqual(400, r.status_code)
+
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.DB_URL, list_id))
+        self.assertEqual(200, r.status_code)
+
+    # get with bullshit wordlist id
+    def test_get_bullshit_wordlist_id(self):
+        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, 6666666)
+        r = requests.get(url)
+        self.assertEqual(404, r.status_code)
+
+    # tests for changing list type; many cases
+
+    # change list type: create empty, change to standard
+    def test_change_list_type_empty_to_standard(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=add_payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        self.assertEqual('empty', obj['list_type'])
+
+        update_payload = {
+            'words': [
+                'werfen',
+                'aoeuaoeu'
+            ]
+        }
+
+        r = requests.put("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id), json=update_payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        self.assertEqual('standard', obj['list_type'])
+
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.DB_URL, list_id))
+        self.assertEqual(200, r.status_code)
+
+    # change list type: create empty, change to smart
+    def test_change_list_type_empty_to_smart(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=add_payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        self.assertEqual('empty', obj['list_type'])
+
+        update_payload = {
+            'sqlcode': 'select id word_id from word where id = 111'
+        }
+
+        r = requests.put("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id), json=update_payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        self.assertEqual('smart', obj['list_type'])
+
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.DB_URL, list_id))
+        self.assertEqual(200, r.status_code)
+
+    # change list type: create smart, change to empty
+    def test_change_list_type_smart_to_empty(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name,
+            'sqlcode': 'select id word_id from word where id = 555'
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=add_payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        self.assertEqual('smart', obj['list_type'])
+
+        update_payload = {
+            'sqlcode': ''
+        }
+
+        r = requests.put("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id), json=update_payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        self.assertEqual('empty', obj['list_type'])
+
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.DB_URL, list_id))
+        self.assertEqual(200, r.status_code)
+
+    # change list type: create smart, change to standard
+    def test_change_list_type_smart_to_standard(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name,
+            'sqlcode': 'select id word_id from word where id = 555'
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=add_payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        self.assertEqual('smart', obj['list_type'])
+
+        update_payload = {
+            'sqlcode': '',
+            'words': [
+                'werfen',
+                'aoeuaoeu'
+            ]
+        }
+
+        r = requests.put("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id), json=update_payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        self.assertEqual('standard', obj['list_type'])
+
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.DB_URL, list_id))
+        self.assertEqual(200, r.status_code)
+
+    # change list type: create standard, change to smart
+    @unittest.skip
+    def test_change_list_type_standard_to_smart(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name,
+            'words': [
+                'werfen',
+                'aoeuaoeu'
+            ]
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=add_payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        self.assertEqual('standard', obj['list_type'])
+
+        # TODO requires word-level deletion on lists
+
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.DB_URL, list_id))
+        self.assertEqual(200, r.status_code)
+
+    # change list type: create standard, change to empty
+    @unittest.skip
+    def test_change_list_type_standard_to_empty(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name,
+            'words': [
+                'werfen',
+                'aoeuaoeu'
+            ]
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=add_payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        self.assertEqual('standard', obj['list_type'])
+
+        # TODO requires word-level deletion on lists
+
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.DB_URL, list_id))
+        self.assertEqual(200, r.status_code)
+
+    # remove words from smart list --> error
+    # remove word by word from list -> removes from unknown
+    # remove word by id from list
+
 
 
 if __name__ == '__main__':

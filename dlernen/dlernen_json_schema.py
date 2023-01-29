@@ -252,15 +252,20 @@ WORDLISTS_SCHEMA = {
                 "type": "integer",
                 "minimum": 0,
             },
-            "is_smart": {
-                "type": "boolean"
+            "list_type": {
+                "type": "string",
+                "enum": [
+                    "smart",
+                    "standard",
+                    "empty"  # no code or words
+                ]
             }
         },
         "required": [
             "name",
             "wordlist_id",
             "count",
-            "is_smart"
+            "list_type"
         ]
     }
 }
@@ -292,7 +297,7 @@ WORDLIST_PAYLOAD_SCHEMA = {
         },
         "sqlcode": {
             "type": "string",
-            "minLength": 1
+            "minLength": 0
         },
         "words": {
             "type": "array",
@@ -349,8 +354,13 @@ WORDLIST_SCHEMA = {
             "type": "integer",
             "minimum": 1
         },
-        "is_smart": {
-            "type": "boolean"
+        "list_type": {
+            "type": "string",
+            "enum": [
+                "smart",
+                "standard",
+                "empty" # no code or words
+            ]
         },
         "citation": {
             "type": ["string", "null"]
@@ -396,7 +406,7 @@ WORDLIST_SCHEMA = {
     "required": [
         "name",
         "wordlist_id",
-        "is_smart",
+        "list_type",
         "citation",
         "known_words",
         "unknown_words",

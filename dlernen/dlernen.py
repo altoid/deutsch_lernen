@@ -789,7 +789,6 @@ def get_wordlist(list_id):
 
         result = dict(wl_row)
         result['source_is_url'] = result['citation'].startswith('http') if result['citation'] else False
-        result['is_smart'] = bool(code)
 
         if code:
             known_words_sql = """
@@ -848,9 +847,49 @@ def get_wordlist(list_id):
         unknown_words = [x['word'] for x in unknown_words]
 
         result['unknown_words'] = unknown_words
+
+        if code:
+            result['list_type'] = "smart"
+        elif unknown_words or known_words:
+            result['list_type'] = "standard"
+        else:
+            result['list_type'] = "empty"
+
         jsonschema.validate(result, dlernen.dlernen_json_schema.WORDLIST_SCHEMA)
 
         return result
+
+
+def add_words_to_list(cursor, list_id, words):
+    arglist = list(words)
+    format_list = ['%s'] * len(arglist)
+    format_list = ', '.join(format_list)
+
+    sql = """
+    select distinct id word_id, word
+    from word
+    where word in (%s)
+    """ % format_list
+
+    cursor.execute(sql, arglist)
+    rows = cursor.fetchall()
+    known_words = {x['word'] for x in rows}
+    unknown_words = words - known_words
+    wkw_tuples = [(list_id, r['word_id']) for r in rows]
+    if wkw_tuples:
+        ins_sql = """
+        insert ignore into wordlist_known_word (wordlist_id, word_id)
+        values (%s, %s)
+        """
+        cursor.executemany(ins_sql, wkw_tuples)
+
+    if unknown_words:
+        ins_sql = """
+        insert ignore into wordlist_unknown_word (wordlist_id, word)
+        values (%s, %s)
+        """
+        wuw_tuples = [(list_id, x) for x in unknown_words]
+        cursor.executemany(ins_sql, wuw_tuples)
 
 
 @app.route('/api/wordlist', methods=['POST'])
@@ -896,35 +935,7 @@ def add_wordlist():
 
             # figure out which words are known and not known
             if words:
-                arglist = list(words)
-                format_list = ['%s'] * len(arglist)
-                format_list = ', '.join(format_list)
-
-                sql = """
-                select distinct id word_id, word
-                from word
-                where word in (%s)
-                """ % format_list
-
-                cursor.execute(sql, arglist)
-                rows = cursor.fetchall()
-                known_words = {x['word'] for x in rows}
-                unknown_words = words - known_words
-                wkw_tuples = [(list_id, r['word_id']) for r in rows]
-                if wkw_tuples:
-                    ins_sql = """
-                    insert ignore into wordlist_known_word (wordlist_id, word_id)
-                    values (%s, %s)
-                    """
-                    cursor.executemany(ins_sql, wkw_tuples)
-
-                if unknown_words:
-                    ins_sql = """
-                    insert ignore into wordlist_unknown_word (wordlist_id, word)
-                    values (%s, %s)
-                    """
-                    wuw_tuples = [(list_id, x) for x in unknown_words]
-                    cursor.executemany(ins_sql, wuw_tuples)
+                add_words_to_list(cursor, list_id, words)
 
             cursor.execute('commit')
 
@@ -959,6 +970,7 @@ def update_wordlist(list_id):
         payload = request.get_json()
         jsonschema.validate(payload, dlernen.dlernen_json_schema.WORDLIST_PAYLOAD_SCHEMA)
     except jsonschema.ValidationError as e:
+        print("shit1")
         return "bad payload: %s" % e.message, 400
 
     name = payload.get('name')
@@ -985,6 +997,16 @@ def update_wordlist(list_id):
         cursor.execute('start transaction')
 
         # TODO have to get by id so we know whether this is a smart list
+        existing_list = get_wordlist(list_id)
+        if existing_list['list_type'] == 'smart' and words and sqlcode != '':
+            # if sqlcode is the empty string, then this is ok, because it means we are going to
+            # clear out the existing sqlcode.
+            cursor.execute('rollback')
+            return "can't add words to smart list", 400
+
+        if existing_list['list_type'] == 'standard' and sqlcode:
+            cursor.execute('rollback')
+            return "can't add code to existing list", 400
 
         try:
             update_args = {
@@ -1006,7 +1028,7 @@ def update_wordlist(list_id):
                 then %(citation)s
                 else citation
             end,
-            sqlcode = case when %(sqlcode)s is not null and length(%(sqlcode)s) > 0
+            sqlcode = case when %(sqlcode)s is not null
                 then %(sqlcode)s
                 else sqlcode
             end,
@@ -1017,6 +1039,9 @@ def update_wordlist(list_id):
             where id = %(list_id)s
             """
             cursor.execute(sql, update_args)
+
+            if words:
+                add_words_to_list(cursor, list_id, words)
 
             cursor.execute('commit')
 
@@ -1037,7 +1062,7 @@ def wordlist(list_id):
     r = requests.get(url)
     result = json.loads(r.text)
 
-    if result['is_smart']:
+    if result['list_type'] == 'smart':
         words = chunkify(result['known_words'], nchunks=nchunks)
         return render_template('smart_wordlist.html',
                                result=result,
@@ -1125,10 +1150,16 @@ order by name
         for r in rows:
             # TODO - the connector is returning the count as a string, find out WTF
 
+            list_type = 'empty'
+            if bool(r['code']):
+                list_type = 'smart'
+            elif count > 0:
+                list_type = 'standard'
+
             dict_result[r['wordlist_id']] = {}
             dict_result[r['wordlist_id']]['name'] = r['name']
             dict_result[r['wordlist_id']]['wordlist_id'] = r['wordlist_id']
-            dict_result[r['wordlist_id']]['is_smart'] = bool(r['code'])
+            dict_result[r['wordlist_id']]['list_type'] = list_type
             dict_result[r['wordlist_id']]['count'] = int(r['count'])
 
             if r['code']:
