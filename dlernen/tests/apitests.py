@@ -1300,7 +1300,78 @@ class APIWordlist(unittest.TestCase):
         r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
         self.assertEqual(r.status_code, 200)
 
-    # create smart list and update every field
+    # remove word by word from list -> removes from unknown
+    def test_remove_word_by_word(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        gibberish = ''.join(random.choices(string.ascii_lowercase, k=10))
+        payload = {
+            'name': list_name,
+            'words': [
+                'werfen',  # known
+                gibberish  # unknown, hopefully
+            ],
+            'notes': 'important notes',
+            'citation': 'confidential'
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        self.assertTrue(len(obj['unknown_words']) > 0)
+        word = obj['unknown_words'][0]
+        r = requests.delete("%s/api/wordlist/%s/%s" % (config.Config.BASE_URL, list_id, word))
+        self.assertEqual(r.status_code, 200)
+
+        r = requests.get("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+
+        self.assertEqual(1, len(obj['known_words']))
+        self.assertEqual(0, len(obj['unknown_words']))
+        self.assertEqual('standard', obj['list_type'])
+
+        # delete it
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 200)
+
+    # remove word by id from list
+    def test_remove_word_by_id(self):
+        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        payload = {
+            'name': list_name,
+            'words': [
+                'werfen', # known
+                'natehdnaoehu' # unknown, hopefully
+            ],
+            'notes': 'important notes',
+            'citation': 'confidential'
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        self.assertTrue(len(obj['known_words']) > 0)
+        word_id = obj['known_words'][0]['word_id']
+        r = requests.delete("%s/api/wordlist/%s/%s" % (config.Config.BASE_URL, list_id, word_id))
+        self.assertEqual(r.status_code, 200)
+
+        r = requests.get("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+
+        self.assertEqual(0, len(obj['known_words']))
+        self.assertEqual(1, len(obj['unknown_words']))
+        self.assertEqual('standard', obj['list_type'])
+
+        # delete it
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 200)
+
+    # TODO create smart list and update every field
 
     # TODO error conditions
     # add list with existing name
@@ -1624,10 +1695,7 @@ class APIWordlist(unittest.TestCase):
         r = requests.delete("%s/api/wordlist/%s" % (config.Config.DB_URL, list_id))
         self.assertEqual(200, r.status_code)
 
-    # remove words from smart list --> error
-    # remove word by word from list -> removes from unknown
-    # remove word by id from list
-
+    # TODO remove words from smart list --> error
 
 
 if __name__ == '__main__':

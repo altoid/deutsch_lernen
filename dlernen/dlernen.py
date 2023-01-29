@@ -964,6 +964,43 @@ def delete_wordlist(list_id):
             return "delete list failed", 500
 
 
+@app.route('/api/wordlist/<int:list_id>/<int:word_id>', methods=['DELETE'])
+def delete_from_wordlist_by_id(list_id, word_id):
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        try:
+            cursor.execute('start transaction')
+            sql = """
+            delete from wordlist_known_word where wordlist_id = %s and word_id = %s
+            """
+            cursor.execute(sql, (list_id, word_id))
+            cursor.execute('commit')
+            return "OK"
+        except Exception as e:
+            pprint(e)
+            cursor.execute('rollback')
+            return "delete list failed", 500
+
+
+@app.route('/api/wordlist/<int:list_id>/<string:word>', methods=['DELETE'])
+def delete_from_wordlist_by_word(list_id, word):
+    # removes from unknown words only
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        try:
+            word = word.strip()
+            if word:
+                cursor.execute('start transaction')
+                sql = """
+                delete from wordlist_unknown_word where wordlist_id = %s and word = %s
+                """
+                cursor.execute(sql, (list_id, word))
+                cursor.execute('commit')
+            return "OK"
+        except Exception as e:
+            pprint(e)
+            cursor.execute('rollback')
+            return "delete list failed", 500
+
+
 @app.route('/api/wordlist/<int:list_id>', methods=['PUT'])
 def update_wordlist(list_id):
     try:
