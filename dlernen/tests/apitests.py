@@ -7,8 +7,6 @@ from pprint import pprint
 import random
 import string
 
-# TODO:  post-delete verification should check for status code 404
-
 SAMPLE_WORDLIST_PAYLOAD = {
     "name": "saetuasasue",
     "source": "anteohusntaeo",
@@ -1371,7 +1369,7 @@ class APIWordlist(unittest.TestCase):
         r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
         self.assertEqual(r.status_code, 200)
 
-    # TODO create smart list and update every field
+    # TODO create smart list and update every field including the code
 
     # TODO error conditions
     # add list with existing name
@@ -1647,39 +1645,19 @@ class APIWordlist(unittest.TestCase):
         r = requests.delete("%s/api/wordlist/%s" % (config.Config.DB_URL, list_id))
         self.assertEqual(200, r.status_code)
 
-    # change list type: create standard, change to smart
-    @unittest.skip
-    def test_change_list_type_standard_to_smart(self):
-        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
-        add_payload = {
-            'name': list_name,
-            'words': [
-                'werfen',
-                'aoeuaoeu'
-            ]
-        }
-
-        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=add_payload)
-        self.assertEqual(200, r.status_code)
-        obj = r.json()
-        list_id = obj['wordlist_id']
-
-        self.assertEqual('standard', obj['list_type'])
-
-        # TODO requires word-level deletion on lists
-
-        r = requests.delete("%s/api/wordlist/%s" % (config.Config.DB_URL, list_id))
-        self.assertEqual(200, r.status_code)
+    # there is no test for create standard, change to smart
+    # because this can't be done in one request.  we have to empty the list first
+    # then change to smart.
 
     # change list type: create standard, change to empty
-    @unittest.skip
     def test_change_list_type_standard_to_empty(self):
         list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        gibberish = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             'name': list_name,
             'words': [
                 'werfen',
-                'aoeuaoeu'
+                gibberish
             ]
         }
 
@@ -1689,8 +1667,24 @@ class APIWordlist(unittest.TestCase):
         list_id = obj['wordlist_id']
 
         self.assertEqual('standard', obj['list_type'])
+        self.assertEqual(1, len(obj['unknown_words']))
+        self.assertEqual(1, len(obj['known_words']))
 
-        # TODO requires word-level deletion on lists
+        # remove the words one by one
+        word = obj['unknown_words'][0]
+        r = requests.delete("%s/api/wordlist/%s/%s" % (config.Config.BASE_URL, list_id, word))
+        self.assertEqual(r.status_code, 200)
+
+        word_id = obj['known_words'][0]['word_id']
+        r = requests.delete("%s/api/wordlist/%s/%s" % (config.Config.BASE_URL, list_id, word_id))
+        self.assertEqual(r.status_code, 200)
+
+        r = requests.get("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        obj = r.json()
+
+        self.assertEqual('empty', obj['list_type'])
+        self.assertEqual(0, len(obj['unknown_words']))
+        self.assertEqual(0, len(obj['known_words']))
 
         r = requests.delete("%s/api/wordlist/%s" % (config.Config.DB_URL, list_id))
         self.assertEqual(200, r.status_code)
