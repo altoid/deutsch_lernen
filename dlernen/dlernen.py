@@ -1030,7 +1030,6 @@ def update_wordlist(list_id):
         # this is well-behaved if citation and sqlcode are not given.
         cursor.execute('start transaction')
 
-        # TODO have to get by id so we know whether this is a smart list
         existing_list = get_wordlist(list_id)
         if existing_list['list_type'] == 'smart' and words and sqlcode != '':
             # if sqlcode is the empty string, then this is ok, because it means we are going to
@@ -1210,7 +1209,7 @@ order by name
 @app.route('/api/wordlists/<int:word_id>')
 def get_wordlists_for_word(word_id):
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        # find static lists that this word is in
+        # find standard lists that this word is in
         sql = """
         select
         wl.id list_id
@@ -1254,12 +1253,12 @@ def get_wordlists_for_word(word_id):
             url = url_for('get_wordlists', list_id=args)
             url = "%s/%s" % (Config.DB_URL, url)
             r = requests.get(url)
-            # validation happens in get_wordlists so we don't need to do it here.
 
             result = json.loads(r.text)
             result = sorted(result, key=lambda x: x['name'].casefold())
 
-        # TODO - validate the results against json schema object
+        # validation happens in get_wordlists so we don't need to do it here.
+
         return result
 
 

@@ -1088,7 +1088,6 @@ class APITests(unittest.TestCase):
 
 
 class APIWordlists(unittest.TestCase):
-    # TODO - flesh this out
     # get all wordlists
     def test_real_wordlist(self):
         r = requests.get(config.Config.BASE_URL + "/api/wordlists")
