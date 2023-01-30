@@ -1716,7 +1716,29 @@ class APIWordlist(unittest.TestCase):
         r = requests.delete("%s/api/wordlist/%s" % (config.Config.DB_URL, list_id))
         self.assertEqual(200, r.status_code)
 
-    # TODO remove words from smart list --> error
+    def test_remove_words_from_smart_list(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name,
+            'sqlcode': 'select id word_id from word where id = 555'
+        }
+
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=add_payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        self.assertEqual('smart', obj['list_type'])
+
+        r = requests.delete("%s/api/wordlist/%s/666" % (config.Config.BASE_URL, list_id))
+        self.assertNotEqual(200, r.status_code)
+
+        r = requests.delete("%s/api/wordlist/%s/teuhdunaoethu" % (config.Config.BASE_URL, list_id))
+        self.assertNotEqual(200, r.status_code)
+
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.DB_URL, list_id))
+        self.assertEqual(200, r.status_code)
+
 
 
 if __name__ == '__main__':

@@ -952,14 +952,21 @@ def delete_from_wordlist_by_id(list_id, word_id):
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
-            sql = """
-            delete from wordlist_known_word where wordlist_id = %s and word_id = %s
-            """
+            sql = "select sqlcode from wordlist where id = %s"
+            cursor.execute(sql, (list_id,))
+            row = cursor.fetchone()
+            if row and row['sqlcode']:
+                cursor.execute('rollback')
+                return "can't delete words from smart list", 400
+            sql = "delete from wordlist_known_word where wordlist_id = %s and word_id = %s"
             cursor.execute(sql, (list_id, word_id))
             cursor.execute('commit')
             return "OK"
         except Exception as e:
             pprint(e)
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
             cursor.execute('rollback')
             return "delete list failed", 500
 
@@ -972,14 +979,21 @@ def delete_from_wordlist_by_word(list_id, word):
             word = word.strip()
             if word:
                 cursor.execute('start transaction')
-                sql = """
-                delete from wordlist_unknown_word where wordlist_id = %s and word = %s
-                """
+                sql = "select sqlcode from wordlist where id = %s"
+                cursor.execute(sql, (list_id,))
+                row = cursor.fetchone()
+                if row and row['sqlcode']:
+                    cursor.execute('rollback')
+                    return "can't delete words from smart list", 400
+                sql = "delete from wordlist_unknown_word where wordlist_id = %s and word = %s"
                 cursor.execute(sql, (list_id, word))
                 cursor.execute('commit')
             return "OK"
         except Exception as e:
             pprint(e)
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
             cursor.execute('rollback')
             return "delete list failed", 500
 
