@@ -315,7 +315,7 @@ WORDLIST_METADATA_SCHEMA = {
     "description": "wordlist and basic properties, optionally with word_ids",
     "type": "object",
     "required": [
-        "id",
+        "wordlist_id",
         "name",
         "sqlcode",
         "citation"
@@ -333,7 +333,7 @@ WORDLIST_METADATA_SCHEMA = {
             "type": "string",
             "minLength": 0
         },
-        "id": {
+        "wordlist_id": {
             "type": "integer",
             "minimum": 1
         }

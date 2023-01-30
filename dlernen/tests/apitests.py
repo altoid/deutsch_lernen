@@ -124,9 +124,9 @@ SAMPLE_WORDIDS_RESULT = {
     ]
 }
 
-SAMPLE_WORDLIST_ATTRIBUTE_RESULT = {
+SAMPLE_WORDLIST_METADATA_RESULT = {
     "sqlcode": "select distinct word_id\r\nfrom mashup_v\r\nwhere pos_name = 'verb'\r\nand word like '%gehe%'",
-    "id": 126,
+    "wordlist_id": 126,
     "name": "verbs like *geh*",
     "citation": ""
 }
@@ -235,7 +235,7 @@ class SchemaTests(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_METADATA_SCHEMA)
 
     def test_list_attribute_sample(self):
-        jsonschema.validate(SAMPLE_WORDLIST_ATTRIBUTE_RESULT, dlernen_json_schema.WORDLIST_METADATA_SCHEMA)
+        jsonschema.validate(SAMPLE_WORDLIST_METADATA_RESULT, dlernen_json_schema.WORDLIST_METADATA_SCHEMA)
 
     def test_quiz_data_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.QUIZ_DATA_SCHEMA)
@@ -652,8 +652,6 @@ class APITestsWordPUT(unittest.TestCase):
 
 # TODO:  make sure proper cleanup happens if any assertions fail on status code values.  setup/teardown?
 
-# TODO:  wordlist tests go in their own class
-
 
 class APITestsWordEndToEnd(unittest.TestCase):
     # end-to-end test:  add a word, verify existence, delete it, verify deletion.
@@ -988,13 +986,6 @@ class APITestsAttributePOST(unittest.TestCase):
 
 
 class APITests(unittest.TestCase):
-    @unittest.skip
-    def test_real_list_attribute_data(self):
-        url = "%s/api/list_attributes/%s" % (config.Config.DB_URL, 126)
-        r = requests.get(url)
-        result = json.loads(r.text)
-        jsonschema.validate(result, dlernen_json_schema.WORDLIST_METADATA_SCHEMA)
-
     def test_real_quiz_data(self):
         url = "%s/api/quiz_data" % config.Config.DB_URL
         payload = {
@@ -1107,7 +1098,6 @@ class APIWordlists(unittest.TestCase):
 
 
 class APIWordlist(unittest.TestCase):
-    # TODO:  wordlist tests
     # add list with no words, just a name
     def test_create_empty_list(self):
         list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
@@ -1369,9 +1359,46 @@ class APIWordlist(unittest.TestCase):
         r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
         self.assertEqual(r.status_code, 200)
 
-    # TODO create smart list and update every field including the code
+    def test_update_smart_list(self):
+        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        payload = {
+            'name': list_name,
+            'notes': 'important notes',
+            'citation': 'confidential',
+            'sqlcode': 'select id word_id from word where id = 124'
+        }
 
-    # TODO error conditions
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        new_code = 'select id word_id from word where id = 666'
+        new_name = "%s%s" % (list_name, '__UPDATED')
+        new_citation = 'really confidential'
+        payload = {
+            'name': new_name,
+            'citation': new_citation,
+            'sqlcode': new_code
+        }
+
+        r = requests.put("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id), json=payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        r = requests.get("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, list_id), json=payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+
+        self.assertEqual(new_code, obj['sqlcode'])
+        self.assertEqual(new_citation, obj['citation'])
+        self.assertEqual(new_name, obj['name'])
+
+        # delete it
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 200)
+
     # add list with existing name
     def test_add_existing_name(self):
         list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))

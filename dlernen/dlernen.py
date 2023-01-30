@@ -384,17 +384,8 @@ select
     pf.sort_order
 from
     mashup_v
-inner join pos_form pf on pf.attribute_id = mashup_v.attribute_id and 
-pf.pos_id = mashup_v.pos_id
-where word_id in
-    (
-    select
-        word_id
-    from
-        mashup_v
-    where
-        word = %s
-    )
+inner join pos_form pf on pf.attribute_id = mashup_v.attribute_id and pf.pos_id = mashup_v.pos_id
+where word = %s
 order by word_id, pf.sort_order
 """
 
@@ -410,15 +401,7 @@ order by word_id, pf.sort_order
     from
         mashup_v
     inner join pos_form pf on pf.attribute_id = mashup_v.attribute_id and pf.pos_id = mashup_v.pos_id
-    where word_id in
-        (
-        select
-            word_id
-        from
-            mashup_v
-        where
-            word like %s or attrvalue like %s
-        )
+    where word like %s or attrvalue like %s
     order by word_id, pf.sort_order
     """
 
@@ -740,12 +723,21 @@ def gender_rules():
         return rows
 
 
-@app.route('/api/list_attributes/<int:list_id>')
+@app.route('/list_attributes/<int:list_id>')
+def list_attributes(list_id):
+    url = "%s/api/list_attributes/%s" % (Config.DB_URL, list_id)
+    r = requests.get(url)
+    result = json.loads(r.text)
+
+    return render_template('list_attributes.html', wl_row=result)
+
+
+@app.route('/api/wordlist/<int:list_id>/metadata')
 def get_list_attributes(list_id):
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
     select
-        id, name, source, ifnull(code, '') code
+        id wordlist_id, name, citation, ifnull(sqlcode, '') sqlcode
      from wordlist
     where id = %s
     """
@@ -755,15 +747,6 @@ def get_list_attributes(list_id):
         jsonschema.validate(wl_row, dlernen.dlernen_json_schema.WORDLIST_METADATA_SCHEMA)
 
         return wl_row
-
-
-@app.route('/list_attributes/<int:list_id>')
-def list_attributes(list_id):
-    url = "%s/api/list_attributes/%s" % (Config.DB_URL, list_id)
-    r = requests.get(url)
-    result = json.loads(r.text)
-
-    return render_template('list_attributes.html', wl_row=result)
 
 
 @app.route('/api/wordlist/<int:list_id>')
@@ -785,12 +768,12 @@ def get_wordlist(list_id):
         if not wl_row:
             return "wordlist %s not found" % list_id, 404
 
-        code = wl_row['sqlcode'].strip()
+        sqlcode = wl_row['sqlcode'].strip()
 
         result = dict(wl_row)
         result['source_is_url'] = result['citation'].startswith('http') if result['citation'] else False
 
-        if code:
+        if sqlcode:
             known_words_sql = """
             with matching as ( %s )
             select
@@ -806,7 +789,7 @@ def get_wordlist(list_id):
             on    matching.word_id = m2.word_id
             and   m2.attrkey = 'article'
             order by m.word        
-            """ % code
+            """ % sqlcode
 
             cursor.execute(known_words_sql)
 
@@ -848,7 +831,7 @@ def get_wordlist(list_id):
 
         result['unknown_words'] = unknown_words
 
-        if code:
+        if sqlcode:
             result['list_type'] = "smart"
         elif unknown_words or known_words:
             result['list_type'] = "standard"
@@ -1239,8 +1222,8 @@ def get_wordlists_for_word(word_id):
         cursor.execute(sql)
         code_results = cursor.fetchall()
         for r in code_results:
-            code = r['sqlcode'].strip()
-            if not code:
+            sqlcode = r['sqlcode'].strip()
+            if not sqlcode:
                 continue
 
             cursor.execute(r['sqlcode'])
@@ -1280,9 +1263,9 @@ def wordlists():
 def addlist():
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         newlist = request.form['name'].strip()
-        source = request.form['source'].strip()
+        citation = request.form['citation'].strip()
         sql = "insert ignore into wordlist (name, citation) values (%s, %s)"
-        cursor.execute(sql, (newlist, source))
+        cursor.execute(sql, (newlist, citation))
         dbh.commit()
 
         return redirect('/wordlists')
@@ -1306,12 +1289,12 @@ def deletelist():
 @app.route('/edit_list', methods=['POST'])
 def edit_list():
     name = request.form['name']
-    source = request.form['source']
-    code = request.form['code']
+    citation = request.form['citation']
+    sqlcode = request.form['sqlcode']
     id = request.form['list_id']
-    sql = "update wordlist set name = %s, source = %s, code = %s where id = %s"
+    sql = "update wordlist set name = %s, citation = %s, sqlcode = %s where id = %s"
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        cursor.execute(sql, (name, source, code, id))
+        cursor.execute(sql, (name, citation, sqlcode, id))
         dbh.commit()
 
     target = url_for('wordlist', list_id=id)
