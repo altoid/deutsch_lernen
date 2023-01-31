@@ -270,17 +270,6 @@ def quiz_data():
     return 'OK'
 
 
-@app.route('/healthcheck')
-def healthcheck():
-    return 'OK'
-
-
-@app.route('/dbcheck')
-def dbcheck():
-    # TODO: have to disable mysql server autostart to test no-connection condition
-    pass
-
-
 def process_word_query_result(rows):
     dict_result = {}
     for r in rows:
@@ -723,15 +712,6 @@ def gender_rules():
         return rows
 
 
-@app.route('/list_attributes/<int:list_id>')
-def list_attributes(list_id):
-    url = "%s/api/list_attributes/%s" % (Config.DB_URL, list_id)
-    r = requests.get(url)
-    result = json.loads(r.text)
-
-    return render_template('list_attributes.html', wl_row=result)
-
-
 @app.route('/api/wordlist/<int:list_id>/metadata')
 def get_list_attributes(list_id):
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
@@ -1088,35 +1068,6 @@ def update_wordlist(list_id):
             return "create list failed", 500
 
 
-@app.route('/wordlist/<int:list_id>')
-def wordlist(list_id):
-    nchunks = request.args.get('nchunks', app.config['NCHUNKS'], type=int)
-    url = "%s/api/wordlist/%s" % (Config.DB_URL, list_id)
-    r = requests.get(url)
-    result = json.loads(r.text)
-
-    if result['list_type'] == 'smart':
-        words = chunkify(result['known_words'], nchunks=nchunks)
-        return render_template('smart_wordlist.html',
-                               result=result,
-                               list_id=list_id,
-                               words=words,
-                               source_is_url=result['source_is_url'],
-                               words_count=len(result['known_words']))
-
-    known_words = chunkify(result['known_words'], nchunks=nchunks)
-    unknown_words = chunkify(result['unknown_words'], nchunks=nchunks)
-
-    return render_template('wordlist.html',
-                           result=result,
-                           list_id=list_id,
-                           source_is_url=result['source_is_url'],
-                           known_words=known_words,
-                           known_words_count=len(result['known_words']),
-                           unknown_words_count=len(result['unknown_words']),
-                           unknown_words=unknown_words)
-
-
 @app.route('/api/wordlists', methods=['DELETE'])
 def delete_wordlists():
     doomed = request.form.getlist('deletelist')
@@ -1272,8 +1223,58 @@ def wordlists():
     return render_template('wordlists.html', rows=result)
 
 
+@app.route('/healthcheck')
+def healthcheck():
+    return 'OK'
+
+
+@app.route('/dbcheck')
+def dbcheck():
+    # TODO: have to disable mysql server autostart to test no-connection condition
+    pass
+
+
+@app.route('/list_attributes/<int:list_id>')
+def list_attributes(list_id):
+    url = "%s/api/list_attributes/%s" % (Config.DB_URL, list_id)
+    r = requests.get(url)
+    result = json.loads(r.text)
+
+    return render_template('list_attributes.html', wl_row=result)
+
+
+@app.route('/wordlist/<int:list_id>')
+def wordlist(list_id):
+    nchunks = request.args.get('nchunks', app.config['NCHUNKS'], type=int)
+    url = "%s/api/wordlist/%s" % (Config.DB_URL, list_id)
+    r = requests.get(url)
+    result = r.json()
+
+    if result['list_type'] == 'smart':
+        words = chunkify(result['known_words'], nchunks=nchunks)
+        return render_template('smart_wordlist.html',
+                               result=result,
+                               list_id=list_id,
+                               words=words,
+                               source_is_url=result['source_is_url'],
+                               words_count=len(result['known_words']))
+
+    known_words = chunkify(result['known_words'], nchunks=nchunks)
+    unknown_words = chunkify(result['unknown_words'], nchunks=nchunks)
+
+    return render_template('wordlist.html',
+                           result=result,
+                           list_id=list_id,
+                           source_is_url=result['source_is_url'],
+                           known_words=known_words,
+                           known_words_count=len(result['known_words']),
+                           unknown_words_count=len(result['unknown_words']),
+                           unknown_words=unknown_words)
+
+
 @app.route('/addlist', methods=['POST'])
 def addlist():
+    # TODO - embedded sql here
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         newlist = request.form['name'].strip()
         citation = request.form['citation'].strip()
@@ -1301,6 +1302,7 @@ def deletelist():
 
 @app.route('/edit_list', methods=['POST'])
 def edit_list():
+    # TODO - embedded sql here
     name = request.form['name']
     citation = request.form['citation']
     sqlcode = request.form['sqlcode']
@@ -1318,7 +1320,7 @@ def edit_list():
 def add_to_list():
     word = request.form['word'].strip()
     list_id = request.form['list_id']
-
+    # TODO - embedded sql here
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         # count the number of times word is in the word table.
         #
@@ -1371,6 +1373,7 @@ def add_to_list():
 
 @app.route('/update_notes', methods=['POST'])
 def update_notes():
+    # TODO - embedded sql here
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         notes = request.form['notes']
         id = request.form['list_id']
@@ -1384,6 +1387,7 @@ def update_notes():
 
 @app.route('/delete_from_list', methods=['POST'])
 def delete_from_list():
+    # TODO - embedded sql here
     list_id = request.form['list_id']
     known_deleting = request.form.getlist('known_wordlist')
 
@@ -1423,6 +1427,7 @@ def delete_from_list():
         # todo:  validate input: word in not bad script, list id is int
 
 
+# TODO - embedded sql here
 def get_pos_info_for_form(cursor):
     """
     get all the part-of-speech info needed to construct the addword form.
@@ -1468,6 +1473,7 @@ order by p.id, sort_order
     return form_dict
 
 
+# TODO - embedded sql here
 def populate_form_dict(cursor, form_dict, **kwargs):
     """
     populate the form_dict with attribute values for the given word id
@@ -1602,6 +1608,7 @@ def add_to_dict():
     # can be entered in one form.  extracting the values will be painful.
     # have to look at what POS was selected, then find the form values for it.
 
+    # TODO - embedded sql here
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         if 'pos' not in request.form:
             raise Exception("select something")

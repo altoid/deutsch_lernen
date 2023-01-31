@@ -25,7 +25,7 @@
                 <input type="checkbox" name="deletelist" value="{{ r.wordlist_id }}">
             </td>
             <td>
-                {% if r.is_smart %}
+                {% if r.list_type == 'smart' %}
                 (*)
                 {% endif %}
             </td>
