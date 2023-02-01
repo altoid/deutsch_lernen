@@ -1,0 +1,31 @@
+{% extends "home.html" %}
+
+{% block body %}
+{{ super() }}
+<br>
+{% if results %}
+{% for item in results %}
+<h2>{{ item['word'] }}</h2>
+{{ item['pos_name'] }}<br>
+<table>
+    {% for attr in item['attributes'] %}
+    <tr>
+        <td>{{ attr['attrkey'] }}</td>
+        <td>{{ attr['attrvalue'] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endfor %}
+{% else %}
+{{ word }} not found
+{% endif %}
+<form action="/lookup" method="post">
+    <table>
+        <tr>
+            <td>Look up word:</td>
+            <td><input type="text" name="lookup" size="100"/></td>
+        </tr>
+    </table>
+    <input type="submit" value="Submit"/>
+</form>
+{% endblock %}

@@ -2,23 +2,26 @@
 
 {% block body %}
 {{ super() }}
-<h1><a href="{{ url_for('list_attributes', list_id=result.wordlist_id) }}">{{result.name}} ({{result.wordlist_id}})</a>
+<h1>
+    <a href="{{ url_for('list_attributes', wordlist_id=result.wordlist_id) }}">
+        {{result.name}} ({{result.wordlist_id}})
+    </a>
 </h1>
 {% if source_is_url %}
-<a href="{{ result.source }}">{{ result.source }}</a>
-{% elif result.source %}
-{{ result.source }}
+<a href="{{ result.citation }}">{{ result.citation }}</a>
+{% elif result.citation %}
+{{ result.citation }}
 {% endif %}
 <br>
 <form action="/add_to_list" method="post">
     Word:
     <input type="text" name="word"/>
     <br>
-    <input type="hidden" value="{{result.wordlist_id}}" name="list_id"/>
+    <input type="hidden" value="{{result.wordlist_id}}" name="wordlist_id"/>
     <input type="submit" value="Add Word"/>
 </form>
 <form action="/delete_from_list" method="post">
-    <input type="hidden" value="{{result.wordlist_id}}" name="list_id"/>
+    <input type="hidden" value="{{result.wordlist_id}}" name="wordlist_id"/>
     <table width="100%">
         <tr valign="top">
             <td width>
@@ -33,7 +36,7 @@
                                     <td><input type="checkbox" name="known_wordlist" value="{{ r.word_id }}"></td>
                                     <td>{{ r.article }}</td>
                                     <td>
-                                        <a href="{{ url_for('update_word_by_id', word_id=r.word_id, list_id=list_id) }}">{{
+                                        <a href="{{ url_for('update_word_by_id', word_id=r.word_id, wordlist_id=wordlist_id) }}">{{
                                             r.word }}</a></td>
                                     <td>{{ r.definition }}</td>
                                 </tr>
@@ -56,7 +59,7 @@
                                 {% for r in column %}
                                 <tr valign="top">
                                     <td><input type="checkbox" name="unknown_wordlist" value="{{ r }}"></td>
-                                    <td><a href="{{ url_for('update_word_from_form', list_id=list_id, word=r) }}">{{ r }}</a></td>
+                                    <td><a href="{{ url_for('update_word_from_form', wordlist_id=wordlist_id, word=r) }}">{{ r }}</a></td>
                                 </tr>
                                 {% endfor %}
                             </table>
@@ -79,7 +82,7 @@
         <br>
         <textarea name="notes" rows="50" cols="100">{{ result.notes }}</textarea>
         <br>
-        <input type="hidden" value="{{result.wordlist_id}}" name="list_id"/>
+        <input type="hidden" value="{{result.wordlist_id}}" name="wordlist_id"/>
         <input type="submit" value="Update Notes"/>
 </form>
 {% endblock %}

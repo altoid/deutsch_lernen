@@ -10,13 +10,13 @@
         </tr>
         <tr>
             <td>Source:</td>
-            <td><input type="text" value="{{ wl_row.source }}" name="source" size="60"></td>
+            <td><input type="text" value="{{ wl_row.citation }}" name="citation" size="60"></td>
         </tr>
-        <input type="hidden" value="{{ wl_row.id }}" name="list_id">
+        <input type="hidden" value="{{ wl_row.wordlist_id }}" name="wordlist_id">
     </table>
     <h2>Code:</h2>
     Should be a sql statement that selects a single column called 'word_id.'<br>
-    <textarea name="code" rows="20" cols="70">{{ wl_row.code }}</textarea>
+    <textarea name="sqlcode" rows="20" cols="70">{{ wl_row.sqlcode }}</textarea>
     <br>
     <input type="submit" value="Update list details"/>
 </form>

@@ -48,13 +48,13 @@ if __name__ == '__main__':
 quiz_plurals (no args)
 all words
 
-quiz_plurals -l <list_id> <list_id> ...
+quiz_plurals -l <wordlist_id> <wordlist_id> ...
 all from a list
 
 quiz_plurals -n <x> -r
 n randomly chosen
 
-quiz_plurals -n <x> -l <list_id> <list_id> ...
+quiz_plurals -n <x> -l <wordlist_id> <wordlist_id> ...
 n randomly chosen from lists
 
 quiz_plurals -n <x>
@@ -77,7 +77,7 @@ n most recent
     url = "%s/api/words/plural" % config.Config.DB_URL
     url = "%s?limit=%s&recent=%s" % (url, cl_args.nwords, cl_args.recent)
     if cl_args.listids:
-        url = "%s&list_id=%s" % (url, ','.join([str(x) for x in cl_args.listids]))
+        url = "%s&wordlist_id=%s" % (url, ','.join([str(x) for x in cl_args.listids]))
 
     pprint(url)
 

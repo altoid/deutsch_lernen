@@ -236,10 +236,6 @@ WORDLISTS_SCHEMA = {
     "items": {
         "type": "object",
         "properties": {
-            # name
-            # list_id
-            # count
-            # whether it is a smart word list
             "name": {
                 "type": "string",
                 "minLength": 1
@@ -270,6 +266,7 @@ WORDLISTS_SCHEMA = {
     }
 }
 
+# TODO - revise this to have 'words_added', 'words_removed' and wordids_removed keywords, to replace 'words' keyword.
 WORDLIST_PAYLOAD_SCHEMA = {
     # can be used for add or update of a list.
     "$id": "https://deutsch-lernen.doug/schemas/addwordlist_payload",
@@ -288,8 +285,7 @@ WORDLIST_PAYLOAD_SCHEMA = {
             "minLength": 1
         },
         "citation": {
-            "type": "string",
-            "minLength": 1
+            "type": ["string", "null"]
         },
         "notes": {
             "type": "string",
@@ -330,8 +326,7 @@ WORDLIST_METADATA_SCHEMA = {
             "minLength": 0
         },
         "citation": {
-            "type": "string",
-            "minLength": 0
+            "type": ["string", "null"]
         },
         "wordlist_id": {
             "type": "integer",

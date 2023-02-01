@@ -11,8 +11,8 @@
 <h1>New Word</h1>
 {% endif %}
 <form action="/add_to_dict" method="post">
-    {% if list_id %}
-    <input type="hidden" name="list_id" value="{{list_id}}">
+    {% if wordlist_id %}
+    <input type="hidden" name="wordlist_id" value="{{wordlist_id}}">
     {% endif %}
 
     {% if word %}
@@ -58,7 +58,7 @@
 {% if wordlists %}
 <h1>Wortlisten, die dieses Wort enthalten</h1>
 {% for wl in wordlists %}
-<a href="{{ url_for('wordlist', list_id=wl.wordlist_id) }}">{{ wl.name }}</a><br>
+<a href="{{ url_for('wordlist', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a><br>
 {% endfor %}
 {% endif %}
 {% endblock %}

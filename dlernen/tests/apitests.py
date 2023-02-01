@@ -9,8 +9,8 @@ import string
 
 SAMPLE_WORDLIST_PAYLOAD = {
     "name": "saetuasasue",
-    "source": "anteohusntaeo",
-    "code": "n;sercisr;cih",
+    "citationsource": "anteohusntaeo",
+    "sqlcode": "n;sercisr;cih",
     "notes": "aoeuaoeu",
     "words": [
         "bla",
@@ -1074,7 +1074,7 @@ class APITests(unittest.TestCase):
 
         url = "%s/api/words/plural" % config.Config.DB_URL
         url = "%s?limit=%s&%s" % (url, 5, '&'.join(args))
-        url = "%s&list_id=%s" % (url, ','.join(args))
+        url = "%s&wordlist_id=%s" % (url, ','.join(args))
 
         r = requests.get(url)
 
@@ -1265,16 +1265,16 @@ class APIWordlist(unittest.TestCase):
         r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=add_payload)
         self.assertEqual(r.status_code, 200)
         obj = r.json()
-        list_id = obj['wordlist_id']
+        wordlist_id = obj['wordlist_id']
 
         update_payload = {
         }
 
-        r = requests.put("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id), json=update_payload)
+        r = requests.put("%s/api/wordlist/%s" % (config.Config.BASE_URL, wordlist_id), json=update_payload)
         self.assertEqual(r.status_code, 200)
         obj = r.json()
 
-        r = requests.get("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        r = requests.get("%s/api/wordlist/%s" % (config.Config.BASE_URL, wordlist_id))
         self.assertEqual(r.status_code, 200)
         obj = r.json()
 
@@ -1284,7 +1284,7 @@ class APIWordlist(unittest.TestCase):
         self.assertTrue(len(obj['known_words']) > 0)
 
         # delete it
-        r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, wordlist_id))
         self.assertEqual(r.status_code, 200)
 
     # remove word by word from list -> removes from unknown

@@ -99,17 +99,17 @@ def get_word_ids_for_attrkey(limit, recent, attrkey):
         return [x['word_id'] for x in query_result]
 
 
-def get_word_ids_from_list_ids(limit, list_ids, recent, attrkey):
+def get_word_ids_from_list_ids(limit, wordlist_ids, recent, attrkey):
     """
     returns a list containing 0 or more unique word ids.
     """
 
     results = []
-    list_ids = list_ids.split(',')
+    wordlist_ids = wordlist_ids.split(',')
 
-    for list_id in list_ids:
+    for wordlist_id in wordlist_ids:
         # use the API so we don't have to worry about whether any are smart lists
-        url = "%s/api/wordlist/%s" % (Config.DB_URL, list_id)
+        url = "%s/api/wordlist/%s" % (Config.DB_URL, wordlist_id)
         r = requests.get(url)
         result = json.loads(r.text)
         if result:
@@ -165,7 +165,7 @@ def words_attrkey(attrkey):
 
     limit=n - optional.  restrict the number of word ids.  defaults to 10 if not specified.
 
-    list_id=n,n,n - optional.  restrict the word ids to those in the given lists.
+    wordlist_id=n,n,n - optional.  restrict the word ids to those in the given lists.
 
     returns a list of all of the word_ids that match the constraints.
     the ids are unique but the order is undefined.
@@ -190,9 +190,9 @@ def words_attrkey(attrkey):
         except ValueError as dammit:
             return "bad value for limit", 400
 
-        list_ids = request.args.get('list_id')
-        if list_ids:
-            word_ids = get_word_ids_from_list_ids(limit, list_ids, recent, attrkey)
+        wordlist_ids = request.args.get('wordlist_id')
+        if wordlist_ids:
+            word_ids = get_word_ids_from_list_ids(limit, wordlist_ids, recent, attrkey)
         else:
             word_ids = get_word_ids_for_attrkey(limit, recent, attrkey)
 
@@ -712,16 +712,16 @@ def gender_rules():
         return rows
 
 
-@app.route('/api/wordlist/<int:list_id>/metadata')
-def get_list_attributes(list_id):
+@app.route('/api/wordlist/<int:wordlist_id>/metadata')
+def get_list_attributes(wordlist_id):
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
     select
-        id wordlist_id, name, citation, ifnull(sqlcode, '') sqlcode
+        id wordlist_id, name, ifnull(citation, '') citation, ifnull(sqlcode, '') sqlcode
      from wordlist
     where id = %s
     """
-        cursor.execute(sql, (list_id,))
+        cursor.execute(sql, (wordlist_id,))
         wl_row = cursor.fetchone()
 
         jsonschema.validate(wl_row, dlernen.dlernen_json_schema.WORDLIST_METADATA_SCHEMA)
@@ -729,24 +729,24 @@ def get_list_attributes(list_id):
         return wl_row
 
 
-@app.route('/api/wordlist/<int:list_id>')
-def get_wordlist(list_id):
+@app.route('/api/wordlist/<int:wordlist_id>')
+def get_wordlist(wordlist_id):
     # uses WORDLIST_SCHEMA
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
         select
             id wordlist_id,
             name,
-            citation,
+            ifnull(citation, '') citation,
             ifnull(notes, '') notes,
             ifnull(sqlcode, '') sqlcode
         from wordlist
         where id = %s
         """
-        cursor.execute(sql, (list_id,))
+        cursor.execute(sql, (wordlist_id,))
         wl_row = cursor.fetchone()
         if not wl_row:
-            return "wordlist %s not found" % list_id, 404
+            return "wordlist %s not found" % wordlist_id, 404
 
         sqlcode = wl_row['sqlcode'].strip()
 
@@ -791,7 +791,7 @@ def get_wordlist(list_id):
             order by m.word
             """
 
-            cursor.execute(known_words_sql, (list_id,))
+            cursor.execute(known_words_sql, (wordlist_id,))
 
         known_words = cursor.fetchall()
 
@@ -805,7 +805,7 @@ def get_wordlist(list_id):
         order by ww.word
         """
 
-        cursor.execute(unknown_words_sql, (list_id,))
+        cursor.execute(unknown_words_sql, (wordlist_id,))
         unknown_words = cursor.fetchall()
         unknown_words = [x['word'] for x in unknown_words]
 
@@ -823,7 +823,7 @@ def get_wordlist(list_id):
         return result
 
 
-def add_words_to_list(cursor, list_id, words):
+def add_words_to_list(cursor, wordlist_id, words):
     arglist = list(words)
     format_list = ['%s'] * len(arglist)
     format_list = ', '.join(format_list)
@@ -838,7 +838,7 @@ def add_words_to_list(cursor, list_id, words):
     rows = cursor.fetchall()
     known_words = {x['word'] for x in rows}
     unknown_words = words - known_words
-    wkw_tuples = [(list_id, r['word_id']) for r in rows]
+    wkw_tuples = [(wordlist_id, r['word_id']) for r in rows]
     if wkw_tuples:
         ins_sql = """
         insert ignore into wordlist_known_word (wordlist_id, word_id)
@@ -851,7 +851,7 @@ def add_words_to_list(cursor, list_id, words):
         insert ignore into wordlist_unknown_word (wordlist_id, word)
         values (%s, %s)
         """
-        wuw_tuples = [(list_id, x) for x in unknown_words]
+        wuw_tuples = [(wordlist_id, x) for x in unknown_words]
         cursor.executemany(ins_sql, wuw_tuples)
 
 
@@ -892,17 +892,17 @@ def add_wordlist():
             cursor.execute('start transaction')
             sql = "insert into wordlist (`name`, `citation`, `sqlcode`, `notes`) values (%s, %s, %s, %s)"
             cursor.execute(sql, (name, citation, sqlcode, notes))
-            cursor.execute("select last_insert_id() list_id")
+            cursor.execute("select last_insert_id() wordlist_id")
             result = cursor.fetchone()
-            list_id = result['list_id']
+            wordlist_id = result['wordlist_id']
 
             # figure out which words are known and not known
             if words:
-                add_words_to_list(cursor, list_id, words)
+                add_words_to_list(cursor, wordlist_id, words)
 
             cursor.execute('commit')
 
-            return get_wordlist(list_id)
+            return get_wordlist(wordlist_id)
         except Exception as e:
             pprint(e)
             exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -912,13 +912,13 @@ def add_wordlist():
             return "create list failed", 500
 
 
-@app.route('/api/wordlist/<int:list_id>', methods=['DELETE'])
-def delete_wordlist(list_id):
+@app.route('/api/wordlist/<int:wordlist_id>', methods=['DELETE'])
+def delete_wordlist(wordlist_id):
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
             sql = "delete from wordlist where id = %s"
-            cursor.execute(sql, (list_id,))
+            cursor.execute(sql, (wordlist_id,))
             cursor.execute('commit')
             return "OK"
         except Exception as e:
@@ -927,19 +927,19 @@ def delete_wordlist(list_id):
             return "delete list failed", 500
 
 
-@app.route('/api/wordlist/<int:list_id>/<int:word_id>', methods=['DELETE'])
-def delete_from_wordlist_by_id(list_id, word_id):
+@app.route('/api/wordlist/<int:wordlist_id>/<int:word_id>', methods=['DELETE'])
+def delete_from_wordlist_by_id(wordlist_id, word_id):
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
             sql = "select sqlcode from wordlist where id = %s"
-            cursor.execute(sql, (list_id,))
+            cursor.execute(sql, (wordlist_id,))
             row = cursor.fetchone()
             if row and row['sqlcode']:
                 cursor.execute('rollback')
                 return "can't delete words from smart list", 400
             sql = "delete from wordlist_known_word where wordlist_id = %s and word_id = %s"
-            cursor.execute(sql, (list_id, word_id))
+            cursor.execute(sql, (wordlist_id, word_id))
             cursor.execute('commit')
             return "OK"
         except Exception as e:
@@ -951,8 +951,8 @@ def delete_from_wordlist_by_id(list_id, word_id):
             return "delete list failed", 500
 
 
-@app.route('/api/wordlist/<int:list_id>/<string:word>', methods=['DELETE'])
-def delete_from_wordlist_by_word(list_id, word):
+@app.route('/api/wordlist/<int:wordlist_id>/<string:word>', methods=['DELETE'])
+def delete_from_wordlist_by_word(wordlist_id, word):
     # removes from unknown words only
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
@@ -960,13 +960,13 @@ def delete_from_wordlist_by_word(list_id, word):
             if word:
                 cursor.execute('start transaction')
                 sql = "select sqlcode from wordlist where id = %s"
-                cursor.execute(sql, (list_id,))
+                cursor.execute(sql, (wordlist_id,))
                 row = cursor.fetchone()
                 if row and row['sqlcode']:
                     cursor.execute('rollback')
                     return "can't delete words from smart list", 400
                 sql = "delete from wordlist_unknown_word where wordlist_id = %s and word = %s"
-                cursor.execute(sql, (list_id, word))
+                cursor.execute(sql, (wordlist_id, word))
                 cursor.execute('commit')
             return "OK"
         except Exception as e:
@@ -978,30 +978,45 @@ def delete_from_wordlist_by_word(list_id, word):
             return "delete list failed", 500
 
 
-@app.route('/api/wordlist/<int:list_id>', methods=['PUT'])
-def update_wordlist(list_id):
+@app.route('/api/wordlist/<int:wordlist_id>', methods=['PUT'])
+def update_wordlist(wordlist_id):
     try:
         payload = request.get_json()
         jsonschema.validate(payload, dlernen.dlernen_json_schema.WORDLIST_PAYLOAD_SCHEMA)
     except jsonschema.ValidationError as e:
-        print("shit1")
         return "bad payload: %s" % e.message, 400
 
-    name = payload.get('name')
-    citation = payload.get('citation')
-    sqlcode = payload.get('sqlcode')
-    notes = payload.get('notes')
-    words = payload.get('words')
+    # don't update anything that isn't in the payload.
+    update_args = {}
+    name = citation = sqlcode = notes = words = None
+    if 'name' in payload:
+        name = payload.get('name')
+        if name is not None:
+            name = name.strip()
+        update_args['name'] = name
 
-    if sqlcode is not None:
-        sqlcode = sqlcode.strip()
-    if name is not None:
-        name = name.strip()
-    if citation is not None:
-        citation = citation.strip()
-    if words is not None:
-        words = [w.strip() for w in words]
-        words = set(filter(lambda x: bool(x), words))
+    if 'citation' in payload:
+        citation = payload.get('citation')
+        if citation is not None:
+            citation = citation.strip()
+        update_args['citation'] = citation
+
+    if 'sqlcode' in payload:
+        sqlcode = payload.get('sqlcode')
+        if sqlcode is not None:
+            sqlcode = sqlcode.strip()
+        update_args['sqlcode'] = sqlcode
+
+    if 'notes' in payload:
+        notes = payload.get('notes')
+        update_args['notes'] = notes
+
+    if 'words' in payload:
+        words = payload.get('words')
+        if words is not None:
+            words = [w.strip() for w in words]
+            # get the words that are not empty strings or None
+            words = set(filter(lambda x: bool(x), words))
 
     if sqlcode and words:
         return "can't modify list with sqlcode and words", 400
@@ -1010,7 +1025,7 @@ def update_wordlist(list_id):
         # this is well-behaved if citation and sqlcode are not given.
         cursor.execute('start transaction')
 
-        existing_list = get_wordlist(list_id)
+        existing_list = get_wordlist(wordlist_id)
         if existing_list['list_type'] == 'smart' and words and sqlcode != '':
             # if sqlcode is the empty string, then this is ok, because it means we are going to
             # clear out the existing sqlcode.
@@ -1022,50 +1037,39 @@ def update_wordlist(list_id):
             return "can't add code to existing list", 400
 
         try:
-            update_args = {
-                'citation': citation,
-                'notes': notes,
-                'name': name,
-                'sqlcode': sqlcode,
-                'list_id': list_id
-            }
-
             cursor.execute('start transaction')
-            sql = """
-            update wordlist
-            set `name` = case when %(name)s is not null and length(%(name)s) > 0
-                then %(name)s
-                else name
-            end,
-            citation = case when %(citation)s is not null and length(%(citation)s) > 0
-                then %(citation)s
-                else citation
-            end,
-            sqlcode = case when %(sqlcode)s is not null
-                then %(sqlcode)s
-                else sqlcode
-            end,
-            notes = case when %(notes)s is not null and length(%(notes)s) > 0
-                then %(notes)s
-                else notes
-            end
-            where id = %(list_id)s
-            """
-            cursor.execute(sql, update_args)
+            if update_args:
+                update_args['wordlist_id'] = wordlist_id
+
+                keez = ['name', 'notes', 'citation', 'sqlcode']
+                clauses = []
+                for k in keez:
+                    if k in update_args:
+                        clauses.append('`%(key)s` = %%(%(key)s)s' % {'key': k})
+
+                sql = """
+                update wordlist
+                set %(clauses)s
+                where id = %%(wordlist_id)s
+                """ % {'clauses': ', '.join(clauses)}
+
+                # print(sql)
+                # pprint(update_args)
+                cursor.execute(sql, update_args)
 
             if words:
-                add_words_to_list(cursor, list_id, words)
+                add_words_to_list(cursor, wordlist_id, words)
 
             cursor.execute('commit')
 
-            return get_wordlist(list_id)
+            return get_wordlist(wordlist_id)
         except Exception as e:
             pprint(e)
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             print(exc_type, fname, exc_tb.tb_lineno)
             cursor.execute('rollback')
-            return "create list failed", 500
+            return "update list failed", 500
 
 
 @app.route('/api/wordlists', methods=['DELETE'])
@@ -1088,16 +1092,16 @@ def get_wordlists():
     """
     request format is
 
-    ?list_id=n,n,n ... - optional.  only return info for the given lists.
+    ?wordlist_id=n,n,n ... - optional.  only return info for the given lists.
 
     """
 
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        list_ids = request.args.get('list_id')
-        if list_ids:
-            list_ids = list_ids.split(',')
-            list_ids = list(set(list_ids))
-            where_clause = "where wordlist.id in (%s)" % (','.join(['%s'] * len(list_ids)))
+        wordlist_ids = request.args.get('wordlist_id')
+        if wordlist_ids:
+            wordlist_ids = wordlist_ids.split(',')
+            wordlist_ids = list(set(wordlist_ids))
+            where_clause = "where wordlist.id in (%s)" % (','.join(['%s'] * len(wordlist_ids)))
         else:
             where_clause = ''
 
@@ -1125,7 +1129,7 @@ order by name
             'where_clause': where_clause
         }
 
-        cursor.execute(sql, list_ids)
+        cursor.execute(sql, wordlist_ids)
         rows = cursor.fetchall()
 
         # maps list id to list info
@@ -1163,7 +1167,7 @@ def get_wordlists_for_word(word_id):
         # find standard lists that this word is in
         sql = """
         select
-        wl.id list_id
+        wl.id wordlist_id
         from wordlist wl
         inner join wordlist_known_word wkw
         on wkw.wordlist_id = wl.id
@@ -1172,12 +1176,12 @@ def get_wordlists_for_word(word_id):
         """
         cursor.execute(sql, (word_id,))
         rows = cursor.fetchall()
-        static_lists = [r['list_id'] for r in rows]
+        static_lists = [r['wordlist_id'] for r in rows]
 
         # find smart lists that this word is in!
         # get all the sql
         sql = """
-        select name, sqlcode, id list_id
+        select name, sqlcode, id wordlist_id
         from wordlist
         where sqlcode is not null
         """
@@ -1194,14 +1198,14 @@ def get_wordlists_for_word(word_id):
             results_for_list = cursor.fetchall()
             results_for_list = [x['word_id'] for x in results_for_list]
             if word_id in results_for_list:
-                smart_lists.append(r['list_id'])
+                smart_lists.append(r['wordlist_id'])
 
-        list_ids = static_lists + smart_lists
+        wordlist_ids = static_lists + smart_lists
 
         result = []
-        if list_ids:
-            args = ','.join([str(x) for x in list_ids])
-            url = url_for('get_wordlists', list_id=args)
+        if wordlist_ids:
+            args = ','.join([str(x) for x in wordlist_ids])
+            url = url_for('get_wordlists', wordlist_id=args)
             url = "%s/%s" % (Config.DB_URL, url)
             r = requests.get(url)
 
@@ -1234,27 +1238,29 @@ def dbcheck():
     pass
 
 
-@app.route('/list_attributes/<int:list_id>')
-def list_attributes(list_id):
-    url = "%s/api/list_attributes/%s" % (Config.DB_URL, list_id)
+@app.route('/list_attributes/<int:wordlist_id>')
+def list_attributes(wordlist_id):
+    url = "%s/api/wordlist/%s/metadata" % (Config.DB_URL, wordlist_id)
     r = requests.get(url)
     result = json.loads(r.text)
 
     return render_template('list_attributes.html', wl_row=result)
 
 
-@app.route('/wordlist/<int:list_id>')
-def wordlist(list_id):
+@app.route('/wordlist/<int:wordlist_id>')
+def wordlist(wordlist_id):
     nchunks = request.args.get('nchunks', app.config['NCHUNKS'], type=int)
-    url = "%s/api/wordlist/%s" % (Config.DB_URL, list_id)
+    url = "%s/api/wordlist/%s" % (Config.DB_URL, wordlist_id)
     r = requests.get(url)
-    result = r.json()
+    if r.status_code == 404:
+        return redirect('/wordlists')
 
+    result = r.json()
     if result['list_type'] == 'smart':
         words = chunkify(result['known_words'], nchunks=nchunks)
         return render_template('smart_wordlist.html',
                                result=result,
-                               list_id=list_id,
+                               wordlist_id=wordlist_id,
                                words=words,
                                source_is_url=result['source_is_url'],
                                words_count=len(result['known_words']))
@@ -1264,7 +1270,7 @@ def wordlist(list_id):
 
     return render_template('wordlist.html',
                            result=result,
-                           list_id=list_id,
+                           wordlist_id=wordlist_id,
                            source_is_url=result['source_is_url'],
                            known_words=known_words,
                            known_words_count=len(result['known_words']),
@@ -1274,16 +1280,17 @@ def wordlist(list_id):
 
 @app.route('/addlist', methods=['POST'])
 def addlist():
-    # TODO - embedded sql here
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        newlist = request.form['name'].strip()
-        citation = request.form['citation'].strip()
-        sql = "insert ignore into wordlist (name, citation) values (%s, %s)"
-        cursor.execute(sql, (newlist, citation))
-        dbh.commit()
+    payload = {
+        'name': request.form['name'].strip(),
+        'citation': request.form.get('citation')
+    }
 
+    url = "%s/api/wordlist" % Config.DB_URL
+    r = requests.post(url, json=payload)
+    if r.status_code == 200:
         return redirect('/wordlists')
-        # todo:  error handling for empty list name, list that already exists
+
+    raise Exception("something went wrong in /api/wordlist POST: %s" % r.text)
 
 
 @app.route('/deletelist', methods=['POST'])
@@ -1297,29 +1304,31 @@ def deletelist():
     r = requests.delete(url, data=payload)
     if r.status_code == 200:
         return redirect('/wordlists')
-    raise Exception("something went wrong in /api/wordlists")
+    raise Exception("something went wrong in /api/wordlists: %s" % r.text)
 
 
 @app.route('/edit_list', methods=['POST'])
 def edit_list():
-    # TODO - embedded sql here
-    name = request.form['name']
-    citation = request.form['citation']
-    sqlcode = request.form['sqlcode']
-    id = request.form['list_id']
-    sql = "update wordlist set name = %s, citation = %s, sqlcode = %s where id = %s"
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        cursor.execute(sql, (name, citation, sqlcode, id))
-        dbh.commit()
+    payload = {
+        'name': request.form['name'],
+        'citation': request.form.get('citation'),
+        'sqlcode': request.form.get('sqlcode')
+    }
+    wordlist_id = request.form['wordlist_id']
 
-    target = url_for('wordlist', list_id=id)
-    return redirect(target)
+    url = "%s/api/wordlist/%s" % (Config.DB_URL, wordlist_id)
+    r = requests.put(url, json=payload)
+    if r.status_code == 200:
+        target = url_for('wordlist', wordlist_id=wordlist_id)
+        return redirect(target)
+
+    raise Exception("something went wrong in /api/wordlist PUT: %s" % r.text)
 
 
 @app.route('/add_to_list', methods=['POST'])
 def add_to_list():
     word = request.form['word'].strip()
-    list_id = request.form['list_id']
+    wordlist_id = request.form['wordlist_id']
     # TODO - embedded sql here
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         # count the number of times word is in the word table.
@@ -1343,9 +1352,9 @@ def add_to_list():
     into wordlist_unknown_word (wordlist_id, word) 
     values (%s, %s)
     """
-            cursor.execute(sql, (list_id, word))
+            cursor.execute(sql, (wordlist_id, word))
             dbh.commit()
-            target = url_for('wordlist', list_id=list_id)
+            target = url_for('wordlist', wordlist_id=wordlist_id)
             return redirect(target)
 
         if count == 1:
@@ -1356,17 +1365,17 @@ def add_to_list():
     into wordlist_known_word (wordlist_id, word_id)
     values (%s, %s)
     """
-            cursor.execute(sql, (list_id, word_id))
+            cursor.execute(sql, (wordlist_id, word_id))
             dbh.commit()
-            target = url_for('wordlist', list_id=list_id)
+            target = url_for('wordlist', wordlist_id=wordlist_id)
             return redirect(target)
 
         pos_infos, word = get_data_for_addword_form(word=word)
 
         return render_template('addword.html',
                                word=word,
-                               list_id=list_id,
-                               return_to_list_id=list_id,
+                               wordlist_id=wordlist_id,
+                               return_to_list_id=wordlist_id,
                                pos_infos=pos_infos)
         # todo:  validate input: word in not bad script, list id is int
 
@@ -1374,57 +1383,39 @@ def add_to_list():
 @app.route('/update_notes', methods=['POST'])
 def update_notes():
     # TODO - embedded sql here
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        notes = request.form['notes']
-        id = request.form['list_id']
-        sql = "update wordlist set notes = %s where id = %s"
-        cursor.execute(sql, (notes, id))
-        dbh.commit()
+    payload = {
+        'notes': request.form['notes']
+    }
+    wordlist_id = request.form['wordlist_id']
 
-        target = url_for('wordlist', list_id=id)
+    url = "%s/api/wordlist/%s" % (Config.DB_URL, wordlist_id)
+    r = requests.put(url, json=payload)
+    if r.status_code == 200:
+        target = url_for('wordlist', wordlist_id=wordlist_id)
         return redirect(target)
+
+    raise Exception("something went wrong in /api/wordlist PUT: %s" % r.text)
 
 
 @app.route('/delete_from_list', methods=['POST'])
 def delete_from_list():
     # TODO - embedded sql here
-    list_id = request.form['list_id']
+    wordlist_id = request.form['wordlist_id']
     known_deleting = request.form.getlist('known_wordlist')
+    unknown_deleting = request.form.getlist('unknown_wordlist')
 
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        if len(known_deleting):
-            format_list = ['%s'] * len(known_deleting)
-            format_args = ', '.join(format_list)
+    for word_id in known_deleting:
+        url = "%s/api/wordlist/%s/%s" % (Config.DB_URL, wordlist_id, int(word_id))
+        r = requests.delete(url)
 
-            sql = """
-    delete from wordlist_known_word
-    where wordlist_id = %%s
-    and word_id in (%s)
-    """ % format_args
+    for word in unknown_deleting:
+        url = "%s/api/wordlist/%s/%s" % (Config.DB_URL, wordlist_id, word)
+        r = requests.delete(url)
 
-            args = [list_id] + known_deleting
-            cursor.execute(sql, args)
-            dbh.commit()
+    # TODO - change API to allow batch delete.  we could do this with a single request
 
-        unknown_deleting = request.form.getlist('unknown_wordlist')
-
-        if len(unknown_deleting):
-            format_list = ['%s'] * len(unknown_deleting)
-            format_args = ', '.join(format_list)
-
-            sql = """
-    delete from wordlist_unknown_word
-    where wordlist_id = %%s
-    and word in (%s)
-    """ % format_args
-
-            args = [list_id] + unknown_deleting
-            cursor.execute(sql, args)
-            dbh.commit()
-
-        target = url_for('wordlist', list_id=list_id)
-        return redirect(target)
-        # todo:  validate input: word in not bad script, list id is int
+    target = url_for('wordlist', wordlist_id=wordlist_id)
+    return redirect(target)
 
 
 # TODO - embedded sql here
@@ -1575,7 +1566,7 @@ def add_word_from_form():
 
 @app.route('/word/<int:word_id>')
 def update_word_by_id(word_id):
-    list_id = request.args.get('list_id')
+    wordlist_id = request.args.get('wordlist_id')
 
     url = "%s/api/wordlists/%s" % (Config.DB_URL, word_id)
     r = requests.get(url)
@@ -1584,21 +1575,21 @@ def update_word_by_id(word_id):
     pos_infos, word = get_data_for_addword_form(word_id=word_id)
     return render_template('addword.html',
                            word=word,
-                           list_id=list_id,
-                           return_to_list_id=list_id,
+                           wordlist_id=wordlist_id,
+                           return_to_list_id=wordlist_id,
                            wordlists=wordlists,
                            pos_infos=pos_infos)
 
 
 @app.route('/word/<string:word>')
 def update_word_from_form(word):
-    list_id = request.args.get('list_id')
+    wordlist_id = request.args.get('wordlist_id')
 
     pos_infos, word = get_data_for_addword_form(word=word)
     return render_template('addword.html',
                            word=word,
-                           list_id=list_id,
-                           return_to_list_id=list_id,
+                           wordlist_id=wordlist_id,
+                           return_to_list_id=wordlist_id,
                            pos_infos=pos_infos)
 
 
@@ -1688,24 +1679,24 @@ def add_to_dict():
             cursor.execute(wa_sql, values)
 
         # now remove the word from unknown words and put it into known words.
-        list_id = request.form.get('list_id')
+        wordlist_id = request.form.get('wordlist_id')
         del_sql = """
     delete from wordlist_unknown_word
     where word = %s
     and wordlist_id = %s
     """
-        cursor.execute(del_sql, (word, list_id))
+        cursor.execute(del_sql, (word, wordlist_id))
 
         ins_sql = """
     insert ignore into wordlist_known_word (wordlist_id, word_id)
     values (%s, %s)
     """
-        cursor.execute(ins_sql, (list_id, word_id))
+        cursor.execute(ins_sql, (wordlist_id, word_id))
 
         dbh.commit()
 
-        if list_id:
-            target = url_for('wordlist', list_id=list_id)
+        if wordlist_id:
+            target = url_for('wordlist', wordlist_id=wordlist_id)
         else:
             # if we didn't add a word to any list, return to the editing form for this word.
             target = url_for('update_word_by_id', word_id=word_id)
