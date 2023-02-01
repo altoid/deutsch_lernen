@@ -1329,60 +1329,53 @@ def edit_list():
 def add_to_list():
     word = request.form['word'].strip()
     wordlist_id = request.form['wordlist_id']
-    # TODO - embedded sql here
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        # count the number of times word is in the word table.
-        #
-        # if it is 0, it goes into the unknown word table.
-        # if it is 1, it goes into the known word table.
-        # otherwise, present multiple choice.
 
-        sql = """
-    select word, id
-    from word
-    where word = %s
-    """
-        cursor.execute(sql, (word,))
-        rows = cursor.fetchall()
-        count = len(rows)
+    # count the number of times word is in the word table.
+    #
+    # if it is 0, it goes into the unknown word table.
+    # if it is 1, it goes into the known word table.
+    # otherwise, present multiple choice.
 
-        if count == 0:
-            sql = """
-    insert ignore
-    into wordlist_unknown_word (wordlist_id, word) 
-    values (%s, %s)
-    """
-            cursor.execute(sql, (wordlist_id, word))
-            dbh.commit()
-            target = url_for('wordlist', wordlist_id=wordlist_id)
-            return redirect(target)
+    # TODO - for now, we can only add a word to a wordlist, not a word_id.
+    payload = None
+    url = "%s/api/word/%s" % (Config.DB_URL, word)
+    r = requests.get(url)
+    if r.status_code == 404:
+        payload = {
+            "words": [
+                word
+            ]
+        }
+    elif r.status_code == 200:
+        obj = r.json()
+        if len(obj) == 1:
+            payload = {
+                "words": [
+                    word
+                ]
+            }
 
-        if count == 1:
-            row = rows[0]
-            word_id = row['id']
-            sql = """
-    insert ignore
-    into wordlist_known_word (wordlist_id, word_id)
-    values (%s, %s)
-    """
-            cursor.execute(sql, (wordlist_id, word_id))
-            dbh.commit()
-            target = url_for('wordlist', wordlist_id=wordlist_id)
-            return redirect(target)
+    if payload:
+        url = "%s/api/wordlist/%s" % (Config.DB_URL, wordlist_id)
+        r = requests.put(url, json=payload)
+        if r.status_code != 200:
+            raise Exception("well, shit")
 
-        pos_infos, word = get_data_for_addword_form(word=word)
+        target = url_for('wordlist', wordlist_id=wordlist_id)
+        return redirect(target)
 
-        return render_template('addword.html',
-                               word=word,
-                               wordlist_id=wordlist_id,
-                               return_to_list_id=wordlist_id,
-                               pos_infos=pos_infos)
-        # todo:  validate input: word in not bad script, list id is int
+    pos_infos, word = get_data_for_addword_form(word=word)
+
+    return render_template('addword.html',
+                           word=word,
+                           wordlist_id=wordlist_id,
+                           return_to_list_id=wordlist_id,
+                           pos_infos=pos_infos)
+    # todo:  validate input: word in not bad script, list id is int
 
 
 @app.route('/update_notes', methods=['POST'])
 def update_notes():
-    # TODO - embedded sql here
     payload = {
         'notes': request.form['notes']
     }
@@ -1399,7 +1392,6 @@ def update_notes():
 
 @app.route('/delete_from_list', methods=['POST'])
 def delete_from_list():
-    # TODO - embedded sql here
     wordlist_id = request.form['wordlist_id']
     known_deleting = request.form.getlist('known_wordlist')
     unknown_deleting = request.form.getlist('unknown_wordlist')
