@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block body %}
+{{ super() }}
+<table>
+    <tr>
+        <td><a href="{{ url_for('home') }}">Startseite</a></td>
+    </tr>
+</table>
+{% endblock %}

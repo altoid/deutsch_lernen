@@ -1,27 +1,20 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-        "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<head>
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <link rel="stylesheet" href="/static/styles.css">
-    {% block title %}
-    {% endblock %}
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}
+Ein Geschichte über zwei Städte
+{% endblock %}
+
+{% block body %}
 <table>
     <tr>
-        <td><a href="{{ url_for('wordlists') }}">Startseite</a></td>
-        {% if return_to_list_id %}
+        <td>
+            Look up a word
+        </td>
     </tr>
     <tr>
-        <td><a href="{{ url_for('wordlist', wordlist_id=return_to_list_id) }}">zur Liste zurückkehren</a></td>
-        {% endif %}
+        <td>
+            <a href="{{ url_for('wordlists') }}">Manage word lists</a>
+        </td>
     </tr>
-    <td>
-      <a href="{{ url_for('add_word_from_form') }}">Add a word</a>
-    </td>
 </table>
-{% block body %}
 {% endblock %}
-</body>
-</html>

@@ -1218,6 +1218,10 @@ def get_wordlists_for_word(word_id):
 
 
 @app.route('/')
+def home():
+    return render_template('home.html')
+
+
 @app.route('/wordlists')
 def wordlists():
     url = "%s/api/wordlists" % Config.DB_URL
@@ -1518,7 +1522,7 @@ def get_data_for_addword_form(**kwargs):
 
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         form_dict = get_pos_info_for_form(cursor)
-
+        # pprint(form_dict)
         if word_id:
             word_id = int(word_id)
             # this is harder.  in this case we have an existing word.  we need
@@ -1546,6 +1550,7 @@ def get_data_for_addword_form(**kwargs):
             pos_infos.append(pos_info)
 
         pos_infos = sorted(pos_infos, key=lambda x: x['pos_id'])
+        # pprint(pos_infos)
         return pos_infos, word
 
 
