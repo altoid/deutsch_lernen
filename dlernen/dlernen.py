@@ -1290,7 +1290,6 @@ def wordlist(wordlist_id):
         words = chunkify(result['known_words'], nchunks=nchunks)
         return render_template('smart_wordlist.html',
                                result=result,
-                               wordlist_id=wordlist_id,
                                words=words)
 
     known_words = chunkify(result['known_words'], nchunks=nchunks)
@@ -1298,7 +1297,6 @@ def wordlist(wordlist_id):
 
     return render_template('wordlist.html',
                            result=result,
-                           wordlist_id=wordlist_id,
                            known_words=known_words,
                            unknown_words=unknown_words)
 
