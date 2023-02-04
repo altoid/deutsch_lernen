@@ -15,6 +15,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # TODO strip strings before storing in DB
+# TODO - in list attributes, don't display code text field if the list is standard.
 
 
 def chunkify(arr, **kwargs):
@@ -1220,6 +1221,31 @@ def get_wordlists_for_word(word_id):
 @app.route('/')
 def home():
     return render_template('home.html')
+
+
+def get_lookup_render_template(word):
+    url = "%s/api/word/%s" % (Config.DB_URL, word)
+    results = None
+    r = requests.get(url)
+    if r.status_code == 404:
+        pass
+    elif r.status_code == 200:
+        results = r.json()
+        pprint(results)
+    return render_template('lookup.html',
+                           word=word,
+                           results=results)
+
+
+@app.route('/lookup/<string:word>', methods=['GET'])
+def lookup_by_get(word):
+    return get_lookup_render_template(word)
+
+
+@app.route('/lookup', methods=['POST'])
+def lookup_by_post():
+    word = request.form.get('lookup')
+    return get_lookup_render_template(word)
 
 
 @app.route('/wordlists')

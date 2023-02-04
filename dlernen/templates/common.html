@@ -6,5 +6,10 @@
     <tr>
         <td><a href="{{ url_for('home') }}">Startseite</a></td>
     </tr>
+    {% if return_to_wordlist_id is defined %}
+    <tr>
+        <td><a href="{{ url_for('wordlist', wordlist_id=return_to_wordlist_id) }}">zur Liste zurückkehren</a></td>
+    </tr>
+    {% endif %}
 </table>
 {% endblock %}

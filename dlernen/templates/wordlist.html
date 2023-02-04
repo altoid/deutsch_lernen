@@ -36,8 +36,8 @@
                                     <td><input type="checkbox" name="known_wordlist" value="{{ r.word_id }}"></td>
                                     <td>{{ r.article }}</td>
                                     <td>
-                                        <a href="{{ url_for('update_word_by_id', word_id=r.word_id, wordlist_id=wordlist_id) }}">{{
-                                            r.word }}</a></td>
+                                        <a href="{{ url_for('lookup_by_get', word=r.word) }}">{{ r.word }}</a>
+                                    </td>
                                     <td>{{ r.definition }}</td>
                                 </tr>
                                 {% endfor %}
