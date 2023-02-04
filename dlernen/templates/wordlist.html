@@ -7,7 +7,7 @@
         {{result.name}} ({{result.wordlist_id}})
     </a>
 </h1>
-{% if source_is_url %}
+{% if result['source_is_url'] == true %}
 <a href="{{ result.citation }}">{{ result.citation }}</a>
 {% elif result.citation %}
 {{ result.citation }}
@@ -25,7 +25,7 @@
     <table width="100%">
         <tr valign="top">
             <td width>
-                <h2>Bekannte Worte ({{ known_words_count }})</h2>
+                <h2>Bekannte Worte ({{ result['known_words']|length }})</h2>
                 <table>
                     <tr valign="top">
                         {% for column in known_words %}
@@ -50,7 +50,7 @@
         </tr>
         <tr>
             <td width>
-                <h2>Unbekannte Worte ({{ unknown_words_count }})</h2>
+                <h2>Unbekannte Worte ({{ result['unknown_words']|length }})</h2>
                 <table>
                     <tr valign="top">
                         {% for column in unknown_words %}

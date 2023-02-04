@@ -5,7 +5,7 @@
 <h1><a href="{{ url_for('list_attributes', wordlist_id=result.wordlist_id) }}">{{result.name}}
     ({{result.wordlist_id}})</a>
 </h1>
-{% if source_is_url %}
+{% if result['source_is_url'] == true %}
 <a href="{{ result.citation }}">{{ result.citation }}</a>
 {% elif result.citation %}
 {{ result.citation }}
@@ -14,7 +14,7 @@
 <table width="100%">
     <tr valign="top">
         <td width>
-            <h2>Wörter ({{ words_count }})</h2>
+            <h2>Wörter ({{ result['known_words']|length }})</h2>
             <table>
                 <tr valign="top">
                     {% for column in words %}
