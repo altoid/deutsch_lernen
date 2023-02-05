@@ -684,7 +684,7 @@ def add_attributes(word_id):
                 rows_to_insert.append(t)
 
             if rows_to_insert:
-                pprint(rows_to_insert)
+                # pprint(rows_to_insert)
                 sql = """
                 insert into word_attribute (attribute_id, word_id, attrvalue)
                 values (%s, %s, %s)
@@ -1223,7 +1223,7 @@ def home():
     return render_template('home.html')
 
 
-def get_lookup_render_template(word):
+def get_lookup_render_template(word, wordlist_id=None):
     url = "%s/api/word/%s" % (Config.DB_URL, word)
     results = None
     r = requests.get(url)
@@ -1231,15 +1231,17 @@ def get_lookup_render_template(word):
         pass
     elif r.status_code == 200:
         results = r.json()
-        pprint(results)
+        # pprint(results)
     return render_template('lookup.html',
                            word=word,
+                           return_to_wordlist_id=wordlist_id,
                            results=results)
 
 
 @app.route('/lookup/<string:word>', methods=['GET'])
 def lookup_by_get(word):
-    return get_lookup_render_template(word)
+    wordlist_id = request.args.get('wordlist_id')
+    return get_lookup_render_template(word, wordlist_id)
 
 
 @app.route('/lookup', methods=['POST'])
