@@ -1247,7 +1247,8 @@ def lookup_by_get(word):
 @app.route('/lookup', methods=['POST'])
 def lookup_by_post():
     word = request.form.get('lookup')
-    return get_lookup_render_template(word)
+    wordlist_id = request.form.get('wordlist_id')
+    return get_lookup_render_template(word, wordlist_id)
 
 
 @app.route('/wordlists')
@@ -1276,7 +1277,9 @@ def list_attributes(wordlist_id):
     r = requests.get(url)
     result = json.loads(r.text)
 
-    return render_template('list_attributes.html', wl_row=result)
+    return render_template('list_attributes.html',
+                           wl_row=result,
+                           return_to_wordlist_id=wordlist_id)
 
 
 @app.route('/wordlist/<int:wordlist_id>')

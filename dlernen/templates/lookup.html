@@ -25,6 +25,9 @@
 {% endif %}
 <br>
 <form action="/lookup" method="post">
+    {% if return_to_wordlist_id != none %}
+    <input type="hidden" value="{{return_to_wordlist_id}}" name="wordlist_id"/>
+    {% endif %}
     <table>
         <tr>
             <td>Look up word:</td>
