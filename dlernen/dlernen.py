@@ -15,7 +15,6 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # TODO strip strings before storing in DB
-# TODO - in list attributes, don't display code text field if the list is standard.
 
 
 def chunkify(arr, **kwargs):
@@ -1273,12 +1272,12 @@ def dbcheck():
 
 @app.route('/list_attributes/<int:wordlist_id>')
 def list_attributes(wordlist_id):
-    url = "%s/api/wordlist/%s/metadata" % (Config.DB_URL, wordlist_id)
+    url = "%s/api/wordlist/%s" % (Config.DB_URL, wordlist_id)
     r = requests.get(url)
-    result = json.loads(r.text)
+    result = r.json()
 
     return render_template('list_attributes.html',
-                           wl_row=result,
+                           wordlist=result,
                            return_to_wordlist_id=wordlist_id)
 
 
