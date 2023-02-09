@@ -4,9 +4,6 @@
 {{ super() }}
 {% if word %}
 <h1>{{ word }}</h1>
-<a href="{{ url_for('add_word_from_form') }}">Add another word</a>
-<br>
-<br>
 {% else %}
 <h1>New Word</h1>
 {% endif %}
@@ -16,7 +13,7 @@
     {% endif %}
 
     {% if word %}
-    <input type="text" name="word" value="{{word}}"> (for correcting spelling)
+    <input type="text" name="word" value="{{word}}">
     {% else %}
     <input type="text" name="word">
     {% endif %}

@@ -1739,6 +1739,75 @@ class APIWordlist(unittest.TestCase):
         self.assertEqual(200, r.status_code)
 
 
+class APIWordlistActions(unittest.TestCase):
+    """
+    tests of operations on lists where we need to set up and tear down a list.
+    TODO: maybe some of the tests in APIWordlist can be moved here.
+    """
+    def setUp(self):
+        self.list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': self.list_name
+        }
+        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=add_payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        self.wordlist_id = obj['wordlist_id']
+
+    def test_add_double_word(self):
+        # add the same word twice to the dictionary
+        # put both into the wordlist
+        # make sure they both appear in the wordlist.
+        random_noun = ''.join(random.choices(string.ascii_lowercase, k=20))
+        add_payload = {
+            "word": random_noun,
+            "pos_name": "noun",
+            "attributes": [
+                {
+                    "attrkey": "article",
+                    "attrvalue": "der"
+                },
+                {
+                    "attrkey": "plural",
+                    "attrvalue": "Xxxxxxxxxx"
+                },
+                {
+                    "attrkey": "definition",
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+
+        r = requests.post("%s/api/word" % config.Config.BASE_URL, json=add_payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+        word_id_1 = obj['word_id']
+
+        # add the word to the dict again
+        r = requests.post("%s/api/word" % config.Config.BASE_URL, json=add_payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+        word_id_2 = obj['word_id']
+
+        update_payload = {
+            'words': [
+                random_noun
+            ]
+        }
+
+        r = requests.put("%s/api/wordlist/%s" % (config.Config.BASE_URL, self.wordlist_id), json=update_payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+
+        self.assertEqual(2, len(obj['known_words']))
+
+        r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, word_id_1), json=update_payload)
+        r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, word_id_2), json=update_payload)
+
+    def tearDown(self):
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.DB_URL, self.wordlist_id))
+        self.assertEqual(200, r.status_code)
+
 
 if __name__ == '__main__':
     unittest.main()

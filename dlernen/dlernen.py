@@ -15,6 +15,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # TODO strip strings before storing in DB
+# TODO when retrieving 'articles' for non-nouns, value should be NULL, not ''
 
 
 def chunkify(arr, **kwargs):
@@ -1375,12 +1376,11 @@ def add_to_list():
         }
     elif r.status_code == 200:
         obj = r.json()
-        if len(obj) == 1:
-            payload = {
-                "words": [
-                    word
-                ]
-            }
+        payload = {
+            "words": [
+                word
+            ]
+        }
 
     if payload:
         url = "%s/api/wordlist/%s" % (Config.DB_URL, wordlist_id)
@@ -1396,7 +1396,7 @@ def add_to_list():
     return render_template('addword.html',
                            word=word,
                            wordlist_id=wordlist_id,
-                           return_to_list_id=wordlist_id,
+                           return_to_wordlist_id=wordlist_id,
                            pos_infos=pos_infos)
     # todo:  validate input: word in not bad script, list id is int
 
@@ -1584,21 +1584,21 @@ def add_word_from_form():
                            pos_infos=pos_infos)
 
 
-@app.route('/word/<int:word_id>')
-def update_word_by_id(word_id):
-    wordlist_id = request.args.get('wordlist_id')
-
-    url = "%s/api/wordlists/%s" % (Config.DB_URL, word_id)
-    r = requests.get(url)
-    wordlists = json.loads(r.text)
-
-    pos_infos, word = get_data_for_addword_form(word_id=word_id)
-    return render_template('addword.html',
-                           word=word,
-                           wordlist_id=wordlist_id,
-                           return_to_list_id=wordlist_id,
-                           wordlists=wordlists,
-                           pos_infos=pos_infos)
+# @app.route('/word/<int:word_id>')
+# def update_word_by_id(word_id):
+#     wordlist_id = request.args.get('wordlist_id')
+#
+#     url = "%s/api/wordlists/%s" % (Config.DB_URL, word_id)
+#     r = requests.get(url)
+#     wordlists = json.loads(r.text)
+#
+#     pos_infos, word = get_data_for_addword_form(word_id=word_id)
+#     return render_template('addword.html',
+#                            word=word,
+#                            wordlist_id=wordlist_id,
+#                            return_to_wordlist_id=wordlist_id,
+#                            wordlists=wordlists,
+#                            pos_infos=pos_infos)
 
 
 @app.route('/word/<string:word>')
@@ -1609,7 +1609,7 @@ def update_word_from_form(word):
     return render_template('addword.html',
                            word=word,
                            wordlist_id=wordlist_id,
-                           return_to_list_id=wordlist_id,
+                           return_to_wordlist_id=wordlist_id,
                            pos_infos=pos_infos)
 
 
