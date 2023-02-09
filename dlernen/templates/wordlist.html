@@ -34,7 +34,11 @@
                                 {% for r in column %}
                                 <tr valign="top">
                                     <td><input type="checkbox" name="known_wordlist" value="{{ r.word_id }}"></td>
-                                    <td>{{ r.article }}</td>
+                                    <td>
+                                        {% if r.article != none %}
+                                        {{ r.article }}
+                                        {% endif %}
+                                    </td>
                                     <td>
                                         <a href="{{ url_for('lookup_by_get', word=r.word, wordlist_id=result.wordlist_id) }}">{{ r.word }}</a>
                                     </td>

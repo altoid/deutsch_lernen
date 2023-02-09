@@ -171,7 +171,6 @@ SAMPLE_WORDLIST_DETAIL_RESULT = {
         {
             "word": "aoeuaeou",
             "word_id": 123,
-            "article": "",
             "definition": "hell if i know"
         },
         {

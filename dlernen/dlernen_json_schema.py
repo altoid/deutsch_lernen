@@ -381,7 +381,8 @@ WORDLIST_SCHEMA = {
                         "minimum": 1
                     },
                     "article": {
-                        "type": "string"
+                        "type": ["string", "null"],
+                        "minLength": 1
                     },
                     "definition": {
                         "type": "string",

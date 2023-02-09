@@ -15,7 +15,6 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # TODO strip strings before storing in DB
-# TODO when retrieving 'articles' for non-nouns, value should be NULL, not ''
 
 
 def chunkify(arr, **kwargs):
@@ -761,7 +760,7 @@ def get_wordlist(wordlist_id):
                   m.word word,
                   matching.word_id,
                   m.attrvalue definition,
-                  ifnull(m2.attrvalue, '') article
+                  m2.attrvalue article  -- possibly null
             from  matching
             left  join mashup_v m
             on    matching.word_id = m.word_id
@@ -780,7 +779,7 @@ def get_wordlist(wordlist_id):
                 m.word,
                 m.word_id,
                 m.attrvalue definition,
-                ifnull(m2.attrvalue, '') article
+                m2.attrvalue article  -- possibly null
             from wordlist_known_word ww
             left join mashup_v m
             on   ww.word_id = m.word_id
