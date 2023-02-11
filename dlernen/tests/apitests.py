@@ -364,15 +364,6 @@ class APITestsWordPOST(unittest.TestCase):
         r = requests.post(config.Config.BASE_URL + "/api/word", json=payload)
         self.assertNotEqual(r.status_code, 200)
 
-    # attributes not in payload
-    def test_attribute_not_in_payload(self):
-        payload = {
-            "word": "blahblah",
-            "pos_name": "noun"
-        }
-        r = requests.post(config.Config.BASE_URL + "/api/word", json=payload)
-        self.assertNotEqual(r.status_code, 200)
-
     # payload not json
     def test_payload_not_json(self):
         payload = "this is some bullshit right here"
@@ -520,7 +511,7 @@ class APITestsWordPUT(unittest.TestCase):
     def test_bullshit_word_id(self):
         update_payload = {
             "word": "blah",
-            "attributes": [
+            "attributes_updating": [
                 {
                     "attrvalue_id": self.obj['attributes'][0]['attrvalue_id'],
                     "attrvalue": "der"
@@ -536,10 +527,10 @@ class APITestsWordPUT(unittest.TestCase):
         self.assertNotEqual(200, r.status_code)
 
     # bullshit attr ids
-    def test_bullshit_attrids(self):
+    def test_update_bullshit_attrids(self):
         update_payload = {
             "word": "blah",
-            "attributes": [
+            "attributes_updating": [
                 {
                     "attrvalue_id": 5555555555555,
                     "attrvalue": "der"
@@ -554,12 +545,24 @@ class APITestsWordPUT(unittest.TestCase):
         r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=update_payload)
         self.assertNotEqual(200, r.status_code)
 
+    def test_delete_bullshit_attrids(self):
+        update_payload = {
+            "word": "blah",
+            "attributes_deleting": [
+                555555555555555,
+                666666666666666
+            ]
+        }
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=update_payload)
+        self.assertNotEqual(200, r.status_code)
+
     # zero-length word
     def test_zero_length_word(self):
         # updating with word = "" not allowed.
         update_payload = {
             "word": "",
-            "attributes": [
+            "attributes_updating": [
                 {
                     "attrvalue_id": self.obj['attributes'][0]['attrvalue_id'],
                     "attrvalue": "der"
@@ -579,7 +582,7 @@ class APITestsWordPUT(unittest.TestCase):
         # updating with attrvalue = "" not allowed.
         update_payload = {
             "word": "aoeuoae",
-            "attributes": [
+            "attributes_updating": [
                 {
                     "attrvalue_id": self.obj['attributes'][0]['attrvalue_id'],
                     "attrvalue": ""
@@ -598,7 +601,7 @@ class APITestsWordPUT(unittest.TestCase):
     def test_attrvalue_keyword_missing(self):
         update_payload = {
             "word": "aoeuoae",
-            "attributes": [
+            "attributes_updating": [
                 {
                     "attrvalue_id": self.obj['attributes'][0]['attrvalue_id']
                 },
@@ -616,7 +619,7 @@ class APITestsWordPUT(unittest.TestCase):
     def test_attrvalue_id_keyword_missing(self):
         update_payload = {
             "word": "aoeuoae",
-            "attributes": [
+            "attributes_updating": [
                 {
                     "attrvalue": "turnips"
                 },
@@ -625,15 +628,6 @@ class APITestsWordPUT(unittest.TestCase):
                     "attrvalue": "Foofoo"
                 }
             ]
-        }
-
-        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=update_payload)
-        self.assertNotEqual(200, r.status_code)
-
-    # attributes keyword missing
-    def test_attributes_keyword_missing(self):
-        update_payload = {
-            "word": "aoeuoae"
         }
 
         r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=update_payload)
@@ -650,8 +644,7 @@ class APITestsWordPUT(unittest.TestCase):
     def test_change_spelling(self):
         new_word = 'aoeuaeouoeau'
         update_payload = {
-            'word': new_word,
-            'attributes': []
+            'word': new_word
         }
 
         r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=update_payload)
@@ -668,7 +661,7 @@ class APITestsWordPUT(unittest.TestCase):
         new_word = 'respell_word_succeeded'
         update_payload = {
             'word': new_word,
-            'attributes': [
+            'attributes_updating': [
                 {
                     'attrvalue_id': victim,
                     'attrvalue': new_value
@@ -691,7 +684,6 @@ class APITestsWordPUT(unittest.TestCase):
     # trivial no-op payload is ok.
     def test_noop_update(self):
         update_payload = {
-            'attributes': []
         }
 
         r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=update_payload)
@@ -1795,6 +1787,174 @@ class APIWordlist(unittest.TestCase):
         self.assertEqual(200, r.status_code)
 
 
+class APIWordUpdate(unittest.TestCase):
+    def setUp(self):
+        # create a random verb
+        self.verb = ''.join(random.choices(string.ascii_lowercase, k=11))
+        add_payload = {
+            "word": self.verb,
+            "pos_name": "verb"
+        }
+
+        r = requests.post("%s/api/word" % config.Config.BASE_URL, json=add_payload)
+        obj = r.json()
+        self.word_id = obj['word_id']
+
+    def test_add_update_delete_attribute_1(self):
+        # add, update, and delete the same attr value in 3 separate requests
+        old_def = "it smells like cereal here"
+        attrkey = "definition"
+        payload = {
+            "attributes_adding": [
+                {
+                    "attrkey": attrkey,
+                    "attrvalue": old_def
+                }
+            ]
+        }
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+
+        attrs = list(filter(lambda x: x['attrkey'] == attrkey, obj['attributes']))
+        defn = attrs[0]
+        self.assertEqual(old_def, defn['attrvalue'])
+
+        # update definition
+        new_def = "try this on for size"
+
+        payload = {
+            "attributes_updating": [
+                {
+                    "attrvalue_id": defn['attrvalue_id'],
+                    "attrvalue": new_def
+                }
+            ]
+        }
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+
+        attrs = list(filter(lambda x: x['attrkey'] == attrkey, obj['attributes']))
+        defn = attrs[0]
+        self.assertEqual(new_def, defn['attrvalue'])
+
+        # delete
+        payload = {
+            "attributes_deleting": [
+                defn['attrvalue_id']
+            ]
+        }
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+
+        attrs = list(filter(lambda x: x['attrkey'] == attrkey, obj['attributes']))
+        defn = attrs[0]
+        self.assertIsNone(defn['attrvalue'])
+
+    def test_add_update_delete_attribute_2(self):
+        # add, update, and delete attribute values in a single request
+        old_def = "it smells like cereal here"
+        payload = {
+            "attributes_adding": [
+                {
+                    "attrkey": "definition",
+                    "attrvalue": old_def
+                },
+                {
+                    "attrkey": "first_person_singular",
+                    "attrvalue": "mr_lonely"
+                }
+            ]
+        }
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+
+        # remove the definition, add 2nd person singular, update 1st person singular, in one request
+        fps = list(filter(lambda x: x['attrkey'] == 'first_person_singular', obj['attributes']))[0]
+        defn = list(filter(lambda x: x['attrkey'] == 'definition', obj['attributes']))[0]
+
+        new_fps = "what hath god wrought"
+        sps_val = "my nose hurts"
+        payload = {
+            "attributes_adding": [
+                {
+                    "attrkey": "second_person_singular",
+                    "attrvalue": sps_val
+                }
+            ],
+            "attributes_deleting": [
+                defn['attrvalue_id']
+            ],
+            "attributes_updating": [
+                {
+                    "attrvalue_id": fps['attrvalue_id'],
+                    "attrvalue": new_fps
+                }
+            ]
+        }
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        fps = list(filter(lambda x: x['attrkey'] == 'first_person_singular', obj['attributes']))[0]
+        sps = list(filter(lambda x: x['attrkey'] == 'second_person_singular', obj['attributes']))[0]
+        defn = list(filter(lambda x: x['attrkey'] == 'definition', obj['attributes']))[0]
+
+        self.assertEqual(new_fps, fps['attrvalue'])
+        self.assertEqual(sps_val, sps['attrvalue'])
+        self.assertIsNone(defn['attrvalue'])
+
+    def test_update_delete_same_attr(self):
+        # error if we attempt to update and delete the same attr id.
+        old_def = "it smells like cereal here"
+        attrkey = "definition"
+        payload = {
+            "attributes_adding": [
+                {
+                    "attrkey": attrkey,
+                    "attrvalue": old_def
+                }
+            ]
+        }
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+
+        defn = list(filter(lambda x: x['attrkey'] == attrkey, obj['attributes']))[0]
+
+        payload = {
+            "attributes_updating": [
+                {
+                    "attrvalue_id": defn['attrvalue_id'],
+                    "attrvalue": "not the same at all"
+                }
+            ],
+            "attributes_deleting": [
+                defn['attrvalue_id']
+            ]
+        }
+
+        r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=payload)
+        self.assertNotEqual(200, r.status_code)
+
+        r = requests.get("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id))
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        defn = list(filter(lambda x: x['attrkey'] == attrkey, obj['attributes']))[0]
+        self.assertEqual(old_def, defn['attrvalue'])
+
+    def tearDown(self):
+        r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id))
+
+
 class APIWordlistActions(unittest.TestCase):
     """
     tests of operations on lists where we need to set up and tear down a list.
@@ -1857,8 +2017,8 @@ class APIWordlistActions(unittest.TestCase):
 
         self.assertEqual(2, len(obj['known_words']))
 
-        r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, word_id_1), json=update_payload)
-        r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, word_id_2), json=update_payload)
+        r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, word_id_1))
+        r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, word_id_2))
 
     def tearDown(self):
         r = requests.delete("%s/api/wordlist/%s" % (config.Config.DB_URL, self.wordlist_id))

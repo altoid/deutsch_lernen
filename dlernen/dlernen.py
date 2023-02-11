@@ -429,7 +429,6 @@ def add_word():
     # - attrvalues are not degenerate
     # note:  adding a word with no attributes is allowed
 
-    #pprint(payload)
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
@@ -461,7 +460,7 @@ def add_word():
             pos_id = rows[0]['pos_id']
             defined_attrkeys = set(attrdict.keys())
 
-            request_attrkeys = {a['attrkey'].strip() for a in payload['attributes']}
+            request_attrkeys = {a['attrkey'].strip() for a in payload.get('attributes', set())}
             undefined_attrkeys = request_attrkeys - defined_attrkeys
             if len(undefined_attrkeys) > 0:
                 message = "attribute keys not defined:  %s" % ', '.join(list(undefined_attrkeys))
@@ -469,7 +468,7 @@ def add_word():
                 return message, 400
 
             # check that attrvalues are all strings len > 0
-            payload_attrvalues = {a['attrvalue'].strip() for a in payload['attributes']}
+            payload_attrvalues = {a['attrvalue'].strip() for a in payload.get('attributes', set())}
             bad_attrvalues = list(filter(lambda x: not bool(x), payload_attrvalues))
             if len(bad_attrvalues) > 0:
                 message = "attribute values cannot be empty strings"
@@ -482,25 +481,29 @@ def add_word():
             result = cursor.fetchone()
             word_id = result['word_id']
 
-            for a in payload['attributes']:
-                attrvalue = a['attrvalue'].strip()
-
-                link_d = {
+            insert_args = [
+                {
                     "word_id": word_id,
                     "attribute_id": attrdict[a['attrkey']],
-                    "attrvalue": attrvalue
+                    "attrvalue": a['attrvalue'].strip()
                 }
-
+                for a in payload.get('attributes', set())
+            ]
+            if insert_args:
                 sql = """insert into word_attribute (word_id, attribute_id, attrvalue)
                 values (%(word_id)s, %(attribute_id)s, %(attrvalue)s)
                 """
-                cursor.execute(sql, link_d)
+                cursor.executemany(sql, insert_args)
 
             cursor.execute('commit')
 
             return get_word_by_id(word_id)  # this is already validated and jsonified
 
         except Exception as e:
+            pprint(e)
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
             cursor.execute('rollback')
             return "error, transaction rolled back", 500
 
@@ -517,8 +520,9 @@ def update_word(word_id):
     # word_id exists
     # word is nonempty if present
     # zero-length attribute list is ok
-    # attrvalue ids exist and belong to the word
-    # TODO - attrvalue ids in deleting and updating are disjoint
+    # attrvalue ids exist and belong to the word, for both update and delete cases
+    # attrvalue ids in deleting and updating are disjoint
+    # attrkeys are defined for the word, for both update and add cases
     # new attrvalues are all strings len > 0.
 
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
@@ -526,14 +530,14 @@ def update_word(word_id):
             cursor.execute('start transaction')
 
             sql = """
-            select attrvalue_id
+            select attrkey, attribute_id, attrvalue_id
             from mashup_v
             where word_id = %(word_id)s
-            and attrvalue_id is not null
             """
             cursor.execute(sql, {'word_id': word_id})
             rows = cursor.fetchall()
             defined_attrvalue_ids = {r['attrvalue_id'] for r in rows}
+            defined_attrkeys = {r['attrkey'] for r in rows}
 
             if len(defined_attrvalue_ids) == 0:
                 # word_id is bogus
@@ -541,10 +545,37 @@ def update_word(word_id):
                 cursor.execute('rollback')
                 return message, 404
 
-            payload_attrvalue_ids = {a['attrvalue_id'] for a in payload['attributes']}
-            undefined_attrvalue_ids = payload_attrvalue_ids - defined_attrvalue_ids
+            payload_updating_attrvalue_ids = {a['attrvalue_id'] for a in payload.get('attributes_updating', set())}
+            undefined_attrvalue_ids = payload_updating_attrvalue_ids - defined_attrvalue_ids
             if len(undefined_attrvalue_ids) > 0:
                 message = "attrvalue_ids not defined:  %s" % ', '.join(list(undefined_attrvalue_ids))
+                cursor.execute('rollback')
+                return message, 400
+
+            payload_deleting_attrvalue_ids = set(payload.get('attributes_deleting', []))
+            undefined_attrvalue_ids = payload_deleting_attrvalue_ids - defined_attrvalue_ids
+            if len(undefined_attrvalue_ids) > 0:
+                message = "attrvalue_ids not defined:  %s" % ', '.join(list(undefined_attrvalue_ids))
+                cursor.execute('rollback')
+                return message, 400
+
+            deleting_and_updating_ids = payload_deleting_attrvalue_ids & payload_updating_attrvalue_ids
+            if deleting_and_updating_ids:
+                message = "attempting to delete and update attr ids:  %s" % ', '.join(list(deleting_and_updating_ids))
+                cursor.execute('rollback')
+                return message, 400
+
+            payload_updating_attrvalue_ids = {a['attrvalue_id'] for a in payload.get('attributes_updating', set())}
+            undefined_attrvalue_ids = payload_updating_attrvalue_ids - defined_attrvalue_ids
+            if len(undefined_attrvalue_ids) > 0:
+                message = "attrvalue_ids not defined:  %s" % ', '.join(list(undefined_attrvalue_ids))
+                cursor.execute('rollback')
+                return message, 400
+
+            payload_adding_attrkeys = {a['attrkey'] for a in payload.get('attributes_adding', set())}
+            undefined_attrkeys = payload_adding_attrkeys - defined_attrkeys
+            if len(undefined_attrkeys) > 0:
+                message = "attrkeys not defined:  %s" % ', '.join(list(undefined_attrkeys))
                 cursor.execute('rollback')
                 return message, 400
 
@@ -556,7 +587,7 @@ def update_word(word_id):
                 return message, 400
 
             # check that attrvalues are all strings len > 0
-            payload_attrvalues = {a['attrvalue'].strip() for a in payload['attributes']}
+            payload_attrvalues = {a['attrvalue'].strip() for a in payload.get('attributes', set())}
             bad_attrvalues = list(filter(lambda x: not bool(x), payload_attrvalues))
             if len(bad_attrvalues) > 0:
                 message = "attribute values cannot be empty strings"
@@ -564,6 +595,7 @@ def update_word(word_id):
                 return message, 400
 
             # checks complete, let's do this.
+            attrdict = {r['attrkey']: r['attribute_id'] for r in rows}
 
             if word:
                 sql = """
@@ -581,18 +613,48 @@ def update_word(word_id):
             set attrvalue = %(attrvalue)s
             where id = %(attrvalue_id)s
             """
-            for a in payload['attributes']:
-                d = {
+            update_args = [
+                {
                     'attrvalue': a['attrvalue'].strip(),
                     'attrvalue_id': a['attrvalue_id']
                 }
-                cursor.execute(sql, d)
+                for a in payload.get('attributes_updating', set())
+            ]
+            if update_args:
+                cursor.executemany(sql, update_args)
+
+            sql = """
+            insert ignore into word_attribute(attribute_id, word_id, attrvalue)
+            values (%(attribute_id)s, %(word_id)s, %(attrvalue)s)
+            """
+            insert_args = [
+                {
+                    'attrvalue': a['attrvalue'].strip(),
+                    'word_id': word_id,
+                    'attribute_id': attrdict[a['attrkey']]
+                }
+                for a in payload.get('attributes_adding', set())
+            ]
+            if insert_args:
+                cursor.executemany(sql, insert_args)
+
+            sql = """
+            delete from word_attribute where id = %s
+            """
+            if payload_deleting_attrvalue_ids:
+                # args to executemany have to be a 2d list, i.e. list of lists
+                args = [[x] for x in payload_deleting_attrvalue_ids]
+                cursor.executemany(sql, args)
 
             cursor.execute('commit')
 
-            return get_word_by_id(word_id)  # this is already validated and jsonified
+            return get_word_by_id(word_id)
 
         except Exception as e:
+            pprint(e)
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
             cursor.execute('rollback')
             return "error, transaction rolled back", 500
 
