@@ -7,7 +7,7 @@
 {% else %}
 <h1>New Word</h1>
 {% endif %}
-<form action="/add_to_dict" method="post">
+<form action="/update_dict" method="post">
     {% if wordlist_id %}
     <input type="hidden" name="wordlist_id" value="{{wordlist_id}}">
     {% endif %}
@@ -24,9 +24,9 @@
         <tr>
             <td>
                 {% if pos_info.get('checked') %}
-                <input type="radio" name="pos" value="{{ pos_info['pos_id'] }}" checked>
+                <input type="radio" name="word_id" value="{{ pos_info['word_id'] }}" checked>
                 {% else %}
-                <input type="radio" name="pos" value="{{ pos_info['pos_id'] }}">
+                <input type="radio" name="word_id" value="{{ pos_info['word_id'] }}">
                 {% endif %}
             </td>
             <td>

@@ -349,7 +349,7 @@ def get_word_by_id(word_id):
 def get_word(word):
     """
     return attributes for every word that matches <word>.  since
-    (word, pos_id) is a unique key, it is possible to return more than
+    words are not unique (e.g. Bank), it is possible to return more than
     one set of attributes for a given word.  ex: 'braten' is a noun
     and a verb.
 
@@ -628,6 +628,8 @@ def get_words():
     jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
 
     return result
+
+# TODO - delete an attribute value - /api/<word_id>/attribute/<attrvalue_id>
 
 
 @app.route('/api/<int:word_id>/attribute', methods=['POST'])
@@ -1217,6 +1219,88 @@ def get_wordlists_for_word(word_id):
         return result
 
 
+@app.route('/api/word/metadata')
+def word_metadata():
+    """
+    get all of the attributes for all parts of speech.  if a word is given (not a word_id), then enrich
+    the POS data with all the attribute values for the word.  the data structure returned will be used in
+    the UI to edit the word and its attribute values.
+
+    optional arguments:
+    word - the word for which we are getting all the things.
+
+    if a word is not provided then we only return enough info to create and populate an empty form.
+    """
+
+    word = request.args.get('word')
+
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        sql = """
+    with pos_info as
+(
+select
+    p.id pos_id,
+    p.name pos_name,
+    a.id attribute_id,
+    a.attrkey,
+    pf.sort_order
+from pos p
+inner join pos_form pf on pf.pos_id = p.id
+inner join attribute a on a.id = pf.attribute_id
+)
+select
+        concat(pos_info.pos_id, '-', pos_info.attribute_id, '-', pos_info.attrkey) field_key,
+        pos_info.pos_name,
+        pos_info.pos_id,
+        pos_info.sort_order,
+        pos_info.attrkey,
+        mashup_v.word_id,
+        mashup_v.word,
+        mashup_v.attrvalue,
+        mashup_v.attrvalue_id
+from pos_info
+left join  mashup_v on mashup_v.pos_id = pos_info.pos_id and mashup_v.attribute_id = pos_info.attribute_id
+    """
+
+        if word:
+            sql += " and mashup_v.word = %(word)s"
+            cursor.execute(sql, {'word': word})
+        else:
+            sql += " and mashup_v.word is NULL"
+            cursor.execute(sql)
+
+        rows = cursor.fetchall()
+        pprint(rows)
+        result = {}
+        for r in rows:
+            if r['pos_name'] not in result:
+                result[r['pos_name']] = {
+                    'pos_name': r['pos_name'],
+                    'pos_id': r['pos_id'],
+                    'pos_fields': []
+                }
+                if r['word_id']:
+                    result[r['pos_name']]['word_id'] = r['word_id']
+            d = {
+                k: r.get(k) for k in r.keys() & {
+                    'attrkey',
+                    'field_key',
+                    'pos_name',
+                    'sort_order',
+                    'field_key'
+                }
+            }
+            if r['attrvalue']:
+                d['attrvalue'] = r['attrvalue']
+                d['attrvalue_id'] = r['attrvalue_id']
+            result[r['pos_name']]['pos_fields'].append(d)
+
+        for v in result.values():
+            v['pos_fields'] = sorted(v['pos_fields'], key=lambda x: x['sort_order'])
+        result = list(result.values())
+        return result
+
+
 @app.route('/')
 def home():
     return render_template('home.html')
@@ -1391,6 +1475,9 @@ def add_to_list():
         return redirect(target)
 
     pos_infos, word = get_data_for_addword_form(word=word)
+    # url = "%s/api/word/metadata?word=%s" % (Config.BASE_URL, word)
+    # r = requests.get(url)
+    # pos_infos = r.json()
 
     return render_template('addword.html',
                            word=word,
@@ -1601,10 +1688,13 @@ def add_word_from_form():
 
 
 @app.route('/word/<string:word>')
-def update_word_from_form(word):
+def edit_word_form(word):
     wordlist_id = request.args.get('wordlist_id')
 
-    pos_infos, word = get_data_for_addword_form(word=word)
+    url = "%s/api/word/metadata?word=%s" % (Config.BASE_URL, word)
+    r = requests.get(url)
+    pos_infos = r.json()
+    pprint(pos_infos)
     return render_template('addword.html',
                            word=word,
                            wordlist_id=wordlist_id,
@@ -1612,16 +1702,29 @@ def update_word_from_form(word):
                            pos_infos=pos_infos)
 
 
-@app.route('/add_to_dict', methods=['POST'])
-def add_to_dict():
+@app.route('/update_dict', methods=['POST'])
+def update_dict():
     # for user convenience, all the parts of speech and their attributes
     # can be entered in one form.  extracting the values will be painful.
     # have to look at what POS was selected, then find the form values for it.
 
     # TODO - embedded sql here
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        if 'pos' not in request.form:
+        if 'word_id' not in request.form:
             raise Exception("select something")
+
+        # if 'word_id' is in the form, then some part of speech was selected.  but the value of word_id
+        # could still be ''.  if we have a real word id, then we update that word.  if we do not have a word
+        # id, then we are adding it.
+
+        pprint(request.form)
+
+        word_id = request.form.get('word_id')
+        if not word_id:
+            raise NotImplemented('add word via form not implemented')
+
+        # we are updating.  figure out all the attribute values we have to add/remove/update.
+
 
         # add the word to get the word_id
         form_pos_id = request.form['pos']

@@ -8,7 +8,15 @@ Ein Geschichte über zwei Städte
 <table>
     <tr>
         <td>
-            Look up a word
+            <form action="/lookup" method="post">
+                <table>
+                    <tr>
+                        <td>Look up word:</td>
+                        <td><input type="text" name="lookup" size="30"/></td>
+                    </tr>
+                </table>
+                <input type="submit" value="Submit"/>
+            </form>
         </td>
     </tr>
     <tr>
