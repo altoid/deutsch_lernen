@@ -83,8 +83,7 @@ UPDATEWORD_PAYLOAD_SCHEMA = {
     "description": "Payload for update word",
     "type": "object",
     "required": [
-        # "word" not required for update
-        "attributes"
+        # no required fields
     ],
     "properties": {
         "word": {
@@ -92,7 +91,34 @@ UPDATEWORD_PAYLOAD_SCHEMA = {
             "type": "string",
             "minLength": 1
         },
-        "attributes": {
+        "attributes_adding": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "attrvalue",
+                    "attrkey"
+                ],
+                "properties": {
+                    "attrkey": {
+                        "type": "string",
+                        "minimum": 1
+                    },
+                    "attrvalue": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                }
+            }
+        },
+        "attributes_deleting": {
+            "type": "array",
+            "items": {
+                "type": "integer",
+                "minimum": 1
+            }
+        },
+        "attributes_updating": {
             "type": "array",
             "items": {
                 "type": "object",

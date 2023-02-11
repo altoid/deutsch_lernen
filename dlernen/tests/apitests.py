@@ -53,13 +53,28 @@ SAMPLE_ADDATTRIBUTES_PAYLOAD = {
 
 SAMPLE_UPDATEWORD_PAYLOAD = {
     "word": "blah",  # in case we need to change spelling.  optional.  word id is in the URL.
-    "attributes": [  # required but can be empty.
+    # the attributes lists are optional and can be empty.  if not empty they must have the right structure.
+    "attributes_updating": [
         {
             "attrvalue_id": 444,
             "attrvalue": "der"  # cannot be empty string.
         },
         {
             "attrvalue_id": 555,
+            "attrvalue": "Foofoo"
+        }
+    ],
+    "attributes_deleting": [
+        444,
+        555
+    ],
+    "attributes_adding": [
+        {
+            "attrkey": "article",
+            "attrvalue": "der"  # cannot be empty string.
+        },
+        {
+            "attrkey": "definition",
             "attrvalue": "Foofoo"
         }
     ]
@@ -223,6 +238,48 @@ class SchemaTests(unittest.TestCase):
 
     def test_updateword_payload_sample(self):
         jsonschema.validate(SAMPLE_UPDATEWORD_PAYLOAD, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
+
+    def test_updateword_payload_sample_2(self):
+        sample_payload = {}
+        jsonschema.validate(sample_payload, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
+
+    def test_updateword_payload_sample_3(self):
+        sample_payload = {
+            'word': 'wordonly'
+        }
+        jsonschema.validate(sample_payload, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
+
+    def test_updateword_payload_sample_4(self):
+        sample_payload = {
+            'attributes_adding': [],
+            'attributes_deleting': [],
+            'attributes_updating': []
+        }
+        jsonschema.validate(sample_payload, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
+
+    def test_updateword_payload_sample_5(self):
+        sample_payload = {
+            'attributes_adding': [
+                {
+                    "attrkey": "no value"
+                }
+            ]
+        }
+
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            jsonschema.validate(sample_payload, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
+
+    def test_updateword_payload_sample_6(self):
+        sample_payload = {
+            'attributes_updating': [
+                {
+                    "attrvalue": "no id"
+                }
+            ]
+        }
+
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            jsonschema.validate(sample_payload, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
 
     def test_add_attributes_payload_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)

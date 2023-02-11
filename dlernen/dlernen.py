@@ -518,6 +518,7 @@ def update_word(word_id):
     # word is nonempty if present
     # zero-length attribute list is ok
     # attrvalue ids exist and belong to the word
+    # TODO - attrvalue ids in deleting and updating are disjoint
     # new attrvalues are all strings len > 0.
 
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
