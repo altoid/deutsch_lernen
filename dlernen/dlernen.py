@@ -1281,9 +1281,9 @@ def refresh_wordlists():
             cursor.execute('rollback')
             return "refresh wordlists failed", 500
 
-
+# TODO - implement a get-by-word version of this.
 @app.route('/api/wordlists/<int:word_id>')
-def get_wordlists_for_word(word_id):
+def get_wordlists_by_word_id(word_id):
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         # find standard lists that this word is in
         sql = """
@@ -1743,8 +1743,9 @@ def update_dict():
     if word:
         payload['word'] = word.strip()
 
+    # pprint(attrs_from_form)
     for k, v in attrs_from_form.items():
-        if 'attrvalue' not in v:
+        if 'attrvalue' not in v and 'attrvalue_id' in v:
             payload["attributes_deleting"].append(int(v['attrvalue_id']))
         elif 'attrvalue_id' not in v:
             payload["attributes_adding"].append(
