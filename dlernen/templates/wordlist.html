@@ -64,7 +64,7 @@
                                 <tr valign="top">
                                     <td><input type="checkbox" name="unknown_wordlist" value="{{ r }}"></td>
                                     <td>
-                                        <a href="{{ url_for('update_word_from_form', wordlist_id=result.wordlist_id, word=r) }}">{{
+                                        <a href="{{ url_for('edit_word_form', wordlist_id=result.wordlist_id, word=r) }}">{{
                                             r }}</a></td>
                                 </tr>
                                 {% endfor %}

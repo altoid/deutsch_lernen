@@ -520,7 +520,7 @@ def update_word(word_id):
     # checks:
     # word_id exists
     # word is nonempty if present
-    # zero-length attribute list is ok
+    # zero-length or non-existent attribute list is ok
     # attrvalue ids exist and belong to the word, for both update and delete cases
     # attrvalue ids in deleting and updating are disjoint
     # attrkeys are defined for the word, for both update and add cases
@@ -996,6 +996,7 @@ def delete_wordlist(wordlist_id):
 
 @app.route('/api/wordlist/<int:wordlist_id>/<int:word_id>', methods=['DELETE'])
 def delete_from_wordlist_by_id(wordlist_id, word_id):
+    # removes from known words only
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
@@ -1180,7 +1181,7 @@ with wordlist_counts as
         select wordlist_id, count(*) c
         from wordlist_unknown_word
         group by wordlist_id
-        union
+        union all
         select wordlist_id, count(*) c
         from wordlist_known_word
         group by wordlist_id
@@ -1222,10 +1223,63 @@ order by name
                 smartlist_rows = cursor.fetchall()
                 dict_result[r['wordlist_id']]['count'] = len(smartlist_rows)
 
-        # json_schema.WORDLISTS_SCHEMA
         result = list(dict_result.values())
         jsonschema.validate(result, dlernen.dlernen_json_schema.WORDLISTS_SCHEMA)
         return result
+
+
+@app.route('/api/wordlists', methods=['PUT'])
+def refresh_wordlists():
+    """
+    this is used when a word in some wordlist's unknowns has been defined.  we are given the word
+    and the newly minted word id.  we'll look for every wordlist where the given word was an unknown,
+    remove it from the unknowns and put it into the knowns.
+
+    payload:
+    {
+        'word': 'whatever',
+        'word_id':  <word_id>
+    }
+    TODO - create a validation schema for this payload.
+    """
+
+    payload = request.get_json()
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        try:
+            cursor.execute('start transaction')
+
+            sql = """
+            select wordlist_id
+            from wordlist_unknown_word
+            where word = %(word)s
+            """
+            cursor.execute(sql, {'word': payload['word']})
+            rows = cursor.fetchall()
+
+            sql = """
+            delete from wordlist_unknown_word
+            where word = %(word)s
+            """
+            cursor.execute(sql, {'word': payload['word']})
+
+            insert_args = [(r['wordlist_id'], payload['word_id']) for r in rows]
+            if insert_args:
+                sql = """
+                insert ignore
+                into wordlist_known_word (wordlist_id, word_id)
+                values (%s, %s)
+                """
+
+                cursor.executemany(sql, insert_args)
+            cursor.execute('commit')
+            return "OK"
+        except Exception as e:
+            pprint(e)
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            cursor.execute('rollback')
+            return "refresh wordlists failed", 500
 
 
 @app.route('/api/wordlists/<int:word_id>')
@@ -1322,8 +1376,8 @@ select
         field_key,
         case
         when mashup_v.word_id is not null then
-        concat(pos_info.pos_id, '-', mashup_v.word_id)
-        else pos_info.pos_id
+        concat(pos_info.pos_id, '-', pos_info.pos_name, '-', mashup_v.word_id)
+        else concat(pos_info.pos_id, '-', pos_info.pos_name)
         end tag,
         pos_info.pos_name,
         pos_info.sort_order,
@@ -1509,12 +1563,6 @@ def add_to_list():
     word = request.form['word'].strip()
     wordlist_id = request.form['wordlist_id']
 
-    # count the number of times word is in the word table.
-    #
-    # if it is 0, it goes into the unknown word table.
-    # if it is 1, it goes into the known word table.
-    # otherwise, present multiple choice.
-
     # TODO - for now, we can only add a word to a wordlist, not a word_id.
     payload = None
     url = "%s/api/word/%s" % (Config.DB_URL, word)
@@ -1533,26 +1581,16 @@ def add_to_list():
             ]
         }
 
-    if payload:
-        url = "%s/api/wordlist/%s" % (Config.DB_URL, wordlist_id)
-        r = requests.put(url, json=payload)
-        if r.status_code != 200:
-            raise Exception("well, shit")
+    if not payload:
+        raise Exception("add_to_list could not make payload")
 
-        target = url_for('wordlist', wordlist_id=wordlist_id)
-        return redirect(target)
+    url = "%s/api/wordlist/%s" % (Config.DB_URL, wordlist_id)
+    r = requests.put(url, json=payload)
+    if r.status_code != 200:
+        raise Exception("well, shit")
 
-    pos_infos, word = get_data_for_addword_form(word=word)
-    # url = "%s/api/word/metadata?word=%s" % (Config.BASE_URL, word)
-    # r = requests.get(url)
-    # pos_infos = r.json()
-
-    return render_template('addword.html',
-                           word=word,
-                           wordlist_id=wordlist_id,
-                           return_to_wordlist_id=wordlist_id,
-                           pos_infos=pos_infos)
-    # todo:  validate input: word in not bad script, list id is int
+    target = url_for('wordlist', wordlist_id=wordlist_id)
+    return redirect(target)
 
 
 @app.route('/update_notes', methods=['POST'])
@@ -1591,170 +1629,6 @@ def delete_from_list():
     return redirect(target)
 
 
-# TODO - embedded sql here
-def get_pos_info_for_form(cursor):
-    """
-    get all the part-of-speech info needed to construct the addword form.
-    the data returned is for POS only and is not specific to any word.
-
-    returns a dictionary that looks like this:
-
-    pos_id => field_key (pos_id-attr_id-attrkey) => {
-         field_key:
-         attrkey:
-         pos_name:
-         sort_order:
-    }
-    """
-    sql = """
-select
-    p.id pos_id,
-    p.name pos_name,
-    a.id attribute_id,
-    a.attrkey,
-    sort_order
-from pos p
-inner join pos_form pf on pf.pos_id = p.id
-inner join attribute a on a.id = pf.attribute_id
-order by p.id, sort_order
-"""
-
-    cursor.execute(sql)
-    pos_list = cursor.fetchall()
-
-    form_dict = {}
-    for pos in pos_list:
-        if not form_dict.get(pos['pos_id']):
-            form_dict[pos['pos_id']] = {}
-        k = '%s-%s-%s' % (pos['pos_id'], pos['attribute_id'], pos['attrkey'])
-        form_dict[pos['pos_id']][k] = {
-            'field_key': k,
-            'pos_name': pos['pos_name'],
-            'attrkey': pos['attrkey'],
-            'sort_order': pos['sort_order']
-        }
-
-    return form_dict
-
-
-# TODO - embedded sql here
-def populate_form_dict(cursor, form_dict, **kwargs):
-    """
-    populate the form_dict with attribute values for the given word id
-    """
-    word_id = kwargs.get('word_id')
-    word = kwargs.get('word')
-
-    if bool(word_id) == bool(word):
-        raise Exception("exactly one of word_id and word must be set")
-
-    checked_pos = None
-
-    if word_id:
-        sql = """
-select
-    word_id, word, pos_id, pos_name, attribute_id, attrkey,
-    ifnull(attrvalue, '') attrvalue, sort_order
-from mashup_v
-where word_id in
-(
-        select id from word
-        where word in (
-              select word from word where id = %s
-        )
-)
-"""
-        cursor.execute(sql, (word_id,))
-    else:
-        sql = """
-select
-    word_id, word, pos_id, pos_name, attribute_id, attrkey,
-    ifnull(attrvalue, '') attrvalue, sort_order
-from mashup_v
-where word_id in
-(
-        select id from word
-        where word in (
-              select word from word where word = %s
-        )
-)
-"""
-        cursor.execute(sql, (word,))
-
-    value_rows = cursor.fetchall()
-    for r in value_rows:
-        word = r['word']
-        k = '%s-%s-%s' % (r['pos_id'], r['attribute_id'], r['attrkey'])
-        pos_id = r['pos_id']
-        form_dict[pos_id][k]['attrvalue'] = r['attrvalue']
-        if r['word_id'] == word_id:
-            checked_pos = r['pos_id']
-
-    return checked_pos, word
-
-
-def get_data_for_addword_form(**kwargs):
-    word = kwargs.get('word')
-    word_id = kwargs.get('word_id')
-
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        form_dict = get_pos_info_for_form(cursor)
-        # pprint(form_dict)
-        if word_id:
-            word_id = int(word_id)
-            # this is harder.  in this case we have an existing word.  we need
-            # to fill in all the attribute values for it, for all parts of
-            # speech for this word that exist in this word list.
-
-            checked_pos, word = populate_form_dict(cursor, form_dict, word_id=word_id)
-        elif word:
-            checked_pos, word = populate_form_dict(cursor, form_dict, word=word)
-        else:
-            checked_pos = word = None
-
-        pos_infos = []
-        for k in list(form_dict.keys()):
-            pos_fields = [x for x in list(form_dict[k].values())]
-            l = sorted(pos_fields, key=lambda x: x['sort_order'])
-            pos_info = {
-                'pos_id': k,
-                'pos_fields': l,
-                'pos_name': l[0]['pos_name']
-            }
-            if checked_pos == k:
-                pos_info['checked'] = True
-
-            pos_infos.append(pos_info)
-
-        pos_infos = sorted(pos_infos, key=lambda x: x['pos_id'])
-        # pprint(pos_infos)
-        return pos_infos, word
-
-
-@app.route('/word')
-def add_word_from_form():
-    pos_infos, word = get_data_for_addword_form()
-    return render_template('addword.html',
-                           pos_infos=pos_infos)
-
-
-# @app.route('/word/<int:word_id>')
-# def update_word_by_id(word_id):
-#     wordlist_id = request.args.get('wordlist_id')
-#
-#     url = "%s/api/wordlists/%s" % (Config.DB_URL, word_id)
-#     r = requests.get(url)
-#     wordlists = json.loads(r.text)
-#
-#     pos_infos, word = get_data_for_addword_form(word_id=word_id)
-#     return render_template('addword.html',
-#                            word=word,
-#                            wordlist_id=wordlist_id,
-#                            return_to_wordlist_id=wordlist_id,
-#                            wordlists=wordlists,
-#                            pos_infos=pos_infos)
-
-
 @app.route('/word/<string:word>')
 def edit_word_form(word):
     wordlist_id = request.args.get('wordlist_id')
@@ -1762,7 +1636,6 @@ def edit_word_form(word):
     url = "%s/api/word/metadata?word=%s" % (Config.BASE_URL, word)
     r = requests.get(url)
     pos_infos = r.json()
-    # pprint(pos_infos)
     return render_template('addword.html',
                            word=word,
                            wordlist_id=wordlist_id,
@@ -1772,30 +1645,19 @@ def edit_word_form(word):
 
 @app.route('/update_dict', methods=['POST'])
 def update_dict():
-    # pprint(request.form)
-
     tag = request.form.get('tag')
     if not tag:
         raise Exception("select something")
 
-    # tag is <pos_id>-<word_id> for the editing case and <pos_id> for the adding case.
+    # tag is <pos_id>-<pos_name>-<word_id> for the editing case and <pos_id>-<pos_name> for the adding case.
 
     tag_parts = tag.split('-')
     pos_id = tag_parts[0]
     word_id = None
-    if len(tag_parts) > 1:
-        word_id = tag_parts[1]
-
-    if not word_id:
-        raise NotImplemented('add word via form not implemented')
-        # TODO - implement the add word case
-        # TODO - whenever we add a word to the dictionary, we have to go through every word list
-        # where the word was unknown and move it to the known words for the list.
-
-    # we are updating.  figure out all the attribute values we have to add/remove/update.
+    if len(tag_parts) > 2:
+        word_id = tag_parts[2]
 
     # get all the attribute info from the form and turn it into a dict.
-
     attrs_from_form = {}
     for f in request.form.keys():
         field_key_parts = f.split('-')
@@ -1811,6 +1673,58 @@ def update_dict():
             if len(field_key_parts) > 2:
                 attrs_from_form[attrkey]['attrvalue_id'] = int(field_key_parts[2])
 
+    if not word_id:
+        pos_name = tag_parts[1]
+        word = request.form.get('word')
+        if word is not None:
+            word = word.strip()
+        if not word:
+            raise Exception('word for add_word is empty')
+        payload = {
+            'word': word,
+            'pos_name': pos_name,
+            'attributes': []
+        }
+
+        for k in attrs_from_form.keys():
+            attrvalue = attrs_from_form[k].get('attrvalue')
+            if attrvalue:
+                payload['attributes'].append(
+                    {
+                        'attrkey': k,
+                        'attrvalue': attrvalue
+                    }
+                )
+
+        url = "%s/api/word" % Config.DB_URL
+        r = requests.post(url, json=payload)
+        if r.status_code != 200:
+            raise Exception("failed to insert word '%s'" % word)
+
+        obj = r.json()
+
+        # remove this word from the unknown wordlists and put the word_id into the known words for those lists.
+
+        refresh_payload = {
+            'word': word,
+            'word_id': obj['word_id']
+        }
+        url = "%s/api/wordlists" % Config.DB_URL
+        r = requests.put(url, json=refresh_payload)
+        if r.status_code != 200:
+            raise Exception("failed to refresh word lists")
+
+        wordlist_id = request.form.get('wordlist_id')
+        if wordlist_id:
+            target = url_for('wordlist', wordlist_id=wordlist_id)
+        else:
+            # if we didn't add a word to any list, return to the editing form for this word.
+            target = url_for('edit_word_form', word=word)
+
+        return redirect(target)
+
+    # we are updating.  figure out all the attribute values we have to add/remove/update.
+
     # go through the contents of the form and figure out what changes to make.  cases:
     #
     # 1.  if there is an attrvalue_id but no value, we are deleting.
@@ -1824,8 +1738,10 @@ def update_dict():
     }
 
     word = request.form.get('word')
+    if word is not None:
+        word = word.strip()
     if word:
-        payload['word'] = word
+        payload['word'] = word.strip()
 
     for k, v in attrs_from_form.items():
         if 'attrvalue' not in v:
@@ -1839,8 +1755,6 @@ def update_dict():
             )
         else:
             payload['attributes_updating'].append(v)
-
-    # pprint(payload)
 
     url = "%s/api/word/%s" % (Config.DB_URL, word_id)
     r = requests.put(url, json=payload)
