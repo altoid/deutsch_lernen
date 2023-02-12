@@ -14,6 +14,7 @@ import os
 app = Flask(__name__)
 app.config.from_object(Config)
 
+
 # TODO strip strings before storing in DB
 
 
@@ -692,6 +693,7 @@ def get_words():
 
     return result
 
+
 # TODO - delete an attribute value - /api/<word_id>/attribute/<attrvalue_id>
 
 
@@ -1053,7 +1055,7 @@ def update_wordlist(wordlist_id):
 
     # don't update anything that isn't in the payload.
     update_args = {}
-    name = citation = sqlcode = notes = words = None
+    sqlcode = words = None
     if 'name' in payload:
         name = payload.get('name')
         if name is not None:
@@ -1299,7 +1301,7 @@ def word_metadata():
 
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
-    with pos_info as
+with pos_info as
 (
 select
     p.id pos_id,
@@ -1312,18 +1314,25 @@ inner join pos_form pf on pf.pos_id = p.id
 inner join attribute a on a.id = pf.attribute_id
 )
 select
-        concat(pos_info.pos_id, '-', pos_info.attribute_id, '-', pos_info.attrkey) field_key,
+        case
+        when mashup_v.attrvalue_id is not null then
+        concat(pos_info.pos_id, '-', pos_info.attrkey, '-', mashup_v.attrvalue_id)
+        else concat(pos_info.pos_id, '-', pos_info.attrkey)
+        end
+        field_key,
+        case
+        when mashup_v.word_id is not null then
+        concat(pos_info.pos_id, '-', mashup_v.word_id)
+        else pos_info.pos_id
+        end tag,
         pos_info.pos_name,
-        pos_info.pos_id,
         pos_info.sort_order,
         pos_info.attrkey,
-        mashup_v.word_id,
         mashup_v.word,
-        mashup_v.attrvalue,
-        mashup_v.attrvalue_id
+        mashup_v.attrvalue
 from pos_info
 left join  mashup_v on mashup_v.pos_id = pos_info.pos_id and mashup_v.attribute_id = pos_info.attribute_id
-    """
+"""
 
         if word:
             sql += " and mashup_v.word = %(word)s"
@@ -1333,31 +1342,27 @@ left join  mashup_v on mashup_v.pos_id = pos_info.pos_id and mashup_v.attribute_
             cursor.execute(sql)
 
         rows = cursor.fetchall()
-        pprint(rows)
+        # pprint(rows)
         result = {}
         for r in rows:
             if r['pos_name'] not in result:
                 result[r['pos_name']] = {
                     'pos_name': r['pos_name'],
-                    'pos_id': r['pos_id'],
+                    'tag': r['tag'],
                     'pos_fields': []
                 }
-                if r['word_id']:
-                    result[r['pos_name']]['word_id'] = r['word_id']
             d = {
                 k: r.get(k) for k in r.keys() & {
                     'attrkey',
-                    'field_key',
-                    'pos_name',
                     'sort_order',
                     'field_key'
                 }
             }
             if r['attrvalue']:
                 d['attrvalue'] = r['attrvalue']
-                d['attrvalue_id'] = r['attrvalue_id']
             result[r['pos_name']]['pos_fields'].append(d)
 
+        # TODO - define schema for the data structure returned here.
         for v in result.values():
             v['pos_fields'] = sorted(v['pos_fields'], key=lambda x: x['sort_order'])
         result = list(result.values())
@@ -1757,7 +1762,7 @@ def edit_word_form(word):
     url = "%s/api/word/metadata?word=%s" % (Config.BASE_URL, word)
     r = requests.get(url)
     pos_infos = r.json()
-    pprint(pos_infos)
+    # pprint(pos_infos)
     return render_template('addword.html',
                            word=word,
                            wordlist_id=wordlist_id,
@@ -1767,123 +1772,84 @@ def edit_word_form(word):
 
 @app.route('/update_dict', methods=['POST'])
 def update_dict():
-    # for user convenience, all the parts of speech and their attributes
-    # can be entered in one form.  extracting the values will be painful.
-    # have to look at what POS was selected, then find the form values for it.
+    # pprint(request.form)
 
-    # TODO - embedded sql here
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        if 'word_id' not in request.form:
-            raise Exception("select something")
+    tag = request.form.get('tag')
+    if not tag:
+        raise Exception("select something")
 
-        # if 'word_id' is in the form, then some part of speech was selected.  but the value of word_id
-        # could still be ''.  if we have a real word id, then we update that word.  if we do not have a word
-        # id, then we are adding it.
+    # tag is <pos_id>-<word_id> for the editing case and <pos_id> for the adding case.
 
-        pprint(request.form)
+    tag_parts = tag.split('-')
+    pos_id = tag_parts[0]
+    word_id = None
+    if len(tag_parts) > 1:
+        word_id = tag_parts[1]
 
-        word_id = request.form.get('word_id')
-        if not word_id:
-            raise NotImplemented('add word via form not implemented')
+    if not word_id:
+        raise NotImplemented('add word via form not implemented')
+        # TODO - implement the add word case
+        # TODO - whenever we add a word to the dictionary, we have to go through every word list
+        # where the word was unknown and move it to the known words for the list.
 
-        # we are updating.  figure out all the attribute values we have to add/remove/update.
+    # we are updating.  figure out all the attribute values we have to add/remove/update.
 
+    # get all the attribute info from the form and turn it into a dict.
 
-        # add the word to get the word_id
-        form_pos_id = request.form['pos']
+    attrs_from_form = {}
+    for f in request.form.keys():
+        field_key_parts = f.split('-')
+        p = field_key_parts[0]
+        if p != pos_id:
+            continue
+        attrkey = field_key_parts[1]
+        if attrkey not in attrs_from_form:
+            attrs_from_form[attrkey] = {}
+            attrvalue = request.form.get(f)
+            if attrvalue:
+                attrs_from_form[attrkey]['attrvalue'] = attrvalue
+            if len(field_key_parts) > 2:
+                attrs_from_form[attrkey]['attrvalue_id'] = int(field_key_parts[2])
 
-        # get the name of the pos
-        q = """
-    select name
-    from pos
-    where id = %s
-    """
+    # go through the contents of the form and figure out what changes to make.  cases:
+    #
+    # 1.  if there is an attrvalue_id but no value, we are deleting.
+    # 2.  if there is an attrvalue but no attrvalue id, we are adding.
+    # 3.  if both are present, we are updating.
 
-        cursor.execute(q, (form_pos_id,))
-        r = cursor.fetchone()
-        pos_name = r['name']
+    payload = {
+        "attributes_adding": [],
+        "attributes_deleting": [],
+        "attributes_updating": []
+    }
 
-        word = request.form['word'].strip()
-        if not word:
-            raise Exception("no word")
+    word = request.form.get('word')
+    if word:
+        payload['word'] = word
 
-        if pos_name == 'Noun':
-            word = word.capitalize()
-
-        w_sql = """
-    insert ignore into word (pos_id, word)
-    values (%s, %s)
-    """
-        cursor.execute(w_sql, (form_pos_id, word))
-
-        id_sql = "select last_insert_id() word_id"
-        cursor.execute(id_sql)
-        r = cursor.fetchone()
-        word_id = r['word_id']
-
-        # if word_id is 0, then the insert ignore didn't do anything because the
-        # word was already there.  go get it.
-        if word_id == 0:
-            sql = """
-    select id
-    from word
-    where pos_id = %s and word = %s
-    """
-            cursor.execute(sql, (form_pos_id, word))
-            r = cursor.fetchone()
-            word_id = r['id']
-
-        # all the text fields have names of the form <pos_id>-<attribute_id>-<attrkey>.
-        # look for all the form fields that start with the pos_id.
-
-        values = []
-        placeholders = []
-        for k in list(request.form.keys()):
-            splitkey = k.split('-')
-            if len(splitkey) < 3:
-                continue
-            pos_id, attr_id, attrkey = splitkey[:3]
-            if pos_id == form_pos_id and request.form[k]:
-                placeholder = "(%s, %s, %s)"  # word_id, attr_id, value
-                placeholders.append(placeholder)
-                value = request.form[k].strip()
-                if pos_name == 'Noun' and attrkey == 'plural':
-                    value = value.capitalize()
-
-                values += [word_id, attr_id, value]
-
-        if len(values) > 0:
-            wa_sql = """
-    insert into word_attribute (word_id, attribute_id, value)
-    values
-    %s
-    on duplicate key update
-    value=values(value)
-    """ % ', '.join(placeholders)
-
-            cursor.execute(wa_sql, values)
-
-        # now remove the word from unknown words and put it into known words.
-        wordlist_id = request.form.get('wordlist_id')
-        del_sql = """
-    delete from wordlist_unknown_word
-    where word = %s
-    and wordlist_id = %s
-    """
-        cursor.execute(del_sql, (word, wordlist_id))
-
-        ins_sql = """
-    insert ignore into wordlist_known_word (wordlist_id, word_id)
-    values (%s, %s)
-    """
-        cursor.execute(ins_sql, (wordlist_id, word_id))
-
-        dbh.commit()
-
-        if wordlist_id:
-            target = url_for('wordlist', wordlist_id=wordlist_id)
+    for k, v in attrs_from_form.items():
+        if 'attrvalue' not in v:
+            payload["attributes_deleting"].append(int(v['attrvalue_id']))
+        elif 'attrvalue_id' not in v:
+            payload["attributes_adding"].append(
+                {
+                    'attrkey': k,
+                    'attrvalue': v['attrvalue']
+                }
+            )
         else:
-            # if we didn't add a word to any list, return to the editing form for this word.
-            target = url_for('update_word_by_id', word_id=word_id)
+            payload['attributes_updating'].append(v)
 
-        return redirect(target)
+    # pprint(payload)
+
+    url = "%s/api/word/%s" % (Config.DB_URL, word_id)
+    r = requests.put(url, json=payload)
+
+    wordlist_id = request.form.get('wordlist_id')
+    if wordlist_id:
+        target = url_for('wordlist', wordlist_id=wordlist_id)
+    else:
+        # if we didn't add a word to any list, return to the editing form for this word.
+        target = url_for('edit_word_form', word=word)
+
+    return redirect(target)
