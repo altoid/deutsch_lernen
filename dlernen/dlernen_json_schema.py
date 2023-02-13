@@ -33,6 +33,28 @@ ADDATTRIBUTES_PAYLOAD_SCHEMA = {
     }
 }
 
+REFRESH_WORDLISTS_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/refresh_wordlists",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Payload refreshing wordlists",
+    "description": "Used for implementing POST to /api/wordlists",
+    "type": "object",
+    "required": [
+        "word",
+        "word_id"
+    ],
+    "properties": {
+        "word": {
+            "type": "string",
+            "minLength": 1
+        },
+        "word_id": {
+            "type": "integer",
+            "minimum": 1
+        }
+    }
+}
+
 ADDWORD_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/addword_payload",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],

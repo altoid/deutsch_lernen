@@ -1240,10 +1240,14 @@ def refresh_wordlists():
         'word': 'whatever',
         'word_id':  <word_id>
     }
-    TODO - create a validation schema for this payload.
     """
 
-    payload = request.get_json()
+    try:
+        payload = request.get_json()
+        jsonschema.validate(payload, dlernen.dlernen_json_schema.REFRESH_WORDLISTS_SCHEMA)
+    except jsonschema.ValidationError as e:
+        return "bad payload: %s" % e.message, 400
+
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
@@ -1280,6 +1284,7 @@ def refresh_wordlists():
             print(exc_type, fname, exc_tb.tb_lineno)
             cursor.execute('rollback')
             return "refresh wordlists failed", 500
+
 
 # TODO - implement a get-by-word version of this.
 @app.route('/api/wordlists/<int:word_id>')
