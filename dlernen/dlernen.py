@@ -168,15 +168,18 @@ def words_attrkey(attrkey):
 
     wordlist_id=n,n,n - optional.  restrict the word ids to those in the given lists.
 
-    returns a list of all of the word_ids that match the constraints.
+    returns a list of word_ids for which there is an attrvalue for the give attrkey, and which meets
+    the other constrains.  e.g. for /api/words/past_participle, return word_ids where the words have
+    a value for past_participle.
+
     the ids are unique but the order is undefined.
     """
 
-    # check that the attrkey exists
-    sql = """
-    select attrkey from attribute
-    """
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        # check that the attrkey exists
+        sql = """
+        select attrkey from attribute
+        """
         cursor.execute(sql)
         query_result = cursor.fetchall()
         keys = {x['attrkey'] for x in query_result}
@@ -206,7 +209,7 @@ def words_attrkey(attrkey):
         return result
 
 
-@app.route('/api/quiz_data', methods=['PUT', 'POST'])
+@app.route('/api/quiz_data', methods=['PUT'])
 def quiz_data():
     """
     given a quiz key and a list of word_ids, get all of the attribute values quizzed for each of the words.
@@ -214,59 +217,63 @@ def quiz_data():
     although this is invoked with a PUT request, this doesn't actually change the state of the server.  we
     use PUT so that we can have longer list of word ids than we can put into a GET url, so the request is idempotent.
     """
-    if request.method == 'PUT':
-        payload = request.get_json()
+    payload = request.get_json()
 
-        quizkey = payload['quizkey']
-        word_ids = payload.get('word_ids', [])
-        word_ids = list(map(str, word_ids))
-        word_ids = ','.join(word_ids)
-        result = []
-        if word_ids:
-            query = quiz_sql.build_quiz_query(quizkey, word_ids)
-            with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-                cursor.execute(query)
-                rows = cursor.fetchall()
-                results_dict = {}
+    quizkey = payload['quizkey']
+    word_ids = payload.get('word_ids', [])
+    word_ids = list(map(str, word_ids))
+    word_ids = ','.join(word_ids)
+    result = []
+    if word_ids:
+        # TODO - validation schema for data struct that we return.
+        query = quiz_sql.build_quiz_query(quizkey, word_ids)
+        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            results_dict = {}
 
-                for row in rows:
-                    keez = row.keys()
-                    if row['word_id'] not in results_dict:
-                        results_dict[row['word_id']] = {
-                            k: row.get(k) for k in keez & {
-                                'qname',
-                                'quiz_id',
-                                'word_id',
-                                'word'
-                            }
+            for row in rows:
+                keez = row.keys()
+                if row['word_id'] not in results_dict:
+                    results_dict[row['word_id']] = {
+                        k: row.get(k) for k in keez & {
+                            'qname',
+                            'quiz_id',
+                            'word_id',
+                            'word'
                         }
-                    if row['attrkey'] not in results_dict[row['word_id']]:
-                        results_dict[row['word_id']][row['attrkey']] = {
-                            k: row.get(k) for k in keez & {
-                                'correct_count',
-                                'presentation_count',
-                                'attrvalue',
-                                'attribute_id',
-                                'last_presentation'
-                            }
+                    }
+                if row['attrkey'] not in results_dict[row['word_id']]:
+                    results_dict[row['word_id']][row['attrkey']] = {
+                        k: row.get(k) for k in keez & {
+                            'correct_count',
+                            'presentation_count',
+                            'attrvalue',
+                            'attribute_id',
+                            'last_presentation'
                         }
-                result = list(results_dict.values())
+                    }
+            result = list(results_dict.values())
 
-        return result
+    return result
 
-    update = """
-        insert into quiz_score
-        (quiz_id, word_id, attribute_id, presentation_count, correct_count)
-        VALUES
-        (%(quiz_id)s, %(word_id)s, %(attribute_id)s, %(presentation_count)s, %(correct_count)s)
-        on duplicate key update
-        presentation_count = values(presentation_count),
-        correct_count = values(correct_count)
-        """
 
+@app.route('/api/quiz_data', methods=['POST'])
+def post_quiz_answer():
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        cursor.execute('start transaction')
+        update = """
+            insert into quiz_score
+            (quiz_id, word_id, attribute_id, presentation_count, correct_count)
+            VALUES
+            (%(quiz_id)s, %(word_id)s, %(attribute_id)s, %(presentation_count)s, %(correct_count)s)
+            on duplicate key update
+            presentation_count = values(presentation_count),
+            correct_count = values(correct_count)
+            """
+
         cursor.execute(update, request.form)
-        dbh.commit()
+        cursor.execute('commit')
 
     return 'OK'
 

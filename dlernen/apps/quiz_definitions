@@ -32,7 +32,7 @@ def get_next_word_to_test(chosen_words):
     for wa in word_attributes:
         for a in wa['attributes']:
             if a['attrkey'] == 'article':
-                word_id_to_article[wa['word_id']] = a['value']
+                word_id_to_article[wa['word_id']] = a['attrvalue']
 
     for qd in quiz_data:
         if qd['word_id'] in word_id_to_article:
