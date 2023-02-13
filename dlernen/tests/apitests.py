@@ -125,6 +125,7 @@ SAMPLE_WORDS_RESULT = [
 ]
 
 SAMPLE_WORDIDS_RESULT = {
+    "attribute_id": 1234,
     "word_ids": [
         1339,
         3429,
@@ -1125,8 +1126,8 @@ class APITests(unittest.TestCase):
         url = "%s&wordlist_id=%s" % (url, ','.join(args))
 
         r = requests.get(url)
-
-        payload = json.loads(r.text)
+        self.assertEqual(200, r.status_code)
+        payload = r.json()
 
         url = "%s/api/words" % config.Config.DB_URL
         r = requests.put(url, json=payload)

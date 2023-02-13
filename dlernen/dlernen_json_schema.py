@@ -265,12 +265,20 @@ WORDIDS_SCHEMA = {
     "title": "WordIDList",
     "description": "list of word ids",
     "type": "object",
+    "required": [
+        "word_ids",
+        "attribute_id"
+    ],
     "properties": {
         "word_ids": {
             "type": "array",
             "items": {
                 "type": "integer"
             }
+        },
+        "attribute_id": {
+            "type": "integer",
+            "minimum": 1
         }
     }
 }

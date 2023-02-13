@@ -178,13 +178,17 @@ def words_attrkey(attrkey):
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         # check that the attrkey exists
         sql = """
-        select attrkey from attribute
+        select attrkey, id attribute_id from attribute
         """
         cursor.execute(sql)
         query_result = cursor.fetchall()
-        keys = {x['attrkey'] for x in query_result}
-        if attrkey not in keys:
+        foundit = list(filter(lambda x: x['attrkey'] == attrkey, query_result))
+
+        if len(foundit) == 0:
             return "attrkey %s not found" % attrkey, 404
+
+        foundit = foundit[0]
+        attribute_id = foundit['attribute_id']
 
         recent = request.args.get('recent', default='False').lower() == 'true'
         try:
@@ -201,6 +205,7 @@ def words_attrkey(attrkey):
             word_ids = get_word_ids_for_attrkey(limit, recent, attrkey)
 
         result = {
+            "attribute_id": attribute_id,
             "word_ids": word_ids
         }
 
