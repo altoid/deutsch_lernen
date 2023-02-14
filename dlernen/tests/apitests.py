@@ -1042,7 +1042,7 @@ class APITests(unittest.TestCase):
             "word_ids": [2175, 3230, 4803]
         }
         r = requests.put(url, json=payload)
-        quiz_data = json.loads(r.text)
+        quiz_data = r.json()
         jsonschema.validate(quiz_data, dlernen_json_schema.QUIZ_DATA_SCHEMA)
 
     def test_empty_quiz_data(self):
@@ -1052,7 +1052,7 @@ class APITests(unittest.TestCase):
             "word_ids": []
         }
         r = requests.put(url, json=payload)
-        quiz_data = json.loads(r.text)
+        quiz_data = r.json()
         jsonschema.validate(quiz_data, dlernen_json_schema.QUIZ_DATA_SCHEMA)
 
     def test_real_wordids(self):

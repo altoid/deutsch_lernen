@@ -230,7 +230,6 @@ def quiz_data():
     word_ids = ','.join(word_ids)
     result = []
     if word_ids:
-        # TODO - validation schema for data struct that we return.
         query = quiz_sql.build_quiz_query(quizkey, word_ids)
         with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
             cursor.execute(query)
@@ -259,6 +258,8 @@ def quiz_data():
                         }
                     }
             result = list(results_dict.values())
+
+    jsonschema.validate(result, dlernen.dlernen_json_schema.QUIZ_DATA_SCHEMA)
 
     return result
 
