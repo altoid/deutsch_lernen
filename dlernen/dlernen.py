@@ -1447,7 +1447,6 @@ left join  mashup_v on mashup_v.pos_id = pos_info.pos_id and mashup_v.attribute_
 def build_quiz_metadata(rows):
     result = {}
     for row in rows:
-        pprint(row)
         if row['quiz_key'] not in result:
             result[row['quiz_key']] = {
                 'quiz_id': row['quiz_id'],
