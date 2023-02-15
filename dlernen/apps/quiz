@@ -40,14 +40,23 @@ def get_next_word_to_test():
 #
 # quiz <quiz_key>
 # show available quizzes
-#
+# filter by list
+
 if __name__ == '__main__':
     url = "%s/api/quiz" % config.Config.DB_URL
     r = requests.get(url)
     result = r.json()
     available_quizzes = {x['quiz_key'] for x in result}
+    l = '\n'.join(sorted(list(available_quizzes)))
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
+                                     description="""
+available quizzes:
 
-    parser = argparse.ArgumentParser()
+%(available_quizzes)s
+""" % {
+    'available_quizzes': l
+    })
+
     parser.add_argument("quiz")
 
     cl_args = parser.parse_args()
@@ -66,8 +75,8 @@ if __name__ == '__main__':
 
         answer = input("%s [%s], q to quit ---> " % (quiz_me['word'], attribute))
 
-        #answer = str(answer, 'utf8').strip().lower()
-        answer = answer.strip().lower()
+        # answer = str(answer, 'utf8').strip().lower()
+        answer = answer.strip()
 
         if not answer:
             continue
@@ -93,106 +102,3 @@ if __name__ == '__main__':
 
         url = "%s/api/quiz_data" % config.Config.DB_URL
         r = requests.post(url, data=payload)
-
-
-    #
-    # db = dsn.getConnection()
-    # c = db.cursor(dictionary=True)
-    #
-    # q = """
-    # select id, name, quizkey
-    # from quiz
-    # where quizkey not in ('genders', 'definitions')
-    # order by id
-    # """
-    #
-    # choices = {}
-    # c.execute(q)
-    # for row in c.fetchall():
-    #     choices[row['id']] = row
-    #
-    # for k in choices:
-    #     print(k, choices[k]['name'])
-    #
-    # # pick attributes
-    # qkey = None
-    # while True:
-    #     answer = input('pick attribute, q to quit ---> ').strip()
-    #
-    #     if answer == '':
-    #         continue
-    #
-    #     if answer == 'q':
-    #         break
-    #
-    #     try:
-    #         answer = int(answer)
-    #
-    #         if answer in list(choices.keys()):
-    #             qkey = choices[answer]['quizkey']
-    #             break
-    #
-    #     except ValueError:
-    #         continue
-    #
-    # if not qkey:
-    #     print("no quiz chosen")
-    #     sys.exit()
-    #
-    # filter = choose_filter()
-    #
-    # q = quiz_sql.build_quiz_query(qkey,
-    #                               join_clauses=filter.get('join_clauses', []),
-    #                               where_clauses=filter.get('where_clauses', []))
-    #
-    # wordcount = 1
-    # done = False
-    # while not done:
-    #     c.execute(q)
-    #     for row in c.fetchall():
-    #         prompt = "[%s] answer, q to quit --[%s] <%s>" % (
-    #             wordcount, row['word'], row['method'])
-    #
-    #         # apparently raw_input can't handle unicode chars in the prompt
-    #         print(prompt, end=' ')
-    #         answer = input(" --> ")
-    #         answer = str(answer, 'utf8').strip().lower()
-    #         while len(answer) == 0:
-    #             print(prompt, end=' ')
-    #             answer = input(" --> ")
-    #             answer = str(answer, 'utf8').strip().lower()
-    #
-    #         if answer == row['value']:
-    #             print('ja')
-    #             row['correct_count'] += 1
-    #         elif answer == 'q':
-    #             done = True
-    #             continue
-    #         else:
-    #             print('nein:  %s' % (row['value']))
-    #
-    #         row['presentation_count'] += 1
-    #
-    #         u = """
-    #     insert into quiz_score
-    #     (quiz_id,word_id,attribute_id,presentation_count,correct_count)
-    #     VALUES
-    #     (%s, %s, %s, %s, %s)
-    #     on duplicate key update
-    #     presentation_count = values(presentation_count),
-    #     correct_count = values(correct_count)
-    #     """ % (row['quiz_id'],
-    #            row['word_id'],
-    #            row['attribute_id'],
-    #            row['presentation_count'],
-    #            row['correct_count'])
-    #
-    #         c.execute(u)
-    #         db.commit()
-    #
-    #         wordcount += 1
-    #
-    # c.close()
-    # db.close()
-    #
-    # print('auf wiedersehen')
