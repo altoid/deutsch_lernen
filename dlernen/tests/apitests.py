@@ -1038,7 +1038,7 @@ class APITests(unittest.TestCase):
     def test_real_quiz_data(self):
         url = "%s/api/quiz_data" % config.Config.DB_URL
         payload = {
-            "quizkey": "plurals",
+            "quiz_key": "plurals",
             "word_ids": [2175, 3230, 4803]
         }
         r = requests.put(url, json=payload)
@@ -1048,7 +1048,7 @@ class APITests(unittest.TestCase):
     def test_empty_quiz_data(self):
         url = "%s/api/quiz_data" % config.Config.DB_URL
         payload = {
-            "quizkey": "plurals",
+            "quiz_key": "plurals",
             "word_ids": []
         }
         r = requests.put(url, json=payload)
@@ -1080,7 +1080,7 @@ class APITests(unittest.TestCase):
     def test_quiz_data_empty_list_1(self):
         url = "%s/api/quiz_data" % config.Config.DB_URL
         payload = {
-            "quizkey": "definitions"
+            "quiz_key": "definitions"
         }
 
         r = requests.put(url, json=payload)
@@ -1090,7 +1090,7 @@ class APITests(unittest.TestCase):
     def test_quiz_data_empty_list_2(self):
         url = "%s/api/quiz_data" % config.Config.DB_URL
         payload = {
-            "quizkey": "definitions",
+            "quiz_key": "definitions",
             "word_ids": []
         }
 

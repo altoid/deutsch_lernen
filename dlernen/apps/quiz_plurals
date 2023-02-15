@@ -10,7 +10,7 @@ from pprint import pprint
 def get_next_word_to_test(chosen_words):
     url = "%s/api/quiz_data" % config.Config.DB_URL
     payload = {
-        "quizkey": "plurals",
+        "quiz_key": "plurals",
         "word_ids": chosen_words['word_ids']
     }
     r = requests.put(url, json=payload)

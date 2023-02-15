@@ -34,7 +34,7 @@ with attrs_for_quiz as (
 select qs.quiz_id, qs.attribute_id
 from quiz
 inner join quiz_structure qs on quiz.id = qs.quiz_id
-where quizkey = '{quizkey}'
+where quiz_key = '{quiz_key}'
 ),
 given_words as (
 select id word_id from word
@@ -133,12 +133,12 @@ order by rand()
 """
 
 
-def build_quiz_query(quizkey, word_ids):
+def build_quiz_query(quiz_key, word_ids):
     """
     word_ids should be a string that is a comma-separated list of word_ids
     """
     d = {
-        "quizkey": quizkey,
+        "quiz_key": quiz_key,
         "word_ids": word_ids
     }
 

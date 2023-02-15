@@ -224,13 +224,13 @@ def quiz_data():
     """
     payload = request.get_json()
 
-    quizkey = payload['quizkey']
+    quiz_key = payload['quiz_key']
     word_ids = payload.get('word_ids', [])
     word_ids = list(map(str, word_ids))
     word_ids = ','.join(word_ids)
     result = []
     if word_ids:
-        query = quiz_sql.build_quiz_query(quizkey, word_ids)
+        query = quiz_sql.build_quiz_query(quiz_key, word_ids)
         with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
             cursor.execute(query)
             rows = cursor.fetchall()
@@ -238,6 +238,9 @@ def quiz_data():
 
             for row in rows:
                 keez = row.keys()
+                if row['last_presentation']:
+                    row['last_presentation'] = row['last_presentation'].strftime("%Y-%m-%d %H:%M:%S")
+                # 2017-06-09 08:26:25
                 if row['word_id'] not in results_dict:
                     results_dict[row['word_id']] = {
                         k: row.get(k) for k in keez & {
@@ -1439,6 +1442,53 @@ left join  mashup_v on mashup_v.pos_id = pos_info.pos_id and mashup_v.attribute_
         result = list(result.values())
         jsonschema.validate(result, dlernen.dlernen_json_schema.WORD_METADATA_SCHEMA)
         return result
+
+
+@app.route('/api/quiz')
+def get_all_quizzes():
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        sql = """
+        select id quiz_id, name, quiz_key
+        from quiz
+        """
+
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+        return rows
+
+
+@app.route('/api/quiz/<int:quiz_id>')
+def get_quiz_by_id(quiz_id):
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        sql = """
+        select id quiz_id, name, quiz_key
+        from quiz
+        where id = %s
+        """
+
+        cursor.execute(sql, (quiz_id,))
+        row = cursor.fetchone()
+        if not row:
+            return "quiz %s not found" % quiz_id, 404
+
+        return row
+
+
+@app.route('/api/quiz/<string:quiz_key>')
+def get_quiz_by_key(quiz_key):
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        sql = """
+        select id quiz_id, name, quiz_key
+        from quiz
+        where quiz_key = %s
+        """
+
+        cursor.execute(sql, (quiz_key,))
+        row = cursor.fetchone()
+        if not row:
+            return "quiz %s not found" % quiz_key, 404
+
+        return row
 
 
 @app.route('/')
