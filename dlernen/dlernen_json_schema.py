@@ -162,6 +162,61 @@ UPDATEWORD_PAYLOAD_SCHEMA = {
     }
 }
 
+WORD_METADATA_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/word_metadata",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Quiz Data List",
+    "description": "list of quiz query results",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "required": [
+            "tag",
+            "pos_name",
+            "pos_fields"
+        ],
+        "properties": {
+            "tag": {
+                "type": "string",
+                "minLength": 1
+            },
+            "pos_name": {
+                "type": "string",
+                "minLength": 1
+            },
+            "pos_fields": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": [
+                        "attrkey",
+                        "field_key",
+                        "sort_order"
+                    ],
+                    "properties": {
+                        "attrkey": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "attrvalue": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "fieldkey": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "sort_order": {
+                            "type": "integer",
+                            "minimum": 0
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 QUIZ_DATA_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/quiz_data",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],

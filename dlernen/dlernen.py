@@ -1434,10 +1434,10 @@ left join  mashup_v on mashup_v.pos_id = pos_info.pos_id and mashup_v.attribute_
                 d['attrvalue'] = r['attrvalue']
             result[r['pos_name']]['pos_fields'].append(d)
 
-        # TODO - define schema for the data structure returned here.
         for v in result.values():
             v['pos_fields'] = sorted(v['pos_fields'], key=lambda x: x['sort_order'])
         result = list(result.values())
+        jsonschema.validate(result, dlernen.dlernen_json_schema.WORD_METADATA_SCHEMA)
         return result
 
 
