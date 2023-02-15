@@ -1,155 +1,198 @@
 #!/usr/bin/env python
 
-from dlernen import quiz_sql
-import sys
-from dlernen import dsn
-from pprint import pprint
+from dlernen import config
 import argparse
-
-filters = {
-    'irregular verbs' : {
-        'join_clauses': ['inner join wordlist_known_word ww on ww.word_id =  w.id',
-                         'inner join wordlist wl on wl.id = ww.wordlist_id'],
-        'where_clauses': ["""wl.name = 'irregular verbs'"""]
-    },
-    'no filter': {}
-}
+import requests
+from pprint import pprint
+import sys
+import random
 
 
-def choose_filter():
-    # prepare menu based on the filter keys, with no filter as default
-    menu = ['irregular verbs', 'no filter']
+def get_next_word_to_test():
+    global url, r, result
+    url = "%s/api/quiz/%s" % (config.Config.DB_URL, quiz_key)
+    r = requests.get(url)
+    result = r.json()
+    # pprint(result)
+    attribute = random.choice(result['attributes'])
+    url = "%s/api/words/%s" % (config.Config.DB_URL, attribute)
+    # url = "%s?limit=%s&recent=%s" % (url, cl_args.nwords, cl_args.recent)
+    # if cl_args.listids:
+    #    url = "%s&wordlist_id=%s" % (url, ','.join([str(x) for x in cl_args.listids]))
+    r = requests.get(url)
+    chosen_words = r.json()
+    # pprint(chosen_words)
+    url = "%s/api/quiz_data" % config.Config.DB_URL
+    payload = {
+        "quiz_key": quiz_key,
+        "word_ids": chosen_words['word_ids']
+    }
+    r = requests.put(url, json=payload)
+    quiz_data = r.json()
 
-    filter = {}
+    if not quiz_data:
+        return
 
-    # present menu until we get a useful answer
-    while True:
-        cnt = 0
-        default = len(menu) - 1
-        for m in menu:
-            print("%s - %s" % (cnt, m))
-            cnt += 1
-
-        prompt = '--> [%s - %s] ' % (default,
-                                     menu[default])
-        try:
-            answer = input(prompt).strip()
-            if len(answer) == 0:
-                break
-
-            answer = int(answer)
-            if answer == default:
-                break
-
-            filter = filters[menu[int(answer)]]
-            break
-        except:
-            continue
-
-    return filter
+    return attribute, quiz_data[0]
 
 
+# usage
+#
+# quiz <quiz_key>
+# show available quizzes
+#
 if __name__ == '__main__':
+    url = "%s/api/quiz" % config.Config.DB_URL
+    r = requests.get(url)
+    result = r.json()
+    available_quizzes = {x['quiz_key'] for x in result}
+
     parser = argparse.ArgumentParser()
+    parser.add_argument("quiz")
+
     cl_args = parser.parse_args()
 
-    db = dsn.getConnection()
-    c = db.cursor(dictionary=True)
-    
-    q = """
-    select id, name, quizkey
-    from quiz
-    where quizkey not in ('genders', 'definitions')
-    order by id
-    """
-    
-    choices = {}
-    c.execute(q)
-    for row in c.fetchall():
-        choices[row['id']] = row
-    
-    for k in choices:
-        print(k, choices[k]['name'])
-    
-    # pick attributes
-    qkey = None
-    while True:
-        choice = input('pick attribute, q to quit ---> ').strip()
-    
-        if choice == '':
-            continue
-    
-        if choice == 'q':
-            break
-    
-        try:
-            choice = int(choice)
-    
-            if choice in list(choices.keys()):
-                qkey = choices[choice]['quizkey']
-                break
-    
-        except ValueError:
-            continue
-    
-    if not qkey:
-        print("no quiz chosen")
+    if cl_args.quiz not in available_quizzes:
+        print("no such quiz:  %s" % cl_args.quiz)
+
+    quiz_key = cl_args.quiz
+    if quiz_key in {'genders', 'definitions'}:
+        print("there is a separate quiz app for %s" % quiz_key)
         sys.exit()
 
-    filter = choose_filter()
-    
-    q = quiz_sql.build_quiz_query(qkey,
-                                  join_clauses=filter.get('join_clauses', []),
-                                  where_clauses=filter.get('where_clauses', []))
-    
-    wordcount = 1
-    done = False
-    while not done:
-        c.execute(q)
-        for row in c.fetchall():
-            prompt = "[%s] answer, q to quit --[%s] <%s>" % (
-                wordcount, row['word'], row['method'])
+    while True:
+        attribute, quiz_me = get_next_word_to_test()
+        # pprint(quiz_me)
 
-            # apparently raw_input can't handle unicode chars in the prompt
-            print(prompt, end=' ')
-            answer = input(" --> ")
-            answer = str(answer, 'utf8').strip().lower()
-            while len(answer) == 0:
-                print(prompt, end=' ')
-                answer = input(" --> ")
-                answer = str(answer, 'utf8').strip().lower()
-        
-            if answer == row['value']:
-                print('ja')
-                row['correct_count'] += 1
-            elif answer == 'q':
-                done = True
-                continue
-            else:
-                print('nein:  %s' % (row['value']))
-        
-            row['presentation_count'] += 1
-        
-            u = """
-        insert into quiz_score
-        (quiz_id,word_id,attribute_id,presentation_count,correct_count)
-        VALUES
-        (%s, %s, %s, %s, %s)
-        on duplicate key update
-        presentation_count = values(presentation_count),
-        correct_count = values(correct_count)
-        """ % (row['quiz_id'],
-               row['word_id'],
-               row['attribute_id'],
-               row['presentation_count'],
-               row['correct_count'])
-        
-            c.execute(u)
-            db.commit()
-    
-            wordcount += 1
-    
-    c.close()
-    db.close()
-    
-    print('auf wiedersehen')
+        answer = input("%s [%s], q to quit ---> " % (quiz_me['word'], attribute))
+
+        #answer = str(answer, 'utf8').strip().lower()
+        answer = answer.strip().lower()
+
+        if not answer:
+            continue
+
+        if answer == 'q':
+            break
+
+        payload = {
+            "quiz_id": quiz_me['quiz_id'],
+            "word_id": quiz_me['word_id'],
+            "attribute_id": quiz_me[attribute]['attribute_id'],
+            "presentation_count": quiz_me[attribute]['presentation_count'],
+            "correct_count": quiz_me[attribute]['correct_count']
+        }
+
+        if answer == quiz_me[attribute]['attrvalue']:
+            print("richtig")
+            payload['correct_count'] += 1
+        else:
+            print("falsch:  %s" % quiz_me[attribute]['attrvalue'])
+
+        payload['presentation_count'] += 1
+
+        url = "%s/api/quiz_data" % config.Config.DB_URL
+        r = requests.post(url, data=payload)
+
+
+    #
+    # db = dsn.getConnection()
+    # c = db.cursor(dictionary=True)
+    #
+    # q = """
+    # select id, name, quizkey
+    # from quiz
+    # where quizkey not in ('genders', 'definitions')
+    # order by id
+    # """
+    #
+    # choices = {}
+    # c.execute(q)
+    # for row in c.fetchall():
+    #     choices[row['id']] = row
+    #
+    # for k in choices:
+    #     print(k, choices[k]['name'])
+    #
+    # # pick attributes
+    # qkey = None
+    # while True:
+    #     answer = input('pick attribute, q to quit ---> ').strip()
+    #
+    #     if answer == '':
+    #         continue
+    #
+    #     if answer == 'q':
+    #         break
+    #
+    #     try:
+    #         answer = int(answer)
+    #
+    #         if answer in list(choices.keys()):
+    #             qkey = choices[answer]['quizkey']
+    #             break
+    #
+    #     except ValueError:
+    #         continue
+    #
+    # if not qkey:
+    #     print("no quiz chosen")
+    #     sys.exit()
+    #
+    # filter = choose_filter()
+    #
+    # q = quiz_sql.build_quiz_query(qkey,
+    #                               join_clauses=filter.get('join_clauses', []),
+    #                               where_clauses=filter.get('where_clauses', []))
+    #
+    # wordcount = 1
+    # done = False
+    # while not done:
+    #     c.execute(q)
+    #     for row in c.fetchall():
+    #         prompt = "[%s] answer, q to quit --[%s] <%s>" % (
+    #             wordcount, row['word'], row['method'])
+    #
+    #         # apparently raw_input can't handle unicode chars in the prompt
+    #         print(prompt, end=' ')
+    #         answer = input(" --> ")
+    #         answer = str(answer, 'utf8').strip().lower()
+    #         while len(answer) == 0:
+    #             print(prompt, end=' ')
+    #             answer = input(" --> ")
+    #             answer = str(answer, 'utf8').strip().lower()
+    #
+    #         if answer == row['value']:
+    #             print('ja')
+    #             row['correct_count'] += 1
+    #         elif answer == 'q':
+    #             done = True
+    #             continue
+    #         else:
+    #             print('nein:  %s' % (row['value']))
+    #
+    #         row['presentation_count'] += 1
+    #
+    #         u = """
+    #     insert into quiz_score
+    #     (quiz_id,word_id,attribute_id,presentation_count,correct_count)
+    #     VALUES
+    #     (%s, %s, %s, %s, %s)
+    #     on duplicate key update
+    #     presentation_count = values(presentation_count),
+    #     correct_count = values(correct_count)
+    #     """ % (row['quiz_id'],
+    #            row['word_id'],
+    #            row['attribute_id'],
+    #            row['presentation_count'],
+    #            row['correct_count'])
+    #
+    #         c.execute(u)
+    #         db.commit()
+    #
+    #         wordcount += 1
+    #
+    # c.close()
+    # db.close()
+    #
+    # print('auf wiedersehen')

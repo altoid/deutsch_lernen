@@ -1444,51 +1444,67 @@ left join  mashup_v on mashup_v.pos_id = pos_info.pos_id and mashup_v.attribute_
         return result
 
 
+def build_quiz_metadata(rows):
+    result = {}
+    for row in rows:
+        pprint(row)
+        if row['quiz_key'] not in result:
+            result[row['quiz_key']] = {
+                'quiz_id': row['quiz_id'],
+                'quizname': row['quizname'],
+                'quiz_key': row['quiz_key'],
+                'attributes': []
+            }
+        result[row['quiz_key']]['attributes'].append(row['attrkey'])
+    result = list(result.values())
+    return result
+
+
 @app.route('/api/quiz')
 def get_all_quizzes():
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
-        select id quiz_id, name, quiz_key
-        from quiz
+        select distinct quiz_id, quizname, quiz_key, attrkey
+        from quiz_v
         """
 
         cursor.execute(sql)
         rows = cursor.fetchall()
-        return rows
+        return build_quiz_metadata(rows)
 
 
 @app.route('/api/quiz/<int:quiz_id>')
 def get_quiz_by_id(quiz_id):
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
-        select id quiz_id, name, quiz_key
-        from quiz
-        where id = %s
+        select distinct quiz_id, quizname, quiz_key, attrkey
+        from quiz_v
+        where quiz_id = %s
         """
 
         cursor.execute(sql, (quiz_id,))
-        row = cursor.fetchone()
-        if not row:
+        rows = cursor.fetchall()
+        if not rows:
             return "quiz %s not found" % quiz_id, 404
 
-        return row
+        return build_quiz_metadata(rows)[0]
 
 
 @app.route('/api/quiz/<string:quiz_key>')
 def get_quiz_by_key(quiz_key):
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
-        select id quiz_id, name, quiz_key
-        from quiz
+        select distinct quiz_id, quizname, quiz_key, attrkey
+        from quiz_v
         where quiz_key = %s
         """
 
         cursor.execute(sql, (quiz_key,))
-        row = cursor.fetchone()
-        if not row:
+        rows = cursor.fetchall()
+        if not rows:
             return "quiz %s not found" % quiz_key, 404
 
-        return row
+        return build_quiz_metadata(rows)[0]
 
 
 @app.route('/')

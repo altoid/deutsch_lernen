@@ -38,7 +38,6 @@ def get_next_word_to_test(chosen_words):
         if qd['word_id'] in word_id_to_article:
             qd['article'] = word_id_to_article[qd['word_id']]
 
-    # pprint(quiz_data)
     return quiz_data[0]
 
 

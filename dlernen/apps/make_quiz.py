@@ -21,7 +21,7 @@ c.execute("set @x := 0")
 choices = {}
 
 q = """
- select @x := @x + 1 choice, 
+ select @x := @x + 1 answer, 
  pos.name pos_name, a.attrkey,
  pos.id pos_id, a.id attribute_id
  from pos, attribute a, pos_form
@@ -32,7 +32,7 @@ q = """
 
 c.execute(q)
 for row in c.fetchall():
-    choices[row['choice']] = row
+    choices[row['answer']] = row
 
 for k in choices:
     print(k, choices[k]['pos_name'], choices[k]['attrkey'])
