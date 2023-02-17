@@ -8,17 +8,15 @@ import sys
 import random
 
 
-def get_next_word_to_test():
-    global url, r, result
+def get_next_word_to_test(wordlist_ids):
     url = "%s/api/quiz/%s" % (config.Config.DB_URL, quiz_key)
     r = requests.get(url)
     result = r.json()
     # pprint(result)
     attribute = random.choice(result['attributes'])
-    url = "%s/api/words/%s" % (config.Config.DB_URL, attribute)
-    # url = "%s?limit=%s&recent=%s" % (url, cl_args.nwords, cl_args.recent)
-    # if cl_args.listids:
-    #    url = "%s&wordlist_id=%s" % (url, ','.join([str(x) for x in cl_args.listids]))
+    url = "%s/api/words/%s?limit=%s" % (config.Config.DB_URL, attribute, 1)
+    if wordlist_ids:
+        url = "%s&wordlist_id=%s" % (url, ','.join([str(x) for x in wordlist_ids]))
     r = requests.get(url)
     chosen_words = r.json()
     # pprint(chosen_words)
@@ -31,7 +29,7 @@ def get_next_word_to_test():
     quiz_data = r.json()
 
     if not quiz_data:
-        return
+        return attribute, None
 
     return attribute, quiz_data[0]
 
@@ -58,6 +56,10 @@ available quizzes:
     })
 
     parser.add_argument("quiz")
+    parser.add_argument('-l', '--listids',
+                        nargs='+',
+                        type=int,
+                        help='id of word list to use')
 
     cl_args = parser.parse_args()
 
@@ -65,13 +67,15 @@ available quizzes:
         print("no such quiz:  %s" % cl_args.quiz)
 
     quiz_key = cl_args.quiz
-    if quiz_key in {'genders', 'definitions'}:
+    if quiz_key in {'genders', 'definitions', 'plurals'}:
         print("there is a separate quiz app for %s" % quiz_key)
         sys.exit()
 
     while True:
-        attribute, quiz_me = get_next_word_to_test()
-        # pprint(quiz_me)
+        attribute, quiz_me = get_next_word_to_test(cl_args.listids)
+        if not quiz_me:
+            print("es gibt keine Welten mehr zu erobern")
+            break
 
         answer = input("%s [%s], q to quit ---> " % (quiz_me['word'], attribute))
 
@@ -102,3 +106,5 @@ available quizzes:
 
         url = "%s/api/quiz_data" % config.Config.DB_URL
         r = requests.post(url, data=payload)
+
+    print('bis bald')

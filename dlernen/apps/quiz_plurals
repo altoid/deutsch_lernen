@@ -68,7 +68,7 @@ n most recent
     parser.add_argument('-n', '--nwords',
                         type=int,
                         default=10,
-                        help='quiz the n most recently added words.  defaults to 10.')
+                        help='quiz up to n words.  defaults to 10.')
     parser.add_argument('-r', '--recent',
                         action='store_true',
                         help='pick most recently added words and quiz them.')

@@ -240,7 +240,7 @@ def quiz_data():
                 keez = row.keys()
                 if row['last_presentation']:
                     row['last_presentation'] = row['last_presentation'].strftime("%Y-%m-%d %H:%M:%S")
-                # 2017-06-09 08:26:25
+
                 if row['word_id'] not in results_dict:
                     results_dict[row['word_id']] = {
                         k: row.get(k) for k in keez & {
