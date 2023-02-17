@@ -6,9 +6,11 @@
 {% if results %}
 {% for item in results %}
 <h2>
-    <a href="{{ url_for('edit_word_form', word=item['word']) }}">
-        {{ item['word'] }}
-    </a>
+    {% if return_to_wordlist_id != none %}
+    <a href="{{ url_for('edit_word_form', word=item['word'], wordlist_id=return_to_wordlist_id) }}">{{ item['word'] }}</a>
+    {% else %}
+    <a href="{{ url_for('edit_word_form', word=item['word']) }}">{{ item['word'] }}</a>
+    {% endif %}
 </h2>
 <p>{{ item['pos_name'] }}
 <table>
