@@ -161,19 +161,21 @@ SAMPLE_QUIZ_DATA_RESULT = [
         'quiz_id': 3,
         'word_id': 868,
         'word': 'Tarnung',
-        'article': {
-            'attrvalue': 'die',
-            'attribute_id': 1,
-            'correct_count': 0,
-            'last_presentation': None,
-            'presentation_count': 0,
-        },
-        'plural': {
-            'attrvalue': 'Tarnungen',
-            'attribute_id': 3,
-            'correct_count': 0,
-            'last_presentation': None,
-            'presentation_count': 0,
+        'attributes': {
+            'article': {
+                'attrvalue': 'die',
+                'attribute_id': 1,
+                'correct_count': 0,
+                'last_presentation': None,
+                'presentation_count': 0,
+            },
+            'plural': {
+                'attrvalue': 'Tarnungen',
+                'attribute_id': 3,
+                'correct_count': 0,
+                'last_presentation': None,
+                'presentation_count': 0,
+            }
         }
     }
 ]
@@ -1148,7 +1150,7 @@ class APIWordlists(unittest.TestCase):
 class APIWordlist(unittest.TestCase):
     # add list with no words, just a name
     def test_create_empty_list(self):
-        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
         payload = {
             'name': list_name
         }
@@ -1164,7 +1166,7 @@ class APIWordlist(unittest.TestCase):
         obj = r.json()
 
         self.assertEqual("empty", obj['list_type'])
-        
+
         # delete it
         r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
         self.assertEqual(r.status_code, 200)
@@ -1175,12 +1177,12 @@ class APIWordlist(unittest.TestCase):
 
     # add list with everything, incl. known and unknown words
     def test_create_dumb_list(self):
-        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
         payload = {
             'name': list_name,
             'words': [
-                'werfen', # known
-                'natehdnaoehu' # unknown, hopefully
+                'werfen',  # known
+                'natehdnaoehu'  # unknown, hopefully
             ],
             'notes': 'important notes',
             'citation': 'confidential'
@@ -1205,7 +1207,7 @@ class APIWordlist(unittest.TestCase):
 
     # add smart list with everything
     def test_create_smart_list(self):
-        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
         payload = {
             'name': list_name,
             'notes': 'important notes',
@@ -1230,7 +1232,7 @@ class APIWordlist(unittest.TestCase):
 
     # update list
     def test_update_list(self):
-        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
         add_payload = {
             'name': list_name
         }
@@ -1305,7 +1307,7 @@ class APIWordlist(unittest.TestCase):
 
     # update list with empty payload --> noop
     def test_update_list_empty_payload(self):
-        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
         add_payload = {
             'name': list_name,
             'sqlcode': """select id word_id from word where word = 'geben'"""
@@ -1374,12 +1376,12 @@ class APIWordlist(unittest.TestCase):
 
     # remove word by id from list
     def test_remove_word_by_id(self):
-        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
         payload = {
             'name': list_name,
             'words': [
-                'werfen', # known
-                'natehdnaoehu' # unknown, hopefully
+                'werfen',  # known
+                'natehdnaoehu'  # unknown, hopefully
             ],
             'notes': 'important notes',
             'citation': 'confidential'
@@ -1408,7 +1410,7 @@ class APIWordlist(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
 
     def test_update_smart_list(self):
-        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
         payload = {
             'name': list_name,
             'notes': 'important notes',
@@ -1531,7 +1533,7 @@ class APIWordlist(unittest.TestCase):
 
     # add list with code and words --> only one is allowed.
     def test_add_list_with_code_and_words(self):
-        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
         payload = {
             'name': list_name,
             'sqlcode': 'select id word_id from word where id = 666',
@@ -1547,7 +1549,7 @@ class APIWordlist(unittest.TestCase):
     # add code to dumb list --> not allowed if list has words, ok if empty
     def test_add_code_to_dumb_list(self):
         # not allowed
-        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
         add_payload = {
             'name': list_name,
             'words': [
@@ -1575,7 +1577,7 @@ class APIWordlist(unittest.TestCase):
     # add words to smart list --> not allowed.
     def test_add_words_to_smart_list(self):
         # not allowed
-        list_name = "%s_%s" %(self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
         add_payload = {
             'name': list_name,
             'sqlcode': 'select id word_id from word where id = 555'
@@ -1961,6 +1963,7 @@ class APIWordlistActions(unittest.TestCase):
     tests of operations on lists where we need to set up and tear down a list.
     TODO: maybe some of the tests in APIWordlist can be moved here.
     """
+
     def setUp(self):
         self.list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
         add_payload = {

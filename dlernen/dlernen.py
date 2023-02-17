@@ -250,8 +250,9 @@ def quiz_data():
                             'word'
                         }
                     }
-                if row['attrkey'] not in results_dict[row['word_id']]:
-                    results_dict[row['word_id']][row['attrkey']] = {
+                    results_dict[row['word_id']]['attributes'] = {}
+                if row['attrkey'] not in results_dict[row['word_id']]['attributes']:
+                    results_dict[row['word_id']]['attributes'][row['attrkey']] = {
                         k: row.get(k) for k in keez & {
                             'correct_count',
                             'presentation_count',

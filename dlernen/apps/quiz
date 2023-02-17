@@ -82,8 +82,9 @@ available quizzes:
         # answer = str(answer, 'utf8').strip().lower()
         answer = answer.strip()
 
-        if not answer:
-            continue
+        while not answer:
+            answer = input("%s [%s], q to quit ---> " % (quiz_me['word'], attribute))
+            answer = answer.strip()
 
         if answer == 'q':
             break

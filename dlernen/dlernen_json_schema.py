@@ -247,35 +247,40 @@ QUIZ_DATA_SCHEMA = {
                 "type": "string",
                 "minLength": 1
             },
-            "article": {
-                "$ref": "#/$defs/quiz_attribute"
-            },
-            "plural": {
-                "$ref": "#/$defs/quiz_attribute"
-            },
-            "definition": {
-                "$ref": "#/$defs/quiz_attribute"
-            },
-            "first_person_singular": {
-                "$ref": "#/$defs/quiz_attribute"
-            },
-            "second_person_singular": {
-                "$ref": "#/$defs/quiz_attribute"
-            },
-            "third_person_singular": {
-                "$ref": "#/$defs/quiz_attribute"
-            },
-            "first_person_plural": {
-                "$ref": "#/$defs/quiz_attribute"
-            },
-            "second_person_plural": {
-                "$ref": "#/$defs/quiz_attribute"
-            },
-            "third_person_plural": {
-                "$ref": "#/$defs/quiz_attribute"
-            },
-            "past_participle": {
-                "$ref": "#/$defs/quiz_attribute"
+            "attributes": {
+                "type": "object",
+                "properties": {
+                    "article": {
+                        "$ref": "#/$defs/quiz_attribute"
+                    },
+                    "plural": {
+                        "$ref": "#/$defs/quiz_attribute"
+                    },
+                    "definition": {
+                        "$ref": "#/$defs/quiz_attribute"
+                    },
+                    "first_person_singular": {
+                        "$ref": "#/$defs/quiz_attribute"
+                    },
+                    "second_person_singular": {
+                        "$ref": "#/$defs/quiz_attribute"
+                    },
+                    "third_person_singular": {
+                        "$ref": "#/$defs/quiz_attribute"
+                    },
+                    "first_person_plural": {
+                        "$ref": "#/$defs/quiz_attribute"
+                    },
+                    "second_person_plural": {
+                        "$ref": "#/$defs/quiz_attribute"
+                    },
+                    "third_person_plural": {
+                        "$ref": "#/$defs/quiz_attribute"
+                    },
+                    "past_participle": {
+                        "$ref": "#/$defs/quiz_attribute"
+                    }
+                }
             }
         }
     },
