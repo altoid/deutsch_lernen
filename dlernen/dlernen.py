@@ -1250,7 +1250,7 @@ select
     pf.sort_order
 from pos p
 inner join pos_form pf on pf.pos_id = p.id
-inner join attrkey a on a.id = pf.attribute_id
+inner join attribute a on a.id = pf.attribute_id
 )
 select
         case
