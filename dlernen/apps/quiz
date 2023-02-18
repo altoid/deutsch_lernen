@@ -9,29 +9,15 @@ import random
 
 
 def get_next_word_to_test(wordlist_ids):
-    url = "%s/api/quiz/%s" % (config.Config.DB_URL, quiz_key)
-    r = requests.get(url)
-    result = r.json()
-    # pprint(result)
-    attribute = random.choice(result['attributes'])
-    url = "%s/api/words/%s?limit=%s" % (config.Config.DB_URL, attribute, 1)
+    url = "%s/api/quiz_data/%s" % (config.Config.DB_URL, quiz_key)
     if wordlist_ids:
-        url = "%s&wordlist_id=%s" % (url, ','.join([str(x) for x in wordlist_ids]))
+        wordlist_ids = ','.join(list(map(str, wordlist_ids)))
+        url = "%s?%s" % (url, wordlist_ids)
     r = requests.get(url)
-    chosen_words = r.json()
-    # pprint(chosen_words)
-    url = "%s/api/quiz_data" % config.Config.DB_URL
-    payload = {
-        "quiz_key": quiz_key,
-        "word_ids": chosen_words['word_ids']
-    }
-    r = requests.put(url, json=payload)
     quiz_data = r.json()
 
-    if not quiz_data:
-        return attribute, None
-
-    return attribute, quiz_data[0]
+    if quiz_data:
+        return quiz_data[0]
 
 
 # usage
@@ -65,25 +51,27 @@ available quizzes:
 
     if cl_args.quiz not in available_quizzes:
         print("no such quiz:  %s" % cl_args.quiz)
+        sys.exit()
 
     quiz_key = cl_args.quiz
-    if quiz_key in {'genders', 'definitions', 'plurals'}:
+    if quiz_key in {'definitions', 'plurals'}:
         print("there is a separate quiz app for %s" % quiz_key)
         sys.exit()
 
     while True:
-        attribute, quiz_me = get_next_word_to_test(cl_args.listids)
+        quiz_me = get_next_word_to_test(cl_args.listids)
         if not quiz_me:
             print("es gibt keine Welten mehr zu erobern")
             break
 
-        answer = input("%s [%s], q to quit ---> " % (quiz_me['word'], attribute))
+        attrkey = list(quiz_me['attributes'].keys())[0]
+        answer = input("%s [%s], q to quit ---> " % (quiz_me['word'], attrkey))
 
         # answer = str(answer, 'utf8').strip().lower()
         answer = answer.strip()
 
         while not answer:
-            answer = input("%s [%s], q to quit ---> " % (quiz_me['word'], attribute))
+            answer = input("%s [%s], q to quit ---> " % (quiz_me['word'], attrkey))
             answer = answer.strip()
 
         if answer == 'q':
@@ -92,16 +80,16 @@ available quizzes:
         payload = {
             "quiz_id": quiz_me['quiz_id'],
             "word_id": quiz_me['word_id'],
-            "attribute_id": quiz_me[attribute]['attribute_id'],
-            "presentation_count": quiz_me[attribute]['presentation_count'],
-            "correct_count": quiz_me[attribute]['correct_count']
+            "attribute_id": quiz_me['attributes'][attrkey]['attribute_id'],
+            "presentation_count": quiz_me['attributes'][attrkey]['presentation_count'],
+            "correct_count": quiz_me['attributes'][attrkey]['correct_count']
         }
 
-        if answer == quiz_me[attribute]['attrvalue']:
+        if answer == quiz_me['attributes'][attrkey]['attrvalue']:
             print("richtig")
             payload['correct_count'] += 1
         else:
-            print("falsch:  %s" % quiz_me[attribute]['attrvalue'])
+            print("falsch:  %s" % quiz_me['attributes'][attrkey]['attrvalue'])
 
         payload['presentation_count'] += 1
 

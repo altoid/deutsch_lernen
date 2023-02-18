@@ -76,192 +76,56 @@ def post_test():
     return j
 
 
-def get_word_ids_for_attrkey(limit, recent, attrkey):
-    query = """
-        select word_id
-        from mashup_v m
-        where attrkey = %(attrkey)s
-        and attrvalue is not null 
-        """
-    if recent:
-        order_by = "order by m.added desc "
-    else:
-        order_by = "order by rand() "
-    query += order_by
-    limit_clause = "limit %(limit)s " if limit else ""
-    query += limit_clause
+@app.route('/api/quiz_data/<string:quiz_key>')
+def quiz_data(quiz_key):
+    """
+    given a quiz key, randomly pick from the dictionary one attrkey value to be quizzed.
+    """
+
+    wordlist_ids = request.args.get('wordlist_id')  # this will come in as a comma-separated string.
+    if wordlist_ids:
+        wordlist_ids = wordlist_ids.split(',')
+        wordlist_ids = list(set(wordlist_ids))
+
+    query = quiz_sql.build_quiz_query(wordlist_ids=wordlist_ids)
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        args = {
-            "limit": limit,
-            "attrkey": attrkey
-        }
-        cursor.execute(query, args)
-        query_result = cursor.fetchall()
-        return [x['word_id'] for x in query_result]
-
-
-def get_word_ids_from_list_ids(limit, wordlist_ids, recent, attrkey):
-    """
-    returns a list containing 0 or more unique word ids.
-    """
-
-    results = []
-    wordlist_ids = wordlist_ids.split(',')
-
-    for wordlist_id in wordlist_ids:
-        # use the API so we don't have to worry about whether any are smart lists
-        url = "%s/api/wordlist/%s" % (Config.DB_URL, wordlist_id)
-        r = requests.get(url)
-        result = json.loads(r.text)
-        if result:
-            results.append(result)
-
-    # dig the word_ids out of the list results
-    word_ids = []
-    for result in results:
-        word_ids += [x['word_id'] for x in result.get('known_words')]
-
-    word_ids = list(set(word_ids))
-
-    # we'll have to apply the recent and limit filters here in software
-    if len(word_ids):
-        query = """
-            select word_id
-            from mashup_v
-            where attrkey = %%s
-            and attrvalue is not null
-            and word_id in (%s)
-            """ % (','.join(['%s'] * len(word_ids)))
-
-        if recent:
-            order_by = " order by mashup_v.added desc "
-        else:
-            order_by = " order by rand() "
-
-        query += order_by
-
-        limit_clause = " limit %s "
-
-        query += limit_clause
-
-        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            args = [attrkey] + word_ids + [limit]
-            cursor.execute(query, args)
-
-            query_result = cursor.fetchall()
-
-            word_ids = [x['word_id'] for x in query_result]
-
-    return word_ids
-
-
-@app.route('/api/words/<string:attrkey>')
-def words_attrkey(attrkey):
-    """
-    request format is
-
-    recent={true|false} - optional, default is false
-    if true, select the word ids by added date, most recent first
-    if false or not specified, selects by rand()
-
-    limit=n - optional.  restrict the number of word ids.  defaults to 10 if not specified.
-
-    wordlist_id=n,n,n - optional.  restrict the word ids to those in the given lists.
-
-    returns a list of word_ids for which there is an attrvalue for the give attrkey, and which meets
-    the other constrains.  e.g. for /api/words/past_participle, return word_ids where the words have
-    a value for past_participle.
-
-    the ids are unique but the order is undefined.
-    """
-
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        # check that the attrkey exists
-        sql = """
-        select attrkey, id attribute_id from attribute
-        """
-        cursor.execute(sql)
-        query_result = cursor.fetchall()
-        foundit = list(filter(lambda x: x['attrkey'] == attrkey, query_result))
-
-        if len(foundit) == 0:
-            return "attrkey %s not found" % attrkey, 404
-
-        foundit = foundit[0]
-        attribute_id = foundit['attribute_id']
-
-        recent = request.args.get('recent', default='False').lower() == 'true'
-        try:
-            limit = int(request.args.get('limit', default='10'))
-            if limit < 1:
-                return "bad value for limit", 400
-        except ValueError as dammit:
-            return "bad value for limit", 400
-
-        wordlist_ids = request.args.get('wordlist_id')
         if wordlist_ids:
-            word_ids = get_word_ids_from_list_ids(limit, wordlist_ids, recent, attrkey)
+            cursor.execute(query, (quiz_key, *wordlist_ids))
         else:
-            word_ids = get_word_ids_for_attrkey(limit, recent, attrkey)
+            cursor.execute(query, (quiz_key,))
 
-        result = {
-            "attribute_id": attribute_id,
-            "word_ids": word_ids
-        }
+        rows = cursor.fetchall()
+        results_dict = {}
 
-        jsonschema.validate(result, dlernen.dlernen_json_schema.WORDIDS_SCHEMA)
+        for row in rows:
+            keez = row.keys()
+            if row['last_presentation']:
+                row['last_presentation'] = row['last_presentation'].strftime("%Y-%m-%d %H:%M:%S")
 
-        return result
-
-
-@app.route('/api/quiz_data', methods=['PUT'])
-def quiz_data():
-    """
-    given a quiz key and a list of word_ids, get all of the attribute values quizzed for each of the words.
-
-    although this is invoked with a PUT request, this doesn't actually change the state of the server.  we
-    use PUT so that we can have longer list of word ids than we can put into a GET url, so the request is idempotent.
-    """
-    payload = request.get_json()
-
-    quiz_key = payload['quiz_key']
-    word_ids = payload.get('word_ids', [])
-    word_ids = list(map(str, word_ids))
-    word_ids = ','.join(word_ids)
-    result = []
-    if word_ids:
-        query = quiz_sql.build_quiz_query(quiz_key, word_ids)
-        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            cursor.execute(query)
-            rows = cursor.fetchall()
-            results_dict = {}
-
-            for row in rows:
-                keez = row.keys()
-                if row['last_presentation']:
-                    row['last_presentation'] = row['last_presentation'].strftime("%Y-%m-%d %H:%M:%S")
-
-                if row['word_id'] not in results_dict:
-                    results_dict[row['word_id']] = {
-                        k: row.get(k) for k in keez & {
-                            'qname',
-                            'quiz_id',
-                            'word_id',
-                            'word'
-                        }
+            if row['word_id'] not in results_dict:
+                results_dict[row['word_id']] = {
+                    k: row.get(k) for k in keez & {
+                        'qname',
+                        'quiz_id',
+                        'word_id',
+                        'word'
                     }
-                    results_dict[row['word_id']]['attributes'] = {}
-                if row['attrkey'] not in results_dict[row['word_id']]['attributes']:
-                    results_dict[row['word_id']]['attributes'][row['attrkey']] = {
-                        k: row.get(k) for k in keez & {
-                            'correct_count',
-                            'presentation_count',
-                            'attrvalue',
-                            'attribute_id',
-                            'last_presentation'
-                        }
+                }
+                results_dict[row['word_id']]['attributes'] = {}
+            if row['attrkey'] not in results_dict[row['word_id']]['attributes']:
+                results_dict[row['word_id']]['attributes'][row['attrkey']] = {
+                    k: row.get(k) for k in keez & {
+                        'correct_count',
+                        'presentation_count',
+                        'attrvalue',
+                        'attribute_id',
+                        'last_presentation'
                     }
-            result = list(results_dict.values())
+                }
+        result = list(results_dict.values())
+
+    if not result:
+        return "no testable attributes for quiz %s" % quiz_key, 404
 
     jsonschema.validate(result, dlernen.dlernen_json_schema.QUIZ_DATA_SCHEMA)
 
@@ -481,7 +345,7 @@ def add_word():
             request_attrkeys = {a['attrkey'].strip() for a in payload.get('attributes', set())}
             undefined_attrkeys = request_attrkeys - defined_attrkeys
             if len(undefined_attrkeys) > 0:
-                message = "attribute keys not defined:  %s" % ', '.join(list(undefined_attrkeys))
+                message = "attrkey keys not defined:  %s" % ', '.join(list(undefined_attrkeys))
                 cursor.execute('rollback')
                 return message, 400
 
@@ -489,7 +353,7 @@ def add_word():
             payload_attrvalues = {a['attrvalue'].strip() for a in payload.get('attributes', set())}
             bad_attrvalues = list(filter(lambda x: not bool(x), payload_attrvalues))
             if len(bad_attrvalues) > 0:
-                message = "attribute values cannot be empty strings"
+                message = "attrkey values cannot be empty strings"
                 cursor.execute('rollback')
                 return message, 400
 
@@ -537,7 +401,7 @@ def update_word(word_id):
     # checks:
     # word_id exists
     # word is nonempty if present
-    # zero-length or non-existent attribute list is ok
+    # zero-length or non-existent attrkey list is ok
     # attrvalue ids exist and belong to the word, for both update and delete cases
     # attrvalue ids in deleting and updating are disjoint
     # attrkeys are defined for the word, for both update and add cases
@@ -608,7 +472,7 @@ def update_word(word_id):
             payload_attrvalues = {a['attrvalue'].strip() for a in payload.get('attributes', set())}
             bad_attrvalues = list(filter(lambda x: not bool(x), payload_attrvalues))
             if len(bad_attrvalues) > 0:
-                message = "attribute values cannot be empty strings"
+                message = "attrkey values cannot be empty strings"
                 cursor.execute('rollback')
                 return message, 400
 
@@ -711,10 +575,10 @@ def get_words():
     return result
 
 
-# TODO - delete an attribute value - /api/<word_id>/attribute/<attrvalue_id>
+# TODO - delete an attrkey value - /api/<word_id>/attrkey/<attrvalue_id>
 
 
-@app.route('/api/<int:word_id>/attribute', methods=['POST'])
+@app.route('/api/<int:word_id>/attrkey', methods=['POST'])
 def add_attributes(word_id):
     try:
         payload = request.get_json()
@@ -725,7 +589,7 @@ def add_attributes(word_id):
 
     # checks:
     # word_id exists
-    # zero-length attribute list is ok
+    # zero-length attrkey list is ok
     # attrvalue ids exist and belong to the word
     # new attrvalues are all strings len > 0.
 
@@ -755,7 +619,7 @@ def add_attributes(word_id):
             payload_attrvalues = [a['attrvalue'].strip() for a in payload['attributes']]
             bad_attrvalues = list(filter(lambda x: not bool(x), payload_attrvalues))
             if len(bad_attrvalues) > 0:
-                message = "attribute values cannot be empty strings"
+                message = "attrkey values cannot be empty strings"
                 cursor.execute('rollback')
                 return message, 400
 
@@ -815,7 +679,6 @@ def get_list_attributes(wordlist_id):
 
 @app.route('/api/wordlist/<int:wordlist_id>')
 def get_wordlist(wordlist_id):
-    # uses WORDLIST_SCHEMA
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
         select
@@ -1110,14 +973,14 @@ def update_wordlist(wordlist_id):
         # this is well-behaved if citation and sqlcode are not given.
         cursor.execute('start transaction')
 
-        existing_list = get_wordlist(wordlist_id)
-        if existing_list['list_type'] == 'smart' and words and sqlcode != '':
+        wordlist = get_wordlist(wordlist_id)
+        if wordlist['list_type'] == 'smart' and words and sqlcode != '':
             # if sqlcode is the empty string, then this is ok, because it means we are going to
             # clear out the existing sqlcode.
             cursor.execute('rollback')
             return "can't add words to smart list", 400
 
-        if existing_list['list_type'] == 'standard' and sqlcode:
+        if wordlist['list_type'] == 'standard' and sqlcode:
             cursor.execute('rollback')
             return "can't add code to existing list", 400
 
@@ -1364,8 +1227,8 @@ def get_wordlists_by_word_id(word_id):
 def word_metadata():
     """
     get all of the attributes for all parts of speech.  if a word is given (not a word_id), then enrich
-    the POS data with all the attribute values for the word.  the data structure returned will be used in
-    the UI to edit the word and its attribute values.
+    the POS data with all the attrkey values for the word.  the data structure returned will be used in
+    the UI to edit the word and its attrkey values.
 
     optional arguments:
     word - the word for which we are getting all the things.
@@ -1387,7 +1250,7 @@ select
     pf.sort_order
 from pos p
 inner join pos_form pf on pf.pos_id = p.id
-inner join attribute a on a.id = pf.attribute_id
+inner join attrkey a on a.id = pf.attribute_id
 )
 select
         case
@@ -1658,7 +1521,6 @@ def add_to_list():
             ]
         }
     elif r.status_code == 200:
-        obj = r.json()
         payload = {
             "words": [
                 word
@@ -1741,7 +1603,7 @@ def update_dict():
     if len(tag_parts) > 2:
         word_id = tag_parts[2]
 
-    # get all the attribute info from the form and turn it into a dict.
+    # get all the attrkey info from the form and turn it into a dict.
     attrs_from_form = {}
     for f in request.form.keys():
         field_key_parts = f.split('-')
@@ -1807,7 +1669,7 @@ def update_dict():
 
         return redirect(target)
 
-    # we are updating.  figure out all the attribute values we have to add/remove/update.
+    # we are updating.  figure out all the attrkey values we have to add/remove/update.
 
     # go through the contents of the form and figure out what changes to make.  cases:
     #

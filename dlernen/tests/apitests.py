@@ -465,7 +465,7 @@ class APITestsWordPOST(unittest.TestCase):
         r = requests.post(config.Config.BASE_URL + "/api/word", json=payload)
         self.assertNotEqual(r.status_code, 200)
 
-    # 0-length attribute
+    # 0-length attrkey
     def test_zero_length_attrvalue(self):
         payload = {
             "word": "aeioeauaoeu",
@@ -580,7 +580,7 @@ class APITestsWordPUT(unittest.TestCase):
         r = requests.put("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id), json=update_payload)
         self.assertNotEqual(200, r.status_code)
 
-    # zero-length attribute value
+    # zero-length attrkey value
     def test_zero_length_attrvalue(self):
         # updating with attrvalue = "" not allowed.
         update_payload = {
@@ -657,7 +657,7 @@ class APITestsWordPUT(unittest.TestCase):
         obj = r.json()
         self.assertEqual(new_word, obj['word'])
 
-    # updating attribute values works.
+    # updating attrkey values works.
     def test_update_attrs(self):
         victim = self.obj['attributes'][0]['attrvalue_id']
         new_value = 'changed to this'
@@ -747,7 +747,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, word_id))
         self.assertEqual(r.status_code, 200)
 
-    # another end-to-end test, but without giving any attribute values.  add attributes to the word.  retrieve
+    # another end-to-end test, but without giving any attrkey values.  add attributes to the word.  retrieve
     # word, new attributes should be there.
     def test_add_attrs(self):
         add_payload = {
@@ -790,7 +790,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
             ]
         }
 
-        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, word_id), json=add_attr_payload)
+        r = requests.post("%s/api/%s/attrkey" % (config.Config.BASE_URL, word_id), json=add_attr_payload)
         self.assertEqual(r.status_code, 200)
         obj = r.json()
 
@@ -802,14 +802,14 @@ class APITestsWordEndToEnd(unittest.TestCase):
         self.assertEqual("Xxxxxxxxxx", attrdict['plural'])
         self.assertEqual("feelthy", attrdict['definition'])
 
-        # add again but with empty attribute list
+        # add again but with empty attrkey list
 
         add_attr_payload = {
             "attributes": [
             ]
         }
 
-        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, word_id), json=add_attr_payload)
+        r = requests.post("%s/api/%s/attrkey" % (config.Config.BASE_URL, word_id), json=add_attr_payload)
         self.assertEqual(r.status_code, 200)
         obj = r.json()
 
@@ -917,14 +917,14 @@ class APITestsAttributePOST(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, 66666666), json=payload)
+        r = requests.post("%s/api/%s/attrkey" % (config.Config.BASE_URL, 66666666), json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # attributes keyword missing
     def test_attributes_keyword_missing(self):
         payload = {
         }
-        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, self.word_id), json=payload)
+        r = requests.post("%s/api/%s/attrkey" % (config.Config.BASE_URL, self.word_id), json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # attrkey keyword missing
@@ -936,7 +936,7 @@ class APITestsAttributePOST(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, self.word_id), json=payload)
+        r = requests.post("%s/api/%s/attrkey" % (config.Config.BASE_URL, self.word_id), json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # attrvalue keyword missing
@@ -948,13 +948,13 @@ class APITestsAttributePOST(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, self.word_id), json=payload)
+        r = requests.post("%s/api/%s/attrkey" % (config.Config.BASE_URL, self.word_id), json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # payload not JSON
     def test_payload_not_json(self):
         payload = "bullshit payload"
-        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, self.word_id), json=payload)
+        r = requests.post("%s/api/%s/attrkey" % (config.Config.BASE_URL, self.word_id), json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     # attrkeys wrong for word/pos
@@ -975,10 +975,10 @@ class APITestsAttributePOST(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, self.word_id), json=payload)
+        r = requests.post("%s/api/%s/attrkey" % (config.Config.BASE_URL, self.word_id), json=payload)
         self.assertNotEqual(r.status_code, 200)
 
-    # zero-length attribute values
+    # zero-length attrkey values
     def test_empty_attrvalue(self):
         payload = {
             "attributes": [
@@ -996,11 +996,11 @@ class APITestsAttributePOST(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, self.word_id), json=payload)
+        r = requests.post("%s/api/%s/attrkey" % (config.Config.BASE_URL, self.word_id), json=payload)
         self.assertNotEqual(r.status_code, 200)
 
     def test_adding_more_values(self):
-        # test that adding additional attribute values is well-behaved
+        # test that adding additional attrkey values is well-behaved
 
         payload = {
             "attributes": [
@@ -1018,7 +1018,7 @@ class APITestsAttributePOST(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post("%s/api/%s/attribute" % (config.Config.BASE_URL, self.word_id), json=payload)
+        r = requests.post("%s/api/%s/attrkey" % (config.Config.BASE_URL, self.word_id), json=payload)
         self.assertEqual(200, r.status_code)
 
         r = requests.get("%s/api/word/%s" % (config.Config.BASE_URL, self.word_id))
@@ -1038,30 +1038,16 @@ class APITestsAttributePOST(unittest.TestCase):
 
 class APITests(unittest.TestCase):
     def test_real_quiz_data(self):
-        url = "%s/api/quiz_data" % config.Config.DB_URL
-        payload = {
-            "quiz_key": "plurals",
-            "word_ids": [2175, 3230, 4803]
-        }
-        r = requests.put(url, json=payload)
+        url = "%s/api/quiz_data/%s" % (config.Config.DB_URL, 'plurals')
+        r = requests.get(url)
         quiz_data = r.json()
+
         jsonschema.validate(quiz_data, dlernen_json_schema.QUIZ_DATA_SCHEMA)
 
-    def test_empty_quiz_data(self):
-        url = "%s/api/quiz_data" % config.Config.DB_URL
-        payload = {
-            "quiz_key": "plurals",
-            "word_ids": []
-        }
-        r = requests.put(url, json=payload)
-        quiz_data = r.json()
-        jsonschema.validate(quiz_data, dlernen_json_schema.QUIZ_DATA_SCHEMA)
-
-    def test_real_wordids(self):
-        r = requests.get(config.Config.BASE_URL + "/api/words/article")
-        results = r.json()
-        self.assertGreater(len(results), 0)
-        jsonschema.validate(results, dlernen_json_schema.WORDIDS_SCHEMA)
+    def test_empty_quiz_data_no_match(self):
+        url = "%s/api/quiz_data/%s" % (config.Config.DB_URL, 'aoeuaoeuaeou')
+        r = requests.get(url)
+        self.assertEqual(404, r.status_code)
 
     def test_get_word_by_word_exact(self):
         r = requests.get(config.Config.BASE_URL + "/api/word/verderben")
@@ -1078,27 +1064,6 @@ class APITests(unittest.TestCase):
         results = r.json()
         self.assertGreater(len(results), 0)
         jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
-
-    def test_quiz_data_empty_list_1(self):
-        url = "%s/api/quiz_data" % config.Config.DB_URL
-        payload = {
-            "quiz_key": "definitions"
-        }
-
-        r = requests.put(url, json=payload)
-        result = json.loads(r.text)
-        self.assertEqual([], result)
-
-    def test_quiz_data_empty_list_2(self):
-        url = "%s/api/quiz_data" % config.Config.DB_URL
-        payload = {
-            "quiz_key": "definitions",
-            "word_ids": []
-        }
-
-        r = requests.put(url, json=payload)
-        result = json.loads(r.text)
-        self.assertEqual([], result)
 
     def test_get_words_empty_list_1(self):
         url = "%s/api/words" % config.Config.DB_URL
@@ -1118,24 +1083,6 @@ class APITests(unittest.TestCase):
         r = requests.put(url, json=payload)
         result = json.loads(r.text)
         self.assertEqual([], result)
-
-    def test_get_words(self):
-        list_ids = [93, 114]
-        args = [str(x) for x in list_ids]
-
-        url = "%s/api/words/plural" % config.Config.DB_URL
-        url = "%s?limit=%s&%s" % (url, 5, '&'.join(args))
-        url = "%s&wordlist_id=%s" % (url, ','.join(args))
-
-        r = requests.get(url)
-        self.assertEqual(200, r.status_code)
-        payload = r.json()
-
-        url = "%s/api/words" % config.Config.DB_URL
-        r = requests.put(url, json=payload)
-        results = json.loads(r.text)
-        self.assertGreater(len(results), 0)
-        jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
 
 
 class APIWordlists(unittest.TestCase):
@@ -1860,7 +1807,7 @@ class APIWordUpdate(unittest.TestCase):
         self.assertIsNone(defn['attrvalue'])
 
     def test_add_update_delete_attribute_2(self):
-        # add, update, and delete attribute values in a single request
+        # add, update, and delete attrkey values in a single request
         old_def = "it smells like cereal here"
         payload = {
             "attributes_adding": [

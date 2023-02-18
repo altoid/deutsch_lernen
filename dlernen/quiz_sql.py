@@ -1,5 +1,5 @@
 # quiz works by testing for knowledge of 
-# the attribute values of chosen words.
+# the attrkey values of chosen words.
 
 # quiz - stores name and id of quiz along with a mnemonic.
 #
@@ -19,7 +19,7 @@
 # | last_presentation  | timestamp | NO   |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP |
 # +--------------------+-----------+------+-----+-------------------+-----------------------------+
 #
-# scores for every quiz/word/attribute, plus presentation time.
+# scores for every quiz/word/attrkey, plus presentation time.
 #
 # how we select what to test:
 #
@@ -29,38 +29,38 @@
 #
 # for a score over 95%, don't retest.  unless it's been more than 30 days.
 
-QUIZ_SQL = """
-with attrs_for_quiz as (
+ATTRS_FOR_QUIZ = """
+attrs_for_quiz as (
 select qs.quiz_id, qs.attribute_id
 from quiz
 inner join quiz_structure qs on quiz.id = qs.quiz_id
-where quiz_key = '{quiz_key}'
-),
-given_words as (
-select id word_id from word
-where id in ({word_ids})
-),
-testable_attributes as (
-select * from
-attrs_for_quiz,
-given_words
-),
-attrs_and_values as (
-select ta.*,
-mashup_v.word, mashup_v.attrvalue, mashup_v.attrkey
-from testable_attributes ta
-inner join mashup_v on ta.word_id = mashup_v.word_id and ta.attribute_id = mashup_v.attribute_id
-),
+where quiz_key = %s
+)"""
+
+TESTABLE_ATTRS_AND_VALUES = """
 testable_attrs_and_values as (
-select * from attrs_and_values	
-where word_id not in (
-    select word_id from attrs_and_values
-    where attrvalue	is null
-    )
-)
+select a.*, m.attrkey, m.word_id, m.word, m.attrvalue
+from attrs_for_quiz a
+inner join mashup_v m
+on a.attribute_id = m.attribute_id
+where attrvalue is not null
+)"""
 
+TESTABLE_ATTRS_AND_VALUES_FILTERED_BY_WORDLIST = """
+testable_attrs_and_values as (
+select a.*, m.attrkey, m.word_id, m.word, m.attrvalue
+from attrs_for_quiz a
+inner join mashup_v m
+on a.attribute_id = m.attribute_id
+inner join wordlist_known_word wkw on m.word_id = wkw.word_id                                                 
+where attrvalue is not null                                                                                   
+and wkw.wordlist_id in (%(wordlist_args)s)                                                                                   
+)"""
+
+PRESENTED_TOO_FEW_TIMES = """
+q1 as
+(
 -- word has been presented 5 or fewer times (or not at all)
-
 select
 'QUERY1' qname,
 ta.quiz_id,
@@ -79,11 +79,12 @@ and ta.quiz_id = v.quiz_id
 and ta.attribute_id = v.attribute_id
 
 where ifnull(presentation_count, 0) <= 5
+)"""
 
-union
-
+CRAPPY_SCORE = """
+q2 as
+(
 -- crappy score (<= 80% in 10 or more presentations
-
 select
 'QUERY2' qname,
 ta.quiz_id,
@@ -103,11 +104,12 @@ and ta.attribute_id = v.attribute_id
 
 where presentation_count >= 10
 and correct_count / presentation_count <= 0.80
+)"""
 
-union
-
+BEEN_TOO_LONG = """
+q3 as
+(
 -- word hasn't been quizzed in more than 30 days
-
 select
 'QUERY3' qname,
 ta.quiz_id,
@@ -126,20 +128,47 @@ and ta.quiz_id = v.quiz_id
 and ta.attribute_id = v.attribute_id
 
 where curdate() - interval 30 day > last_presentation
+)"""
+
+
+def build_quiz_query(wordlist_ids=None):
+    if wordlist_ids:
+        wordlist_args = ['%s'] * len(wordlist_ids)
+        d = {
+            'wordlist_args': ', '.join(wordlist_args)
+        }
+
+        subqueries = [
+            ATTRS_FOR_QUIZ,
+            TESTABLE_ATTRS_AND_VALUES_FILTERED_BY_WORDLIST % d,
+            PRESENTED_TOO_FEW_TIMES,
+            CRAPPY_SCORE,
+            BEEN_TOO_LONG
+        ]
+    else:
+        subqueries = [
+            ATTRS_FOR_QUIZ,
+            TESTABLE_ATTRS_AND_VALUES,
+            PRESENTED_TOO_FEW_TIMES,
+            CRAPPY_SCORE,
+            BEEN_TOO_LONG
+        ]
+
+    quiz_sql = """
+with 
+""" + ', '.join(subqueries) + """,
+alle as (
+select * from q1
+union
+select * from q2
+union
+select * from q3
+)
+select alle.* from alle
 
 order by rand()
 
--- limit 1
+limit 1
 """
 
-
-def build_quiz_query(quiz_key, word_ids):
-    """
-    word_ids should be a string that is a comma-separated list of word_ids
-    """
-    d = {
-        "quiz_key": quiz_key,
-        "word_ids": word_ids
-    }
-
-    return QUIZ_SQL.format(**d)
+    return quiz_sql

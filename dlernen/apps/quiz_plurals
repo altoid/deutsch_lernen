@@ -1,46 +1,7 @@
 #!/usr/bin/env python
 
-from dlernen import config
 import argparse
-import json
-import requests
-from pprint import pprint
-
-
-def get_next_word_to_test(chosen_words):
-    url = "%s/api/quiz_data" % config.Config.DB_URL
-    payload = {
-        "quiz_key": "plurals",
-        "word_ids": chosen_words['word_ids']
-    }
-    r = requests.put(url, json=payload)
-    quiz_data = json.loads(r.text)
-    if not quiz_data:
-        return None
-
-    # dig the word_ids out of the result and then find the articles for each word that is a noun.
-    word_ids = [x['word_id'] for x in quiz_data]
-    url = "%s/api/words" % config.Config.DB_URL
-    payload = {
-        "word_ids": word_ids
-    }
-    r = requests.put(url, json=payload)
-    word_attributes = json.loads(r.text)
-
-    # enrich the quiz_data by adding the articles
-    word_id_to_article = {}
-    for wa in word_attributes:
-        for a in wa['attributes']:
-            if a['attrkey'] == 'article':
-                word_id_to_article[wa['word_id']] = a['value']
-
-    for qd in quiz_data:
-        if qd['word_id'] in word_id_to_article:
-            qd['article'] = word_id_to_article[qd['word_id']]
-
-    # pprint(quiz_data)
-    return quiz_data[0]
-
+from app_common import *
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
@@ -59,7 +20,11 @@ n randomly chosen from lists
 
 quiz_plurals -n <x>
 n most recent
+
+THE -n AND -r OPTIONS NO LONGER WORK
 """)
+
+    # TODO - restore word recency feature.
 
     parser.add_argument('-l', '--listids',
                         nargs='+',
@@ -74,25 +39,17 @@ n most recent
                         help='pick most recently added words and quiz them.')
     cl_args = parser.parse_args()
 
-    url = "%s/api/words/plural" % config.Config.DB_URL
-    url = "%s?limit=%s&recent=%s" % (url, cl_args.nwords, cl_args.recent)
-    if cl_args.listids:
-        url = "%s&wordlist_id=%s" % (url, ','.join([str(x) for x in cl_args.listids]))
-
-    pprint(url)
-
-    r = requests.get(url)
-    chosen_words = json.loads(r.text)
+    wordlist_ids = cl_args.listids if cl_args.listids else None
 
     done = False
     counter = 0
     while not done:
-        row = get_next_word_to_test(chosen_words)
+        row = get_next_word_to_test(wordlist_ids, 'plurals')
+
         if not row:
             print("es gibt keine Welten mehr zu erobern")
             break
 
-        # pprint(row)
         counter += 1
         print("[%s]" % counter, end=' ')
 
@@ -107,16 +64,16 @@ n most recent
         payload = {
             "quiz_id": row['quiz_id'],
             "word_id": row['word_id'],
-            "attribute_id": row['plural']['attribute_id'],
-            "presentation_count": row['plural']['presentation_count'],
-            "correct_count": row['plural']['correct_count']
+            "attribute_id": row['attributes']['plural']['attribute_id'],
+            "presentation_count": row['attributes']['plural']['presentation_count'],
+            "correct_count": row['attributes']['plural']['correct_count']
         }
 
-        if answer == row['plural']['attrvalue']:
-            print("ja")
+        if answer == row['attributes']['plural']['attrvalue']:
+            print("richtig")
             payload['correct_count'] += 1
         else:
-            print("nein:  %s" % row['plural']['attrvalue'])
+            print("falsch:  %s" % row['attributes']['plural']['attrvalue'])
 
         payload['presentation_count'] += 1
 
