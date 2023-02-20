@@ -1166,9 +1166,9 @@ def refresh_wordlists():
             return "refresh wordlists failed", 500
 
 
-# TODO - implement a get-by-word version of this.
 @app.route('/api/wordlists/<int:word_id>')
 def get_wordlists_by_word_id(word_id):
+    word_id = int(word_id)
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         # find standard lists that this word is in
         sql = """
@@ -1375,7 +1375,9 @@ def home():
     return render_template('home.html')
 
 
-def get_lookup_render_template(word, wordlist_id=None):
+def get_lookup_render_template(word, **kwargs):
+    return_to_wordlist_id = kwargs.get('return_to_wordlist_id')
+    member_wordlists = kwargs.get('member_wordlists')
     url = "%s/api/word/%s" % (Config.DB_URL, word)
     results = None
     r = requests.get(url)
@@ -1383,24 +1385,29 @@ def get_lookup_render_template(word, wordlist_id=None):
         pass
     elif r.status_code == 200:
         results = r.json()
-        # pprint(results)
     return render_template('lookup.html',
                            word=word,
-                           return_to_wordlist_id=wordlist_id,
+                           return_to_wordlist_id=return_to_wordlist_id,
+                           member_wordlists=member_wordlists,
                            results=results)
 
 
 @app.route('/lookup/<string:word>', methods=['GET'])
 def lookup_by_get(word):
-    wordlist_id = request.args.get('wordlist_id')
-    return get_lookup_render_template(word, wordlist_id)
+    return_to_wordlist_id = request.args.get('return_to_wordlist_id')
+    word_id = request.args.get('word_id')
+    member_wordlists = None
+    if word_id:
+        member_wordlists = get_wordlists_by_word_id(word_id)
+    return get_lookup_render_template(word, return_to_wordlist_id=return_to_wordlist_id,
+                                      member_wordlists=member_wordlists)
 
 
 @app.route('/lookup', methods=['POST'])
 def lookup_by_post():
     word = request.form.get('lookup')
-    wordlist_id = request.form.get('wordlist_id')
-    return get_lookup_render_template(word, wordlist_id)
+    return_to_wordlist_id = request.form.get('return_to_wordlist_id')
+    return get_lookup_render_template(word, return_to_wordlist_id=return_to_wordlist_id)
 
 
 @app.route('/wordlists')

@@ -8,7 +8,7 @@ def get_next_word_to_test(wordlist_ids, quiz_key):
     if wordlist_ids:
         wordlist_ids = ','.join(list(map(str, wordlist_ids)))
         url = "%s?wordlist_id=%s" % (url, wordlist_ids)
-        pprint(url)
+
     r = requests.get(url)
     quiz_data = r.json()
     if not quiz_data:

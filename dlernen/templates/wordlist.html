@@ -40,7 +40,8 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <a href="{{ url_for('lookup_by_get', word=r.word, wordlist_id=result.wordlist_id) }}">{{ r.word }}</a>
+                                        <a href="{{ url_for('lookup_by_get', word=r.word, word_id=r.word_id, wordlist_id=result.wordlist_id) }}">{{
+                                            r.word }}</a>
                                     </td>
                                     <td>{{ r.definition }}</td>
                                 </tr>

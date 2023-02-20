@@ -42,9 +42,9 @@
     </table>
     <input type="submit" value="Submit"/>
 </form>
-{% if wordlists %}
+{% if member_wordlists %}
 <h1>Wortlisten, die dieses Wort enthalten</h1>
-{% for wl in wordlists %}
+{% for wl in member_wordlists %}
 <a href="{{ url_for('wordlist', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a><br>
 {% endfor %}
 {% endif %}
