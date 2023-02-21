@@ -1212,7 +1212,7 @@ def get_wordlists_by_word_id(word_id):
         if wordlist_ids:
             args = ','.join([str(x) for x in wordlist_ids])
             url = url_for('get_wordlists', wordlist_id=args)
-            url = "%s/%s" % (Config.DB_URL, url)
+            url = "%s%s" % (Config.DB_URL, url)
             r = requests.get(url)
 
             result = json.loads(r.text)
