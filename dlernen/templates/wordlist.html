@@ -42,7 +42,7 @@ Wordlist:  {{ result.name }}
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <a href="{{ url_for('lookup_by_get', word=r.word, word_id=r.word_id, wordlist_id=result.wordlist_id) }}">{{
+                                        <a href="{{ url_for('lookup_by_get', word=r.word, word_id=r.word_id, return_to_wordlist_id=result.wordlist_id) }}">{{
                                             r.word }}</a>
                                     </td>
                                     <td>{{ r.definition }}</td>
