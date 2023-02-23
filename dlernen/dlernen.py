@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for
+from flask import Flask, request, render_template, redirect, url_for, flash
 from pprint import pprint
 from mysql.connector import connect
 from dlernen.config import Config
@@ -12,6 +12,7 @@ import sys
 import os
 
 app = Flask(__name__)
+app.secret_key = "ap.i*&(^ap1."
 app.config.from_object(Config)
 
 
@@ -1600,7 +1601,13 @@ def edit_word_form(word):
 def update_dict():
     tag = request.form.get('tag')
     if not tag:
-        raise Exception("select something")
+        word = request.form.get('word')
+        wordlist_id = request.form.get('wordlist_id')
+        if word is not None:
+            flash("Select a Part of Speech")
+            return redirect(url_for('edit_word_form', word=word, wordlist_id=wordlist_id))
+
+        raise Exception("select a part of speech")
 
     # tag is <pos_id>-<pos_name>-<word_id> for the editing case and <pos_id>-<pos_name> for the adding case.
 

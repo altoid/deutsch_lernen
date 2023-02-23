@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 
 {% block body %}
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+        <h2>{{ message }}</h2>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
 {{ super() }}
 <table>
     <tr>
