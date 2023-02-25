@@ -397,7 +397,9 @@ def update_word(word_id):
         payload = request.get_json()
         jsonschema.validate(payload, dlernen.dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
     except jsonschema.ValidationError as e:
-        return "bad payload: %s" % e.message, 400
+        message = "bad payload: %s" % e.message
+        print(message)
+        return message, 400
 
     # checks:
     # word_id exists
@@ -425,6 +427,7 @@ def update_word(word_id):
             if len(defined_attrvalue_ids) == 0:
                 # word_id is bogus
                 message = "word_id %s not found" % word_id
+                print(message)
                 cursor.execute('rollback')
                 return message, 404
 
@@ -432,6 +435,7 @@ def update_word(word_id):
             undefined_attrvalue_ids = payload_updating_attrvalue_ids - defined_attrvalue_ids
             if len(undefined_attrvalue_ids) > 0:
                 message = "attrvalue_ids not defined:  %s" % ', '.join(list(undefined_attrvalue_ids))
+                print(message)
                 cursor.execute('rollback')
                 return message, 400
 
@@ -439,12 +443,14 @@ def update_word(word_id):
             undefined_attrvalue_ids = payload_deleting_attrvalue_ids - defined_attrvalue_ids
             if len(undefined_attrvalue_ids) > 0:
                 message = "attrvalue_ids not defined:  %s" % ', '.join(list(undefined_attrvalue_ids))
+                print(message)
                 cursor.execute('rollback')
                 return message, 400
 
             deleting_and_updating_ids = payload_deleting_attrvalue_ids & payload_updating_attrvalue_ids
             if deleting_and_updating_ids:
                 message = "attempting to delete and update attr ids:  %s" % ', '.join(list(deleting_and_updating_ids))
+                print(message)
                 cursor.execute('rollback')
                 return message, 400
 
@@ -452,6 +458,7 @@ def update_word(word_id):
             undefined_attrvalue_ids = payload_updating_attrvalue_ids - defined_attrvalue_ids
             if len(undefined_attrvalue_ids) > 0:
                 message = "attrvalue_ids not defined:  %s" % ', '.join(list(undefined_attrvalue_ids))
+                print(message)
                 cursor.execute('rollback')
                 return message, 400
 
@@ -459,6 +466,7 @@ def update_word(word_id):
             undefined_attrkeys = payload_adding_attrkeys - defined_attrkeys
             if len(undefined_attrkeys) > 0:
                 message = "attrkeys not defined:  %s" % ', '.join(list(undefined_attrkeys))
+                print(message)
                 cursor.execute('rollback')
                 return message, 400
 
@@ -467,6 +475,7 @@ def update_word(word_id):
                 word = payload['word'].strip()
             if word == '':
                 message = 'word cannot be empty string'
+                print(message)
                 return message, 400
 
             # check that attrvalues are all strings len > 0
@@ -475,6 +484,7 @@ def update_word(word_id):
             if len(bad_attrvalues) > 0:
                 message = "attrkey values cannot be empty strings"
                 cursor.execute('rollback')
+                print(message)
                 return message, 400
 
             # checks complete, let's do this.
@@ -1714,7 +1724,7 @@ def update_dict():
                     'attrvalue': v['attrvalue']
                 }
             )
-        else:
+        elif v:
             payload['attributes_updating'].append(v)
 
     url = "%s/api/word/%s" % (Config.DB_URL, word_id)
