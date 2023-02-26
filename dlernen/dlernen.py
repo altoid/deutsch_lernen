@@ -1717,7 +1717,7 @@ def update_dict():
     for k, v in attrs_from_form.items():
         if 'attrvalue' not in v and 'attrvalue_id' in v:
             payload["attributes_deleting"].append(int(v['attrvalue_id']))
-        elif 'attrvalue_id' not in v:
+        elif 'attrvalue_id' not in v and 'attrvalue' in v:
             payload["attributes_adding"].append(
                 {
                     'attrkey': k,
