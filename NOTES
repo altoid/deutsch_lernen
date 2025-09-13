@@ -34,3 +34,7 @@ Press CTRL+C to quit
  * Restarting with stat
  * Debugger is active!
  * Debugger PIN: 772-306-967
+
+------
+
+TODO review return values of requests.get.  stop checking for this being None, look at status_code instead.

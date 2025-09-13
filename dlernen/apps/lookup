@@ -50,10 +50,11 @@ if __name__ == '__main__':
     for word in args.word:
         url = "%s/api/word/%s?partial=%s" % (Config.BASE_URL, word, str(args.partial))
         r = requests.get(url)
-        results = r.json()
-        if not results:
+        if r.status_code == 404:
             print("%s NOT FOUND:  %s" % ('#' * 33, word))
+            continue
 
+        results = r.json()
         all_results += results
 
     if all_results:
