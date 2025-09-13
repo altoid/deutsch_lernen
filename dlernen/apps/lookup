@@ -32,7 +32,7 @@ def display_result(result, tagwidth, keywidth):
     attrs = sorted(attrs, key=lambda x: x['sort_order'])
     for a in attrs:
         display_key = "%s:" % a['attrkey']
-        v = a.get('value')
+        v = a.get('attrvalue')
         print("%s %s %s" % (tag.ljust(tagwidth + 10),
                             display_key.ljust(keywidth + 1),  # add 1 for the : appended to the key name
                             v if v else ''))
