@@ -2,3 +2,35 @@ to do local development install:
 
 python -m pip install -e .
 
+---
+
+as of sep 2025 this machine runs the following:
+
+* sequoia 15.6
+* python 3.13.7
+* mysql 8.1
+
+the name of the python executable is python3.  the command 'python'
+will not be found in the environment.  do not finesse the PATH
+or other env variables to make 'python' appear.  the way to do this
+properly is with venv.
+
+'python' and other essential utilities will appear in the virtual
+environment.
+
+Dougs-MacBook-Pro:deutsch_lernen dougtomm$ python3 -m venv venv/
+Dougs-MacBook-Pro:deutsch_lernen dougtomm$ source venv/bin/activate
+(venv) Dougs-MacBook-Pro:deutsch_lernen dougtomm$ which python
+/Users/dougtomm/src/deutsch_lernen/venv/bin/python
+
+then all you have to do is start the server:
+
+(venv) Dougs-MacBook-Pro:deutsch_lernen dougtomm$ ./start.sh 
+ * Serving Flask app 'dlernen.dlernen'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 772-306-967
