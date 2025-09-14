@@ -37,4 +37,4 @@ Press CTRL+C to quit
 
 ------
 
-TODO review return values of requests.get.  stop checking for this being None, look at status_code instead.
+TODO review return values of requests.get.  should be checking that the response is valid before inspecting json

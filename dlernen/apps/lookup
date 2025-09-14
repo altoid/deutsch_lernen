@@ -43,18 +43,19 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("word", nargs='+', help="word to look up")
     parser.add_argument("--partial", action='store_true',
-                        help="search for word verbatim, no substring matching")
+                        help="search for word with substring matching")
     args = parser.parse_args()
 
     all_results = []
     for word in args.word:
         url = "%s/api/word/%s?partial=%s" % (Config.BASE_URL, word, str(args.partial))
         r = requests.get(url)
-        if r.status_code == 404:
+        if not r:
             print("%s NOT FOUND:  %s" % ('#' * 33, word))
             continue
 
         results = r.json()
+
         all_results += results
 
     if all_results:
