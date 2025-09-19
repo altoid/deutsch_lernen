@@ -6,6 +6,9 @@ from pprint import pprint
 import requests
 from dlernen.config import Config
 
+# TODO:  change the way --partial works.  currently all we are doing is displaying all of the attrvalues
+#   that match the argument.  what we should be doing is returning all of the words that have attrvalues
+#   that match the string, then displaying those.
 
 def widest_attrkey_len(result):
     """
@@ -40,7 +43,10 @@ def display_result(result, tagwidth, keywidth):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="""
+    look up the given word.  performs an exact match on just the word.  with
+    --partial, does a substring match on all words and attribute values.
+    """)
     parser.add_argument("word", nargs='+', help="word to look up")
     parser.add_argument("--partial", action='store_true',
                         help="search for word with substring matching")
