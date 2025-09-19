@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for, flash
+from flask import Flask, request, render_template, redirect, url_for, flash, abort
 from pprint import pprint
 from mysql.connector import connect
 from dlernen.config import Config
@@ -1381,6 +1381,11 @@ def get_quiz_by_key(quiz_key):
         return build_quiz_metadata(rows)[0]
 
 
+@app.errorhandler(500)
+def server_error(e):
+    return render_template('500.html'), 500
+
+
 @app.route('/')
 def home():
     return render_template('home.html')
@@ -1425,31 +1430,33 @@ def lookup_by_post():
 def wordlists():
     url = "%s/api/wordlists" % Config.DB_URL
     r = requests.get(url)
-    result = json.loads(r.text)
+    if r:
+        result = json.loads(r.text)
+        return render_template('wordlists.html', rows=result)
 
-    return render_template('wordlists.html', rows=result)
+    abort(r.status_code)
 
 
 @app.route('/healthcheck')
-def healthcheck():
-    return 'OK'
-
-
-@app.route('/dbcheck')
 def dbcheck():
-    # TODO: have to disable mysql server autostart to test no-connection condition
-    pass
+    try:
+        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            return 'OK', 200
+    except Exception as e:
+        return str(e), 500
 
 
 @app.route('/list_attributes/<int:wordlist_id>')
 def list_attributes(wordlist_id):
     url = "%s/api/wordlist/%s" % (Config.DB_URL, wordlist_id)
     r = requests.get(url)
-    result = r.json()
+    if r:
+        result = r.json()
+        return render_template('list_attributes.html',
+                               wordlist=result,
+                               return_to_wordlist_id=wordlist_id)
 
-    return render_template('list_attributes.html',
-                           wordlist=result,
-                           return_to_wordlist_id=wordlist_id)
+    abort(r.status_code)
 
 
 @app.route('/wordlist/<int:wordlist_id>')
@@ -1599,12 +1606,15 @@ def edit_word_form(word):
 
     url = "%s/api/word/metadata?word=%s" % (Config.BASE_URL, word)
     r = requests.get(url)
-    pos_infos = r.json()
-    return render_template('addword.html',
-                           word=word,
-                           wordlist_id=wordlist_id,
-                           return_to_wordlist_id=wordlist_id,
-                           pos_infos=pos_infos)
+    if r:
+        pos_infos = r.json()
+        return render_template('addword.html',
+                               word=word,
+                               wordlist_id=wordlist_id,
+                               return_to_wordlist_id=wordlist_id,
+                               pos_infos=pos_infos)
+
+    abort(r.status_code)
 
 
 @app.route('/update_dict', methods=['POST'])
