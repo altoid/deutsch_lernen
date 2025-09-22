@@ -1517,8 +1517,10 @@ def edit_list():
     payload = {
         'name': request.form['name'],
         'citation': request.form.get('citation'),
-        'sqlcode': request.form.get('sqlcode')
     }
+    sqlcode = request.form.get('sqlcode')
+    if sqlcode:
+        payload['sqlcode'] = sqlcode
     wordlist_id = request.form['wordlist_id']
 
     url = "%s/api/wordlist/%s" % (Config.DB_URL, wordlist_id)
