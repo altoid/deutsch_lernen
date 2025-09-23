@@ -8,7 +8,7 @@ as of sep 2025 this machine runs the following:
 
 * sequoia 15.6
 * python 3.13.7
-* mysql 8.1
+* mysql 8.4.6
 
 the name of the python executable is python3.  the command 'python'
 will not be found in the environment.  do not finesse the PATH
@@ -34,6 +34,26 @@ Press CTRL+C to quit
  * Restarting with stat
  * Debugger is active!
  * Debugger PIN: 772-306-967
+
+-------
+
+to run server health check (including db check):
+
+(venv) MacBookPro:deutsch_lernen dougtomm$ curl 127.0.0.1:5000/healthcheck
+OK(venv) MacBookPro:deutsch_lernen dougtomm$
+
+------
+
+to run the tests:
+
+(venv) MacBookPro:tests dougtomm$ pwd
+/Users/dougtomm/src/deutsch_lernen/dlernen/tests
+(venv) MacBookPro:tests dougtomm$ python -m unittest apitests.py
+..........................................................................................
+----------------------------------------------------------------------
+Ran 90 tests in 5.891s
+
+OK
 
 ------
 
