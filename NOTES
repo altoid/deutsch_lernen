@@ -56,5 +56,23 @@ Ran 90 tests in 5.891s
 OK
 
 ------
+backups
+
+logrotate is configured to rotate the mysql dump file, which is in
+
+~/Dropbox/personal/deutsch_lernen
+
+config file is
+
+/usr/local/etc/logrotate.d/deutsch.conf
+
+backups are run through cron; see crontab -l
+
+------
 
 TODO review return values of requests.get.  should be checking that the response is valid before inspecting json
+
+tests:
+
+1. new word being added is nonempty when stripped - don't add '' or '   ' as words.
+2. wordlist citation is never stored as empty string.  it should either be a nonempy string or null.

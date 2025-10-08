@@ -31,8 +31,12 @@ if __name__ == '__main__':
             break
 
         if answer == rule_to_test['article']:
-            print("ja")
+            print("""
+==> richtig
+""")
         else:
-            print("nein:  %s" % rule_to_test['article'])
+            print("""
+**** FALSCH ****:  %s
+""" % rule_to_test['article'])
 
     print('bis bald')
