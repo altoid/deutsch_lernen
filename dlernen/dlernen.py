@@ -775,7 +775,7 @@ def get_wordlist(wordlist_id):
         else:
             result['list_type'] = "empty"
 
-        jsonschema.validate(result, dlernen.dlernen_json_schema.WORDLIST_SCHEMA)
+        jsonschema.validate(result, dlernen.dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA)
 
         return result
 
@@ -1114,7 +1114,7 @@ order by name
                 dict_result[r['wordlist_id']]['count'] = len(smartlist_rows)
 
         result = list(dict_result.values())
-        jsonschema.validate(result, dlernen.dlernen_json_schema.WORDLISTS_SCHEMA)
+        jsonschema.validate(result, dlernen.dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
         return result
 
 

@@ -48,12 +48,21 @@ to run the tests:
 
 (venv) MacBookPro:tests dougtomm$ pwd
 /Users/dougtomm/src/deutsch_lernen/dlernen/tests
-(venv) MacBookPro:tests dougtomm$ python -m unittest apitests.py
+(venv) MacBookPro:tests dougtomm$ python -m unittest apitests
 ..........................................................................................
 ----------------------------------------------------------------------
 Ran 90 tests in 5.891s
 
 OK
+
+to run an individual test:
+
+python -m unittest apitests.<class>.<individual_test>
+
+eg
+
+python -m unittest apitests.APIWordlists.test_real_wordlist
+
 
 ------
 backups
@@ -70,7 +79,15 @@ backups are run through cron; see crontab -l
 
 ------
 
-TODO review return values of requests.get.  should be checking that the response is valid before inspecting json
+TODO review return values of requests.get.  should be checking that the response is valid before inspecting json.
+    it's not in the documentation (https://requests.readthedocs.io/en/latest/api/#requests.Response) but
+    the response object implements a __bool__ method that lets you do
+    if response:
+        bla
+    else:
+        bla
+    this fun fact is in the source code, which the documention points to.  better to check response.status_code
+    explicitly
 
 tests:
 

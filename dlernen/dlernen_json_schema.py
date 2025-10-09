@@ -343,10 +343,17 @@ WORDIDS_SCHEMA = {
     }
 }
 
-WORDLISTS_SCHEMA = {
+WORDLISTS_RESPONSE_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
-    "description": "wordlist and basic properties",
+    "description": """
+    used for the result returned by get_wordlists.  returns an array of the following, for all of the wordlists in
+    the database:
+    - name
+    - id
+    - count of known words
+    - list type (empty/smart/standard)
+    """,
     "type": "array",
     "items": {
         "type": "object",
@@ -422,6 +429,7 @@ WORDLIST_PAYLOAD_SCHEMA = {
 
 # TODO - citation and sqlcode should be nonempty strings or null.  we should be able to store and retrieve null
 #   values for these.
+# TODO - should citation be part of list metadata?
 WORDLIST_METADATA_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
@@ -452,10 +460,20 @@ WORDLIST_METADATA_SCHEMA = {
     }
 }
 
-WORDLIST_SCHEMA = {
+WORDLIST_RESPONSE_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
-    "description": "wordlist and basic properties, optionally with word_ids",
+    "description": """
+    used for the response to GET /api/wordlist/<int:wordlist_id>, which is implemented in get_wordlist().
+    fully specifies a single word list.  defines the json documents that are returned when we do a get 
+    request on a wordlist_id.  we get everything:
+    - word list metadata
+    - the notes
+    - list type (smart, standard, empty)
+    - all the words, known and unknown.
+    note that we do not return the sqlcode if the list is a smart list.  we return the words fetched
+    by the sql code.  which is the point of a smart list.
+    """,
     "type": "object",
     "properties": {
         "name": {

@@ -7,6 +7,8 @@ from pprint import pprint
 import random
 import string
 
+# TODO make test discovery work:  https://docs.python.org/3/library/unittest.html#test-discovery
+
 SAMPLE_WORDLIST_PAYLOAD = {
     "name": "saetuasasue",
     "citationsource": "anteohusntaeo",
@@ -180,7 +182,7 @@ SAMPLE_QUIZ_DATA_RESULT = [
     }
 ]
 
-SAMPLE_WORDLIST_DETAIL_RESULT = {
+SAMPLE_WORDLIST_RESPONSE = {
     "name": "sample_word_list",
     "wordlist_id": 1234,
     "count": 111,
@@ -308,17 +310,17 @@ class SchemaTests(unittest.TestCase):
     def test_wordids_sample(self):
         jsonschema.validate(SAMPLE_WORDIDS_RESULT, dlernen_json_schema.WORDIDS_SCHEMA)
 
-    def test_wordlist_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLISTS_SCHEMA)
+    def test_wordlists_response_schema(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
 
-    def test_wordlist_sample(self):
-        jsonschema.validate(SAMPLE_WORDLISTS_RESULT, dlernen_json_schema.WORDLISTS_SCHEMA)
+    def test_wordlists_sample(self):
+        jsonschema.validate(SAMPLE_WORDLISTS_RESULT, dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
 
-    def test_wordlist_detail_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_SCHEMA)
+    def test_wordlist_response_schema(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA)
 
-    def test_wordlist_detail_sample(self):
-        jsonschema.validate(SAMPLE_WORDLIST_DETAIL_RESULT, dlernen_json_schema.WORDLIST_SCHEMA)
+    def test_wordlist_response_sample(self):
+        jsonschema.validate(SAMPLE_WORDLIST_RESPONSE, dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA)
 
 
 class APITestsWordPOST(unittest.TestCase):
@@ -1089,9 +1091,10 @@ class APIWordlists(unittest.TestCase):
     # get all wordlists
     def test_real_wordlist(self):
         r = requests.get(config.Config.BASE_URL + "/api/wordlists")
+        self.assertEqual(r.status_code, 200)
         results = r.json()
         self.assertGreater(len(results), 0)
-        jsonschema.validate(results, dlernen_json_schema.WORDLISTS_SCHEMA)
+        jsonschema.validate(results, dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
 
 
 class APIWordlist(unittest.TestCase):
