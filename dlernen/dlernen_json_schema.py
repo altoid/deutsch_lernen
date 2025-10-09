@@ -389,7 +389,7 @@ WORDLISTS_RESPONSE_SCHEMA = {
 }
 
 # TODO - revise this to have 'words_added', 'words_removed' and wordids_removed keywords, to replace 'words' keyword.
-WORDLIST_PAYLOAD_SCHEMA = {
+WORDLIST_METADATA_PAYLOAD_SCHEMA = {
     # can be used for add or update of a list.
     "$id": "https://deutsch-lernen.doug/schemas/addwordlist_payload",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
@@ -430,7 +430,7 @@ WORDLIST_PAYLOAD_SCHEMA = {
 # TODO - citation and sqlcode should be nonempty strings or null.  we should be able to store and retrieve null
 #   values for these.
 # TODO - should citation be part of list metadata?
-WORDLIST_METADATA_SCHEMA = {
+WORDLIST_METADATA_RESPONSE_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
     "description": "wordlist and basic properties, optionally with word_ids",

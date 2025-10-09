@@ -218,13 +218,13 @@ class SchemaTests(unittest.TestCase):
     """
 
     def test_wordlist_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_PAYLOAD_SCHEMA)
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
 
     def test_wordlist_payload_sample(self):
-        jsonschema.validate(SAMPLE_WORDLIST_PAYLOAD, dlernen_json_schema.WORDLIST_PAYLOAD_SCHEMA)
+        jsonschema.validate(SAMPLE_WORDLIST_PAYLOAD, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
 
     def test_wordlist_empty_payload(self):
-        jsonschema.validate({}, dlernen_json_schema.WORDLIST_PAYLOAD_SCHEMA)
+        jsonschema.validate({}, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
 
     def test_word_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDS_SCHEMA)
@@ -293,10 +293,10 @@ class SchemaTests(unittest.TestCase):
         jsonschema.validate(SAMPLE_ADDATTRIBUTES_PAYLOAD, dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)
 
     def test_list_attribute_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_METADATA_SCHEMA)
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
 
     def test_list_attribute_sample(self):
-        jsonschema.validate(SAMPLE_WORDLIST_METADATA_RESULT, dlernen_json_schema.WORDLIST_METADATA_SCHEMA)
+        jsonschema.validate(SAMPLE_WORDLIST_METADATA_RESULT, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
 
     def test_quiz_data_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.QUIZ_DATA_SCHEMA)
@@ -1123,6 +1123,10 @@ class APIWordlist(unittest.TestCase):
 
         # do a GET - should be gone
         r = requests.get("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
+        self.assertEqual(r.status_code, 404)
+
+        # getting the list metadata should also be well-behaved
+        r = requests.get("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, list_id))
         self.assertEqual(r.status_code, 404)
 
     # add list with everything, incl. known and unknown words

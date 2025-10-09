@@ -671,7 +671,10 @@ def gender_rules():
 
 
 @app.route('/api/wordlist/<int:wordlist_id>/metadata')
-def get_list_attributes(wordlist_id):
+def get_wordlist_metadata(wordlist_id):
+    """
+    returns the metadata for a given wordlist:  name, sqlcode, citation, and id.
+    """
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
     select
@@ -682,9 +685,13 @@ def get_list_attributes(wordlist_id):
         cursor.execute(sql, (wordlist_id,))
         wl_row = cursor.fetchone()
 
-        jsonschema.validate(wl_row, dlernen.dlernen_json_schema.WORDLIST_METADATA_SCHEMA)
+        if not wl_row:
+            return "wordlist %s not found" % wordlist_id, 404
+
+        jsonschema.validate(wl_row, dlernen.dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
 
         return wl_row
+
 
 
 @app.route('/api/wordlist/<int:wordlist_id>')
@@ -816,7 +823,7 @@ def add_words_to_list(cursor, wordlist_id, words):
 def add_wordlist():
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, dlernen.dlernen_json_schema.WORDLIST_PAYLOAD_SCHEMA)
+        jsonschema.validate(payload, dlernen.dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 
@@ -940,7 +947,7 @@ def delete_from_wordlist_by_word(wordlist_id, word):
 def update_wordlist(wordlist_id):
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, dlernen.dlernen_json_schema.WORDLIST_PAYLOAD_SCHEMA)
+        jsonschema.validate(payload, dlernen.dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 
