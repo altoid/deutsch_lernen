@@ -434,7 +434,6 @@ WORDLIST_METADATA_PAYLOAD_SCHEMA = {
 
 # TODO - citation and sqlcode should be nonempty strings or null.  we should be able to store and retrieve null
 #   values for these.
-# TODO - should citation be part of list metadata?
 WORDLIST_METADATA_RESPONSE_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
