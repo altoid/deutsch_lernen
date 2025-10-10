@@ -1,5 +1,7 @@
 import jsonschema
 
+STRING_PATTERN = r"""^\S(.*\S)*$"""
+
 ADDATTRIBUTES_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/addattributes_payload",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
@@ -400,11 +402,14 @@ WORDLIST_METADATA_PAYLOAD_SCHEMA = {
         # haha, none are required.  string values must be at least 1 char if provided.
         # for creating a word list a name is of course required, but we will check that
         # in code, not here.
+        #
+        # FIXME this schema is used for both creating and updating a word list.
+        # we permit payloads with no name so that we can update a given list without having to specify a name.
     ],
     "properties": {
         "name": {
             "type": "string",
-            "minLength": 1
+            "pattern": STRING_PATTERN
         },
         "citation": {
             "type": ["string", "null"]

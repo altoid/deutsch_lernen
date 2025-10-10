@@ -693,7 +693,6 @@ def get_wordlist_metadata(wordlist_id):
         return wl_row
 
 
-
 @app.route('/api/wordlist/<int:wordlist_id>')
 def get_wordlist(wordlist_id):
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
@@ -835,16 +834,19 @@ def add_wordlist():
 
     if sqlcode is not None:
         sqlcode = sqlcode.strip()
-    if name is not None:
-        name = name.strip()
     if citation is not None:
         citation = citation.strip()
     if words is not None:
         words = [w.strip() for w in words]
         words = set(filter(lambda x: bool(x), words))
 
+    # no need to strip the name; no leading/trailing whitespace is enforced by schema.  but name is optional
+    # in the schema but required here.
     if not name:
-        return "can't create list with empty name", 400
+        return "wordlists must have a name", 400
+
+    # name is required, but the schema permits no name
+    # the json schema enforces that the name has no leading/trailing whitespace, so no need to check for that here.
 
     if sqlcode and words:
         return "can't create list with sqlcode and words", 400
@@ -956,8 +958,6 @@ def update_wordlist(wordlist_id):
     sqlcode = words = None
     if 'name' in payload:
         name = payload.get('name')
-        if name is not None:
-            name = name.strip()
         update_args['name'] = name
 
     if 'citation' in payload:

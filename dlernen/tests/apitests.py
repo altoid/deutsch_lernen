@@ -217,11 +217,18 @@ class SchemaTests(unittest.TestCase):
     which depend on these schema definitions being correct.
     """
 
-    def test_wordlist_schema(self):
+    def test_wordlist_metadata_payload_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
 
-    def test_wordlist_payload_sample(self):
+    def test_wordlist_metadata_payload_sample(self):
         jsonschema.validate(SAMPLE_WORDLIST_PAYLOAD, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
+
+    def test_wordlist_metadata_payload_malformed_name(self):
+        malformed_name_payload = {
+            "name": "  has leading and trailing whitespace, not allowed   "
+        }
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            jsonschema.validate(malformed_name_payload, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
 
     def test_wordlist_empty_payload(self):
         jsonschema.validate({}, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
