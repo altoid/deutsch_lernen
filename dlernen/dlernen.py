@@ -1,26 +1,26 @@
 from flask import Flask, request, render_template, redirect, url_for, flash, abort
 from pprint import pprint
 from mysql.connector import connect
-from dlernen.config import Config
-from dlernen import quiz_sql
+import config
+import quiz_sql
 import requests
 import json
 from contextlib import closing
-import dlernen.dlernen_json_schema
+import dlernen_json_schema
 import jsonschema
 import sys
 import os
 
 app = Flask(__name__)
 app.secret_key = "ap.i*&(^ap1."
-app.config.from_object(Config)
-
+app.config.from_object(config.Config)
 
 # TODO strip strings before storing in DB
 
 # FIXME creating a wordlist without a citation will cause the citation to be stored as null.  but if you
 #   update the name of the list without changing the citation, the citation will be updated as the empty
 #   string.  citation should be either null or a nonempty string.
+
 
 def chunkify(arr, **kwargs):
     if not arr:
@@ -131,7 +131,7 @@ def quiz_data(quiz_key):
     if not result:
         return "no testable attributes for quiz %s" % quiz_key, 404
 
-    jsonschema.validate(result, dlernen.dlernen_json_schema.QUIZ_DATA_SCHEMA)
+    jsonschema.validate(result, dlernen_json_schema.QUIZ_DATA_SCHEMA)
 
     return result
 
@@ -223,7 +223,7 @@ def get_word_by_id(word_id):
     word_ids = [word_id]
     words = get_words_from_word_ids(word_ids)
 
-    jsonschema.validate(words, dlernen.dlernen_json_schema.WORDS_SCHEMA)
+    jsonschema.validate(words, dlernen_json_schema.WORDS_SCHEMA)
 
     if words:
         return words[0]
@@ -295,7 +295,7 @@ order by word_id, pf.sort_order
         if not result:
             return "no match for %s" % word, 404
 
-        jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
+        jsonschema.validate(result, dlernen_json_schema.WORDS_SCHEMA)
 
         return result
 
@@ -307,7 +307,7 @@ def add_word():
     """
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, dlernen.dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA)
+        jsonschema.validate(payload, dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA)
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 
@@ -403,7 +403,7 @@ def add_word():
 def update_word(word_id):
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, dlernen.dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
+        jsonschema.validate(payload, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
     except jsonschema.ValidationError as e:
         message = "bad payload: %s" % e.message
         return message, 400
@@ -580,7 +580,7 @@ def get_words():
     word_ids = payload.get('word_ids', [])
     result = get_words_from_word_ids(word_ids)
 
-    jsonschema.validate(result, dlernen.dlernen_json_schema.WORDS_SCHEMA)
+    jsonschema.validate(result, dlernen_json_schema.WORDS_SCHEMA)
 
     return result
 
@@ -592,7 +592,7 @@ def get_words():
 def add_attributes(word_id):
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, dlernen.dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)
+        jsonschema.validate(payload, dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)
     except jsonschema.ValidationError as e:
         pprint(e)
         return "bad payload: %s" % e.message, 400
@@ -688,7 +688,7 @@ def get_wordlist_metadata(wordlist_id):
         if not wl_row:
             return "wordlist %s not found" % wordlist_id, 404
 
-        jsonschema.validate(wl_row, dlernen.dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
+        jsonschema.validate(wl_row, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
 
         return wl_row
 
@@ -781,7 +781,7 @@ def get_wordlist(wordlist_id):
         else:
             result['list_type'] = "empty"
 
-        jsonschema.validate(result, dlernen.dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA)
+        jsonschema.validate(result, dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA)
 
         return result
 
@@ -822,7 +822,7 @@ def add_words_to_list(cursor, wordlist_id, words):
 def add_wordlist():
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, dlernen.dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
+        jsonschema.validate(payload, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 
@@ -949,7 +949,7 @@ def delete_from_wordlist_by_word(wordlist_id, word):
 def update_wordlist(wordlist_id):
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, dlernen.dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
+        jsonschema.validate(payload, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 
@@ -1121,7 +1121,7 @@ order by name
                 dict_result[r['wordlist_id']]['count'] = len(smartlist_rows)
 
         result = list(dict_result.values())
-        jsonschema.validate(result, dlernen.dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
+        jsonschema.validate(result, dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
         return result
 
 
@@ -1141,7 +1141,7 @@ def refresh_wordlists():
 
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, dlernen.dlernen_json_schema.REFRESH_WORDLISTS_SCHEMA)
+        jsonschema.validate(payload, dlernen_json_schema.REFRESH_WORDLISTS_SCHEMA)
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 
@@ -1229,7 +1229,7 @@ def get_wordlists_by_word_id(word_id):
         if wordlist_ids:
             args = ','.join([str(x) for x in wordlist_ids])
             url = url_for('get_wordlists', wordlist_id=args)
-            url = "%s%s" % (Config.DB_URL, url)
+            url = "%s%s" % (config.Config.DB_URL, url)
             r = requests.get(url)
 
             result = json.loads(r.text)
@@ -1321,7 +1321,7 @@ left join  mashup_v on mashup_v.pos_id = pos_info.pos_id and mashup_v.attribute_
         for v in result.values():
             v['pos_fields'] = sorted(v['pos_fields'], key=lambda x: x['sort_order'])
         result = list(result.values())
-        jsonschema.validate(result, dlernen.dlernen_json_schema.WORD_METADATA_SCHEMA)
+        jsonschema.validate(result, dlernen_json_schema.WORD_METADATA_SCHEMA)
         return result
 
 
@@ -1400,7 +1400,7 @@ def home():
 def get_lookup_render_template(word, **kwargs):
     return_to_wordlist_id = kwargs.get('return_to_wordlist_id')
     member_wordlists = kwargs.get('member_wordlists')
-    url = "%s/api/word/%s" % (Config.DB_URL, word)
+    url = "%s/api/word/%s" % (config.Config.DB_URL, word)
     results = None
     r = requests.get(url)
     if r.status_code == 404:
@@ -1434,7 +1434,7 @@ def lookup_by_post():
 
 @app.route('/wordlists')
 def wordlists():
-    url = "%s/api/wordlists" % Config.DB_URL
+    url = "%s/api/wordlists" % config.Config.DB_URL
     r = requests.get(url)
     if r:
         result = json.loads(r.text)
@@ -1454,7 +1454,7 @@ def dbcheck():
 
 @app.route('/list_attributes/<int:wordlist_id>')
 def list_attributes(wordlist_id):
-    url = "%s/api/wordlist/%s" % (Config.DB_URL, wordlist_id)
+    url = "%s/api/wordlist/%s" % (config.Config.DB_URL, wordlist_id)
     r = requests.get(url)
     if r:
         result = r.json()
@@ -1468,7 +1468,7 @@ def list_attributes(wordlist_id):
 @app.route('/wordlist/<int:wordlist_id>')
 def wordlist(wordlist_id):
     nchunks = request.args.get('nchunks', app.config['NCHUNKS'], type=int)
-    url = "%s/api/wordlist/%s" % (Config.DB_URL, wordlist_id)
+    url = "%s/api/wordlist/%s" % (config.Config.DB_URL, wordlist_id)
     r = requests.get(url)
     if r.status_code == 404:
         return redirect('/wordlists')
@@ -1496,7 +1496,7 @@ def addlist():
         'citation': request.form.get('citation')
     }
 
-    url = "%s/api/wordlist" % Config.DB_URL
+    url = "%s/api/wordlist" % config.Config.DB_URL
     r = requests.post(url, json=payload)
     if r.status_code == 200:
         return redirect('/wordlists')
@@ -1507,7 +1507,7 @@ def addlist():
 @app.route('/deletelist', methods=['POST'])
 def deletelist():
     doomed = request.form.getlist('deletelist')
-    url = "%s/api/wordlists" % Config.DB_URL
+    url = "%s/api/wordlists" % config.Config.DB_URL
     payload = {
         'deletelist': doomed
     }
@@ -1529,7 +1529,7 @@ def edit_list():
         payload['sqlcode'] = sqlcode
     wordlist_id = request.form['wordlist_id']
 
-    url = "%s/api/wordlist/%s" % (Config.DB_URL, wordlist_id)
+    url = "%s/api/wordlist/%s" % (config.Config.DB_URL, wordlist_id)
     r = requests.put(url, json=payload)
     if r.status_code == 200:
         target = url_for('wordlist', wordlist_id=wordlist_id)
@@ -1546,7 +1546,7 @@ def add_to_list():
 
     # TODO - for now, we can only add a word to a wordlist, not a word_id.
     payload = None
-    url = "%s/api/word/%s" % (Config.DB_URL, word)
+    url = "%s/api/word/%s" % (config.Config.DB_URL, word)
     r = requests.get(url)
     if r.status_code == 404:
         payload = {
@@ -1564,7 +1564,7 @@ def add_to_list():
     if not payload:
         raise Exception("add_to_list could not make payload")
 
-    url = "%s/api/wordlist/%s" % (Config.DB_URL, wordlist_id)
+    url = "%s/api/wordlist/%s" % (config.Config.DB_URL, wordlist_id)
     r = requests.put(url, json=payload)
     if r.status_code != 200:
         raise Exception("well, shit")
@@ -1580,7 +1580,7 @@ def update_notes():
     }
     wordlist_id = request.form['wordlist_id']
 
-    url = "%s/api/wordlist/%s" % (Config.DB_URL, wordlist_id)
+    url = "%s/api/wordlist/%s" % (config.Config.DB_URL, wordlist_id)
     r = requests.put(url, json=payload)
     if r.status_code == 200:
         target = url_for('wordlist', wordlist_id=wordlist_id)
@@ -1596,11 +1596,11 @@ def delete_from_list():
     unknown_deleting = request.form.getlist('unknown_wordlist')
 
     for word_id in known_deleting:
-        url = "%s/api/wordlist/%s/%s" % (Config.DB_URL, wordlist_id, int(word_id))
+        url = "%s/api/wordlist/%s/%s" % (config.Config.DB_URL, wordlist_id, int(word_id))
         r = requests.delete(url)
 
     for word in unknown_deleting:
-        url = "%s/api/wordlist/%s/%s" % (Config.DB_URL, wordlist_id, word)
+        url = "%s/api/wordlist/%s/%s" % (config.Config.DB_URL, wordlist_id, word)
         r = requests.delete(url)
 
     # TODO - change API to allow batch delete.  we could do this with a single request
@@ -1613,7 +1613,7 @@ def delete_from_list():
 def edit_word_form(word):
     wordlist_id = request.args.get('wordlist_id')
 
-    url = "%s/api/word/metadata?word=%s" % (Config.BASE_URL, word)
+    url = "%s/api/word/metadata?word=%s" % (config.Config.BASE_URL, word)
     r = requests.get(url)
     if r:
         pos_infos = r.json()
@@ -1685,7 +1685,7 @@ def update_dict():
                     }
                 )
 
-        url = "%s/api/word" % Config.DB_URL
+        url = "%s/api/word" % config.Config.DB_URL
         r = requests.post(url, json=payload)
         if r.status_code != 200:
             raise Exception("failed to insert word '%s'" % word)
@@ -1698,7 +1698,7 @@ def update_dict():
             'word': word,
             'word_id': obj['word_id']
         }
-        url = "%s/api/wordlists" % Config.DB_URL
+        url = "%s/api/wordlists" % config.Config.DB_URL
         r = requests.put(url, json=refresh_payload)
         if r.status_code != 200:
             raise Exception("failed to refresh word lists")
@@ -1746,7 +1746,7 @@ def update_dict():
         elif v:
             payload['attributes_updating'].append(v)
 
-    url = "%s/api/word/%s" % (Config.DB_URL, word_id)
+    url = "%s/api/word/%s" % (config.Config.DB_URL, word_id)
     r = requests.put(url, json=payload)
 
     wordlist_id = request.form.get('wordlist_id')
