@@ -678,7 +678,7 @@ def get_wordlist_metadata(wordlist_id):
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
     select
-        id wordlist_id, name, ifnull(citation, '') citation, ifnull(sqlcode, '') sqlcode
+        id wordlist_id, name, ifnull(citation, '') citation, sqlcode
      from wordlist
     where id = %s
     """
@@ -1206,7 +1206,7 @@ def get_wordlists_by_word_id(word_id):
         cursor.execute(sql)
         code_results = cursor.fetchall()
         for r in code_results:
-            sqlcode = r['sqlcode'].strip()
+            sqlcode = r['sqlcode']
             if not sqlcode:
                 continue
 
@@ -1451,6 +1451,8 @@ def list_attributes(wordlist_id):
     r = requests.get(url)
     if r:
         result = r.json()
+        if result['sqlcode'] is None:
+            result['sqlcode'] = ''
         return render_template('list_attributes.html',
                                wordlist=result,
                                return_to_wordlist_id=wordlist_id)
@@ -1519,7 +1521,15 @@ def edit_list():
     }
     sqlcode = request.form.get('sqlcode')
     if sqlcode:
-        payload['sqlcode'] = sqlcode
+        sqlcode = sqlcode.strip()
+
+    if not sqlcode:
+        # are we here?  then the sqlcode field in the form has no code.  maybe existing code
+        # was removed.  whatever.  send the sqlcode as None.
+        sqlcode = None
+
+    payload['sqlcode'] = sqlcode
+
     wordlist_id = request.form['wordlist_id']
 
     url = "%s/api/wordlist/%s" % (config.Config.DB_URL, wordlist_id)

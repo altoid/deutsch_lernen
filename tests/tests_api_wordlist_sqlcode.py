@@ -17,7 +17,7 @@ test that this is all well-behaved.
 testing list behavior when the sqlcode field is changed is not in the scope of this test class.
 e.g.  updating the sqlcode field of a standard list should not succeed (since there are words in it),
 but these behavioral tests are already implemented elsewhere.  the purpose of this class is just to make sure
-the api is sane in the presense of the json doc changes.
+the api is sane in the presence of the json doc changes.
 """
 
 # schema tests:
