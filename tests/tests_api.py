@@ -7,8 +7,6 @@ from pprint import pprint
 import random
 import string
 
-# TODO make test discovery work:  https://docs.python.org/3/library/unittest.html#test-discovery
-
 SAMPLE_WORDLIST_PAYLOAD = {
     "name": "saetuasasue",
     "citationsource": "anteohusntaeo",

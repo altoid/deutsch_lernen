@@ -50,22 +50,22 @@ OK(venv) MacBookPro:deutsch_lernen dougtomm$
 
 to run the tests:
 
-(venv) MacBookPro:tests dougtomm$ pwd
-/Users/dougtomm/src/deutsch_lernen/dlernen/tests
-(venv) MacBookPro:tests dougtomm$ python -m unittest apitests
-..........................................................................................
+(venv) MacBookPro:deutsch_lernen dougtomm$ pwd
+/Users/dougtomm/src/deutsch_lernen
+(venv) MacBookPro:deutsch_lernen dougtomm$ python -m unittest
+............................................................................................
 ----------------------------------------------------------------------
-Ran 90 tests in 5.891s
+Ran 92 tests in 6.027s
 
 OK
+(venv) MacBookPro:deutsch_lernen dougtomm$
 
-to run an individual test:
+we're using test discovery so that the command to run the suite is as simple as possible.
+NOTE!  all the files with unit tests have to match the pattern test*.py, or else unittest won't find them.  stupid.
 
-python -m unittest apitests.<class>.<individual_test>
+example of running an individual test:
 
-eg
-
-python -m unittest apitests.APIWordlists.test_real_wordlist
+(venv) MacBookPro:deutsch_lernen dougtomm$ python -m unittest tests.tests_api.APIWordlists.test_real_wordlist
 
 
 ------
