@@ -542,7 +542,7 @@ class APIWordlist(unittest.TestCase):
         self.assertEqual('smart', obj['list_type'])
 
         update_payload = {
-            'sqlcode': ''
+            'sqlcode': None
         }
 
         r = requests.put("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id), json=update_payload)
@@ -569,7 +569,7 @@ class APIWordlist(unittest.TestCase):
         self.assertEqual('smart', obj['list_type'])
 
         update_payload = {
-            'sqlcode': '',
+            'sqlcode': None,
             'words': [
                 'werfen',
                 'aoeuaoeu'
@@ -628,6 +628,7 @@ class APIWordlist(unittest.TestCase):
         r = requests.delete("%s/api/wordlist/%s" % (config.Config.DB_URL, list_id))
         self.assertEqual(200, r.status_code)
 
+    # removing words from a smart list should not be possible.  let's verify that.
     def test_remove_words_from_smart_list(self):
         list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
         add_payload = {

@@ -1,6 +1,7 @@
 import jsonschema
 
-STRING_PATTERN = r"""^\S(.*\S)*$"""
+# without checking for \r and \n this will not match multiline strings.
+STRING_PATTERN = r"""^\S((.|[\r\n])*\S)*$"""
 
 ADDATTRIBUTES_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/addattributes_payload",
@@ -419,8 +420,8 @@ WORDLIST_METADATA_PAYLOAD_SCHEMA = {
             "minLength": 1
         },
         "sqlcode": {
-            "type": "string",
-            "minLength": 0
+            "type": ["string", "null"],
+            "pattern": STRING_PATTERN
         },
         "words": {
             "type": "array",
@@ -451,8 +452,8 @@ WORDLIST_METADATA_RESPONSE_SCHEMA = {
             "minLength": 1
         },
         "sqlcode": {
-            "type": "string",
-            "minLength": 0
+            "type": ["string", "null"],
+            "pattern": STRING_PATTERN
         },
         "citation": {
             "type": ["string", "null"]

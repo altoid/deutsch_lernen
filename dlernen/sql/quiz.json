@@ -1,0 +1,37 @@
+ {'attribute_id': 1,
+  'attrvalue': 'die',
+  'correct_count': 0,
+  'last_presentation': None,
+  'presentation_count': 0,
+  'quiz_id': 3,
+  'word': 'Tarnung',
+  'word_id': 868},
+ {'attribute_id': 3,
+  'attrvalue': 'Tarnungen',
+  'correct_count': 0,
+  'last_presentation': None,
+  'presentation_count': 0,
+  'quiz_id': 3,
+  'word': 'Tarnung',
+  'word_id': 868},
+
+
+{
+    'quiz_id': 3,
+    'word_id': 868,
+    'word': 'Tarnung',
+    'article' : {
+	'attrvalue': 'die',
+	'correct_count': 0,
+	'last_presentation': None,
+	'presentation_count': 0,
+    },
+    'plural' : {
+	'attrvalue': 'Tarnungen',
+	'correct_count': 0,
+	'last_presentation': None,
+	'presentation_count': 0,
+    }
+}
+
+	    

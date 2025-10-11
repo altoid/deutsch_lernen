@@ -702,7 +702,7 @@ def get_wordlist(wordlist_id):
             name,
             ifnull(citation, '') citation,
             ifnull(notes, '') notes,
-            ifnull(sqlcode, '') sqlcode
+            sqlcode
         from wordlist
         where id = %s
         """
@@ -711,7 +711,7 @@ def get_wordlist(wordlist_id):
         if not wl_row:
             return "wordlist %s not found" % wordlist_id, 404
 
-        sqlcode = wl_row['sqlcode'].strip()
+        sqlcode = wl_row['sqlcode']
 
         result = dict(wl_row)
         result['source_is_url'] = result['citation'].startswith('http') if result['citation'] else False
@@ -832,8 +832,6 @@ def add_wordlist():
     notes = payload.get('notes')
     words = payload.get('words')
 
-    if sqlcode is not None:
-        sqlcode = sqlcode.strip()
     if citation is not None:
         citation = citation.strip()
     if words is not None:
@@ -861,13 +859,11 @@ def add_wordlist():
             cursor.execute("select last_insert_id() wordlist_id")
             result = cursor.fetchone()
             wordlist_id = result['wordlist_id']
-
             # figure out which words are known and not known
             if words:
                 add_words_to_list(cursor, wordlist_id, words)
 
             cursor.execute('commit')
-
             return get_wordlist(wordlist_id)
         except Exception as e:
             pprint(e)
@@ -968,8 +964,6 @@ def update_wordlist(wordlist_id):
 
     if 'sqlcode' in payload:
         sqlcode = payload.get('sqlcode')
-        if sqlcode is not None:
-            sqlcode = sqlcode.strip()
         update_args['sqlcode'] = sqlcode
 
     if 'notes' in payload:
@@ -991,11 +985,12 @@ def update_wordlist(wordlist_id):
         cursor.execute('start transaction')
 
         wordlist = get_wordlist(wordlist_id)
-        if wordlist['list_type'] == 'smart' and words and sqlcode != '':
-            # if sqlcode is the empty string, then this is ok, because it means we are going to
-            # clear out the existing sqlcode.
-            cursor.execute('rollback')
-            return "can't add words to smart list", 400
+        if wordlist['list_type'] == 'smart' and words:
+            # if we are trying to add words to a smart list, and we are not
+            # removing the sql code, do not proceed.
+            if 'sqlcode' not in update_args or update_args['sqlcode'] is not None:
+                cursor.execute('rollback')
+                return "can't add words to smart list", 400
 
         if wordlist['list_type'] == 'standard' and sqlcode:
             cursor.execute('rollback')
@@ -1018,8 +1013,6 @@ def update_wordlist(wordlist_id):
                 where id = %%(wordlist_id)s
                 """ % {'clauses': ', '.join(clauses)}
 
-                # print(sql)
-                # pprint(update_args)
                 cursor.execute(sql, update_args)
 
             if words:

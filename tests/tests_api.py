@@ -207,6 +207,48 @@ SAMPLE_WORDLIST_RESPONSE = {
 }
 
 
+class CheckSchemaTests(unittest.TestCase):
+    """
+    run check_schema on all the document types.
+    """
+
+    def test_ADDATTRIBUTES_PAYLOAD_SCHEMA(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)
+
+    def test_ADDWORD_PAYLOAD_SCHEMA(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA)
+
+    def test_QUIZ_DATA_SCHEMA(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.QUIZ_DATA_SCHEMA)
+
+    def test_REFRESH_WORDLISTS_SCHEMA(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.REFRESH_WORDLISTS_SCHEMA)
+
+    def test_UPDATEWORD_PAYLOAD_SCHEMA(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
+
+    def test_WORD_METADATA_SCHEMA(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORD_METADATA_SCHEMA)
+
+    def test_WORDIDS_SCHEMA(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDIDS_SCHEMA)
+
+    def test_WORDLIST_METADATA_PAYLOAD_SCHEMA(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
+
+    def test_WORDLIST_METADATA_RESPONSE_SCHEMA(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
+
+    def test_WORDLIST_RESPONSE_SCHEMA(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA)
+
+    def test_WORDLISTS_RESPONSE_SCHEMA(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
+
+    def test_WORDS_SCHEMA(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDS_SCHEMA)
+
+
 class SchemaTests(unittest.TestCase):
     """
     checks on json schema objects are all done in one class here.
@@ -214,9 +256,6 @@ class SchemaTests(unittest.TestCase):
     we do this because we don't want to do this in test classes that have setup and teardown methods
     which depend on these schema definitions being correct.
     """
-
-    def test_wordlist_metadata_payload_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
 
     def test_wordlist_metadata_payload_sample(self):
         jsonschema.validate(SAMPLE_WORDLIST_PAYLOAD, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
@@ -231,20 +270,11 @@ class SchemaTests(unittest.TestCase):
     def test_wordlist_empty_payload(self):
         jsonschema.validate({}, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
 
-    def test_word_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDS_SCHEMA)
-
     def test_word_sample(self):
         jsonschema.validate(SAMPLE_WORDS_RESULT, dlernen_json_schema.WORDS_SCHEMA)
 
-    def test_addword_payload_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA)
-
     def test_addword_payload_sample(self):
         jsonschema.validate(SAMPLE_ADDWORD_PAYLOAD, dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA)
-
-    def test_updateword_payload_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
 
     def test_updateword_payload_sample(self):
         jsonschema.validate(SAMPLE_UPDATEWORD_PAYLOAD, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
@@ -291,38 +321,23 @@ class SchemaTests(unittest.TestCase):
         with self.assertRaises(jsonschema.exceptions.ValidationError):
             jsonschema.validate(sample_payload, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
 
-    def test_add_attributes_payload_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)
-
     def test_add_attributes_payload_sample(self):
         jsonschema.validate(SAMPLE_ADDATTRIBUTES_PAYLOAD, dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)
-
-    def test_list_attribute_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
 
     def test_list_attribute_sample(self):
         jsonschema.validate(SAMPLE_WORDLIST_METADATA_RESULT, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
 
-    def test_quiz_data_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.QUIZ_DATA_SCHEMA)
-
     def test_quiz_data_sample(self):
         jsonschema.validate(SAMPLE_QUIZ_DATA_RESULT, dlernen_json_schema.QUIZ_DATA_SCHEMA)
 
-    def test_wordids_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDIDS_SCHEMA)
+    def test_list_attribute_schema(self):
+        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
 
     def test_wordids_sample(self):
         jsonschema.validate(SAMPLE_WORDIDS_RESULT, dlernen_json_schema.WORDIDS_SCHEMA)
 
-    def test_wordlists_response_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
-
     def test_wordlists_sample(self):
         jsonschema.validate(SAMPLE_WORDLISTS_RESULT, dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
-
-    def test_wordlist_response_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA)
 
     def test_wordlist_response_sample(self):
         jsonschema.validate(SAMPLE_WORDLIST_RESPONSE, dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA)
