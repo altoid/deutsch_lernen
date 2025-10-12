@@ -15,9 +15,6 @@ app = Flask(__name__)
 app.secret_key = "ap.i*&(^ap1."
 app.config.from_object(config.Config)
 
-# FIXME creating a wordlist without a citation will cause the citation to be stored as null.  but if you
-#   update the name of the list without changing the citation, the citation will be updated as the empty
-#   string.  citation should be either null or a nonempty string.
 # FIXME hitting the 'add list' button on the word lists page without entering any values for the fields
 #   causes badness.  re-render the page with a nice error message.
 
@@ -678,7 +675,7 @@ def get_wordlist_metadata(wordlist_id):
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
     select
-        id wordlist_id, name, ifnull(citation, '') citation, sqlcode
+        id wordlist_id, name, citation, sqlcode
      from wordlist
     where id = %s
     """
@@ -700,7 +697,7 @@ def get_wordlist(wordlist_id):
         select
             id wordlist_id,
             name,
-            ifnull(citation, '') citation,
+            citation,
             ifnull(notes, '') notes,
             sqlcode
         from wordlist
@@ -712,9 +709,12 @@ def get_wordlist(wordlist_id):
             return "wordlist %s not found" % wordlist_id, 404
 
         sqlcode = wl_row['sqlcode']
+        citation = wl_row['citation']
+        if citation is not None:
+            citation = citation.strip()
 
         result = dict(wl_row)
-        result['source_is_url'] = result['citation'].startswith('http') if result['citation'] else False
+        result['source_is_url'] = citation.startswith('http') if citation else False
 
         if sqlcode:
             known_words_sql = """
@@ -832,8 +832,6 @@ def add_wordlist():
     notes = payload.get('notes')
     words = payload.get('words')
 
-    if citation is not None:
-        citation = citation.strip()
     if words is not None:
         words = [w.strip() for w in words]
         words = set(filter(lambda x: bool(x), words))
@@ -958,8 +956,6 @@ def update_wordlist(wordlist_id):
 
     if 'citation' in payload:
         citation = payload.get('citation')
-        if citation is not None:
-            citation = citation.strip()
         update_args['citation'] = citation
 
     if 'sqlcode' in payload:
@@ -1453,6 +1449,8 @@ def list_attributes(wordlist_id):
         result = r.json()
         if result['sqlcode'] is None:
             result['sqlcode'] = ''
+        if result['citation'] is None:
+            result['citation'] = ''
         return render_template('list_attributes.html',
                                wordlist=result,
                                return_to_wordlist_id=wordlist_id)
@@ -1486,9 +1484,27 @@ def wordlist(wordlist_id):
 
 @app.route('/addlist', methods=['POST'])
 def addlist():
+    # note that the values in the form have not been subject to json schema validation.  these are just
+    # whatever bullshit was entered into the form.  so we have to fiddle with the values before stuffing
+    # them into the payload, which IS validated.
+
+    name = request.form.get('name')
+    citation = request.form.get('citation')
+
+    if name:
+        name = name.strip()
+        if not name:
+            # FIXME - this is bad.  deal with it later
+            pass
+
+    if citation:
+        x = citation.strip()
+        if not x:
+            citation = None
+
     payload = {
-        'name': request.form['name'].strip(),
-        'citation': request.form.get('citation')
+        'name': name,
+        'citation': citation
     }
 
     url = "%s/api/wordlist" % config.Config.DB_URL
@@ -1515,20 +1531,36 @@ def deletelist():
 
 @app.route('/edit_list', methods=['POST'])
 def edit_list():
-    payload = {
-        'name': request.form['name'],
-        'citation': request.form.get('citation'),
-    }
+    # note that the values in the form have not been subject to json schema validation.  these are just
+    # whatever bullshit was entered into the form (the list_attributes template).  so we have to
+    # fiddle with the values before stuffing them into the payload, which IS validated.
+
+    name = request.form.get('name')
+    citation = request.form.get('citation')
     sqlcode = request.form.get('sqlcode')
+    wordlist_id = request.form.get('wordlist_id')
 
-    if not sqlcode:
-        # are we here?  then the sqlcode field in the form has no code.  maybe existing code
-        # was removed.  whatever.  send the sqlcode as None.
-        sqlcode = None
+    if name:
+        name = name.strip()
+        if not name:
+            # FIXME - this is bad.  deal with it later
+            pass
 
-    payload['sqlcode'] = sqlcode
+    if sqlcode is not None:
+        x = sqlcode.strip()
+        if not x:
+            sqlcode = None
 
-    wordlist_id = request.form['wordlist_id']
+    if citation is not None:
+        x = citation.strip()
+        if not x:
+            citation = None
+
+    payload = {
+        'name': name,
+        'sqlcode': sqlcode,
+        'citation': citation
+    }
 
     url = "%s/api/wordlist/%s" % (config.Config.DB_URL, wordlist_id)
     r = requests.put(url, json=payload)

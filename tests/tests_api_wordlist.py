@@ -5,6 +5,9 @@ import json
 import random
 import string
 
+# TODO - test updating a list's name to null, empty string, or other bullshit values.
+#   also test creating a list with a bullshit name.
+
 
 class APIWordlist(unittest.TestCase):
     # add list with no words, just a name
@@ -114,7 +117,6 @@ class APIWordlist(unittest.TestCase):
 
         r = requests.put("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id), json=update_payload)
         self.assertEqual(r.status_code, 200)
-        obj = r.json()
 
         r = requests.get("%s/api/wordlist/%s" % (config.Config.BASE_URL, list_id))
         self.assertEqual(r.status_code, 200)

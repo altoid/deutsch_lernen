@@ -141,10 +141,10 @@ SAMPLE_WORDIDS_RESULT = {
 }
 
 SAMPLE_WORDLIST_METADATA_RESULT = {
-    "sqlcode": "select distinct word_id\r\nfrom mashup_v\r\nwhere pos_name = 'verb'\r\nand word like '%gehe%'",
+    "sqlcode": "\r\nselect distinct word_id\r\nfrom mashup_v\r\nwhere pos_name = 'verb'\r\nand word like '%gehe%'",
     "wordlist_id": 126,
     "name": "verbs like *geh*",
-    "citation": ""
+    "citation": None
 }
 
 SAMPLE_WORDLISTS_RESULT = [

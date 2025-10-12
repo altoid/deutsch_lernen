@@ -15,13 +15,14 @@ Manage Word Lists
         </tr>
         <tr>
             <td>Source:</td>
-            <td><input type="text" name="source" size="100"/></td>
+            <td><input type="text" name="citation" size="100"/></td>
         </tr>
     </table>
     <input type="submit" value="Add List"/>
 </form>
 <h1>Word Lists</h1>
 <form action="/deletelist" method="post">
+    <input type="submit" value="Delete Selected Lists"/>
     <table>
         {% for r in rows %}
         <tr>

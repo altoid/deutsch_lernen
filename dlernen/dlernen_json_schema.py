@@ -2,6 +2,9 @@ import jsonschema
 
 STRING_PATTERN = r"""\S"""
 
+# for names, leading/trailing whitespace is prohibited.
+NAME_PATTERN = r"""^\S(.*\S)*$"""
+
 # separate regex for multiline strings.
 MULTILINE_STRING_PATTERN = r"""\S"""
 
@@ -412,10 +415,11 @@ WORDLIST_METADATA_PAYLOAD_SCHEMA = {
     "properties": {
         "name": {
             "type": "string",
-            "pattern": STRING_PATTERN
+            "pattern": NAME_PATTERN
         },
         "citation": {
-            "type": ["string", "null"]
+            "type": ["string", "null"],
+            "pattern": STRING_PATTERN
         },
         "notes": {
             "type": "string",
@@ -435,8 +439,6 @@ WORDLIST_METADATA_PAYLOAD_SCHEMA = {
     }
 }
 
-# TODO - citation and sqlcode should be nonempty strings or null.  we should be able to store and retrieve null
-#   values for these.
 WORDLIST_METADATA_RESPONSE_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
@@ -451,14 +453,15 @@ WORDLIST_METADATA_RESPONSE_SCHEMA = {
     "properties": {
         "name": {
             "type": "string",
-            "minLength": 1
+            "pattern": NAME_PATTERN
         },
         "sqlcode": {
             "type": ["string", "null"],
             "pattern": MULTILINE_STRING_PATTERN
         },
         "citation": {
-            "type": ["string", "null"]
+            "type": ["string", "null"],
+            "pattern": STRING_PATTERN
         },
         "wordlist_id": {
             "type": "integer",
@@ -500,7 +503,8 @@ WORDLIST_RESPONSE_SCHEMA = {
             ]
         },
         "citation": {
-            "type": ["string", "null"]
+            "type": ["string", "null"],
+            "pattern": STRING_PATTERN
         },
         "notes": {
             "type": ["string", "null"]
