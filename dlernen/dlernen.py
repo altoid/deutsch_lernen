@@ -15,11 +15,11 @@ app = Flask(__name__)
 app.secret_key = "ap.i*&(^ap1."
 app.config.from_object(config.Config)
 
-# TODO strip strings before storing in DB
-
 # FIXME creating a wordlist without a citation will cause the citation to be stored as null.  but if you
 #   update the name of the list without changing the citation, the citation will be updated as the empty
 #   string.  citation should be either null or a nonempty string.
+# FIXME hitting the 'add list' button on the word lists page without entering any values for the fields
+#   causes badness.  re-render the page with a nice error message.
 
 
 def chunkify(arr, **kwargs):
@@ -1520,8 +1520,6 @@ def edit_list():
         'citation': request.form.get('citation'),
     }
     sqlcode = request.form.get('sqlcode')
-    if sqlcode:
-        sqlcode = sqlcode.strip()
 
     if not sqlcode:
         # are we here?  then the sqlcode field in the form has no code.  maybe existing code

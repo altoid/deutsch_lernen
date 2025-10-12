@@ -3,7 +3,6 @@ import jsonschema
 import requests
 from dlernen import config
 from dlernen import dlernen_json_schema
-import json
 import random
 import string
 
@@ -28,103 +27,74 @@ the api is sane in the presence of the json doc changes.
 # 2.
 # verify that the schema validator complains on malformed sqlcode values.
 # - empty string
-# - leading whitespace
-# - trailing whitespace
-#
+# - all whitespace
 #
 
 
 class SchemaTests(unittest.TestCase):
-    def test_legit_value_1(self):
-        payload = {
-            "sqlcode": None
-        }
+    legit_values = [
+        None,
+        "this is not real sql but matches the pattern in the json schema so shut up",
+        "  leading and trailing whitespace   ",
+        """
 
-        jsonschema.validate(payload, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
+        multiline
+        sql
+        statement
 
-    def test_legit_value_2(self):
-        payload = {
-            "sqlcode": "this is not real sql but matches the pattern in the json schema so shut up"
-        }
 
-        jsonschema.validate(payload, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
+        """
+    ]
 
-    def test_legit_value_3(self):
-        response = {
-            "sqlcode": None,
-            "wordlist_id": 1,
-            "citation": "oeu",
-            "name": "aoeu"
-        }
+    bad_values = [
+        "",
+        "    ",
+        " \t\r\n"
+    ]
 
-        jsonschema.validate(response, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
+    def test_legit_values_for_payload(self):
+        for sqlcode in self.legit_values:
+            with self.subTest(sqlcode=sqlcode):
+                payload = {
+                    "sqlcode": sqlcode
+                }
 
-    def test_legit_value_4(self):
-        response = {
-            "sqlcode": "this is not real sql but matches the pattern in the json schema so shut up",
-            "wordlist_id": 1,
-            "citation": "oeu",
-            "name": "aoeu"
-        }
+                jsonschema.validate(payload, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
 
-        jsonschema.validate(response, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
+    def test_legit_values_for_response(self):
+        for sqlcode in self.legit_values:
+            with self.subTest(sqlcode=sqlcode):
+                response = {
+                    "sqlcode": sqlcode,
+                    "wordlist_id": 1,
+                    "citation": "oeu",
+                    "name": "aoeu"
+                }
 
-    def test_bad_value_1(self):
-        payload = {
-            "sqlcode": ""
-        }
+                jsonschema.validate(response, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
 
-        with self.assertRaises(jsonschema.exceptions.ValidationError):
-            jsonschema.validate(payload, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
+    def test_bad_values_for_payload(self):
+        for sqlcode in self.bad_values:
+            with self.subTest(sqlcode=sqlcode):
+                payload = {
+                    "sqlcode": sqlcode
+                }
 
-    def test_bad_value_2(self):
-        payload = {
-            "sqlcode": "trailing whitespace  "
-        }
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(payload, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
 
-        with self.assertRaises(jsonschema.exceptions.ValidationError):
-            jsonschema.validate(payload, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
+    def test_bad_values_for_response(self):
+        for sqlcode in self.bad_values:
+            with self.subTest(sqlcode=sqlcode):
+                response = {
+                    "sqlcode": sqlcode,
+                    "wordlist_id": 1,
+                    "citation": "oeu",
+                    "name": "aoeu"
+                }
 
-    def test_bad_value_3(self):
-        payload = {
-            "sqlcode": "  leading whitespace"
-        }
-
-        with self.assertRaises(jsonschema.exceptions.ValidationError):
-            jsonschema.validate(payload, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
-
-    def test_bad_value_4(self):
-        response = {
-            "sqlcode": "",
-            "wordlist_id": 1,
-            "citation": "oeu",
-            "name": "aoeu"
-        }
-
-        with self.assertRaises(jsonschema.exceptions.ValidationError):
-            jsonschema.validate(response, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
-
-    def test_bad_value_5(self):
-        response = {
-            "sqlcode": "trailing whitespace  ",
-            "wordlist_id": 1,
-            "citation": "oeu",
-            "name": "aoeu"
-        }
-
-        with self.assertRaises(jsonschema.exceptions.ValidationError):
-            jsonschema.validate(response, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
-
-    def test_bad_value_6(self):
-        response = {
-            "sqlcode": "  leading whitespace",
-            "wordlist_id": 1,
-            "citation": "oeu",
-            "name": "aoeu"
-        }
-
-        with self.assertRaises(jsonschema.exceptions.ValidationError):
-            jsonschema.validate(response, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(response, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
 
 
 # list create tests
@@ -185,7 +155,11 @@ class ListCreate(unittest.TestCase):
     # inspect the sqlcode and make sure it's what we sent.
     def test_create_3(self):
         list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
-        sqlcode = "select id as word_id from word where id = 1234"
+        sqlcode = """
+        select id as word_id 
+        from word 
+        where id = 1234"""
+
         payload = {
             'name': list_name,
             'sqlcode': sqlcode

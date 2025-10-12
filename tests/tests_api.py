@@ -212,41 +212,25 @@ class CheckSchemaTests(unittest.TestCase):
     run check_schema on all the document types.
     """
 
-    def test_ADDATTRIBUTES_PAYLOAD_SCHEMA(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)
+    all_the_docs = [
+        dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA,
+        dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA,
+        dlernen_json_schema.QUIZ_DATA_SCHEMA,
+        dlernen_json_schema.REFRESH_WORDLISTS_SCHEMA,
+        dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA,
+        dlernen_json_schema.WORD_METADATA_SCHEMA,
+        dlernen_json_schema.WORDIDS_SCHEMA,
+        dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA,
+        dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA,
+        dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA,
+        dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA,
+        dlernen_json_schema.WORDS_SCHEMA
+    ]
 
-    def test_ADDWORD_PAYLOAD_SCHEMA(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA)
-
-    def test_QUIZ_DATA_SCHEMA(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.QUIZ_DATA_SCHEMA)
-
-    def test_REFRESH_WORDLISTS_SCHEMA(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.REFRESH_WORDLISTS_SCHEMA)
-
-    def test_UPDATEWORD_PAYLOAD_SCHEMA(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
-
-    def test_WORD_METADATA_SCHEMA(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORD_METADATA_SCHEMA)
-
-    def test_WORDIDS_SCHEMA(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDIDS_SCHEMA)
-
-    def test_WORDLIST_METADATA_PAYLOAD_SCHEMA(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
-
-    def test_WORDLIST_METADATA_RESPONSE_SCHEMA(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
-
-    def test_WORDLIST_RESPONSE_SCHEMA(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA)
-
-    def test_WORDLISTS_RESPONSE_SCHEMA(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
-
-    def test_WORDS_SCHEMA(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDS_SCHEMA)
+    def test_check_schema_docs(self):
+        for jdoc in self.all_the_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.Draft202012Validator.check_schema(jdoc)
 
 
 class SchemaTests(unittest.TestCase):
@@ -262,7 +246,7 @@ class SchemaTests(unittest.TestCase):
 
     def test_wordlist_metadata_payload_malformed_name(self):
         malformed_name_payload = {
-            "name": "  has leading and trailing whitespace, not allowed   "
+            "name": "     "
         }
         with self.assertRaises(jsonschema.exceptions.ValidationError):
             jsonschema.validate(malformed_name_payload, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
