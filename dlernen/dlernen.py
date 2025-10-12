@@ -128,7 +128,7 @@ def quiz_data(quiz_key):
     if not result:
         return "no testable attributes for quiz %s" % quiz_key, 404
 
-    jsonschema.validate(result, dlernen_json_schema.QUIZ_DATA_SCHEMA)
+    jsonschema.validate(result, dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA)
 
     return result
 
@@ -1130,7 +1130,7 @@ def refresh_wordlists():
 
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, dlernen_json_schema.REFRESH_WORDLISTS_SCHEMA)
+        jsonschema.validate(payload, dlernen_json_schema.REFRESH_WORDLISTS_PAYLOAD_SCHEMA)
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 
@@ -1310,7 +1310,7 @@ left join  mashup_v on mashup_v.pos_id = pos_info.pos_id and mashup_v.attribute_
         for v in result.values():
             v['pos_fields'] = sorted(v['pos_fields'], key=lambda x: x['sort_order'])
         result = list(result.values())
-        jsonschema.validate(result, dlernen_json_schema.WORD_METADATA_SCHEMA)
+        jsonschema.validate(result, dlernen_json_schema.WORD_METADATA_RESPONSE_SCHEMA)
         return result
 
 

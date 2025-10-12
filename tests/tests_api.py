@@ -124,22 +124,6 @@ SAMPLE_WORDS_RESULT = [
     }
 ]
 
-SAMPLE_WORDIDS_RESULT = {
-    "attribute_id": 1234,
-    "word_ids": [
-        1339,
-        3429,
-        1197,
-        3193,
-        3086,
-        4822,
-        1892,
-        212,
-        3346,
-        1616
-    ]
-}
-
 SAMPLE_WORDLIST_METADATA_RESULT = {
     "sqlcode": "\r\nselect distinct word_id\r\nfrom mashup_v\r\nwhere pos_name = 'verb'\r\nand word like '%gehe%'",
     "wordlist_id": 126,
@@ -215,11 +199,10 @@ class CheckSchemaTests(unittest.TestCase):
     all_the_docs = [
         dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA,
         dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA,
-        dlernen_json_schema.QUIZ_DATA_SCHEMA,
-        dlernen_json_schema.REFRESH_WORDLISTS_SCHEMA,
+        dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA,
+        dlernen_json_schema.REFRESH_WORDLISTS_PAYLOAD_SCHEMA,
         dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA,
-        dlernen_json_schema.WORD_METADATA_SCHEMA,
-        dlernen_json_schema.WORDIDS_SCHEMA,
+        dlernen_json_schema.WORD_METADATA_RESPONSE_SCHEMA,
         dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA,
         dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA,
         dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA,
@@ -312,13 +295,10 @@ class SchemaTests(unittest.TestCase):
         jsonschema.validate(SAMPLE_WORDLIST_METADATA_RESULT, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
 
     def test_quiz_data_sample(self):
-        jsonschema.validate(SAMPLE_QUIZ_DATA_RESULT, dlernen_json_schema.QUIZ_DATA_SCHEMA)
+        jsonschema.validate(SAMPLE_QUIZ_DATA_RESULT, dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA)
 
     def test_list_attribute_schema(self):
         jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
-
-    def test_wordids_sample(self):
-        jsonschema.validate(SAMPLE_WORDIDS_RESULT, dlernen_json_schema.WORDIDS_SCHEMA)
 
     def test_wordlists_sample(self):
         jsonschema.validate(SAMPLE_WORDLISTS_RESULT, dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
@@ -1048,7 +1028,7 @@ class APITests(unittest.TestCase):
         r = requests.get(url)
         quiz_data = r.json()
 
-        jsonschema.validate(quiz_data, dlernen_json_schema.QUIZ_DATA_SCHEMA)
+        jsonschema.validate(quiz_data, dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA)
 
     def test_empty_quiz_data_no_match(self):
         url = "%s/api/quiz_data/%s" % (config.Config.DB_URL, 'aoeuaoeuaeou')

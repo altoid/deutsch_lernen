@@ -41,7 +41,7 @@ ADDATTRIBUTES_PAYLOAD_SCHEMA = {
     }
 }
 
-REFRESH_WORDLISTS_SCHEMA = {
+REFRESH_WORDLISTS_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/refresh_wordlists",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Payload refreshing wordlists",
@@ -170,7 +170,7 @@ UPDATEWORD_PAYLOAD_SCHEMA = {
     }
 }
 
-WORD_METADATA_SCHEMA = {
+WORD_METADATA_RESPONSE_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/word_metadata",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Quiz Data List",
@@ -225,7 +225,7 @@ WORD_METADATA_SCHEMA = {
     }
 }
 
-QUIZ_DATA_SCHEMA = {
+QUIZ_DATA_RESPONSE_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/quiz_data",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Quiz Data List",
@@ -324,29 +324,6 @@ QUIZ_DATA_SCHEMA = {
                 "presentation_count",
                 "last_presentation"
             ]
-        }
-    }
-}
-
-WORDIDS_SCHEMA = {
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "WordIDList",
-    "description": "list of word ids",
-    "type": "object",
-    "required": [
-        "word_ids",
-        "attribute_id"
-    ],
-    "properties": {
-        "word_ids": {
-            "type": "array",
-            "items": {
-                "type": "integer"
-            }
-        },
-        "attribute_id": {
-            "type": "integer",
-            "minimum": 1
         }
     }
 }
