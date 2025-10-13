@@ -46,15 +46,14 @@ on a.attribute_id = m.attribute_id
 where attrvalue is not null
 )"""
 
-TESTABLE_ATTRS_AND_VALUES_FILTERED_BY_WORDLIST = """
+TESTABLE_ATTRS_AND_VALUES_WITH_WORDIDS_GIVEN = """
 testable_attrs_and_values as (
 select a.*, m.attrkey, m.word_id, m.word, m.attrvalue
 from attrs_for_quiz a
 inner join mashup_v m
 on a.attribute_id = m.attribute_id
-inner join wordlist_known_word wkw on m.word_id = wkw.word_id                                                 
 where attrvalue is not null                                                                                   
-and wkw.wordlist_id in (%(wordlist_args)s)                                                                                   
+and m.word_id in (%(wordid_args)s)                                                                                   
 )"""
 
 PRESENTED_TOO_FEW_TIMES = """
@@ -131,16 +130,16 @@ where curdate() - interval 30 day > last_presentation
 )"""
 
 
-def build_quiz_query(wordlist_ids=None):
-    if wordlist_ids:
-        wordlist_args = ['%s'] * len(wordlist_ids)
+def build_quiz_query(word_ids=None):
+    if word_ids:
+        wordid_args = ['%s'] * len(word_ids)
         d = {
-            'wordlist_args': ', '.join(wordlist_args)
+            'wordid_args': ', '.join(wordid_args)
         }
 
         subqueries = [
             ATTRS_FOR_QUIZ,
-            TESTABLE_ATTRS_AND_VALUES_FILTERED_BY_WORDLIST % d,
+            TESTABLE_ATTRS_AND_VALUES_WITH_WORDIDS_GIVEN % d,
             PRESENTED_TOO_FEW_TIMES,
             CRAPPY_SCORE,
             BEEN_TOO_LONG

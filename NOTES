@@ -100,27 +100,9 @@ tests:
 
 -----
 
-better distinction of json documents  for payloads and results.  the names should should have PAYLOAD or RESULT
-in them and we should never use the same doc type for both a payload and a response.
-
-in list metadata
-for responses:  sqlcode and citation required but can be null.  if not null, must be minlength 1 when stripped.
-for post/put:  sqlcode and citation optional.  if present, their values will be written to the database.  so if citation is null, this will bash the current value if it is set.  from the UI, an empty value should be sent as an explicit  null.
-
-same for sqlcode field.  if we remove the sqlcode altogether, that field should be sent as a null.  doing so will
-render the list empty; it won't be a smart list any more.
-
-test the shit out of this.
-1. create a list with empty citation, then retrieve it.  make sure it is null.
-    update it to be nonempty value.  retrieve it and make sure the update took.
-    update it again but don't send a value for the citation.  retrieve it and make sure it was not changed.
-    update it again but send a null value for the citation.  retrieve it and make sure it is null.
-2. same for  the sqlcode field
-3. never allow the name to be null/empty
-
-
 misc
 
 review how attribute values are stored.  make sure we aren't storing empty strings; unset attribute values
 should be null in the database.
 
+----

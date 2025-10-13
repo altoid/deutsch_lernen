@@ -6,7 +6,7 @@ attrs_for_quiz AS
              FROM       quiz
              INNER JOIN quiz_structure qs
              ON         quiz.id = qs.quiz_id
-             WHERE      quiz_key = %s ),
+             WHERE      quiz_key = 'definitions' ),
 
 testable_attrs_and_values AS
   (
@@ -18,10 +18,8 @@ testable_attrs_and_values AS
              FROM       attrs_for_quiz a
              INNER JOIN mashup_v m
              ON         a.attribute_id = m.attribute_id
-             INNER JOIN wordlist_known_word wkw
-             ON         m.word_id = wkw.word_id
              WHERE      attrvalue IS NOT NULL
-             AND        wkw.wordlist_id IN (%s) ),
+             AND        m.word_id between 100 and 200 ),
 q1 AS
   (
             -- word has been presented 5 or fewer times (or not at all)
