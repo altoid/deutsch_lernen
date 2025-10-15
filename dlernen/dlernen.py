@@ -239,15 +239,7 @@ def get_words_from_word_ids(word_ids):
     from
         mashup_v
     inner join pos_form pf on pf.attribute_id = mashup_v.attribute_id and pf.pos_id = mashup_v.pos_id
-    where word_id in
-        (
-        select
-            word_id
-        from
-            mashup_v
-        where
-            word_id in (%s)
-        )
+    where word_id in (%s)
     """ % format_args
 
     result = []
