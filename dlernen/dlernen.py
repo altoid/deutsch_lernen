@@ -604,6 +604,37 @@ def delete_word(word_id):
             return 'error deleting word_id %s' % word_id, 500
 
 
+@app.route('/api/words', methods=['GET'])
+def get_words_in_wordlists():
+    """
+    given a list of wordlist ids, get all the words in those lists.  if no word list ids are given, dump
+    the whole dictionary.
+    """
+    word_ids = []
+    wordlist_ids = request.args.get('wordlist_id')  # this will come in as a comma-separated string.
+    if wordlist_ids:
+        wordlist_ids = wordlist_ids.split(',')
+        wordlist_ids = list(set(wordlist_ids))
+
+        word_ids = get_word_ids_from_wordlists(wordlist_ids)
+    else:
+        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            sql = """
+            select id as word_id from word
+            """
+
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+
+            word_ids = list(map(lambda x: x['word_id'], rows))
+
+    result = get_words_from_word_ids(word_ids)
+
+    jsonschema.validate(result, dlernen_json_schema.WORDS_SCHEMA)
+
+    return result
+
+
 @app.route('/api/words', methods=['PUT'])
 def get_words():
     # this is for PUT requests because we have to send in the list of words ids as a payload.
