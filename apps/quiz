@@ -3,7 +3,6 @@
 from dlernen import config
 import argparse
 import requests
-from pprint import pprint
 import sys
 
 
