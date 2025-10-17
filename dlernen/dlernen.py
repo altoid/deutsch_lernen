@@ -610,6 +610,8 @@ def get_words_in_wordlists():
     given a list of wordlist ids, get all the words in those lists.  if no word list ids are given, dump
     the whole dictionary.
     """
+    # TODO - currently no unit tests for this.  do we need any?
+
     word_ids = []
     wordlist_ids = request.args.get('wordlist_id')  # this will come in as a comma-separated string.
     if wordlist_ids:
@@ -1568,7 +1570,7 @@ def addlist():
             # FIXME - this is bad.  deal with it later
             pass
 
-    if citation:
+    if citation is not None:
         x = citation.strip()
         if not x:
             citation = None
