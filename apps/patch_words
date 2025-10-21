@@ -12,8 +12,6 @@ from pprint import pprint
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 
-    # TODO - restore word recency feature.
-
     parser.add_argument('-l', '--listids',
                         nargs='+',
                         type=int,
@@ -39,25 +37,26 @@ if __name__ == '__main__':
     words_to_patch = []
 
     # get all the verbs
+    attrkey = 'third_person_past'
     result = list(filter(lambda x: x['pos_name'] == 'Verb', result))
     for w in result:
-        tpp = list(filter(lambda x: x['attrkey'] == 'third_person_past', w['attributes']))
+        tpp = list(filter(lambda x: x['attrkey'] == attrkey, w['attributes']))
         if not tpp[0]['attrvalue']:
             words_to_patch.append(w)
 
 #    pprint(words_to_patch)
-    print("found %s verbs where %s is unset" % (len(words_to_patch), "third_person_past"))
+    print("found %s verbs where %s is unset" % (len(words_to_patch), attrkey))
 
     if not words_to_patch:
         print("nothing to do")
         sys.exit()
 
     for p in words_to_patch:
-        answer = input("%s [third_person_past] ---> " % p['word'])
+        answer = input("%s [%s] ---> " % (p['word'], attrkey))
         answer = answer.strip()
 
         while not answer:
-            answer = input("%s [third_person_past] ---> " % p['word'])
+            answer = input("%s [%s] ---> " % (p['word'], attrkey))
             answer = answer.strip()
 
         if answer == 'q':
@@ -67,7 +66,7 @@ if __name__ == '__main__':
             "attributes_adding": [
                 {
                     "attrvalue": answer,
-                    "attrkey": "third_person_past"
+                    "attrkey": attrkey
                 }
             ]
         }
