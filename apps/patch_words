@@ -55,9 +55,9 @@ if __name__ == '__main__':
         answer = input("%s [%s] ---> " % (p['word'], attrkey))
         answer = answer.strip()
 
-        while not answer:
-            answer = input("%s [%s] ---> " % (p['word'], attrkey))
-            answer = answer.strip()
+        if not answer:
+            # skip to the next one
+            continue
 
         if answer == 'q':
             sys.exit()
