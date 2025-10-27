@@ -128,6 +128,36 @@ SAMPLE_WORDS_RESULT = [
     }
 ]
 
+SAMPLE_POS_STRUCTURE_RESPONSE = [
+    # 0 or more of these
+    {
+        # required
+        "name": "Verb",
+
+        # required but can be empty
+        "attributes": [
+            {
+                # both of these are required
+                "attrkey": "definition",
+                "sort_order": 5,
+            },
+            {
+                "attrkey": "first_person_singular",
+                "sort_order": 6
+            }
+        ]
+    },
+    {
+        "name": "Conjunction",
+        "attributes": [
+            {
+                "attrkey": "definition",
+                "sort_order": 0
+            }
+        ]
+    }
+]
+
 SAMPLE_WORDLIST_METADATA_RESULT = {
     "sqlcode": "\r\nselect distinct word_id\r\nfrom mashup_v\r\nwhere pos_name = 'verb'\r\nand word like '%gehe%'",
     "wordlist_id": 126,
@@ -211,7 +241,8 @@ class CheckSchemaTests(unittest.TestCase):
         dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA,
         dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA,
         dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA,
-        dlernen_json_schema.WORDS_SCHEMA
+        dlernen_json_schema.WORDS_SCHEMA,
+        dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA
     ]
 
     def test_check_schema_docs(self):
@@ -227,6 +258,44 @@ class SchemaTests(unittest.TestCase):
     we do this because we don't want to do this in test classes that have setup and teardown methods
     which depend on these schema definitions being correct.
     """
+
+    def test_pos_structure_response_sample_1(self):
+        jsonschema.validate(SAMPLE_POS_STRUCTURE_RESPONSE, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
+
+    def test_pos_structure_response_sample_2(self):
+        doc = [
+        ]
+
+        jsonschema.validate(doc, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
+
+    def test_pos_structure_response_sample_3(self):
+        doc = [
+            {
+                "name": "voib",
+                "attributes": []  # can't be empty
+            }
+        ]
+
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            jsonschema.validate(doc, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
+
+    def test_pos_structure_response_sample_4(self):
+        doc = [
+            {
+                "name": "voib",
+                "attributes": [
+                    {
+                        "attrkey": "definition",
+                        "sort_order": 0,
+                    }
+                ]
+            }
+        ]
+
+        jsonschema.validate(doc, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
+
+    def wordlist_metadata_payload_sample(self):
+        jsonschema.validate(SAMPLE_WORDLIST_PAYLOAD, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
 
     def test_wordlist_metadata_payload_sample(self):
         jsonschema.validate(SAMPLE_WORDLIST_PAYLOAD, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)

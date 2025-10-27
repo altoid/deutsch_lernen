@@ -582,3 +582,40 @@ WORDS_SCHEMA = {
     }
     # the attributes - article, definition, etc. - are all optional but the attributes keyword is not.
 }
+
+POS_STRUCTURE_RESPONSE_SCHEMA = {
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Part-of-Speech Structure",
+    "description": """
+    attributes for each part of speech, along with their sort ordering
+    """,
+    "type": "array",
+    "items": {
+        "type": "object",
+        "required": ["name", "attributes"],
+        "properties": {
+            "name": {
+                "type": "string",
+                "minLength": 1
+            },
+            "attributes": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                    "type": "object",
+                    "required": ["attrkey", "sort_order"],
+                    "properties": {
+                        "attrkey": {
+                            "type": "string",
+                            "minLength": 1,
+                        },
+                        "sort_order": {
+                            "type": "integer",
+                            "minimum": 0
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
