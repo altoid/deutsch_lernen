@@ -66,6 +66,10 @@ if __name__ == '__main__':
     ordering = sorted(list(sort_order_to_attrkey.keys()))
 #    pprint(ordering)
 
+    payload = {
+        "attributes_adding": []
+    }
+
     for p in words_to_patch:
         attrkey_to_attrvalue = {}
         for a in p['attributes']:
@@ -73,9 +77,7 @@ if __name__ == '__main__':
                 attrkey_to_attrvalue[a['attrkey']] = a['attrvalue']
 #        pprint(attrkey_to_attrvalue)
 
-        payload = {
-            "attributes_adding": []
-        }
+        payload['attributes_adding'].clear()
 
         for i in ordering:
             k = sort_order_to_attrkey[i]
