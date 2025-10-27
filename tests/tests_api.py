@@ -7,6 +7,10 @@ from pprint import pprint
 import random
 import string
 
+
+# FIXME - correcting the spelling of a word through the UI isn't working
+#   special case of correcting the spelling of an unknown word before it is added
+
 SAMPLE_WORDLIST_PAYLOAD = {
     "name": "saetuasasue",
     "citationsource": "anteohusntaeo",
