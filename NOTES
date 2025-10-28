@@ -83,7 +83,8 @@ backups are run through cron; see crontab -l
 
 ------
 
-TODO review return values of requests.get.  should be checking that the response is valid before inspecting json.
+TODO review return values of requests.get.  see function wordlists() as example.  should be checking that
+    the response is valid before inspecting json.
     it's not in the documentation (https://requests.readthedocs.io/en/latest/api/#requests.Response) but
     the response object implements a __bool__ method that lets you do
     if response:
@@ -106,3 +107,11 @@ review how attribute values are stored.  make sure we aren't storing empty strin
 should be null in the database.
 
 ----
+TODO - in add/edit word page, get rid of the radio button selectors for part of speech.  the system should
+    figure out the POS from the fields that are filled in.  it should be possible to add a word that is every
+    part of speech just by filling in all the fields.
+
+TODO - need a way to add a word from scratch, either an app or through UI.  currently no way to add 'der Leiter'
+    because 'die Leiter' is already there.  fortunately the data model itself permits this case.
+
+TODO - really need a better way to deal with reflexive verbs

@@ -1096,6 +1096,13 @@ class APITestsAttributePOST(unittest.TestCase):
 
 
 class APITests(unittest.TestCase):
+    def test_pos_structure(self):
+        url = "%s/api/pos" % config.Config.DB_URL
+        r = requests.get(url)
+        pos_structure = r.json()
+
+        jsonschema.validate(pos_structure, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
+
     def test_real_quiz_data(self):
         url = "%s/api/quiz_data/%s" % (config.Config.DB_URL, 'plurals')
         r = requests.get(url)

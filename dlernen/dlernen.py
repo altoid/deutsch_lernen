@@ -1449,6 +1449,47 @@ def get_quiz_by_key(quiz_key):
         return build_quiz_metadata(rows)[0]
 
 
+@app.route('/api/pos')
+def get_pos():
+    """
+    fetch the part-of-speech info from the database and format it
+    """
+    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        sql = """
+        select p.name, a.attrkey, pf.sort_order
+        from pos_form pf
+        inner join pos p on p.id = pf.pos_id
+        inner join attribute a on a.id = pf.attribute_id;
+        """
+
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+
+        temp_result = {}
+        for r in rows:
+            if r['name'] not in temp_result:
+                temp_result[r['name']] = []
+            temp_result[r['name']].append(
+                {
+                    "attrkey": r['attrkey'],
+                    "sort_order": r['sort_order']
+                }
+            )
+
+        result = []
+        for k in temp_result.keys():
+            result.append(
+                {
+                    "name": k.lower(),
+                    "attributes": temp_result[k]
+                }
+            )
+
+        jsonschema.validate(result, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
+
+        return result
+
+
 @app.errorhandler(500)
 def server_error(e):
     return render_template('500.html'), 500
