@@ -771,7 +771,7 @@ def get_wordlist(wordlist_id):
             id wordlist_id,
             name,
             citation,
-            ifnull(notes, '') notes,
+            notes,
             sqlcode
         from wordlist
         where id = %s

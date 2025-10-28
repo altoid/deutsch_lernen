@@ -395,6 +395,115 @@ class APIWordlist(unittest.TestCase):
         r = requests.delete(url)
         self.assertEqual(200, r.status_code)
 
+    # update list with notes as empty string
+    def test_update_notes_to_empty_string(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+
+        create_url = "%s/api/wordlist" % config.Config.DB_URL
+        payload = {
+            'name': list_name,
+            'notes': 'aosthedunthaoe'
+        }
+        r = requests.post(create_url, json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        # set notes to empty string - should succeed
+
+        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
+        payload = {
+            'notes': ''
+        }
+        r = requests.put(url, json=payload)
+        self.assertEqual(r.status_code, 200)
+
+        # make sure the notes were cleared
+
+        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
+        r = requests.get(url)
+        result = json.loads(r.text)
+        self.assertEqual('', result['notes'])
+
+        # clean up
+
+        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
+        r = requests.delete(url)
+        self.assertEqual(200, r.status_code)
+
+    # update list with notes as None
+    def test_update_notes_to_None(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+
+        create_url = "%s/api/wordlist" % config.Config.DB_URL
+        payload = {
+            'name': list_name,
+            'notes': 'aosthedunthaoe'
+        }
+        r = requests.post(create_url, json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        # set notes to empty string - should succeed
+
+        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
+        payload = {
+            'notes': None
+        }
+        r = requests.put(url, json=payload)
+        self.assertEqual(r.status_code, 200)
+
+        # make sure the notes were cleared
+
+        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
+        r = requests.get(url)
+        result = json.loads(r.text)
+        self.assertIsNone(result['notes'])
+
+        # clean up
+
+        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
+        r = requests.delete(url)
+        self.assertEqual(200, r.status_code)
+
+    # update something other than the notes and make sure the notes didn't get bashed
+    def test_update_does_not_affect_notes(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+
+        create_url = "%s/api/wordlist" % config.Config.DB_URL
+        notes = 'anhtoednaoehduntaeo'
+        payload = {
+            'name': list_name,
+            'notes': notes
+        }
+        r = requests.post(create_url, json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = r.json()
+        list_id = obj['wordlist_id']
+
+        # update the name then check the notes
+
+        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
+        payload = {
+            'name': list_name + list_name
+        }
+        r = requests.put(url, json=payload)
+        self.assertEqual(r.status_code, 200)
+
+        # make sure the notes were unaffected
+
+        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
+        r = requests.get(url)
+        result = json.loads(r.text)
+        self.assertEqual(notes, result['notes'])
+
+        # clean up
+
+        url = "%s/api/wordlist/%s" % (config.Config.DB_URL, list_id)
+        r = requests.delete(url)
+        self.assertEqual(200, r.status_code)
+
     # add list with code and words --> only one is allowed.
     def test_add_list_with_code_and_words(self):
         list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))

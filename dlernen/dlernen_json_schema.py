@@ -258,6 +258,7 @@ QUIZ_DATA_RESPONSE_SCHEMA = {
             "attributes": {
                 "type": "object",
                 "properties": {
+                    # TODO revisit this.  keys that are hardcoded values found in the database is a bad idea.
                     "article": {
                         "$ref": "#/$defs/quiz_attribute"
                     },
@@ -399,8 +400,7 @@ WORDLIST_METADATA_PAYLOAD_SCHEMA = {
             "pattern": STRING_PATTERN
         },
         "notes": {
-            "type": "string",
-            "minLength": 1
+            "type": ["string", 'null']
         },
         "sqlcode": {
             "type": ["string", "null"],

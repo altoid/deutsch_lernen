@@ -115,3 +115,5 @@ TODO - need a way to add a word from scratch, either an app or through UI.  curr
     because 'die Leiter' is already there.  fortunately the data model itself permits this case.
 
 TODO - really need a better way to deal with reflexive verbs
+
+FIXME - smart wordlists aren't recursive - smart lists of other smart lists doesn't work
