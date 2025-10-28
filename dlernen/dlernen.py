@@ -1581,6 +1581,10 @@ def wordlist(wordlist_id):
         return redirect('/wordlists')
 
     result = r.json()
+    if result['notes'] is None:
+        # otherwise the word 'None' is rendered in the form
+        result['notes'] = ''
+
     if result['list_type'] == 'smart':
         words = chunkify(result['known_words'], nchunks=nchunks)
         return render_template('smart_wordlist.html',
