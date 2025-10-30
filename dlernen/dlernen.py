@@ -1611,9 +1611,10 @@ def addlist():
 
     if name:
         name = name.strip()
-        if not name:
-            # FIXME - this is bad.  deal with it later
-            pass
+
+    if not name:
+        flash("Die Liste muss einen Namen haben")
+        return redirect('/wordlists')
 
     if citation is not None:
         x = citation.strip()
@@ -1660,9 +1661,17 @@ def edit_list():
 
     if name:
         name = name.strip()
-        if not name:
-            # FIXME - this is bad.  deal with it later
-            pass
+
+    if not name:
+        flash("Die Liste muss einen Namen haben")
+        result = {
+            "sqlcode": '' if sqlcode is None else sqlcode,
+            "citation": '' if citation is None else citation,
+            "wordlist_id": wordlist_id
+        }
+        return render_template('list_attributes.html',
+                               wordlist=result,
+                               return_to_wordlist_id=wordlist_id)
 
     if sqlcode is not None:
         x = sqlcode.strip()
