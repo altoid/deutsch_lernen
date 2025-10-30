@@ -1049,21 +1049,18 @@ def update_wordlist(wordlist_id):
     if sqlcode and words:
         return "can't modify list with sqlcode and words", 400
 
+    wordlist = get_wordlist(wordlist_id)
+    if wordlist['list_type'] == 'smart' and words:
+        # if we are trying to add words to a smart list, and we are not
+        # removing the sql code, do not proceed.
+        if 'sqlcode' not in update_args or update_args['sqlcode'] is not None:
+            return "can't add words to smart list", 400
+
+    if wordlist['list_type'] == 'standard' and sqlcode:
+        return "can't add code to existing list", 400
+
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         # this is well-behaved if citation and sqlcode are not given.
-        cursor.execute('start transaction')
-
-        wordlist = get_wordlist(wordlist_id)
-        if wordlist['list_type'] == 'smart' and words:
-            # if we are trying to add words to a smart list, and we are not
-            # removing the sql code, do not proceed.
-            if 'sqlcode' not in update_args or update_args['sqlcode'] is not None:
-                cursor.execute('rollback')
-                return "can't add words to smart list", 400
-
-        if wordlist['list_type'] == 'standard' and sqlcode:
-            cursor.execute('rollback')
-            return "can't add code to existing list", 400
 
         try:
             cursor.execute('start transaction')
