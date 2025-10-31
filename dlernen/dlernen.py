@@ -1,3 +1,4 @@
+import mysql.connector.errors
 from flask import Flask, request, render_template, redirect, url_for, flash, abort
 from pprint import pprint
 from mysql.connector import connect
@@ -791,6 +792,19 @@ def validate_sqlcode(cursor, sqlcode):
 
 
 @app.route('/api/wordlist/<int:wordlist_id>')
+def api_get_wordlist(wordlist_id):
+    try:
+        return get_wordlist(wordlist_id)
+    except mysql.connector.errors.ProgrammingError as f:
+        # get_wordlist validates sqlcode that is read from the database.  if that fails,
+        # then the server failed to validate it properly.  that makes this case a server
+        # error, not a bad request.
+        return str(f), 500
+    except jsonschema.ValidationError as f:
+        # same thing.  responses that don't validate are a server implementation problem.
+        return str(f), 500
+
+
 def get_wordlist(wordlist_id):
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
