@@ -15,8 +15,23 @@ app = Flask(__name__)
 app.secret_key = "ap.i*&(^ap1."
 app.config.from_object(config.Config)
 
-# FIXME hitting the 'add list' button on the word lists page without entering any values for the fields
-#   causes badness.  re-render the page with a nice error message.
+
+SQL_FOR_WORDLIST_FROM_SQLCODE = """
+    with matching as ( %s )
+    select
+          m.word word,
+          matching.word_id,
+          m.attrvalue definition,
+          m2.attrvalue article  -- possibly null
+    from  matching
+    left  join mashup_v m
+    on    matching.word_id = m.word_id
+    and   m.attrkey = 'definition'
+    left  join mashup_v m2
+    on    matching.word_id = m2.word_id
+    and   m2.attrkey = 'article'
+    order by m.word        
+"""
 
 
 def chunkify(arr, **kwargs):
@@ -763,6 +778,18 @@ def get_wordlist_metadata(wordlist_id):
         return wl_row
 
 
+def validate_sqlcode(cursor, sqlcode):
+    # throw an exception if the sqlcode snippet isn't useful for constructing a wordlist.
+    # has to be called from within a context manager block; we won't make a new database
+    # connection for this.
+
+    if sqlcode is not None:
+        x = sqlcode.strip()
+        sql = SQL_FOR_WORDLIST_FROM_SQLCODE % x
+
+        cursor.execute(sql)
+
+
 @app.route('/api/wordlist/<int:wordlist_id>')
 def get_wordlist(wordlist_id):
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
@@ -790,22 +817,7 @@ def get_wordlist(wordlist_id):
         result['source_is_url'] = citation.startswith('http') if citation else False
 
         if sqlcode:
-            known_words_sql = """
-            with matching as ( %s )
-            select
-                  m.word word,
-                  matching.word_id,
-                  m.attrvalue definition,
-                  m2.attrvalue article  -- possibly null
-            from  matching
-            left  join mashup_v m
-            on    matching.word_id = m.word_id
-            and   m.attrkey = 'definition'
-            left  join mashup_v m2
-            on    matching.word_id = m2.word_id
-            and   m2.attrkey = 'article'
-            order by m.word        
-            """ % sqlcode
+            known_words_sql = SQL_FOR_WORDLIST_FROM_SQLCODE % sqlcode
 
             cursor.execute(known_words_sql)
 
