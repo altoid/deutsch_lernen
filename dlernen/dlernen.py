@@ -757,25 +757,44 @@ def gender_rules():
 
 
 @app.route('/api/wordlist/<int:wordlist_id>/metadata')
+def api_get_wordlist_metadata(wordlist_id):
+    try:
+        result = get_wordlist_metadata(wordlist_id)
+        if not result:
+            return "wordlist %s not found" % wordlist_id, 404
+
+        jsonschema.validate(result, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
+
+        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            validate_sqlcode(cursor, result['sqlcode'])
+
+        return result
+    except mysql.connector.errors.ProgrammingError as f:
+        # if validation of sqlcode that is read from the database fails,
+        # treat it as unprocessable content.
+        return str(f), 422
+    except jsonschema.ValidationError as f:
+        # responses that don't validate are a server implementation problem.
+        return str(f), 500
+
+
 def get_wordlist_metadata(wordlist_id):
     """
     returns the metadata for a given wordlist:  name, sqlcode, citation, and id.
     """
     with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
-    select
+        select
         id wordlist_id, name, citation, sqlcode
-     from wordlist
-    where id = %s
-    """
+        from wordlist
+        where id = %s
+        """
         cursor.execute(sql, (wordlist_id,))
         wl_row = cursor.fetchone()
 
-        if not wl_row:
-            return "wordlist %s not found" % wordlist_id, 404
+        # don't validate anything.  callers and wrapper functions should do that.
 
-        jsonschema.validate(wl_row, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
-
+        # could be None
         return wl_row
 
 
@@ -794,14 +813,17 @@ def validate_sqlcode(cursor, sqlcode):
 @app.route('/api/wordlist/<int:wordlist_id>')
 def api_get_wordlist(wordlist_id):
     try:
-        return get_wordlist(wordlist_id)
+        result = get_wordlist(wordlist_id)
+        if result:
+            return result
+
+        return "wordlist %s not found" % wordlist_id, 404
     except mysql.connector.errors.ProgrammingError as f:
         # get_wordlist validates sqlcode that is read from the database.  if that fails,
-        # then the server failed to validate it properly.  that makes this case a server
-        # error, not a bad request.
-        return str(f), 500
+        # treat it as unprocessable content.
+        return str(f), 422
     except jsonschema.ValidationError as f:
-        # same thing.  responses that don't validate are a server implementation problem.
+        # responses that don't validate are a server implementation problem.
         return str(f), 500
 
 
@@ -820,7 +842,7 @@ def get_wordlist(wordlist_id):
         cursor.execute(sql, (wordlist_id,))
         wl_row = cursor.fetchone()
         if not wl_row:
-            return "wordlist %s not found" % wordlist_id, 404
+            return None
 
         sqlcode = wl_row['sqlcode']
         citation = wl_row['citation']
@@ -1580,7 +1602,7 @@ def dbcheck():
 
 @app.route('/list_attributes/<int:wordlist_id>')
 def list_attributes(wordlist_id):
-    url = "%s/api/wordlist/%s" % (config.Config.DB_URL, wordlist_id)
+    url = "%s/api/wordlist/%s/metadata" % (config.Config.DB_URL, wordlist_id)
     r = requests.get(url)
     if r:
         result = r.json()
@@ -1601,6 +1623,7 @@ def wordlist(wordlist_id):
     url = "%s/api/wordlist/%s" % (config.Config.DB_URL, wordlist_id)
     r = requests.get(url)
     if r.status_code == 404:
+        flash("wordlist %s not found" % wordlist_id)
         return redirect('/wordlists')
 
     result = r.json()
