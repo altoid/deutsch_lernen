@@ -1,6 +1,7 @@
 from flask import Flask
 from dlernen import config
 from dlernen.dlernen import bp as dlernen_bp
+from dlernen.api import bp as api_bp
 
 
 def create_app():
@@ -8,5 +9,6 @@ def create_app():
     app.secret_key = "ap.i*&(^ap1."
     app.config.from_object(config.Config)
     app.register_blueprint(dlernen_bp)
+    app.register_blueprint(api_bp)
 
     return app

@@ -1589,15 +1589,6 @@ def wordlists():
     abort(r.status_code)
 
 
-@bp.route('/healthcheck')
-def dbcheck():
-    try:
-        with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            return 'OK', 200
-    except Exception as e:
-        return str(e), 500
-
-
 @bp.route('/list_attributes/<int:wordlist_id>')
 def list_attributes(wordlist_id):
     url = "%s/api/wordlist/%s/metadata" % (current_app.config['DB_URL'], wordlist_id)
