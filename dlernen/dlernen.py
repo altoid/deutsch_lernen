@@ -12,9 +12,7 @@ import jsonschema
 import sys
 import os
 
-from dlernen import create_app
-
-app = create_app()
+from run import app
 
 SQL_FOR_WORDLIST_FROM_SQLCODE = """
     with matching as ( %s )
