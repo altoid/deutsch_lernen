@@ -805,6 +805,7 @@ def validate_sqlcode(cursor, sqlcode):
         sql = SQL_FOR_WORDLIST_FROM_SQLCODE % x
 
         cursor.execute(sql)
+        cursor.fetchone()
 
 
 @app.route('/api/wordlist/<int:wordlist_id>')
