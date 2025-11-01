@@ -55,7 +55,7 @@
 {% if wordlists %}
 <h1>Wortlisten, die dieses Wort enthalten</h1>
 {% for wl in wordlists %}
-<a href="{{ url_for('wordlist', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a><br>
+<a href="{{ url_for('dlernen.wordlist', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a><br>
 {% endfor %}
 {% endif %}
 {% endblock %}

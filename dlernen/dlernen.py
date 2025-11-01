@@ -1,18 +1,16 @@
 import mysql.connector.errors
-from flask import Flask, request, render_template, redirect, url_for, flash, abort
+from flask import Blueprint, request, render_template, redirect, url_for, flash, abort, current_app
 from pprint import pprint
 from mysql.connector import connect
-import config
-import quiz_sql
+from dlernen import quiz_sql, dlernen_json_schema
 import requests
 import json
 from contextlib import closing
-import dlernen_json_schema
 import jsonschema
 import sys
 import os
 
-from run import app
+bp = Blueprint('dlernen', __name__)
 
 SQL_FOR_WORDLIST_FROM_SQLCODE = """
     with matching as ( %s )
@@ -63,7 +61,7 @@ def chunkify(arr, **kwargs):
     return result
 
 
-@app.route('/api/post_test', methods=['POST'])
+@bp.route('/api/post_test', methods=['POST'])
 def post_test():
     """
     apparently you can't use requests to send true JSON objects in a post request.  i.e. this did not work:
@@ -111,7 +109,7 @@ def get_word_ids_from_wordlists(wordlist_ids):
     ]
 
     # make a UNION out of this and all the sqlcode routines for all the word lists
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
         select sqlcode
         from wordlist
@@ -135,7 +133,7 @@ def get_word_ids_from_wordlists(wordlist_ids):
         return result
 
 
-@app.route('/api/quiz_data/<string:quiz_key>')
+@bp.route('/api/quiz_data/<string:quiz_key>')
 def quiz_data(quiz_key):
     """
     given a quiz key, randomly pick from the dictionary one attrkey value to be quizzed.
@@ -150,7 +148,7 @@ def quiz_data(quiz_key):
         word_ids = get_word_ids_from_wordlists(wordlist_ids)
 
     query = quiz_sql.build_quiz_query(word_ids=word_ids)
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         if wordlist_ids:
             cursor.execute(query, (quiz_key, *word_ids))
         else:
@@ -194,9 +192,9 @@ def quiz_data(quiz_key):
     return result
 
 
-@app.route('/api/quiz_data', methods=['POST'])
+@bp.route('/api/quiz_data', methods=['POST'])
 def post_quiz_answer():
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         cursor.execute('start transaction')
         update = """
             insert into quiz_score
@@ -257,7 +255,7 @@ def get_words_from_word_ids(word_ids):
 
     result = []
     if word_ids:
-        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
             cursor.execute(sql, word_ids)
             rows = cursor.fetchall()
             result = process_word_query_result(rows)
@@ -265,7 +263,7 @@ def get_words_from_word_ids(word_ids):
     return result
 
 
-@app.route('/api/word/<int:word_id>')
+@bp.route('/api/word/<int:word_id>')
 def get_word_by_id(word_id):
     """
     returns word object, or 404 if word_id not found.
@@ -281,7 +279,7 @@ def get_word_by_id(word_id):
     return "word id %s not found" % word_id, 404
 
 
-@app.route('/api/word/<string:word>')
+@bp.route('/api/word/<string:word>')
 def get_word(word):
     """
     return attributes for every word that matches <word>.  since
@@ -338,7 +336,7 @@ order by word_id, pf.sort_order
         query = exact_match_sql
         query_args = (word,)
 
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         cursor.execute(query, query_args)
         rows = cursor.fetchall()
         result = process_word_query_result(rows)
@@ -350,7 +348,7 @@ order by word_id, pf.sort_order
         return result
 
 
-@app.route('/api/word', methods=['POST'])
+@bp.route('/api/word', methods=['POST'])
 def add_word():
     """
     add a word to the dictionary.
@@ -368,7 +366,7 @@ def add_word():
     # - attrvalues are not degenerate
     # note:  adding a word with no attributes is allowed
 
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
             check_sql = """
@@ -449,7 +447,7 @@ def add_word():
             return "error, transaction rolled back", 500
 
 
-@app.route('/api/word/<int:word_id>', methods=['PUT'])
+@bp.route('/api/word/<int:word_id>', methods=['PUT'])
 def update_word(word_id):
     try:
         payload = request.get_json()
@@ -467,7 +465,7 @@ def update_word(word_id):
     # attrkeys are defined for the word, for both update and add cases
     # new attrvalues are all strings len > 0.
 
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
 
@@ -601,9 +599,9 @@ def update_word(word_id):
             return "error, transaction rolled back", 500
 
 
-@app.route('/api/word/<int:word_id>', methods=['DELETE'])
+@bp.route('/api/word/<int:word_id>', methods=['DELETE'])
 def delete_word(word_id):
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             sql = """
             delete from word
@@ -617,7 +615,7 @@ def delete_word(word_id):
             return 'error deleting word_id %s' % word_id, 500
 
 
-@app.route('/api/words', methods=['GET'])
+@bp.route('/api/words', methods=['GET'])
 def get_words_in_wordlists():
     """
     given a list of wordlist ids, get all the words in those lists.  if no word list ids are given, dump
@@ -633,7 +631,7 @@ def get_words_in_wordlists():
 
         word_ids = get_word_ids_from_wordlists(wordlist_ids)
     else:
-        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
             sql = """
             select id as word_id from word
             """
@@ -650,7 +648,7 @@ def get_words_in_wordlists():
     return result
 
 
-@app.route('/api/words', methods=['PUT'])
+@bp.route('/api/words', methods=['PUT'])
 def get_words():
     # this is for PUT requests because we have to send in the list of words ids as a payload.
     # if we try to put the word_ids into a GET URL, the URL might be too long.
@@ -671,7 +669,7 @@ def get_words():
 # TODO - delete an attrkey value - /api/<word_id>/attrkey/<attrvalue_id>
 
 
-@app.route('/api/<int:word_id>/attrkey', methods=['POST'])
+@bp.route('/api/<int:word_id>/attrkey', methods=['POST'])
 def add_attributes(word_id):
     try:
         payload = request.get_json()
@@ -686,7 +684,7 @@ def add_attributes(word_id):
     # attrvalue ids exist and belong to the word
     # new attrvalues are all strings len > 0.
 
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
             sql = """
@@ -741,9 +739,9 @@ def add_attributes(word_id):
             return 'error adding attributes to word_id %s' % word_id, 500
 
 
-@app.route('/api/gender_rules')
+@bp.route('/api/gender_rules')
 def gender_rules():
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         query = """
         select article, rule
         from gender_rule
@@ -753,7 +751,7 @@ def gender_rules():
         return rows
 
 
-@app.route('/api/wordlist/<int:wordlist_id>/metadata')
+@bp.route('/api/wordlist/<int:wordlist_id>/metadata')
 def api_get_wordlist_metadata(wordlist_id):
     try:
         result = get_wordlist_metadata(wordlist_id)
@@ -762,7 +760,7 @@ def api_get_wordlist_metadata(wordlist_id):
 
         jsonschema.validate(result, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
 
-        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
             validate_sqlcode(cursor, result['sqlcode'])
 
         return result
@@ -779,7 +777,7 @@ def get_wordlist_metadata(wordlist_id):
     """
     returns the metadata for a given wordlist:  name, sqlcode, citation, and id.
     """
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
         select
         id wordlist_id, name, citation, sqlcode
@@ -810,7 +808,7 @@ def validate_sqlcode(cursor, sqlcode):
         cursor.fetchone()
 
 
-@app.route('/api/wordlist/<int:wordlist_id>')
+@bp.route('/api/wordlist/<int:wordlist_id>')
 def api_get_wordlist(wordlist_id):
     try:
         result = get_wordlist(wordlist_id)
@@ -828,7 +826,7 @@ def api_get_wordlist(wordlist_id):
 
 
 def get_wordlist(wordlist_id):
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
         select
             id wordlist_id,
@@ -939,7 +937,7 @@ def add_words_to_list(cursor, wordlist_id, words):
         cursor.executemany(ins_sql, wuw_tuples)
 
 
-@app.route('/api/wordlist', methods=['POST'])
+@bp.route('/api/wordlist', methods=['POST'])
 def add_wordlist():
     try:
         payload = request.get_json()
@@ -968,7 +966,7 @@ def add_wordlist():
     if sqlcode and words:
         return "can't create list with sqlcode and words", 400
 
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         # this is well-behaved if citation and sqlcode are not given.
 
         try:
@@ -993,9 +991,9 @@ def add_wordlist():
             return "create list failed", 500
 
 
-@app.route('/api/wordlist/<int:wordlist_id>', methods=['DELETE'])
+@bp.route('/api/wordlist/<int:wordlist_id>', methods=['DELETE'])
 def delete_wordlist(wordlist_id):
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
             sql = "delete from wordlist where id = %s"
@@ -1008,10 +1006,10 @@ def delete_wordlist(wordlist_id):
             return "delete list failed", 500
 
 
-@app.route('/api/wordlist/<int:wordlist_id>/<int:word_id>', methods=['DELETE'])
+@bp.route('/api/wordlist/<int:wordlist_id>/<int:word_id>', methods=['DELETE'])
 def delete_from_wordlist_by_id(wordlist_id, word_id):
     # removes from known words only
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
             sql = "select sqlcode from wordlist where id = %s"
@@ -1033,10 +1031,10 @@ def delete_from_wordlist_by_id(wordlist_id, word_id):
             return "delete list failed", 500
 
 
-@app.route('/api/wordlist/<int:wordlist_id>/<string:word>', methods=['DELETE'])
+@bp.route('/api/wordlist/<int:wordlist_id>/<string:word>', methods=['DELETE'])
 def delete_from_wordlist_by_word(wordlist_id, word):
     # removes from unknown words only
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             word = word.strip()
             if word:
@@ -1060,7 +1058,7 @@ def delete_from_wordlist_by_word(wordlist_id, word):
             return "delete list failed", 500
 
 
-@app.route('/api/wordlist/<int:wordlist_id>', methods=['PUT'])
+@bp.route('/api/wordlist/<int:wordlist_id>', methods=['PUT'])
 def update_wordlist(wordlist_id):
     try:
         payload = request.get_json()
@@ -1107,7 +1105,7 @@ def update_wordlist(wordlist_id):
     if wordlist['list_type'] == 'standard' and sqlcode:
         return "can't add code to existing list", 400
 
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         # this is well-behaved if citation and sqlcode are not given.
 
         try:
@@ -1144,11 +1142,11 @@ def update_wordlist(wordlist_id):
             return "update list failed", 500
 
 
-@app.route('/api/wordlists', methods=['DELETE'])
+@bp.route('/api/wordlists', methods=['DELETE'])
 def delete_wordlists():
     doomed = request.form.getlist('deletelist')
     if len(doomed):
-        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
             format_list = ['%s'] * len(doomed)
             format_args = ', '.join(format_list)
             sql = "delete from wordlist where id in (%s)" % format_args
@@ -1159,7 +1157,7 @@ def delete_wordlists():
     return 'OK'
 
 
-@app.route('/api/wordlists', methods=['GET'])
+@bp.route('/api/wordlists', methods=['GET'])
 def get_wordlists():
     """
     request format is
@@ -1168,7 +1166,7 @@ def get_wordlists():
 
     """
 
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         wordlist_ids = request.args.get('wordlist_id')
         if wordlist_ids:
             wordlist_ids = wordlist_ids.split(',')
@@ -1232,7 +1230,7 @@ order by name
         return result
 
 
-@app.route('/api/wordlists', methods=['PUT'])
+@bp.route('/api/wordlists', methods=['PUT'])
 def refresh_wordlists():
     """
     this is used when a word in some wordlist's unknowns has been defined.  we are given the word
@@ -1252,7 +1250,7 @@ def refresh_wordlists():
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
 
@@ -1290,10 +1288,10 @@ def refresh_wordlists():
             return "refresh wordlists failed", 500
 
 
-@app.route('/api/wordlists/<int:word_id>')
+@bp.route('/api/wordlists/<int:word_id>')
 def get_wordlists_by_word_id(word_id):
     word_id = int(word_id)
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         # find standard lists that this word is in
         sql = """
         select
@@ -1335,8 +1333,8 @@ def get_wordlists_by_word_id(word_id):
         result = []
         if wordlist_ids:
             args = ','.join([str(x) for x in wordlist_ids])
-            url = url_for('get_wordlists', wordlist_id=args)
-            url = "%s%s" % (config.Config.DB_URL, url)
+            url = url_for('dlernen.get_wordlists', wordlist_id=args)
+            url = "%s%s" % (current_app.config['DB_URL'], url)
             r = requests.get(url)
 
             result = json.loads(r.text)
@@ -1347,7 +1345,7 @@ def get_wordlists_by_word_id(word_id):
         return result
 
 
-@app.route('/api/word/metadata')
+@bp.route('/api/word/metadata')
 def word_metadata():
     """
     get all of the attributes for all parts of speech.  if a word is given (not a word_id), then enrich
@@ -1362,7 +1360,7 @@ def word_metadata():
 
     word = request.args.get('word')
 
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
 with pos_info as
 (
@@ -1447,9 +1445,9 @@ def build_quiz_metadata(rows):
     return result
 
 
-@app.route('/api/quiz')
+@bp.route('/api/quiz')
 def get_all_quizzes():
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
         select distinct quiz_id, quizname, quiz_key, attrkey
         from quiz_v
@@ -1460,9 +1458,9 @@ def get_all_quizzes():
         return build_quiz_metadata(rows)
 
 
-@app.route('/api/quiz/<int:quiz_id>')
+@bp.route('/api/quiz/<int:quiz_id>')
 def get_quiz_by_id(quiz_id):
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
         select distinct quiz_id, quizname, quiz_key, attrkey
         from quiz_v
@@ -1477,9 +1475,9 @@ def get_quiz_by_id(quiz_id):
         return build_quiz_metadata(rows)[0]
 
 
-@app.route('/api/quiz/<string:quiz_key>')
+@bp.route('/api/quiz/<string:quiz_key>')
 def get_quiz_by_key(quiz_key):
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
         select distinct quiz_id, quizname, quiz_key, attrkey
         from quiz_v
@@ -1494,12 +1492,12 @@ def get_quiz_by_key(quiz_key):
         return build_quiz_metadata(rows)[0]
 
 
-@app.route('/api/pos')
+@bp.route('/api/pos')
 def get_pos():
     """
     fetch the part-of-speech info from the database and format it
     """
-    with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
         select p.name, a.attrkey, pf.sort_order
         from pos_form pf
@@ -1535,12 +1533,12 @@ def get_pos():
         return result
 
 
-@app.errorhandler(500)
+@bp.errorhandler(500)
 def server_error(e):
     return render_template('500.html'), 500
 
 
-@app.route('/')
+@bp.route('/')
 def home():
     return render_template('home.html')
 
@@ -1548,7 +1546,7 @@ def home():
 def get_lookup_render_template(word, **kwargs):
     return_to_wordlist_id = kwargs.get('return_to_wordlist_id')
     member_wordlists = kwargs.get('member_wordlists')
-    url = "%s/api/word/%s" % (config.Config.DB_URL, word)
+    url = "%s/api/word/%s" % (current_app.config['DB_URL'], word)
     results = None
     r = requests.get(url)
     if r.status_code == 404:
@@ -1562,7 +1560,7 @@ def get_lookup_render_template(word, **kwargs):
                            results=results)
 
 
-@app.route('/lookup/<string:word>', methods=['GET'])
+@bp.route('/lookup/<string:word>', methods=['GET'])
 def lookup_by_get(word):
     return_to_wordlist_id = request.args.get('return_to_wordlist_id')
     word_id = request.args.get('word_id')
@@ -1573,16 +1571,16 @@ def lookup_by_get(word):
                                       member_wordlists=member_wordlists)
 
 
-@app.route('/lookup', methods=['POST'])
+@bp.route('/lookup', methods=['POST'])
 def lookup_by_post():
     word = request.form.get('lookup')
     return_to_wordlist_id = request.form.get('return_to_wordlist_id')
     return get_lookup_render_template(word, return_to_wordlist_id=return_to_wordlist_id)
 
 
-@app.route('/wordlists')
+@bp.route('/wordlists')
 def wordlists():
-    url = "%s/api/wordlists" % config.Config.DB_URL
+    url = "%s/api/wordlists" % current_app.config['DB_URL']
     r = requests.get(url)
     if r:
         result = json.loads(r.text)
@@ -1591,18 +1589,18 @@ def wordlists():
     abort(r.status_code)
 
 
-@app.route('/healthcheck')
+@bp.route('/healthcheck')
 def dbcheck():
     try:
-        with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
             return 'OK', 200
     except Exception as e:
         return str(e), 500
 
 
-@app.route('/list_attributes/<int:wordlist_id>')
+@bp.route('/list_attributes/<int:wordlist_id>')
 def list_attributes(wordlist_id):
-    url = "%s/api/wordlist/%s/metadata" % (config.Config.DB_URL, wordlist_id)
+    url = "%s/api/wordlist/%s/metadata" % (current_app.config['DB_URL'], wordlist_id)
     r = requests.get(url)
     if r:
         result = r.json()
@@ -1617,10 +1615,10 @@ def list_attributes(wordlist_id):
     abort(r.status_code)
 
 
-@app.route('/wordlist/<int:wordlist_id>')
+@bp.route('/wordlist/<int:wordlist_id>')
 def wordlist(wordlist_id):
-    nchunks = request.args.get('nchunks', app.config['NCHUNKS'], type=int)
-    url = "%s/api/wordlist/%s" % (config.Config.DB_URL, wordlist_id)
+    nchunks = request.args.get('nchunks', current_app.config['NCHUNKS'], type=int)
+    url = "%s/api/wordlist/%s" % (current_app.config['DB_URL'], wordlist_id)
     r = requests.get(url)
     if r.status_code == 404:
         flash("wordlist %s not found" % wordlist_id)
@@ -1646,7 +1644,7 @@ def wordlist(wordlist_id):
                            unknown_words=unknown_words)
 
 
-@app.route('/addlist', methods=['POST'])
+@bp.route('/addlist', methods=['POST'])
 def addlist():
     # note that the values in the form have not been subject to json schema validation.  these are just
     # whatever bullshit was entered into the form.  so we have to fiddle with the values before stuffing
@@ -1672,7 +1670,7 @@ def addlist():
         'citation': citation
     }
 
-    url = "%s/api/wordlist" % config.Config.DB_URL
+    url = "%s/api/wordlist" % current_app.config['DB_URL']
     r = requests.post(url, json=payload)
     if r.status_code == 200:
         return redirect('/wordlists')
@@ -1680,10 +1678,10 @@ def addlist():
     raise Exception("something went wrong in /api/wordlist POST: %s" % r.text)
 
 
-@app.route('/deletelist', methods=['POST'])
+@bp.route('/deletelist', methods=['POST'])
 def deletelist():
     doomed = request.form.getlist('deletelist')
-    url = "%s/api/wordlists" % config.Config.DB_URL
+    url = "%s/api/wordlists" % current_app.config['DB_URL']
     payload = {
         'deletelist': doomed
     }
@@ -1694,7 +1692,7 @@ def deletelist():
     raise Exception("something went wrong in /api/wordlists: %s" % r.text)
 
 
-@app.route('/edit_list', methods=['POST'])
+@bp.route('/edit_list', methods=['POST'])
 def edit_list():
     # note that the values in the form have not been subject to json schema validation.  these are just
     # whatever bullshit was entered into the form (the list_attributes template).  so we have to
@@ -1735,24 +1733,24 @@ def edit_list():
         'citation': citation
     }
 
-    url = "%s/api/wordlist/%s" % (config.Config.DB_URL, wordlist_id)
+    url = "%s/api/wordlist/%s" % (current_app.config['DB_URL'], wordlist_id)
     r = requests.put(url, json=payload)
     if r.status_code == 200:
-        target = url_for('wordlist', wordlist_id=wordlist_id)
+        target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
         return redirect(target)
 
     raise Exception("something went wrong in /api/wordlist PUT: %s" % r.text)
 
 
 # TODO if this is for a POST request, why does it call requests.put()?
-@app.route('/add_to_list', methods=['POST'])
+@bp.route('/add_to_list', methods=['POST'])
 def add_to_list():
     word = request.form['word'].strip()
     wordlist_id = request.form['wordlist_id']
 
     # TODO - for now, we can only add a word to a wordlist, not a word_id.
     payload = None
-    url = "%s/api/word/%s" % (config.Config.DB_URL, word)
+    url = "%s/api/word/%s" % (current_app.config['DB_URL'], word)
     r = requests.get(url)
     if r.status_code == 404:
         payload = {
@@ -1770,56 +1768,56 @@ def add_to_list():
     if not payload:
         raise Exception("add_to_list could not make payload")
 
-    url = "%s/api/wordlist/%s" % (config.Config.DB_URL, wordlist_id)
+    url = "%s/api/wordlist/%s" % (current_app.config['DB_URL'], wordlist_id)
     r = requests.put(url, json=payload)
     if r.status_code != 200:
         raise Exception("well, shit")
 
-    target = url_for('wordlist', wordlist_id=wordlist_id)
+    target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
     return redirect(target)
 
 
-@app.route('/update_notes', methods=['POST'])
+@bp.route('/update_notes', methods=['POST'])
 def update_notes():
     payload = {
         'notes': request.form['notes']
     }
     wordlist_id = request.form['wordlist_id']
 
-    url = "%s/api/wordlist/%s" % (config.Config.DB_URL, wordlist_id)
+    url = "%s/api/wordlist/%s" % (current_app.config['DB_URL'], wordlist_id)
     r = requests.put(url, json=payload)
     if r.status_code == 200:
-        target = url_for('wordlist', wordlist_id=wordlist_id)
+        target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
         return redirect(target)
 
     raise Exception("something went wrong in /api/wordlist PUT: %s" % r.text)
 
 
-@app.route('/delete_from_list', methods=['POST'])
+@bp.route('/delete_from_list', methods=['POST'])
 def delete_from_list():
     wordlist_id = request.form['wordlist_id']
     known_deleting = request.form.getlist('known_wordlist')
     unknown_deleting = request.form.getlist('unknown_wordlist')
 
     for word_id in known_deleting:
-        url = "%s/api/wordlist/%s/%s" % (config.Config.DB_URL, wordlist_id, int(word_id))
+        url = "%s/api/wordlist/%s/%s" % (current_app.config['DB_URL'], wordlist_id, int(word_id))
         r = requests.delete(url)
 
     for word in unknown_deleting:
-        url = "%s/api/wordlist/%s/%s" % (config.Config.DB_URL, wordlist_id, word)
+        url = "%s/api/wordlist/%s/%s" % (current_app.config['DB_URL'], wordlist_id, word)
         r = requests.delete(url)
 
     # TODO - change API to allow batch delete.  we could do this with a single request
 
-    target = url_for('wordlist', wordlist_id=wordlist_id)
+    target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
     return redirect(target)
 
 
-@app.route('/word/<string:word>')
+@bp.route('/word/<string:word>')
 def edit_word_form(word):
     wordlist_id = request.args.get('wordlist_id')
 
-    url = "%s/api/word/metadata?word=%s" % (config.Config.BASE_URL, word)
+    url = "%s/api/word/metadata?word=%s" % (current_app.config['BASE_URL'], word)
     r = requests.get(url)
     if r:
         pos_infos = r.json()
@@ -1832,7 +1830,7 @@ def edit_word_form(word):
     abort(r.status_code)
 
 
-@app.route('/update_dict', methods=['POST'])
+@bp.route('/update_dict', methods=['POST'])
 def update_dict():
     tag = request.form.get('tag')
     if not tag:
@@ -1840,7 +1838,7 @@ def update_dict():
         wordlist_id = request.form.get('wordlist_id')
         if word is not None:
             flash("Select a Part of Speech")
-            return redirect(url_for('edit_word_form', word=word, wordlist_id=wordlist_id))
+            return redirect(url_for('dlernen.edit_word_form', word=word, wordlist_id=wordlist_id))
 
         raise Exception("select a part of speech")
 
@@ -1891,7 +1889,7 @@ def update_dict():
                     }
                 )
 
-        url = "%s/api/word" % config.Config.DB_URL
+        url = "%s/api/word" % current_app.config['DB_URL']
         r = requests.post(url, json=payload)
         if r.status_code != 200:
             raise Exception("failed to insert word '%s'" % word)
@@ -1904,17 +1902,17 @@ def update_dict():
             'word': word,
             'word_id': obj['word_id']
         }
-        url = "%s/api/wordlists" % config.Config.DB_URL
+        url = "%s/api/wordlists" % current_app.config['DB_URL']
         r = requests.put(url, json=refresh_payload)
         if r.status_code != 200:
             raise Exception("failed to refresh word lists")
 
         wordlist_id = request.form.get('wordlist_id')
         if wordlist_id:
-            target = url_for('wordlist', wordlist_id=wordlist_id)
+            target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
         else:
             # if we didn't add a word to any list, return to the editing form for this word.
-            target = url_for('edit_word_form', word=word)
+            target = url_for('dlernen.edit_word_form', word=word)
 
         return redirect(target)
 
@@ -1938,7 +1936,6 @@ def update_dict():
     if word:
         payload['word'] = word.strip()
 
-    # pprint(attrs_from_form)
     for k, v in attrs_from_form.items():
         if 'attrvalue' not in v and 'attrvalue_id' in v:
             payload["attributes_deleting"].append(int(v['attrvalue_id']))
@@ -1952,14 +1949,14 @@ def update_dict():
         elif v:
             payload['attributes_updating'].append(v)
 
-    url = "%s/api/word/%s" % (config.Config.DB_URL, word_id)
+    url = "%s/api/word/%s" % (current_app.config['DB_URL'], word_id)
     r = requests.put(url, json=payload)
 
     wordlist_id = request.form.get('wordlist_id')
     if wordlist_id:
-        target = url_for('wordlist', wordlist_id=wordlist_id)
+        target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
     else:
         # if we didn't add a word to any list, return to the editing form for this word.
-        target = url_for('edit_word_form', word=word)
+        target = url_for('dlernen.edit_word_form', word=word)
 
     return redirect(target)
