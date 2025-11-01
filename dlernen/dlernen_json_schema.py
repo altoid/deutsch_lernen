@@ -374,8 +374,16 @@ WORDLISTS_RESPONSE_SCHEMA = {
     }
 }
 
-# TODO - revise this to have 'words_added', 'words_removed' and wordids_removed keywords, to replace 'words' keyword.
-# FIXME this schema is used for both creating and updating a word list.
+# wordlist metadata is all the info about a list except its contents.  metadata fields are:
+#
+#     - name
+#     - id
+#     - citation
+#     - sqlcode
+#     - source_is_url (derived value)
+#     - type (empty, standard, smart.  derived value, not stored in database)
+#
+
 WORDLIST_METADATA_PAYLOAD_SCHEMA = {
     # can be used for add or update of a list.
     "$id": "https://deutsch-lernen.doug/schemas/addwordlist_payload",
@@ -399,19 +407,9 @@ WORDLIST_METADATA_PAYLOAD_SCHEMA = {
             "type": ["string", "null"],
             "pattern": STRING_PATTERN
         },
-        "notes": {
-            "type": ["string", 'null']
-        },
         "sqlcode": {
             "type": ["string", "null"],
             "pattern": MULTILINE_STRING_PATTERN
-        },
-        "words": {
-            "type": "array",
-            "items": {
-                "type": "string",
-                "minLength": 1
-            }
         }
     }
 }
@@ -419,15 +417,23 @@ WORDLIST_METADATA_PAYLOAD_SCHEMA = {
 WORDLIST_METADATA_RESPONSE_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
-    "description": "wordlist and basic properties, optionally with word_ids",
+    "description": """
+    wordlist metadata is all the info about a list except its contents.
+    """,
     "type": "object",
     "required": [
         "wordlist_id",
         "name",
         "sqlcode",
-        "citation"
+        "citation",
+        "list_type",
+        "source_is_url"
     ],
     "properties": {
+        "wordlist_id": {
+            "type": "integer",
+            "minimum": 1
+        },
         "name": {
             "type": "string",
             "pattern": NAME_PATTERN
@@ -440,9 +446,16 @@ WORDLIST_METADATA_RESPONSE_SCHEMA = {
             "type": ["string", "null"],
             "pattern": STRING_PATTERN
         },
-        "wordlist_id": {
-            "type": "integer",
-            "minimum": 1
+        "list_type": {
+            "type": "string",
+            "enum": [
+                "smart",
+                "standard",
+                "empty"  # no code or words
+            ]
+        },
+        "source_is_url": {
+            "type": "boolean"
         }
     }
 }

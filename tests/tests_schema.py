@@ -2,18 +2,6 @@ import unittest
 import jsonschema
 from dlernen import dlernen_json_schema
 
-SAMPLE_WORDLIST_PAYLOAD = {
-    "name": "saetuasasue",
-    "citationsource": "anteohusntaeo",
-    "sqlcode": "n;sercisr;cih",
-    "notes": "aoeuaoeu",
-    "words": [
-        "bla",
-        "bazz",
-        "whee"
-    ]
-}
-
 SAMPLE_ADDWORD_PAYLOAD = {
     "word": "Tag",  # required, nonempty
     "pos_name": "noun",  # name not id, makes existence check easier
@@ -149,13 +137,6 @@ SAMPLE_POS_STRUCTURE_RESPONSE = [
     }
 ]
 
-SAMPLE_WORDLIST_METADATA_RESULT = {
-    "sqlcode": "\r\nselect distinct word_id\r\nfrom mashup_v\r\nwhere pos_name = 'verb'\r\nand word like '%gehe%'",
-    "wordlist_id": 126,
-    "name": "verbs like *geh*",
-    "citation": None
-}
-
 SAMPLE_WORDLISTS_RESULT = [
     {
         "name": "sample_word_list",
@@ -216,7 +197,7 @@ SAMPLE_WORDLIST_RESPONSE = {
 }
 
 
-class CheckSchemaTests(unittest.TestCase):
+class CheckDocumentDefinitions(unittest.TestCase):
     """
     run check_schema on all the document types.
     """
@@ -243,13 +224,6 @@ class CheckSchemaTests(unittest.TestCase):
 
 
 class SchemaTests(unittest.TestCase):
-    """
-    checks on json schema objects are all done in one class here.
-
-    we do this because we don't want to do this in test classes that have setup and teardown methods
-    which depend on these schema definitions being correct.
-    """
-
     def test_pos_structure_response_sample_1(self):
         jsonschema.validate(SAMPLE_POS_STRUCTURE_RESPONSE, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
 
@@ -284,22 +258,6 @@ class SchemaTests(unittest.TestCase):
         ]
 
         jsonschema.validate(doc, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
-
-    def wordlist_metadata_payload_sample(self):
-        jsonschema.validate(SAMPLE_WORDLIST_PAYLOAD, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
-
-    def test_wordlist_metadata_payload_sample(self):
-        jsonschema.validate(SAMPLE_WORDLIST_PAYLOAD, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
-
-    def test_wordlist_metadata_payload_malformed_name(self):
-        malformed_name_payload = {
-            "name": "     "
-        }
-        with self.assertRaises(jsonschema.exceptions.ValidationError):
-            jsonschema.validate(malformed_name_payload, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
-
-    def test_wordlist_empty_payload(self):
-        jsonschema.validate({}, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
 
     def test_word_sample(self):
         jsonschema.validate(SAMPLE_WORDS_RESULT, dlernen_json_schema.WORDS_SCHEMA)
@@ -355,14 +313,8 @@ class SchemaTests(unittest.TestCase):
     def test_add_attributes_payload_sample(self):
         jsonschema.validate(SAMPLE_ADDATTRIBUTES_PAYLOAD, dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)
 
-    def test_list_attribute_sample(self):
-        jsonschema.validate(SAMPLE_WORDLIST_METADATA_RESULT, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
-
     def test_quiz_data_sample(self):
         jsonschema.validate(SAMPLE_QUIZ_DATA_RESULT, dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA)
-
-    def test_list_attribute_schema(self):
-        jsonschema.Draft202012Validator.check_schema(dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
 
     def test_wordlists_sample(self):
         jsonschema.validate(SAMPLE_WORDLISTS_RESULT, dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
@@ -371,3 +323,197 @@ class SchemaTests(unittest.TestCase):
         jsonschema.validate(SAMPLE_WORDLIST_RESPONSE, dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA)
 
 
+class WordlistMetadataPayload(unittest.TestCase):
+    # note:  these tests don't validate sqlcode.  that happens in the API tests.
+
+    valid_payloads = [
+        {
+            "name": "saetuasasue",
+            "citation": "anteohusntaeo",
+            "sqlcode": "n;sercisr;cih"
+        },
+        {
+            "name": "saetuasasue",
+            "citation": None,
+            "sqlcode": None
+        },
+        {
+            "name": "x"
+        },
+        {
+            "citation": "    xxx    "
+        },
+        {
+            "sqlcode": "  line1\r\nline2\r\nline3  "
+        },
+        {
+            # empty payloads are valid
+        }
+    ]
+
+    invalid_payloads = [
+        {
+            "name": "  leading and trailing whitespace not allowed  "
+        },
+        {
+            "name": None
+        },
+        {
+            "sqlcode": ""
+        },
+        {
+            "citation": ""
+        }
+    ]
+
+    def test_valid_payloads(self):
+        for jdoc in self.valid_payloads:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
+
+    def test_invalid_payloads(self):
+        for jdoc in self.invalid_payloads:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
+
+
+class WordlistMetadataResponse(unittest.TestCase):
+    valid_responses = [
+        {
+            "wordlist_id": 1234,
+            "name": "fester",
+            "sqlcode": "not really sql but what the hell",
+            "citation": "  speeding  ",
+            "list_type": "empty",
+            "source_is_url": True
+        },
+        {
+            "wordlist_id": 1234,
+            "name": "fester",
+            "sqlcode": None,
+            "citation": None,
+            "list_type": "empty",
+            "source_is_url": True
+        }
+    ]
+
+    invalid_responses = [
+        # any required fields not present should cause validation error
+        {
+            # "wordlist_id": 1234,
+            "name": "fester",
+            "sqlcode": "not really sql but what the hell",
+            "citation": "speeding",
+            "list_type": "empty",
+            "source_is_url": True
+        },
+        {
+            "wordlist_id": 1234,
+            # "name": "fester",
+            "sqlcode": "not really sql but what the hell",
+            "citation": "speeding",
+            "list_type": "empty",
+            "source_is_url": True
+        },
+        {
+            "wordlist_id": 1234,
+            "name": "fester",
+            # "sqlcode": "not really sql but what the hell",
+            "citation": "speeding",
+            "list_type": "empty",
+            "source_is_url": True
+        },
+        {
+            "wordlist_id": 1234,
+            "name": "fester",
+            "sqlcode": "not really sql but what the hell",
+            # "citation": "speeding",
+            "list_type": "empty",
+            "source_is_url": True
+        },
+        {
+            "wordlist_id": 1234,
+            "name": "fester",
+            "sqlcode": "not really sql but what the hell",
+            "citation": "speeding",
+            # "list_type": "empty",
+            "source_is_url": True
+        },
+        {
+            "wordlist_id": 1234,
+            "name": "fester",
+            "sqlcode": "not really sql but what the hell",
+            "citation": "speeding",
+            "list_type": "empty"
+            # "source_is_url": True
+        },
+        {
+            # bad list type
+            "wordlist_id": 1234,
+            "name": "fester",
+            "sqlcode": "not really sql but what the hell",
+            "citation": "  speeding  ",
+            "list_type": "shopping",
+            "source_is_url": True
+        },
+        {
+            # bad name
+            "wordlist_id": 1234,
+            "name": "   fester",
+            "sqlcode": "not really sql but what the hell",
+            "citation": "speeding",
+            "list_type": "empty",
+            "source_is_url": True
+        },
+        {
+            # another bad name
+            "wordlist_id": 1234,
+            "name": "",
+            "sqlcode": "not really sql but what the hell",
+            "citation": "speeding",
+            "list_type": "empty",
+            "source_is_url": True
+        },
+        {
+            # bad sqlcode
+            "wordlist_id": 1234,
+            "name": "aoeu",
+            "sqlcode": "",
+            "citation": "speeding",
+            "list_type": "empty",
+            "source_is_url": True
+        },
+        {
+            # bad citation
+            "wordlist_id": 1234,
+            "name": "aoeu",
+            "sqlcode": "not really sql but what the hell",
+            "citation": "",
+            "list_type": "empty",
+            "source_is_url": True
+        },
+        {
+            # bad id
+            "wordlist_id": "1234",
+            "name": "aoeu",
+            "sqlcode": "not really sql but what the hell",
+            "citation": "aoeuoea",
+            "list_type": "empty",
+            "source_is_url": True
+        },
+        {
+
+        }
+    ]
+
+    def test_valid_payloads(self):
+        for jdoc in self.valid_responses:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
+
+    def test_invalid_payloads(self):
+        for jdoc in self.invalid_responses:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
