@@ -225,6 +225,7 @@ WORD_METADATA_RESPONSE_SCHEMA = {
     }
 }
 
+# TODO revisit this.  keys that are hardcoded values found in the database is a bad idea.
 QUIZ_DATA_RESPONSE_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/quiz_data",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
@@ -258,7 +259,6 @@ QUIZ_DATA_RESPONSE_SCHEMA = {
             "attributes": {
                 "type": "object",
                 "properties": {
-                    # TODO revisit this.  keys that are hardcoded values found in the database is a bad idea.
                     "article": {
                         "$ref": "#/$defs/quiz_attribute"
                     },
@@ -375,6 +375,7 @@ WORDLISTS_RESPONSE_SCHEMA = {
 }
 
 # TODO - revise this to have 'words_added', 'words_removed' and wordids_removed keywords, to replace 'words' keyword.
+# FIXME this schema is used for both creating and updating a word list.
 WORDLIST_METADATA_PAYLOAD_SCHEMA = {
     # can be used for add or update of a list.
     "$id": "https://deutsch-lernen.doug/schemas/addwordlist_payload",
@@ -387,7 +388,6 @@ WORDLIST_METADATA_PAYLOAD_SCHEMA = {
         # for creating a word list a name is of course required, but we will check that
         # in code, not here.
         #
-        # FIXME this schema is used for both creating and updating a word list.
         # we permit payloads with no name so that we can update a given list without having to specify a name.
     ],
     "properties": {
@@ -462,6 +462,16 @@ WORDLIST_RESPONSE_SCHEMA = {
     by the sql code.  which is the point of a smart list.
     """,
     "type": "object",
+    "required": [
+        "name",
+        "wordlist_id",
+        "list_type",
+        "citation",
+        "known_words",
+        "unknown_words",
+        "notes",
+        "source_is_url"
+    ],
     "properties": {
         "name": {
             "type": "string",
@@ -476,7 +486,7 @@ WORDLIST_RESPONSE_SCHEMA = {
             "enum": [
                 "smart",
                 "standard",
-                "empty" # no code or words
+                "empty"  # no code or words
             ]
         },
         "citation": {
@@ -521,17 +531,7 @@ WORDLIST_RESPONSE_SCHEMA = {
                 "minLength": 1
             }
         }
-    },
-    "required": [
-        "name",
-        "wordlist_id",
-        "list_type",
-        "citation",
-        "known_words",
-        "unknown_words",
-        "notes",
-        "source_is_url"
-    ]
+    }
 }
 
 WORDS_SCHEMA = {
