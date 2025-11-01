@@ -1,5 +1,5 @@
 from flask import Flask
-import config
+from dlernen import config
 
 
 def create_app():

@@ -805,6 +805,8 @@ def validate_sqlcode(cursor, sqlcode):
         sql = SQL_FOR_WORDLIST_FROM_SQLCODE % x
 
         cursor.execute(sql)
+
+        # if we don't do a fetch we will get an incomplete read.
         cursor.fetchone()
 
 
