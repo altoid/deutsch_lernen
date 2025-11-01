@@ -12,10 +12,9 @@ import jsonschema
 import sys
 import os
 
-app = Flask(__name__)
-app.secret_key = "ap.i*&(^ap1."
-app.config.from_object(config.Config)
+from dlernen import create_app
 
+app = create_app()
 
 SQL_FOR_WORDLIST_FROM_SQLCODE = """
     with matching as ( %s )

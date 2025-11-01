@@ -117,3 +117,8 @@ TODO - need a way to add a word from scratch, either an app or through UI.  curr
 TODO - really need a better way to deal with reflexive verbs
 
 FIXME - smart wordlists aren't recursive - smart lists of other smart lists doesn't work
+
+TODO - validate sqlcode fields, both when reading and writing
+
+FIXME - strictly decouple updating wordlist contents and metadata.  this should never be done
+    in a single request.  will require new doc types and urls, possibly deprecating existing ones.
