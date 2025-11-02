@@ -148,6 +148,43 @@ class APIWordListMetadataUpdate(unittest.TestCase):
         self.assertEqual(sqlcode, obj['sqlcode'])
         self.assertEqual('smart', obj['list_type'])
 
+    # update the sqlcode to different sqlcode.
+    def test_1_1(self):
+        sqlcode = 'select id word_id from word where id = 1234'
+
+        payload = {
+            "sqlcode": sqlcode
+        }
+
+        r = requests.put("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, self.wordlist_id), json=payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+
+        self.assertEqual(sqlcode, obj['sqlcode'])
+        self.assertEqual('smart', obj['list_type'])
+
+        sqlcode = 'select id word_id from word where id = 666'
+
+        payload = {
+            "sqlcode": sqlcode
+        }
+
+        r = requests.put("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, self.wordlist_id), json=payload)
+        self.assertEqual(r.status_code, 200)
+        obj = r.json()
+
+        self.assertEqual(sqlcode, obj['sqlcode'])
+        self.assertEqual('smart', obj['list_type'])
+
+    # add a new list with the same name as in the setup.  should not succeed.
+    def test_1_2(self):
+        payload = {
+            'name': self.list_name
+        }
+
+        r = requests.post("%s/api/wordlist/metadata" % config.Config.BASE_URL, json=payload)
+        self.assertNotEqual(r.status_code, 200)
+
     # update all the fields and set citation and sqlcode to nontrivial values, then set citation and sqlcode back to
     # None.
     def test_2(self):

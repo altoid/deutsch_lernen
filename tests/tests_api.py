@@ -971,10 +971,13 @@ class APIWordlistActions(unittest.TestCase):
         add_payload = {
             'name': self.list_name
         }
-        r = requests.post("%s/api/wordlist" % config.Config.BASE_URL, json=add_payload)
+        r = requests.post("%s/api/wordlist/metadata" % config.Config.BASE_URL, json=add_payload)
         self.assertEqual(200, r.status_code)
         obj = r.json()
         self.wordlist_id = obj['wordlist_id']
+
+    def tearDown(self):
+        r = requests.delete("%s/api/wordlist/%s" % (config.Config.DB_URL, self.wordlist_id))
 
     def test_add_double_word(self):
         # add the same word twice to the dictionary
@@ -1017,7 +1020,7 @@ class APIWordlistActions(unittest.TestCase):
             ]
         }
 
-        r = requests.put("%s/api/wordlist/%s" % (config.Config.BASE_URL, self.wordlist_id), json=update_payload)
+        r = requests.put("%s/api/wordlist/%s/contents" % (config.Config.BASE_URL, self.wordlist_id), json=update_payload)
         self.assertEqual(r.status_code, 200)
         obj = r.json()
 
@@ -1025,10 +1028,6 @@ class APIWordlistActions(unittest.TestCase):
 
         r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, word_id_1))
         r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, word_id_2))
-
-    def tearDown(self):
-        r = requests.delete("%s/api/wordlist/%s" % (config.Config.DB_URL, self.wordlist_id))
-        self.assertEqual(200, r.status_code)
 
 
 if __name__ == '__main__':

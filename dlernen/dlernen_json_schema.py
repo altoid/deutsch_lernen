@@ -485,7 +485,7 @@ WORDLIST_RESPONSE_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
     "description": """
-    used for the response to GET /api/wordlist/<int:wordlist_id>, which is implemented in get_wordlist().
+    used for the response to GET /api/wordlist/<int:wordlist_id>, which is implemented in __get_wordlist().
     fully specifies a single word list.  defines the json documents that are returned when we do a get 
     request on a wordlist_id.  we get everything:
     - word list metadata

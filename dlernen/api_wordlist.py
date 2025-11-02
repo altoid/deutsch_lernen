@@ -255,7 +255,7 @@ def add_words_to_list(cursor, wordlist_id, words):
         cursor.executemany(ins_sql, wuw_tuples)
 
 
-def get_wordlist(wordlist_id):
+def __get_wordlist(wordlist_id):
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
         select
@@ -336,15 +336,15 @@ def get_wordlist(wordlist_id):
 
 
 @bp.route('/api/wordlist/<int:wordlist_id>')
-def api_get_wordlist(wordlist_id):
+def get_wordlist(wordlist_id):
     try:
-        result = get_wordlist(wordlist_id)
+        result = __get_wordlist(wordlist_id)
         if result:
             return result
 
         return "wordlist %s not found" % wordlist_id, 404
     except mysql.connector.errors.ProgrammingError as f:
-        # get_wordlist validates sqlcode that is read from the database.  if that fails,
+        # this will happen if the sqlcode is invalid.
         # treat it as unprocessable content.
         return str(f), 422
     except jsonschema.ValidationError as f:
@@ -352,58 +352,63 @@ def api_get_wordlist(wordlist_id):
         return str(f), 500
 
 
-@bp.route('/api/wordlist', methods=['POST'])
-def add_wordlist():
+@bp.route('/api/wordlist/<int:wordlist_id>/contents', methods=['PUT'])
+def update_wordlist_contents(wordlist_id):
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
+        jsonschema.validate(payload, dlernen_json_schema.WORDLIST_CONTENTS_PAYLOAD_SCHEMA)
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 
-    name = payload.get('name')
-    citation = payload.get('citation')
-    sqlcode = payload.get('sqlcode')
-    notes = payload.get('notes')
-    words = payload.get('words')
+    update_args = {}
 
-    if words is not None:
-        words = [w.strip() for w in words]
-        words = set(filter(lambda x: bool(x), words))
+    if 'notes' in payload:
+        notes = payload.get('notes')
+        update_args['notes'] = notes
 
-    # no need to strip the name; no leading/trailing whitespace is enforced by schema.  but name is optional
-    # in the schema but required here.
-    if not name:
-        return "wordlists must have a name", 400
+    words = None
+    if 'words' in payload:
+        words = payload.get('words')
+        if words is not None:
+            words = set([w.strip() for w in words])
 
-    # name is required, but the schema permits no name
-    # the json schema enforces that the name has no leading/trailing whitespace, so no need to check for that here.
-
-    if sqlcode and words:
-        return "can't create list with sqlcode and words", 400
+    wordlist = __get_wordlist(wordlist_id)
+    if wordlist['list_type'] == 'smart' and words:
+        return "can't add words to smart list", 400
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        # this is well-behaved if citation and sqlcode are not given.
-
         try:
             cursor.execute('start transaction')
-            sql = "insert into wordlist (`name`, `citation`, `sqlcode`, `notes`) values (%s, %s, %s, %s)"
-            cursor.execute(sql, (name, citation, sqlcode, notes))
-            cursor.execute("select last_insert_id() wordlist_id")
-            result = cursor.fetchone()
-            wordlist_id = result['wordlist_id']
-            # figure out which words are known and not known
+            if update_args:
+                update_args['wordlist_id'] = wordlist_id
+
+                keez = ['notes']
+                clauses = []
+                for k in keez:
+                    if k in update_args:
+                        clauses.append('`%(key)s` = %%(%(key)s)s' % {'key': k})
+
+                sql = """
+                update wordlist
+                set %(clauses)s
+                where id = %%(wordlist_id)s
+                """ % {'clauses': ', '.join(clauses)}
+
+                cursor.execute(sql, update_args)
+
             if words:
                 add_words_to_list(cursor, wordlist_id, words)
 
             cursor.execute('commit')
-            return get_wordlist(wordlist_id)
+
+            return __get_wordlist(wordlist_id)
         except Exception as e:
             pprint(e)
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             print(exc_type, fname, exc_tb.tb_lineno)
             cursor.execute('rollback')
-            return "create list failed", 500
+            return "update list failed", 500
 
 
 @bp.route('/api/wordlist/<int:wordlist_id>', methods=['DELETE'])
@@ -471,90 +476,6 @@ def delete_from_wordlist_by_word(wordlist_id, word):
             print(exc_type, fname, exc_tb.tb_lineno)
             cursor.execute('rollback')
             return "delete list failed", 500
-
-
-@bp.route('/api/wordlist/<int:wordlist_id>', methods=['PUT'])
-def update_wordlist(wordlist_id):
-    try:
-        payload = request.get_json()
-        jsonschema.validate(payload, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
-    except jsonschema.ValidationError as e:
-        return "bad payload: %s" % e.message, 400
-
-    # don't update anything that isn't in the payload.
-    update_args = {}
-    sqlcode = words = None
-    if 'name' in payload:
-        name = payload.get('name')
-        update_args['name'] = name
-
-    if 'citation' in payload:
-        citation = payload.get('citation')
-        update_args['citation'] = citation
-
-    if 'sqlcode' in payload:
-        sqlcode = payload.get('sqlcode')
-        update_args['sqlcode'] = sqlcode
-
-    if 'notes' in payload:
-        notes = payload.get('notes')
-        update_args['notes'] = notes
-
-    if 'words' in payload:
-        words = payload.get('words')
-        if words is not None:
-            words = [w.strip() for w in words]
-            # get the words that are not empty strings or None
-            words = set(filter(lambda x: bool(x), words))
-
-    if sqlcode and words:
-        return "can't modify list with sqlcode and words", 400
-
-    wordlist = get_wordlist(wordlist_id)
-    if wordlist['list_type'] == 'smart' and words:
-        # if we are trying to add words to a smart list, and we are not
-        # removing the sql code, do not proceed.
-        if 'sqlcode' not in update_args or update_args['sqlcode'] is not None:
-            return "can't add words to smart list", 400
-
-    if wordlist['list_type'] == 'standard' and sqlcode:
-        return "can't add code to existing list", 400
-
-    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        # this is well-behaved if citation and sqlcode are not given.
-
-        try:
-            cursor.execute('start transaction')
-            if update_args:
-                update_args['wordlist_id'] = wordlist_id
-
-                keez = ['name', 'notes', 'citation', 'sqlcode']
-                clauses = []
-                for k in keez:
-                    if k in update_args:
-                        clauses.append('`%(key)s` = %%(%(key)s)s' % {'key': k})
-
-                sql = """
-                update wordlist
-                set %(clauses)s
-                where id = %%(wordlist_id)s
-                """ % {'clauses': ', '.join(clauses)}
-
-                cursor.execute(sql, update_args)
-
-            if words:
-                add_words_to_list(cursor, wordlist_id, words)
-
-            cursor.execute('commit')
-
-            return get_wordlist(wordlist_id)
-        except Exception as e:
-            pprint(e)
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
-            cursor.execute('rollback')
-            return "update list failed", 500
 
 
 @bp.route('/api/wordlists', methods=['DELETE'])
