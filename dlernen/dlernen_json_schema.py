@@ -380,7 +380,6 @@ WORDLISTS_RESPONSE_SCHEMA = {
 #     - id
 #     - citation
 #     - sqlcode
-#     - source_is_url (derived value)
 #     - type (empty, standard, smart.  derived value, not stored in database)
 #
 

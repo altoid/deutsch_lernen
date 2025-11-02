@@ -47,9 +47,9 @@ def validate_sqlcode(cursor, sqlcode):
         cursor.fetchall()
 
 
-def get_wordlist_metadata(wordlist_id):
+def __get_wordlist_metadata(wordlist_id):
     """
-    returns the metadata for a given wordlist:  name, sqlcode, citation, and id.
+    returns the metadata for a given wordlist:  name, sqlcode, citation, list_type, and id.
     """
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
@@ -59,34 +59,170 @@ def get_wordlist_metadata(wordlist_id):
         where id = %s
         """
         cursor.execute(sql, (wordlist_id,))
-        wl_row = cursor.fetchone()
+        wl_metadata = cursor.fetchone()
+
+        # see if there are any known or unknown words in this wordlist
+        sql = """
+        select count(*) nwords from (
+            select wordlist_id from wordlist_known_word where wordlist_id = %(wordlist_id)s  
+            union all 
+            select wordlist_id from wordlist_unknown_word where wordlist_id = %(wordlist_id)s) a
+        """ % {
+            "wordlist_id": wordlist_id
+        }
+        cursor.execute(sql)
+        row = cursor.fetchone()
+        nwords = row['nwords']
 
         # don't validate anything.  callers and wrapper functions should do that.
+        # sqlcode may not be valid, but we don't validate on read, so it's out of our hands here.
+        if wl_metadata:
+            if wl_metadata['sqlcode']:
+                wl_metadata['list_type'] = 'smart'
+            elif nwords > 0:
+                wl_metadata['list_type'] = 'standard'
+            else:
+                wl_metadata['list_type'] = 'empty'
+
+            jsonschema.validate(wl_metadata, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
 
         # could be None
-        return wl_row
+        return wl_metadata
 
 
 @bp.route('/api/wordlist/<int:wordlist_id>/metadata')
-def api_get_wordlist_metadata(wordlist_id):
+def get_wordlist_metadata(wordlist_id):
     try:
-        result = get_wordlist_metadata(wordlist_id)
+        result = __get_wordlist_metadata(wordlist_id)
         if not result:
             return "wordlist %s not found" % wordlist_id, 404
 
-        jsonschema.validate(result, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
-
-        with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            validate_sqlcode(cursor, result['sqlcode'])
+        # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
 
         return result
-    except mysql.connector.errors.ProgrammingError as f:
-        # if validation of sqlcode that is read from the database fails,
-        # treat it as unprocessable content.
-        return str(f), 422
     except jsonschema.ValidationError as f:
         # responses that don't validate are a server implementation problem.
         return str(f), 500
+
+
+@bp.route('/api/wordlist/metadata', methods=['POST'])
+def create_wordlist_metadata():
+    try:
+        payload = request.get_json()
+        jsonschema.validate(payload, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
+    except jsonschema.ValidationError as e:
+        return "bad payload: %s" % e.message, 400
+
+    name = payload.get('name')
+    citation = payload.get('citation')
+    sqlcode = payload.get('sqlcode')
+
+    # no need to strip the name; no leading/trailing whitespace is enforced by schema.  however, name is optional
+    # in the schema but required here.
+    if not name:
+        return "wordlists must have a name", 400
+
+    # name is required, but the schema permits no name
+    # the json schema enforces that the name has no leading/trailing whitespace, so no need to check for that here.
+
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        # this is well-behaved if citation and sqlcode are not given.
+
+        try:
+            validate_sqlcode(cursor, sqlcode)
+            cursor.execute('start transaction')
+            sql = "insert into wordlist (`name`, `citation`, `sqlcode`) values (%s, %s, %s)"
+            cursor.execute(sql, (name, citation, sqlcode))
+            cursor.execute("select last_insert_id() wordlist_id")
+            result = cursor.fetchone()
+            wordlist_id = result['wordlist_id']
+            cursor.execute('commit')
+            result = __get_wordlist_metadata(wordlist_id)
+
+            # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
+
+            return result
+
+        except mysql.connector.errors.ProgrammingError as f:
+            # if validation of sqlcode that is read from the database fails,
+            # treat it as unprocessable content.
+            return str(f), 422
+        except Exception as e:
+            pprint(e)
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            cursor.execute('rollback')
+            return "create list failed", 500
+
+
+@bp.route('/api/wordlist/<int:wordlist_id>/metadata', methods=['PUT'])
+def update_wordlist_metadata(wordlist_id):
+    try:
+        payload = request.get_json()
+        jsonschema.validate(payload, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
+    except jsonschema.ValidationError as e:
+        return "bad payload: %s" % e.message, 400
+
+    # don't update anything that isn't in the payload.
+    update_args = {}
+
+    if 'name' in payload:
+        update_args['name'] = payload.get('name')
+
+    if 'citation' in payload:
+        update_args['citation'] = payload.get('citation')
+
+    if 'sqlcode' in payload:
+        update_args['sqlcode'] = payload.get('sqlcode')
+
+    if update_args:
+        try:
+            wordlist_metadata = __get_wordlist_metadata(wordlist_id)
+
+            with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+                # this is well-behaved if citation and sqlcode are not given.
+
+                if 'sqlcode' in update_args:
+                    if wordlist_metadata['list_type'] == 'standard':
+                        return "can't add sqlcode to a nonempty list", 400
+
+                    validate_sqlcode(cursor, update_args['sqlcode'])
+
+                cursor.execute('start transaction')
+                update_args['wordlist_id'] = wordlist_id
+
+                keez = ['name', 'citation', 'sqlcode']
+                clauses = []
+                for k in keez:
+                    if k in update_args:
+                        clauses.append('`%(key)s` = %%(%(key)s)s' % {'key': k})
+
+                sql = """
+                update wordlist
+                set %(clauses)s
+                where id = %%(wordlist_id)s
+                """ % {'clauses': ', '.join(clauses)}
+
+                cursor.execute(sql, update_args)
+                cursor.execute('commit')
+
+        except mysql.connector.errors.ProgrammingError as e:
+            # this will happen if validate_sqlcode throws exception
+            return str(e), 422
+        except Exception as e:
+            pprint(e)
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            cursor.execute('rollback')
+            return "update list failed", 500
+
+    # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
+    return __get_wordlist_metadata(wordlist_id)
+
+
+
 
 
 def add_words_to_list(cursor, wordlist_id, words):
