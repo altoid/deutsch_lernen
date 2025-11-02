@@ -211,12 +211,12 @@ def addlist():
         'citation': citation
     }
 
-    url = "%s/api/wordlist" % current_app.config['DB_URL']
+    url = "%s/api/wordlist/metadata" % current_app.config['DB_URL']
     r = requests.post(url, json=payload)
     if r.status_code == 200:
         return redirect('/wordlists')
 
-    raise Exception("something went wrong in /api/wordlist POST: %s" % r.text)
+    raise Exception("something went wrong in POST: to %s - %s [%s]" % (url, r.text, r.status_code))
 
 
 @bp.route('/deletelist', methods=['POST'])
@@ -320,7 +320,7 @@ def add_to_list():
     if not payload:
         raise Exception("add_to_list could not make payload")
 
-    url = "%s/api/wordlist/%s" % (current_app.config['DB_URL'], wordlist_id)
+    url = "%s/api/wordlist/%s/contents" % (current_app.config['DB_URL'], wordlist_id)
     r = requests.put(url, json=payload)
     if r.status_code != 200:
         raise Exception("well, shit")
@@ -336,7 +336,7 @@ def update_notes():
     }
     wordlist_id = request.form['wordlist_id']
 
-    url = "%s/api/wordlist/%s" % (current_app.config['DB_URL'], wordlist_id)
+    url = "%s/api/wordlist/%s/contents" % (current_app.config['DB_URL'], wordlist_id)
     r = requests.put(url, json=payload)
     if r.status_code == 200:
         target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
