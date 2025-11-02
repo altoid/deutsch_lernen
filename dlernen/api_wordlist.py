@@ -542,7 +542,7 @@ order by name
         dict_result = {}
 
         for r in rows:
-            # TODO - the connector is returning the count as a string, find out WTF
+            # the connector is returning the count as a Decimal, have to convert it to int
 
             list_type = 'empty'
             if bool(r['sqlcode']):
