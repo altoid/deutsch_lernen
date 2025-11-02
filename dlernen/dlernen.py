@@ -151,6 +151,20 @@ def wordlist(wordlist_id):
         flash("wordlist %s not found" % wordlist_id)
         return redirect('/wordlists')
 
+    if r.status_code == 422:
+        # unprocessable content - the sqlcode is not valid.  redirect to the list attributes page to fix it.
+        url = "%s/api/wordlist/%s/metadata" % (current_app.config['DB_URL'], wordlist_id)
+        r = requests.get(url)
+        result = r.json()
+        if result['sqlcode'] is None:
+            result['sqlcode'] = ''
+        if result['citation'] is None:
+            result['citation'] = ''
+        flash("invalid sqlcode")
+        return render_template('list_attributes.html',
+                               wordlist=result,
+                               return_to_wordlist_id=wordlist_id)
+
     result = r.json()
     if result['notes'] is None:
         # otherwise the word 'None' is rendered in the form
@@ -219,8 +233,8 @@ def deletelist():
     raise Exception("something went wrong in /api/wordlists: %s" % r.text)
 
 
-@bp.route('/edit_list', methods=['POST'])
-def edit_list():
+@bp.route('/edit_list_attributes', methods=['POST'])
+def edit_list_attributes():
     # note that the values in the form have not been subject to json schema validation.  these are just
     # whatever bullshit was entered into the form (the list_attributes template).  so we have to
     # fiddle with the values before stuffing them into the payload, which IS validated.
@@ -260,13 +274,24 @@ def edit_list():
         'citation': citation
     }
 
-    url = "%s/api/wordlist/%s" % (current_app.config['DB_URL'], wordlist_id)
+    url = "%s/api/wordlist/%s/metadata" % (current_app.config['DB_URL'], wordlist_id)
     r = requests.put(url, json=payload)
     if r.status_code == 200:
         target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
         return redirect(target)
-
-    raise Exception("something went wrong in /api/wordlist PUT: %s" % r.text)
+    if r.status_code == 422:
+        # unprocessable content - the sqlcode is not valid.  redirect to the list attributes page to fix it.
+        payload = {
+            'name': name,
+            'citation': '' if citation is None else citation,
+            'sqlcode': sqlcode,
+            'wordlist_id': wordlist_id
+        }
+        flash("invalid sqlcode")
+        return render_template('list_attributes.html',
+                               wordlist=payload,
+                               return_to_wordlist_id=wordlist_id)
+    raise Exception("something went wrong in %s PUT: %s (%s)" % (url, r.text, r.status_code))
 
 
 # TODO if this is for a POST request, why does it call requests.put()?

@@ -2,7 +2,7 @@
 
 {% block body %}
 {{ super() }}
-<form action="/edit_list" method="post">
+<form action="/edit_list_attributes" method="post">
     <input type="hidden" value="{{ wordlist.wordlist_id }}" name="wordlist_id"/>
     <table>
         <tr>

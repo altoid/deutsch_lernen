@@ -118,9 +118,6 @@ TODO - really need a better way to deal with reflexive verbs
 
 FIXME - smart wordlists aren't recursive - smart lists of other smart lists doesn't work
 
-FIXME - strictly decouple updating wordlist contents and metadata.  this should never be done
-    in a single request.  will require new doc types and urls, possibly deprecating existing ones.
-
 ------
 metadata:
 - name
