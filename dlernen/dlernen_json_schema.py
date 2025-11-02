@@ -374,6 +374,32 @@ WORDLISTS_RESPONSE_SCHEMA = {
     }
 }
 
+# wordlist contents are notes and a list of words.
+
+WORDLIST_CONTENTS_PAYLOAD_SCHEMA = {
+    # can be used for add or update of a list.
+    "$id": "https://deutsch-lernen.doug/schemas/addwordlist_payload",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "WORDLIST_CONTENTS_PAYLOAD_SCHEMA",
+    "description": "Payload for adding content to a wordlist",
+    "type": "object",
+    "required": [
+        # none are required.
+    ],
+    "properties": {
+        "notes": {
+            "type": ["string", 'null']
+        },
+        "words": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "pattern": STRING_PATTERN
+            }
+        }
+    }
+}
+
 # wordlist metadata is all the info about a list except its contents.  metadata fields are:
 #
 #     - name

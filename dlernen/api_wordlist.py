@@ -74,8 +74,9 @@ def __get_wordlist_metadata(wordlist_id):
         row = cursor.fetchone()
         nwords = row['nwords']
 
-        # don't validate anything.  callers and wrapper functions should do that.
-        # sqlcode may not be valid, but we don't validate on read, so it's out of our hands here.
+        # don't validate sqlcode.  callers and wrapper functions should do that.
+        # sqlcode may not be valid, but we don't validate on read, so it's out of our hands here.  we need to be
+        # able to return list metadata even if it has broken sqlcode, so that clients may fix it.
         if wl_metadata:
             if wl_metadata['sqlcode']:
                 wl_metadata['list_type'] = 'smart'
@@ -220,9 +221,6 @@ def update_wordlist_metadata(wordlist_id):
 
     # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
     return __get_wordlist_metadata(wordlist_id)
-
-
-
 
 
 def add_words_to_list(cursor, wordlist_id, words):

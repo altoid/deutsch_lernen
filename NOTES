@@ -118,7 +118,43 @@ TODO - really need a better way to deal with reflexive verbs
 
 FIXME - smart wordlists aren't recursive - smart lists of other smart lists doesn't work
 
-TODO - validate sqlcode fields, both when reading and writing
-
 FIXME - strictly decouple updating wordlist contents and metadata.  this should never be done
     in a single request.  will require new doc types and urls, possibly deprecating existing ones.
+
+------
+metadata:
+- name
+- id
+- citation
+- sqlcode
+- source_is_url (derived value)
+- type (empty, standard, smart.  derived value, not stored in database)
+
+contents:
+- known words
+- unknown words
+- notes
+
+operations on list metadata:
+
+- get (given list id)
+    all metadata fields
+- update (given list id)
+    name (required)
+    citation
+    sqlcode
+- create (adding a new empty list)
+    name (required)
+    citation
+    sqlcode
+- there is no delete operation on list metadata!  when we delete anything we delete the whole damn list.
+
+operations on list
+
+- get (including contents)
+- delete (everything, both metadata and contents)
+
+operations on list contents
+
+- update (adding/deleting words, notes)
+

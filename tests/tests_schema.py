@@ -205,16 +205,17 @@ class CheckDocumentDefinitions(unittest.TestCase):
     all_the_docs = [
         dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA,
         dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA,
+        dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA,
         dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA,
         dlernen_json_schema.REFRESH_WORDLISTS_PAYLOAD_SCHEMA,
         dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA,
         dlernen_json_schema.WORD_METADATA_RESPONSE_SCHEMA,
+        dlernen_json_schema.WORDLIST_CONTENTS_PAYLOAD_SCHEMA,
         dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA,
         dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA,
         dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA,
         dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA,
         dlernen_json_schema.WORDS_SCHEMA,
-        dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA
     ]
 
     def test_check_schema_docs(self):
@@ -321,6 +322,63 @@ class SchemaTests(unittest.TestCase):
 
     def test_wordlist_response_sample(self):
         jsonschema.validate(SAMPLE_WORDLIST_RESPONSE, dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA)
+
+
+class WordlistContentsPayload(unittest.TestCase):
+    valid_payloads = [
+        {
+        },
+        {
+            "notes": None
+        },
+        {
+            "notes": "whatevs"
+        },
+        {
+            "words": []
+        },
+        {
+            "words": [
+                "aoeu",
+                "nthdue",
+                "eoathudt"
+            ]
+        },
+        {
+            "notes": "whatevs",
+            "words": [
+                "aoeu",
+                "ioeuioeu"
+            ]
+        }
+    ]
+
+    invalid_payloads = [
+        {
+            "words": [
+                ""
+            ]
+        },
+        {
+            "words": [
+                "  "
+            ]
+        },
+        {
+            "words": "value should be an array"
+        }
+    ]
+
+    def test_valid_payloads(self):
+        for jdoc in self.valid_payloads:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_CONTENTS_PAYLOAD_SCHEMA)
+
+    def test_invalid_payloads(self):
+        for jdoc in self.invalid_payloads:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_CONTENTS_PAYLOAD_SCHEMA)
 
 
 class WordlistMetadataPayload(unittest.TestCase):

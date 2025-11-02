@@ -5,9 +5,6 @@ import json
 import random
 import string
 
-# TODO - test updating a list's name to null, empty string, or other bullshit values.
-#   also test creating a list with a bullshit name.
-
 
 class APIWordlist(unittest.TestCase):
     # add list with no words, just a name

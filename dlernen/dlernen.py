@@ -1,13 +1,7 @@
 from flask import Blueprint, request, render_template, redirect, url_for, flash, abort, current_app
 from pprint import pprint
-from mysql.connector import connect
-from dlernen import dlernen_json_schema, common
 import requests
 import json
-from contextlib import closing
-import jsonschema
-import sys
-import os
 
 bp = Blueprint('dlernen', __name__)
 
