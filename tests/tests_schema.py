@@ -385,16 +385,14 @@ class WordlistMetadataResponse(unittest.TestCase):
             "name": "fester",
             "sqlcode": "not really sql but what the hell",
             "citation": "  speeding  ",
-            "list_type": "empty",
-            "source_is_url": True
+            "list_type": "empty"
         },
         {
             "wordlist_id": 1234,
             "name": "fester",
             "sqlcode": None,
             "citation": None,
-            "list_type": "empty",
-            "source_is_url": True
+            "list_type": "empty"
         }
     ]
 
@@ -405,48 +403,35 @@ class WordlistMetadataResponse(unittest.TestCase):
             "name": "fester",
             "sqlcode": "not really sql but what the hell",
             "citation": "speeding",
-            "list_type": "empty",
-            "source_is_url": True
+            "list_type": "empty"
         },
         {
             "wordlist_id": 1234,
             # "name": "fester",
             "sqlcode": "not really sql but what the hell",
             "citation": "speeding",
-            "list_type": "empty",
-            "source_is_url": True
+            "list_type": "empty"
         },
         {
             "wordlist_id": 1234,
             "name": "fester",
             # "sqlcode": "not really sql but what the hell",
             "citation": "speeding",
-            "list_type": "empty",
-            "source_is_url": True
+            "list_type": "empty"
         },
         {
             "wordlist_id": 1234,
             "name": "fester",
             "sqlcode": "not really sql but what the hell",
             # "citation": "speeding",
-            "list_type": "empty",
-            "source_is_url": True
-        },
-        {
-            "wordlist_id": 1234,
-            "name": "fester",
-            "sqlcode": "not really sql but what the hell",
-            "citation": "speeding",
-            # "list_type": "empty",
-            "source_is_url": True
-        },
-        {
-            "wordlist_id": 1234,
-            "name": "fester",
-            "sqlcode": "not really sql but what the hell",
-            "citation": "speeding",
             "list_type": "empty"
-            # "source_is_url": True
+        },
+        {
+            "wordlist_id": 1234,
+            "name": "fester",
+            "sqlcode": "not really sql but what the hell",
+            "citation": "speeding"
+            # "list_type": "empty",
         },
         {
             # bad list type
@@ -454,8 +439,7 @@ class WordlistMetadataResponse(unittest.TestCase):
             "name": "fester",
             "sqlcode": "not really sql but what the hell",
             "citation": "  speeding  ",
-            "list_type": "shopping",
-            "source_is_url": True
+            "list_type": "shopping"
         },
         {
             # bad name
@@ -463,8 +447,7 @@ class WordlistMetadataResponse(unittest.TestCase):
             "name": "   fester",
             "sqlcode": "not really sql but what the hell",
             "citation": "speeding",
-            "list_type": "empty",
-            "source_is_url": True
+            "list_type": "empty"
         },
         {
             # another bad name
@@ -472,8 +455,7 @@ class WordlistMetadataResponse(unittest.TestCase):
             "name": "",
             "sqlcode": "not really sql but what the hell",
             "citation": "speeding",
-            "list_type": "empty",
-            "source_is_url": True
+            "list_type": "empty"
         },
         {
             # bad sqlcode
@@ -481,8 +463,7 @@ class WordlistMetadataResponse(unittest.TestCase):
             "name": "aoeu",
             "sqlcode": "",
             "citation": "speeding",
-            "list_type": "empty",
-            "source_is_url": True
+            "list_type": "empty"
         },
         {
             # bad citation
@@ -490,8 +471,7 @@ class WordlistMetadataResponse(unittest.TestCase):
             "name": "aoeu",
             "sqlcode": "not really sql but what the hell",
             "citation": "",
-            "list_type": "empty",
-            "source_is_url": True
+            "list_type": "empty"
         },
         {
             # bad id
@@ -499,8 +479,7 @@ class WordlistMetadataResponse(unittest.TestCase):
             "name": "aoeu",
             "sqlcode": "not really sql but what the hell",
             "citation": "aoeuoea",
-            "list_type": "empty",
-            "source_is_url": True
+            "list_type": "empty"
         },
         {
 

@@ -426,8 +426,7 @@ WORDLIST_METADATA_RESPONSE_SCHEMA = {
         "name",
         "sqlcode",
         "citation",
-        "list_type",
-        "source_is_url"
+        "list_type"
     ],
     "properties": {
         "wordlist_id": {
@@ -453,9 +452,6 @@ WORDLIST_METADATA_RESPONSE_SCHEMA = {
                 "standard",
                 "empty"  # no code or words
             ]
-        },
-        "source_is_url": {
-            "type": "boolean"
         }
     }
 }
