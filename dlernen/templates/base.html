@@ -13,11 +13,11 @@
 {% block body %}
 {% with messages = get_flashed_messages() %}
     {% if messages %}
-    <table border="1px" style="width:100%">
+    <table id="banner">
         {% for message in messages %}
         <tr>
-            <td bgcolor="pink" align="center">
-                <strong>{{ message }}</strong>
+            <td>
+                {{ message }}
             </td>
         </tr>
         {% endfor %}
