@@ -10,8 +10,13 @@
     </title>
 </head>
 <body>
-{% block body %}
-{% with messages = get_flashed_messages() %}
+<div class="sidebar">
+    <a href="{{ url_for('dlernen.wordlists') }}">Word lists</a>
+    <a href="{{ url_for('dlernen.home') }}">Look Up Word</a>
+</div>
+<div class="content">
+    {% block body %}
+    {% with messages = get_flashed_messages() %}
     {% if messages %}
     <table class="banner">
         {% for message in messages %}
@@ -23,17 +28,16 @@
         {% endfor %}
     </table>
     {% endif %}
-{% endwith %}
-<table>
-    <tr>
-        <td><a href="{{ url_for('dlernen.home') }}">Startseite</a></td>
-    </tr>
-    {% if return_to_wordlist_id is defined and return_to_wordlist_id != none %}
-    <tr>
-        <td><a href="{{ url_for('dlernen.wordlist', wordlist_id=return_to_wordlist_id) }}">zur List zurückkehren</a></td>
-    </tr>
-    {% endif %}
-</table>
-{% endblock %}
+    {% endwith %}
+    <table>
+        {% if return_to_wordlist_id is defined and return_to_wordlist_id != none %}
+        <tr>
+            <td><a href="{{ url_for('dlernen.wordlist', wordlist_id=return_to_wordlist_id) }}">zur Liste zurückkehren</a>
+            </td>
+        </tr>
+        {% endif %}
+    </table>
+    {% endblock %}
+</div>
 </body>
 </html>

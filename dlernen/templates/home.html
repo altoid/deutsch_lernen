@@ -9,24 +9,13 @@ flashed messages usually won't appear here because this page is typically not lo
 #}
 
 {% block body %}
-<table>
-    <tr>
-        <td>
-            <form action="/lookup" method="post">
-                <table>
-                    <tr>
-                        <td>Look up word:</td>
-                        <td><input type="text" name="lookup" size="30"/></td>
-                    </tr>
-                </table>
-                <input type="submit" value="Submit"/>
-            </form>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <a href="{{ url_for('dlernen.wordlists') }}">Manage word lists</a>
-        </td>
-    </tr>
-</table>
+<form action="/lookup" method="post">
+    <table>
+        <tr>
+            <td>Look up word:</td>
+            <td><input type="text" name="lookup" size="30"/></td>
+        </tr>
+    </table>
+    <input type="submit" value="Submit"/>
+</form>
 {% endblock %}
