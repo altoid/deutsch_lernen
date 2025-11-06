@@ -1,8 +1,9 @@
 body {
     background-color: #fbeee2;
+    font-family: helvetica
 }
 
-#banner {
+.banner {
     background-color: pink;
     text-align: center;
     width: 100%;
