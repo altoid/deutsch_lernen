@@ -20,6 +20,11 @@ body {
     position: fixed;
     z-index: 1;
     background-color: black;
+
+    /* this sets the coordinate of the top left corner of the sidebar.  without these there is a space around
+    the sidebar.  */
+    top: 0;
+    left: 0;
 }
 
 .sidebar a {
@@ -27,8 +32,10 @@ body {
     text-decoration: none;
     color: #fbeee2;
     font-size: large;
+    padding: 20px;
 }
 
 .content {
     margin-left: var(--sidebar-width);
+    padding: 0px 10px
 }
