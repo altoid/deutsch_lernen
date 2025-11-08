@@ -465,6 +465,7 @@ def get_words():
     return result
 
 
+# TODO - compare with get_pos(); these could be redundant.
 @bp.route('/api/word/metadata')
 def word_metadata():
     """

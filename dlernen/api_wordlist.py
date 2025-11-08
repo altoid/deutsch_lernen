@@ -640,7 +640,7 @@ def get_wordlists_by_word_id(word_id):
         """
         cursor.execute(sql, (word_id,))
         rows = cursor.fetchall()
-        static_lists = [r['wordlist_id'] for r in rows]
+        standard_lists = [r['wordlist_id'] for r in rows]
 
         # find smart lists that this word is in!
         # get all the sql
@@ -664,7 +664,7 @@ def get_wordlists_by_word_id(word_id):
             if word_id in results_for_list:
                 smart_lists.append(r['wordlist_id'])
 
-        wordlist_ids = static_lists + smart_lists
+        wordlist_ids = standard_lists + smart_lists
 
         result = []
         if wordlist_ids:
@@ -676,6 +676,6 @@ def get_wordlists_by_word_id(word_id):
             result = json.loads(r.text)
             result = sorted(result, key=lambda x: x['name'].casefold())
 
-        # validation happens in get_wordlists so we don't need to do it here.
+            # validation happens in get_wordlists so we don't need to do it here.
 
         return result
