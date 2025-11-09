@@ -5,6 +5,8 @@ STRING_PATTERN = r"""\S"""
 # for names, leading/trailing whitespace is prohibited.
 NAME_PATTERN = r"""^\S(.*\S)*$"""
 
+WORD_PATTERN = NAME_PATTERN
+
 # separate regex for multiline strings.
 MULTILINE_STRING_PATTERN = r"""\S"""
 
@@ -54,7 +56,7 @@ REFRESH_WORDLISTS_PAYLOAD_SCHEMA = {
     "properties": {
         "word": {
             "type": "string",
-            "minLength": 1
+            "pattern": WORD_PATTERN
         },
         "word_id": {
             "type": "integer",
@@ -76,11 +78,11 @@ ADDWORD_PAYLOAD_SCHEMA = {
     "properties": {
         "word": {
             "type": "string",
-            "minLength": 1
+            "pattern": WORD_PATTERN
         },
         "pos_name": {
             "type": "string",
-            "minLength": 1
+            "pattern": NAME_PATTERN
         },
         "attributes": {
             "type": "array",
@@ -97,7 +99,7 @@ ADDWORD_PAYLOAD_SCHEMA = {
                     },
                     "attrvalue": {
                         "type": "string",
-                        "minLength": 1
+                        "pattern": STRING_PATTERN
                     }
                 }
             }
@@ -118,7 +120,7 @@ UPDATEWORD_PAYLOAD_SCHEMA = {
         "word": {
             # this is optional
             "type": "string",
-            "minLength": 1
+            "pattern": WORD_PATTERN
         },
         "attributes_adding": {
             "type": "array",
@@ -162,7 +164,7 @@ UPDATEWORD_PAYLOAD_SCHEMA = {
                     },
                     "attrvalue": {
                         "type": "string",
-                        "minLength": 1
+                        "pattern": STRING_PATTERN
                     }
                 }
             }
@@ -174,7 +176,7 @@ WORD_METADATA_RESPONSE_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/word_metadata",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Quiz Data List",
-    "description": "list of quiz query results",
+    "description": "",
     "type": "array",
     "items": {
         "type": "object",
@@ -190,7 +192,7 @@ WORD_METADATA_RESPONSE_SCHEMA = {
             },
             "pos_name": {
                 "type": "string",
-                "minLength": 1
+                "pattern": NAME_PATTERN
             },
             "pos_fields": {
                 "type": "array",
@@ -204,11 +206,11 @@ WORD_METADATA_RESPONSE_SCHEMA = {
                     "properties": {
                         "attrkey": {
                             "type": "string",
-                            "minLength": 1
+                            "pattern": NAME_PATTERN
                         },
                         "attrvalue": {
                             "type": "string",
-                            "minLength": 1
+                            "pattern": STRING_PATTERN
                         },
                         "fieldkey": {
                             "type": "string",
@@ -250,11 +252,11 @@ QUIZ_DATA_RESPONSE_SCHEMA = {
             },
             "qname": {
                 "type": "string",
-                "minLength": 1
+                "pattern": NAME_PATTERN
             },
             "word": {
                 "type": "string",
-                "minLength": 1
+                "pattern": WORD_PATTERN
             },
             "attributes": {
                 "type": "object",
@@ -346,7 +348,7 @@ WORDLISTS_RESPONSE_SCHEMA = {
         "properties": {
             "name": {
                 "type": "string",
-                "minLength": 1
+                "pattern": NAME_PATTERN
             },
             "wordlist_id": {
                 "type": "integer",
@@ -509,7 +511,7 @@ WORDLIST_RESPONSE_SCHEMA = {
     "properties": {
         "name": {
             "type": "string",
-            "minLength": 1
+            "pattern": NAME_PATTERN
         },
         "wordlist_id": {
             "type": "integer",
@@ -541,7 +543,7 @@ WORDLIST_RESPONSE_SCHEMA = {
                 "properties": {
                     "word": {
                         "type": "string",
-                        "minLength": 1
+                        "pattern": WORD_PATTERN
                     },
                     "word_id": {
                         "type": "integer",
@@ -562,7 +564,7 @@ WORDLIST_RESPONSE_SCHEMA = {
             "type": "array",
             "items": {
                 "type": "string",
-                "minLength": 1
+                "pattern": WORD_PATTERN
             }
         }
     }
@@ -579,7 +581,7 @@ WORDS_SCHEMA = {
         "properties": {
             "word": {
                 "type": "string",
-                "minLength": 1
+                "pattern": WORD_PATTERN
             },
             "word_id": {
                 "type": "integer",
@@ -587,7 +589,7 @@ WORDS_SCHEMA = {
             },
             "pos_name": {
                 "type": "string",
-                "minLength": 1
+                "pattern": NAME_PATTERN
             },
             "attributes": {
                 "type": "array",
@@ -630,7 +632,7 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
         "properties": {
             "name": {
                 "type": "string",
-                "minLength": 1
+                "pattern": NAME_PATTERN
             },
             "attributes": {
                 "type": "array",
