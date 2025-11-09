@@ -570,7 +570,7 @@ WORDLIST_RESPONSE_SCHEMA = {
     }
 }
 
-WORDS_SCHEMA = {
+WORDS_RESPONSE_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Word",
     "description": "list of words with attributes",

@@ -71,7 +71,7 @@ def get_word_by_id(word_id):
     word_ids = [word_id]
     words = get_words_from_word_ids(word_ids)
 
-    jsonschema.validate(words, dlernen_json_schema.WORDS_SCHEMA)
+    jsonschema.validate(words, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
 
     if words:
         return words[0]
@@ -143,7 +143,7 @@ order by word_id, pf.sort_order
         if not result:
             return "no match for %s" % word, 404
 
-        jsonschema.validate(result, dlernen_json_schema.WORDS_SCHEMA)
+        jsonschema.validate(result, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
 
         return result
 
@@ -442,7 +442,7 @@ def get_words_in_wordlists():
 
     result = get_words_from_word_ids(word_ids)
 
-    jsonschema.validate(result, dlernen_json_schema.WORDS_SCHEMA)
+    jsonschema.validate(result, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
 
     return result
 
@@ -460,7 +460,7 @@ def get_words():
     word_ids = payload.get('word_ids', [])
     result = get_words_from_word_ids(word_ids)
 
-    jsonschema.validate(result, dlernen_json_schema.WORDS_SCHEMA)
+    jsonschema.validate(result, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
 
     return result
 

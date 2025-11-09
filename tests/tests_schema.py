@@ -215,7 +215,7 @@ class CheckDocumentDefinitions(unittest.TestCase):
         dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA,
         dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA,
         dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA,
-        dlernen_json_schema.WORDS_SCHEMA,
+        dlernen_json_schema.WORDS_RESPONSE_SCHEMA,
     ]
 
     def test_check_schema_docs(self):
@@ -261,7 +261,7 @@ class SchemaTests(unittest.TestCase):
         jsonschema.validate(doc, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
 
     def test_word_sample(self):
-        jsonschema.validate(SAMPLE_WORDS_RESULT, dlernen_json_schema.WORDS_SCHEMA)
+        jsonschema.validate(SAMPLE_WORDS_RESULT, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
 
     def test_addword_payload_sample(self):
         jsonschema.validate(SAMPLE_ADDWORD_PAYLOAD, dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA)

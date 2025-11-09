@@ -765,7 +765,7 @@ class APITests(unittest.TestCase):
         r = requests.get(config.Config.BASE_URL + "/api/word/verderben")
         results = r.json()
         self.assertGreater(len(results), 0)
-        jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
+        jsonschema.validate(results, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
 
     def test_get_word_no_match(self):
         r = requests.get(config.Config.BASE_URL + "/api/word/anehuintaoedhunateohdu")
@@ -775,7 +775,7 @@ class APITests(unittest.TestCase):
         r = requests.get(config.Config.BASE_URL + "/api/word/geh?partial=true")
         results = r.json()
         self.assertGreater(len(results), 0)
-        jsonschema.validate(results, dlernen_json_schema.WORDS_SCHEMA)
+        jsonschema.validate(results, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
 
     def test_get_words_empty_list_1(self):
         url = "%s/api/words" % config.Config.DB_URL
