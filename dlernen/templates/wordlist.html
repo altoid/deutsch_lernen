@@ -26,9 +26,9 @@ Wordlist:  {{ result.name }}
     <input type="hidden" value="{{result.wordlist_id}}" name="wordlist_id"/>
     <table>
         <tr>
-            <td width>
+            <td>
                 <h2>Bekannte Worte ({{ result['known_words']|length }})</h2>
-                <table>
+                <table class="tableau">
                     <tr>
                         {% for column in known_words %}
                         <td>
@@ -59,7 +59,7 @@ Wordlist:  {{ result.name }}
         <tr>
             <td>
                 <h2>Unbekannte Worte ({{ result['unknown_words']|length }})</h2>
-                <table>
+                <table class="tableau">
                     <tr>
                         {% for column in unknown_words %}
                         <td>
@@ -68,8 +68,10 @@ Wordlist:  {{ result.name }}
                                 <tr>
                                     <td><input type="checkbox" name="unknown_wordlist" value="{{ r }}"></td>
                                     <td>
-                                        <a href="{{ url_for('dlernen.edit_word_form', wordlist_id=result.wordlist_id, word=r) }}">{{
-                                            r }}</a></td>
+                                        <a href="{{ url_for('dlernen.edit_word_form', wordlist_id=result.wordlist_id, word=r) }}">
+                                            {{ r }}
+                                        </a>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </table>

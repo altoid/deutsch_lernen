@@ -4,8 +4,8 @@ Wordlist:  {{ result.name }}
 {% endblock %}
 {% block body %}
 {{ super() }}
-<h1><a href="{{ url_for('dlernen.list_attributes', wordlist_id=result.wordlist_id) }}">{{result.name}}
-    ({{result.wordlist_id}})</a>
+<h1><a href="{{ url_for('dlernen.list_attributes', wordlist_id=result.wordlist_id) }}">
+    {{result.name}} ({{result.wordlist_id}})</a>
 </h1>
 {% if result['source_is_url'] == true %}
 <a href="{{ result.citation }}">{{ result.citation }}</a>
@@ -13,12 +13,12 @@ Wordlist:  {{ result.name }}
 {{ result.citation }}
 {% endif %}
 <br>
-<table width="100%">
-    <tr valign="top">
-        <td width>
+<table class="tableau">
+    <tr>
+        <td>
             <h2>Wörter ({{ result['known_words']|length }})</h2>
             <table>
-                <tr valign="top">
+                <tr>
                     {% for column in words %}
                     <td>
                         <table>
@@ -30,8 +30,9 @@ Wordlist:  {{ result.name }}
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <a href="{{ url_for('dlernen.lookup_by_get', word=r.word, word_id=r.word_id, return_to_wordlist_id=result.wordlist_id) }}">{{
-                                        r.word }}</a>
+                                    <a href="{{ url_for('dlernen.lookup_by_get', word=r.word, word_id=r.word_id, return_to_wordlist_id=result.wordlist_id) }}">
+                                        {{ r.word }}
+                                    </a>
                                 </td>
                                 <td>{{ r.definition }}</td>
                             </tr>
