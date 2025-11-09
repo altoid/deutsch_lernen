@@ -1,33 +1,53 @@
 {% extends "base.html" %}
 
+{#
+ # template_args is a list of 2-ples.
+ #
+ # tuple[0] is an element of the array in WORDS_RESPONSE_SCHEMA.
+ # tuple[1] is the member wordlists for the word_id in tuple[0], as returned by /api/wordlists/word_id.
+ # this list may be empty.
+ #}
+
 {% block body %}
 {{ super() }}
 <br>
-{% if results %}
-{% for item in results %}
-<h2>
-    {% if return_to_wordlist_id != none %}
-    <a href="{{ url_for('dlernen.edit_word_form', word=item['word'], wordlist_id=return_to_wordlist_id) }}">{{ item['word'] }}</a>
-    {% else %}
-    <a href="{{ url_for('dlernen.edit_word_form', word=item['word']) }}">{{ item['word'] }}</a>
-    {% endif %}
-</h2>
-<p>{{ item['pos_name'] }}
-<table>
-    {% for attr in item['attributes'] %}
-    <tr>
-        <td class="word_attributes">{{ attr['attrkey'] }}</td>
-        <td>
-            {% if attr['attrvalue'] != None %}
-            {{ attr['attrvalue'] }}
+{% if template_args %}
+    {% for tuple in template_args %}
+        <h1>
+            {% if return_to_wordlist_id != none %}
+            <a href="{{ url_for('dlernen.edit_word_form', word=tuple[0]['word'], wordlist_id=return_to_wordlist_id) }}">
+                {{ tuple[0]['word'] }}
+            </a>
+            {% else %}
+            <a href="{{ url_for('dlernen.edit_word_form', word=tuple[0]['word']) }}">
+                {{ tuple[0]['word'] }}
+            </a>
             {% endif %}
-        </td>
-    </tr>
+        </h1>
+        <p>{{ tuple[0]['pos_name'] }}
+        <table>
+            {% for attr in tuple[0]['attributes'] %}
+            <tr>
+                <td class="word_attributes">{{ attr['attrkey'] }}</td>
+                <td>
+                    {% if attr['attrvalue'] != None %}
+                    {{ attr['attrvalue'] }}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% if tuple[1] %}
+            <h2>Wortlisten, die dieses Wort enthalten</h2>
+            {% for wl in tuple[1] %}
+            <a href="{{ url_for('dlernen.wordlist', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a><br>
+            {% endfor %}
+        {% else %}
+            <h2>(no member wordlists)</h2>
+        {% endif %}
     {% endfor %}
-</table>
-{% endfor %}
 {% else %}
-{{ word }} not found.  Click <a href="{{ url_for('dlernen.edit_word_form', word=word) }}">here</a> to define it.
+    {{ word }} not found.  Click <a href="{{ url_for('dlernen.edit_word_form', word=word) }}">here</a> to define it.
 {% endif %}
 <br>
 <form action="/lookup" method="post">
@@ -42,10 +62,4 @@
     </table>
     <input type="submit" value="Submit"/>
 </form>
-{% if member_wordlists %}
-<h1>Wortlisten, die dieses Wort enthalten</h1>
-{% for wl in member_wordlists %}
-<a href="{{ url_for('dlernen.wordlist', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a><br>
-{% endfor %}
-{% endif %}
 {% endblock %}

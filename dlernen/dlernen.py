@@ -79,37 +79,55 @@ def home():
 
 def get_lookup_render_template(word, **kwargs):
     return_to_wordlist_id = kwargs.get('return_to_wordlist_id')
-    member_wordlists = kwargs.get('member_wordlists')
     url = "%s/api/word/%s" % (current_app.config['DB_URL'], word)
-    results = None
+    results = []
     r = requests.get(url)
     if r.status_code == 404:
         pass
     elif r.status_code == 200:
         results = r.json()
+
+    template_args = []
+
+    for result in results:
+        # FIXME - gracefully handle status code <> 200
+        url = "%s/api/wordlists/%s" % (current_app.config['DB_URL'], result['word_id'])
+        r = requests.get(url)
+        member_wordlists = r.json()
+        template_args.append((result, member_wordlists))
+
     return render_template('lookup.html',
                            word=word,
                            return_to_wordlist_id=return_to_wordlist_id,
-                           member_wordlists=member_wordlists,
-                           results=results)
+                           template_args=template_args)
 
 
-@bp.route('/lookup/<string:word>', methods=['GET'])
-def lookup_by_get(word):
+@bp.route('/lookup/<int:word_id>', methods=['GET'])
+def lookup_by_get(word_id):
+    # for when a word appears as a hyperlink in a page.
     return_to_wordlist_id = request.args.get('return_to_wordlist_id')
-    word_id = request.args.get('word_id')
-    member_wordlists = None
-    if word_id:
-        url = "%s/api/wordlists/%s" % (current_app.config['DB_URL'], word_id)
-        r = requests.get(url)
-        member_wordlists = r.json()
-    return get_lookup_render_template(word, return_to_wordlist_id=return_to_wordlist_id,
-                                      member_wordlists=member_wordlists)
+
+    # FIXME - gracefully handle status code <> 200
+
+    url = "%s/api/word/%s" % (current_app.config['DB_URL'], word_id)
+    r = requests.get(url)
+    result = r.json()
+
+    url = "%s/api/wordlists/%s" % (current_app.config['DB_URL'], word_id)
+    r = requests.get(url)
+    member_wordlists = r.json()
+
+    template_args = [(result, member_wordlists)]
+
+    return render_template('lookup.html',
+                           word=result["word"],
+                           return_to_wordlist_id=return_to_wordlist_id,
+                           template_args=template_args)
 
 
-# TODO - see if we really need this.
 @bp.route('/lookup', methods=['POST'])
 def lookup_by_post():
+    # for looking up a word entered into a form.
     word = request.form.get('lookup')
     return_to_wordlist_id = request.form.get('return_to_wordlist_id')
     return get_lookup_render_template(word, return_to_wordlist_id=return_to_wordlist_id)
