@@ -24,17 +24,17 @@ Wordlist:  {{ result.name }}
 </form>
 <form action="/delete_from_list" method="post">
     <input type="hidden" value="{{result.wordlist_id}}" name="wordlist_id"/>
-    <table width="100%">
-        <tr valign="top">
+    <table>
+        <tr>
             <td width>
                 <h2>Bekannte Worte ({{ result['known_words']|length }})</h2>
                 <table>
-                    <tr valign="top">
+                    <tr>
                         {% for column in known_words %}
                         <td>
                             <table>
                                 {% for r in column %}
-                                <tr valign="top">
+                                <tr>
                                     <td><input type="checkbox" name="known_wordlist" value="{{ r.word_id }}"></td>
                                     <td>
                                         {% if r.article != none %}
@@ -57,15 +57,15 @@ Wordlist:  {{ result.name }}
             </td>
         </tr>
         <tr>
-            <td width>
+            <td>
                 <h2>Unbekannte Worte ({{ result['unknown_words']|length }})</h2>
                 <table>
-                    <tr valign="top">
+                    <tr>
                         {% for column in unknown_words %}
                         <td>
                             <table>
                                 {% for r in column %}
-                                <tr valign="top">
+                                <tr>
                                     <td><input type="checkbox" name="unknown_wordlist" value="{{ r }}"></td>
                                     <td>
                                         <a href="{{ url_for('dlernen.edit_word_form', wordlist_id=result.wordlist_id, word=r) }}">{{
