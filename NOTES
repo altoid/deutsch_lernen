@@ -118,6 +118,20 @@ TODO - really need a better way to deal with reflexive verbs
 
 FIXME - smart wordlists aren't recursive - smart lists of other smart lists doesn't work
 
+TODO - import word lists
+
+TODO - notes for individual words.  there is already a notes column in the word table.
+
+FIXME - bug:
+    go to a wordlist
+    select a word - note the return-to-list link
+    look up a word, doesn't matter if it's real
+    there is no return-to-list link in the resultant lookup page
+
+FIXME - we have word lookup by word and by word_id.  should just have lookup by id only.  if we don't have the
+    id look for the word in the word table.
+
+TODO - programmatically determine whether a verb is irregular.
 ------
 metadata:
 - name
@@ -155,3 +169,31 @@ operations on list contents
 
 - update (adding/deleting words, notes)
 
+----------
+
+word lookup:
+
+by id:  easy
+
+by word:  there will  be 0 or more associated word ids.  for every word id, fetch all attribute values
+for the respective part of speech.
+
+we can also get word lists by word id, so for each word we fetch we can get the word lists it's in, if desired.
+
+adding a word:
+how do we add a noun that has multiple genders?
+fill-in form can have fields for each gender
+when adding a noun, force capitalization of first letter.
+
+ADDWORD_PAYLOAD_SCHEMA should refer to pos_id, not pos_name.
+
+editing/updating a word:
+
+deleting a word:
+we already have an endpoint to delete by id.  that's enough.  we won't ever use it in the UI.
+
+--------------------
+string comparisons:
+
+mysql is case insensitive
+python is case sensitive
