@@ -516,10 +516,10 @@ class APITestsWordEndToEnd(unittest.TestCase):
         r = requests.delete("%s/api/word/%s" % (config.Config.BASE_URL, word_id))
         self.assertEqual(r.status_code, 200)
 
-    # adding the same word twice is ok, should have different word ids.
+    # adding the same word twice is ok, as long as they are different parts of speech.  should have different word ids.
     def test_add_twice(self):
         word = "test_add_twice_%s" % ''.join(random.choices(string.ascii_lowercase, k=10))
-        add_payload = {
+        payload = {
             "word": word,
             "pos_name": "noun",
             "attributes": [
@@ -537,13 +537,28 @@ class APITestsWordEndToEnd(unittest.TestCase):
                 }
             ]
         }
-        r = requests.post("%s/api/word" % config.Config.BASE_URL, json=add_payload)
+        r = requests.post("%s/api/word" % config.Config.BASE_URL, json=payload)
         self.assertEqual(r.status_code, 200)
         obj = r.json()
         word_id_1 = obj['word_id']
 
-        r = requests.post("%s/api/word" % config.Config.BASE_URL, json=add_payload)
+        r = requests.post("%s/api/word" % config.Config.BASE_URL, json=payload)
+        self.assertNotEqual(r.status_code, 200)
+
+        payload = {
+            "word": word,
+            "pos_name": "adjective",
+            "attributes": [
+                {
+                    "attrkey": "definition",
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+
+        r = requests.post("%s/api/word" % config.Config.BASE_URL, json=payload)
         self.assertEqual(r.status_code, 200)
+
         obj = r.json()
         word_id_2 = obj['word_id']
 
@@ -983,9 +998,9 @@ class APIWordlistActions(unittest.TestCase):
         # add the same word twice to the dictionary
         # put both into the wordlist
         # make sure they both appear in the wordlist.
-        random_noun = ''.join(random.choices(string.ascii_lowercase, k=20))
-        add_payload = {
-            "word": random_noun,
+        word = ''.join(random.choices(string.ascii_lowercase, k=20))
+        noun_payload = {
+            "word": word,
             "pos_name": "noun",
             "attributes": [
                 {
@@ -1003,20 +1018,31 @@ class APIWordlistActions(unittest.TestCase):
             ]
         }
 
-        r = requests.post("%s/api/word" % config.Config.BASE_URL, json=add_payload)
+        adjective_payload = {
+            "word": word,
+            "pos_name": "adjective",
+            "attributes": [
+                {
+                    "attrkey": "definition",
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+
+        r = requests.post("%s/api/word" % config.Config.BASE_URL, json=noun_payload)
         self.assertEqual(r.status_code, 200)
         obj = r.json()
         word_id_1 = obj['word_id']
 
         # add the word to the dict again
-        r = requests.post("%s/api/word" % config.Config.BASE_URL, json=add_payload)
+        r = requests.post("%s/api/word" % config.Config.BASE_URL, json=adjective_payload)
         self.assertEqual(r.status_code, 200)
         obj = r.json()
         word_id_2 = obj['word_id']
 
         update_payload = {
             'words': [
-                random_noun
+                word
             ]
         }
 
