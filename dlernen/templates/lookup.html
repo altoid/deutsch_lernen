@@ -16,7 +16,7 @@
 <table>
     {% for attr in item['attributes'] %}
     <tr>
-        <td width="200px">{{ attr['attrkey'] }}</td>
+        <td class="word_attributes">{{ attr['attrkey'] }}</td>
         <td>
             {% if attr['attrvalue'] != None %}
             {{ attr['attrvalue'] }}

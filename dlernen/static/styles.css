@@ -7,6 +7,14 @@ body {
     font-family: helvetica
 }
 
+td {
+    vertical-align: top
+}
+
+td.word_attributes {
+    width: 200px
+}
+
 .banner {
     background-color: pink;
     text-align: center;
