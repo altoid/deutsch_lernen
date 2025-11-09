@@ -161,10 +161,12 @@ def add_word():
 
     # checks:
     # - pos_name is valid
-    # - word is valid (nonempty when stripped)
     # - attrkeys are valid for the POS
     # - attrvalues are not degenerate
     # note:  adding a word with no attributes is allowed
+    #
+    # jsonschema doc definitions guarantee that word contains no whitespace and that attrvalues have
+    # at least one non-whitespace character.  so no checks needed for these.
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
@@ -175,12 +177,10 @@ def add_word():
             where pos_name = %(pos_name)s
             """
 
-            # note:  we still need to make the nonempty-when-stripped check because the json schema validation
-            # just checks for minlength 1 - it could be a nonempty string but just be whitespace.
-            pos_name = payload['pos_name'].strip()
-            word = payload['word'].strip()
-            if not word:
-                return "word cannot be empty string", 400
+            # jsonschema doc definition guarantees that payload['word'] and payload['pos_name']
+            # will not contain whitespace.
+            word = payload['word']
+            pos_name = payload['pos_name']
 
             d = {
                 'pos_name': pos_name
@@ -192,7 +192,7 @@ def add_word():
             # maps attr keys to attr ids
             attrdict = {r['attrkey']: r['attribute_id'] for r in rows}
 
-            if len(attrdict) == 0:
+            if not attrdict:
                 cursor.execute('rollback')
                 return "unknown part of speech:  %s" % payload['pos_name'], 400
 
@@ -203,14 +203,6 @@ def add_word():
             undefined_attrkeys = request_attrkeys - defined_attrkeys
             if len(undefined_attrkeys) > 0:
                 message = "attrkey keys not defined:  %s" % ', '.join(list(undefined_attrkeys))
-                cursor.execute('rollback')
-                return message, 400
-
-            # check that attrvalues are all strings len > 0
-            payload_attrvalues = {a['attrvalue'].strip() for a in payload.get('attributes', set())}
-            bad_attrvalues = list(filter(lambda x: not bool(x), payload_attrvalues))
-            if len(bad_attrvalues) > 0:
-                message = "attrkey values cannot be empty strings"
                 cursor.execute('rollback')
                 return message, 400
 
@@ -258,12 +250,13 @@ def update_word(word_id):
 
     # checks:
     # word_id exists
-    # word is nonempty if present
     # zero-length or non-existent attrkey list is ok
     # attrvalue ids exist and belong to the word, for both update and delete cases
     # attrvalue ids in deleting and updating are disjoint
     # attrkeys are defined for the word, for both update and add cases
-    # new attrvalues are all strings len > 0.
+    #
+    # jsonschema doc definitions guarantee that word contains no whitespace and that attrvalues have
+    # at least one non-whitespace character.  so no checks needed for these.
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
@@ -319,20 +312,8 @@ def update_word(word_id):
                 cursor.execute('rollback')
                 return message, 400
 
-            word = None
-            if 'word' in payload:
-                word = payload['word'].strip()
-            if word == '':
-                message = 'word cannot be empty string'
-                return message, 400
-
-            # check that attrvalues are all strings len > 0
-            payload_attrvalues = {a['attrvalue'].strip() for a in payload.get('attributes', set())}
-            bad_attrvalues = list(filter(lambda x: not bool(x), payload_attrvalues))
-            if len(bad_attrvalues) > 0:
-                message = "attrkey values cannot be empty strings"
-                cursor.execute('rollback')
-                return message, 400
+            # jsonschema definition guarantees that word, if present, will not contain whitespace
+            word = payload.get('word')
 
             # checks complete, let's do this.
             attrdict = {r['attrkey']: r['attribute_id'] for r in rows}

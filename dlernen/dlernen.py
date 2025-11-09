@@ -107,11 +107,12 @@ def lookup_by_get(word):
                                       member_wordlists=member_wordlists)
 
 
-# @bp.route('/lookup', methods=['POST'])
-# def lookup_by_post():
-#     word = request.form.get('lookup')
-#     return_to_wordlist_id = request.form.get('return_to_wordlist_id')
-#     return get_lookup_render_template(word, return_to_wordlist_id=return_to_wordlist_id)
+# TODO - see if we really need this.
+@bp.route('/lookup', methods=['POST'])
+def lookup_by_post():
+    word = request.form.get('lookup')
+    return_to_wordlist_id = request.form.get('return_to_wordlist_id')
+    return get_lookup_render_template(word, return_to_wordlist_id=return_to_wordlist_id)
 
 
 @bp.route('/wordlists')

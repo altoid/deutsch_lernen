@@ -31,11 +31,11 @@ ADDATTRIBUTES_PAYLOAD_SCHEMA = {
                 "properties": {
                     "attrkey": {
                         "type": "string",
-                        "minLength": 1
+                        "pattern": NAME_PATTERN
                     },
                     "attrvalue": {
                         "type": "string",
-                        "minLength": 1
+                        "pattern": STRING_PATTERN
                     }
                 }
             }
@@ -95,7 +95,7 @@ ADDWORD_PAYLOAD_SCHEMA = {
                 "properties": {
                     "attrkey": {
                         "type": "string",
-                        "minLength": 1
+                        "pattern": NAME_PATTERN
                     },
                     "attrvalue": {
                         "type": "string",
@@ -133,11 +133,11 @@ UPDATEWORD_PAYLOAD_SCHEMA = {
                 "properties": {
                     "attrkey": {
                         "type": "string",
-                        "minimum": 1
+                        "pattern": NAME_PATTERN
                     },
                     "attrvalue": {
                         "type": "string",
-                        "minLength": 1
+                        "pattern": STRING_PATTERN
                     }
                 }
             }
@@ -302,7 +302,7 @@ QUIZ_DATA_RESPONSE_SCHEMA = {
             "properties": {
                 "attrvalue": {
                     "type": "string",
-                    "minLength": 1
+                    "pattern": STRING_PATTERN
                 },
                 "correct_count": {
                     "type": "integer",
@@ -599,14 +599,15 @@ WORDS_RESPONSE_SCHEMA = {
                     "properties": {
                         "attrkey": {
                             "type": "string",
-                            "minLength": 1
+                            "pattern": NAME_PATTERN
                         },
                         "sort_order": {
                             "type": "integer",
                             "minimum": 0
                         },
                         "attrvalue": {
-                            "type": ["string", "null"]
+                            "type": ["string", "null"],
+                            "pattern": STRING_PATTERN
                         },
                         "attrvalue_id": {
                             "type": ["integer", "null"]
@@ -643,7 +644,7 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
                     "properties": {
                         "attrkey": {
                             "type": "string",
-                            "minLength": 1,
+                            "pattern": NAME_PATTERN
                         },
                         "sort_order": {
                             "type": "integer",

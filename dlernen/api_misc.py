@@ -87,7 +87,9 @@ def add_attributes(word_id):
     # word_id exists
     # zero-length attrkey list is ok
     # attrvalue ids exist and belong to the word
-    # new attrvalues are all strings len > 0.
+    #
+    # jsonschema doc definitions guarantee that attrvalues have
+    # at least one non-whitespace character.  so no checks needed for these.
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
@@ -103,19 +105,12 @@ def add_attributes(word_id):
                 return "no such word id:  %s" % word_id, 400
 
             defined_attrkeys = {r['attrkey'] for r in rows}
-            payload_attrkeys = {a['attrkey'].strip() for a in payload['attributes']}
+            payload_attrkeys = {a['attrkey'] for a in payload['attributes']}
 
             undefined_attrkeys = payload_attrkeys - defined_attrkeys
             if len(undefined_attrkeys) > 0:
                 wtf = ', '.join(undefined_attrkeys)
                 message = "invalid attrkeys:  %s" % wtf
-                cursor.execute('rollback')
-                return message, 400
-
-            payload_attrvalues = [a['attrvalue'].strip() for a in payload['attributes']]
-            bad_attrvalues = list(filter(lambda x: not bool(x), payload_attrvalues))
-            if len(bad_attrvalues) > 0:
-                message = "attrkey values cannot be empty strings"
                 cursor.execute('rollback')
                 return message, 400
 
@@ -127,7 +122,6 @@ def add_attributes(word_id):
                 rows_to_insert.append(t)
 
             if rows_to_insert:
-                # pprint(rows_to_insert)
                 sql = """
                 insert into word_attribute (attribute_id, word_id, attrvalue)
                 values (%s, %s, %s)

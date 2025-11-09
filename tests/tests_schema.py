@@ -381,6 +381,27 @@ class WordlistContentsPayload(unittest.TestCase):
                     jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_CONTENTS_PAYLOAD_SCHEMA)
 
 
+class WordUpdatePayload(unittest.TestCase):
+    valid_payloads = [
+        {
+        }
+    ]
+
+    invalid_payloads = [
+    ]
+
+    def test_valid_payloads(self):
+        for jdoc in self.valid_payloads:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
+
+    def test_invalid_payloads(self):
+        for jdoc in self.invalid_payloads:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
+
+
 class WordlistMetadataPayload(unittest.TestCase):
     # note:  these tests don't validate sqlcode.  that happens in the API tests.
 
