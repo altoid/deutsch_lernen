@@ -1,0 +1,3 @@
+create or replace
+VIEW `quiz_v` AS select `quiz`.`name` AS `quizname`,`quiz`.`quiz_key` AS `quiz_key`,`quiz`.`id` AS `quiz_id`,`qscore`.`attribute_id` AS `attribute_id`,`qscore`.`presentation_count` AS `presentation_count`,`qscore`.`correct_count` AS `correct_count`,`qscore`.`last_presentation` AS `last_presentation`,`word`.`id` AS `word_id`,`word`.`word` AS `word`,`word`.`added` AS `added`,`attribute`.`attrkey` AS `attrkey` from ((((`quiz` join `quiz_structure` `qstruct` on((`quiz`.`id` = `qstruct`.`quiz_id`))) join `quiz_score` `qscore` on(((`qscore`.`quiz_id` = `quiz`.`id`) and (`qscore`.`attribute_id` = `qstruct`.`attribute_id`)))) join `attribute` on((`attribute`.`id` = `qscore`.`attribute_id`))) join `word` on((`word`.`id` = `qscore`.`word_id`)))
+;

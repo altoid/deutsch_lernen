@@ -5,43 +5,12 @@ STRING_PATTERN = r"""\S"""
 # for names, leading/trailing whitespace is prohibited.
 NAME_PATTERN = r"""^\S(.*\S)*$"""
 
-WORD_PATTERN = NAME_PATTERN
+WORD_PATTERN = r"""^\S+$"""
+
+ID_PATTERN = WORD_PATTERN
 
 # separate regex for multiline strings.
 MULTILINE_STRING_PATTERN = r"""\S"""
-
-ADDATTRIBUTES_PAYLOAD_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/addattributes_payload",
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Payload for add attributes",
-    "description": "Payload for add attributes",
-    "type": "object",
-    "required": [
-        "attributes"
-    ],
-    "properties": {
-        "attributes": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "required": [
-                    "attrkey",
-                    "attrvalue"
-                ],
-                "properties": {
-                    "attrkey": {
-                        "type": "string",
-                        "pattern": NAME_PATTERN
-                    },
-                    "attrvalue": {
-                        "type": "string",
-                        "pattern": STRING_PATTERN
-                    }
-                }
-            }
-        }
-    }
-}
 
 REFRESH_WORDLISTS_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/refresh_wordlists",
@@ -65,62 +34,25 @@ REFRESH_WORDLISTS_PAYLOAD_SCHEMA = {
     }
 }
 
-ADDWORD_PAYLOAD_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/addword_payload",
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Payload for add word",
-    "description": "Payload for add word",
-    "type": "object",
-    "required": [
-        "word",
-        "pos_name"
-    ],
-    "properties": {
-        "word": {
-            "type": "string",
-            "pattern": WORD_PATTERN
-        },
-        "pos_name": {
-            "type": "string",
-            "pattern": NAME_PATTERN
-        },
-        "attributes": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "required": [
-                    "attrkey",
-                    "attrvalue"
-                ],
-                "properties": {
-                    "attrkey": {
-                        "type": "string",
-                        "pattern": NAME_PATTERN
-                    },
-                    "attrvalue": {
-                        "type": "string",
-                        "pattern": STRING_PATTERN
-                    }
-                }
-            }
-        }
-    }
-}
-
-UPDATEWORD_PAYLOAD_SCHEMA = {
+WORD_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/updateword_payload",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Payload for update word",
-    "description": "Payload for update word",
+    "title": "Payload for add/update word",
+    "description": "Payload for add/update word",
     "type": "object",
     "required": [
         # no required fields
     ],
     "properties": {
         "word": {
-            # this is optional
+            # this is optional but required when adding a word.
             "type": "string",
             "pattern": WORD_PATTERN
+        },
+        "pos_name": {
+            # this is optional.  required for adding a word and ignored on updates
+            "type": "string",
+            "pattern": ID_PATTERN
         },
         "attributes_adding": {
             "type": "array",
@@ -133,7 +65,7 @@ UPDATEWORD_PAYLOAD_SCHEMA = {
                 "properties": {
                     "attrkey": {
                         "type": "string",
-                        "pattern": NAME_PATTERN
+                        "pattern": ID_PATTERN
                     },
                     "attrvalue": {
                         "type": "string",
@@ -192,7 +124,7 @@ WORD_METADATA_RESPONSE_SCHEMA = {
             },
             "pos_name": {
                 "type": "string",
-                "pattern": NAME_PATTERN
+                "pattern": ID_PATTERN
             },
             "pos_fields": {
                 "type": "array",
@@ -206,7 +138,7 @@ WORD_METADATA_RESPONSE_SCHEMA = {
                     "properties": {
                         "attrkey": {
                             "type": "string",
-                            "pattern": NAME_PATTERN
+                            "pattern": ID_PATTERN
                         },
                         "attrvalue": {
                             "type": "string",
@@ -252,7 +184,7 @@ QUIZ_DATA_RESPONSE_SCHEMA = {
             },
             "qname": {
                 "type": "string",
-                "pattern": NAME_PATTERN
+                "pattern": ID_PATTERN
             },
             "word": {
                 "type": "string",
@@ -589,7 +521,7 @@ WORDS_RESPONSE_SCHEMA = {
             },
             "pos_name": {
                 "type": "string",
-                "pattern": NAME_PATTERN
+                "pattern": ID_PATTERN
             },
             "attributes": {
                 "type": "array",
@@ -599,7 +531,7 @@ WORDS_RESPONSE_SCHEMA = {
                     "properties": {
                         "attrkey": {
                             "type": "string",
-                            "pattern": NAME_PATTERN
+                            "pattern": ID_PATTERN
                         },
                         "sort_order": {
                             "type": "integer",
@@ -633,7 +565,7 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
         "properties": {
             "name": {
                 "type": "string",
-                "pattern": NAME_PATTERN
+                "pattern": ID_PATTERN
             },
             "attributes": {
                 "type": "array",
@@ -644,7 +576,7 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
                     "properties": {
                         "attrkey": {
                             "type": "string",
-                            "pattern": NAME_PATTERN
+                            "pattern": ID_PATTERN
                         },
                         "sort_order": {
                             "type": "integer",

@@ -2,67 +2,6 @@ import unittest
 import jsonschema
 from dlernen import dlernen_json_schema
 
-SAMPLE_ADDWORD_PAYLOAD = {
-    "word": "Tag",  # required, nonempty
-    "pos_name": "noun",  # name not id, makes existence check easier
-    "attributes": [
-        {
-            "attrkey": "article",
-            "attrvalue": "der"
-        },
-        {
-            "attrkey": "plural",
-            "attrvalue": "Tage"
-        },
-        {
-            "attrkey": "definition",
-            "attrvalue": "a day"
-        }
-    ]
-}
-
-SAMPLE_ADDATTRIBUTES_PAYLOAD = {
-    "attributes": [
-        {
-            "attrkey": "article",
-            "attrvalue": "der"
-        },
-        {
-            "attrkey": "plural",
-            "attrvalue": "Blahs"
-        }
-    ]
-}
-
-SAMPLE_UPDATEWORD_PAYLOAD = {
-    "word": "blah",  # in case we need to change spelling.  optional.  word id is in the URL.
-    # the attributes lists are optional and can be empty.  if not empty they must have the right structure.
-    "attributes_updating": [
-        {
-            "attrvalue_id": 444,
-            "attrvalue": "der"  # cannot be empty string.
-        },
-        {
-            "attrvalue_id": 555,
-            "attrvalue": "Foofoo"
-        }
-    ],
-    "attributes_deleting": [
-        444,
-        555
-    ],
-    "attributes_adding": [
-        {
-            "attrkey": "article",
-            "attrvalue": "der"  # cannot be empty string.
-        },
-        {
-            "attrkey": "definition",
-            "attrvalue": "Foofoo"
-        }
-    ]
-}
-
 SAMPLE_WORDS_RESULT = [
     {
         "attributes": [{'attrkey': 'definition',
@@ -203,12 +142,10 @@ class CheckDocumentDefinitions(unittest.TestCase):
     """
 
     all_the_docs = [
-        dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA,
-        dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA,
         dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA,
         dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA,
         dlernen_json_schema.REFRESH_WORDLISTS_PAYLOAD_SCHEMA,
-        dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA,
+        dlernen_json_schema.WORD_PAYLOAD_SCHEMA,
         dlernen_json_schema.WORD_METADATA_RESPONSE_SCHEMA,
         dlernen_json_schema.WORDLIST_CONTENTS_PAYLOAD_SCHEMA,
         dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA,
@@ -263,57 +200,6 @@ class SchemaTests(unittest.TestCase):
     def test_word_sample(self):
         jsonschema.validate(SAMPLE_WORDS_RESULT, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
 
-    def test_addword_payload_sample(self):
-        jsonschema.validate(SAMPLE_ADDWORD_PAYLOAD, dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA)
-
-    def test_updateword_payload_sample(self):
-        jsonschema.validate(SAMPLE_UPDATEWORD_PAYLOAD, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
-
-    def test_updateword_payload_sample_2(self):
-        sample_payload = {}
-        jsonschema.validate(sample_payload, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
-
-    def test_updateword_payload_sample_3(self):
-        sample_payload = {
-            'word': 'wordonly'
-        }
-        jsonschema.validate(sample_payload, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
-
-    def test_updateword_payload_sample_4(self):
-        sample_payload = {
-            'attributes_adding': [],
-            'attributes_deleting': [],
-            'attributes_updating': []
-        }
-        jsonschema.validate(sample_payload, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
-
-    def test_updateword_payload_sample_5(self):
-        sample_payload = {
-            'attributes_adding': [
-                {
-                    "attrkey": "no value"
-                }
-            ]
-        }
-
-        with self.assertRaises(jsonschema.exceptions.ValidationError):
-            jsonschema.validate(sample_payload, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
-
-    def test_updateword_payload_sample_6(self):
-        sample_payload = {
-            'attributes_updating': [
-                {
-                    "attrvalue": "no id"
-                }
-            ]
-        }
-
-        with self.assertRaises(jsonschema.exceptions.ValidationError):
-            jsonschema.validate(sample_payload, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
-
-    def test_add_attributes_payload_sample(self):
-        jsonschema.validate(SAMPLE_ADDATTRIBUTES_PAYLOAD, dlernen_json_schema.ADDATTRIBUTES_PAYLOAD_SCHEMA)
-
     def test_quiz_data_sample(self):
         jsonschema.validate(SAMPLE_QUIZ_DATA_RESULT, dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA)
 
@@ -322,6 +208,154 @@ class SchemaTests(unittest.TestCase):
 
     def test_wordlist_response_sample(self):
         jsonschema.validate(SAMPLE_WORDLIST_RESPONSE, dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA)
+
+
+class WordPayload(unittest.TestCase):
+    valid_payloads = [
+        {
+            # empty payload is allowed
+        },
+        {
+            # fully specified payload
+            "word": "werd",
+            "pos_name": "something",
+            "attributes_adding": [
+                {
+                    "attrkey": "key",
+                    "attrvalue": "value"
+                }
+            ],
+            "attributes_deleting": [
+                12,
+                34,
+                56
+            ],
+            "attributes_updating": [
+                {
+                    "attrvalue_id": 123,
+                    "attrvalue": "new value"
+                }
+            ]
+        },
+        {
+            # without any attribute values is valid
+            "word": "valid"
+        },
+        {
+            "attributes_adding": [],
+            "attributes_deleting": [],
+            "attributes_updating": []
+        }
+    ]
+
+    invalid_payloads = [
+        {
+            "attributes_adding": [
+                {
+                    "attrkey": "  noWhitespaceInKey",
+                    "attrvalue": "aoeu"
+                }
+            ]
+        },
+        {
+            "attributes_adding": [
+                {
+                    "attrkey": "key",
+                    "attrvalue": " "  # must have at least 1 non-whitespace character
+                }
+            ]
+        },
+        {
+            "attributes_adding": [
+                {
+                    "attrkey": "keyAndValueBothRequired"
+                }
+            ]
+        },
+        {
+            "attributes_adding": [
+                {
+                    "attrvalue": "keyAndValueBothRequired"
+                }
+            ]
+        },
+        {
+            "attributes_updating": [
+                {
+                    "attrvalue_id": 1234,
+                    "attrvalue": "   "  # must have at least 1 non-whitespace character
+                }
+            ]
+        },
+        {
+            "attributes_updating": [
+                {
+                    # id and value both required
+                    "attrvalue_id": 1234
+                }
+            ]
+        },
+        {
+            "attributes_updating": [
+                {
+                    "attrvalue": "id and value both required"
+                }
+            ]
+        },
+        {
+            "attributes_deleting": [
+                "has to be", "a list of ints"
+            ]
+        },
+        {
+            "word": ""
+        },
+        {
+            "word": " "
+        },
+        {
+            "word": "cannot have whitespace"
+        },
+        {
+            "pos_name": "cannot have whitespace"
+        },
+        {
+            "pos_name": ""
+        },
+        {
+            "pos_name": " "
+        }
+    ]
+
+    def test_valid_payloads(self):
+        for jdoc in self.valid_payloads:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, dlernen_json_schema.WORD_PAYLOAD_SCHEMA)
+
+    def test_invalid_payloads(self):
+        for jdoc in self.invalid_payloads:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, dlernen_json_schema.WORD_PAYLOAD_SCHEMA)
+
+
+class WordsResponse(unittest.TestCase):
+    valid_payloads = [
+    ]
+
+    invalid_payloads = [
+    ]
+
+    def test_valid_payloads(self):
+        for jdoc in self.valid_payloads:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
+
+    def test_invalid_payloads(self):
+        for jdoc in self.invalid_payloads:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
 
 
 class WordlistContentsPayload(unittest.TestCase):
@@ -379,27 +413,6 @@ class WordlistContentsPayload(unittest.TestCase):
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
                     jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_CONTENTS_PAYLOAD_SCHEMA)
-
-
-class WordUpdatePayload(unittest.TestCase):
-    valid_payloads = [
-        {
-        }
-    ]
-
-    invalid_payloads = [
-    ]
-
-    def test_valid_payloads(self):
-        for jdoc in self.valid_payloads:
-            with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
-
-    def test_invalid_payloads(self):
-        for jdoc in self.invalid_payloads:
-            with self.subTest(jdoc=jdoc):
-                with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
 
 
 class WordlistMetadataPayload(unittest.TestCase):

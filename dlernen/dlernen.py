@@ -447,13 +447,13 @@ def update_dict():
         payload = {
             'word': word,
             'pos_name': pos_name,
-            'attributes': []
+            'attributes_adding': []
         }
 
         for k in attrs_from_form.keys():
             attrvalue = attrs_from_form[k].get('attrvalue')
             if attrvalue:
-                payload['attributes'].append(
+                payload['attributes_adding'].append(
                     {
                         'attrkey': k,
                         'attrvalue': attrvalue

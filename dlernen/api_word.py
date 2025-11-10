@@ -155,14 +155,25 @@ def add_word():
     """
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, dlernen_json_schema.ADDWORD_PAYLOAD_SCHEMA)
+        jsonschema.validate(payload, dlernen_json_schema.WORD_PAYLOAD_SCHEMA)
+
+        # word isn't required in the json schema but we need it here.
+        if not payload.get('word'):
+            raise Exception("no word in add word request")
+
+        # same with pos_name.
+        if not payload.get('pos_name'):
+            raise Exception("no part of speech in add word request")
+
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
+    except Exception as e:
+        return "bad payload: %s" % str(e), 400
 
     # checks:
     # - pos_name is valid
     # - attrkeys are valid for the POS
-    # - attrvalues are not degenerate
+    #
     # note:  adding a word with no attributes is allowed
     #
     # jsonschema doc definitions guarantee that word contains no whitespace and that attrvalues have
@@ -197,34 +208,35 @@ def add_word():
                 return "unknown part of speech:  %s" % payload['pos_name'], 400
 
             pos_id = rows[0]['pos_id']
-            defined_attrkeys = set(attrdict.keys())
-
-            request_attrkeys = {a['attrkey'].strip() for a in payload.get('attributes', set())}
-            undefined_attrkeys = request_attrkeys - defined_attrkeys
-            if len(undefined_attrkeys) > 0:
-                message = "attrkey keys not defined:  %s" % ', '.join(list(undefined_attrkeys))
-                cursor.execute('rollback')
-                return message, 400
-
             sql = "insert into word (word, pos_id) values (%s, %s)"
             cursor.execute(sql, (word, pos_id))
             cursor.execute("select last_insert_id() word_id")
             result = cursor.fetchone()
             word_id = result['word_id']
 
-            insert_args = [
-                {
-                    "word_id": word_id,
-                    "attribute_id": attrdict[a['attrkey']],
-                    "attrvalue": a['attrvalue'].strip()
-                }
-                for a in payload.get('attributes', set())
-            ]
-            if insert_args:
-                sql = """insert into word_attribute (word_id, attribute_id, attrvalue)
-                values (%(word_id)s, %(attribute_id)s, %(attrvalue)s)
-                """
-                cursor.executemany(sql, insert_args)
+            defined_attrkeys = set(attrdict.keys())
+            attributes_adding = payload.get('attributes_adding')
+            if attributes_adding:
+                request_attrkeys = {a['attrkey'] for a in attributes_adding}
+                undefined_attrkeys = request_attrkeys - defined_attrkeys
+                if len(undefined_attrkeys) > 0:
+                    message = "attrkey keys not defined:  %s" % ', '.join(list(undefined_attrkeys))
+                    cursor.execute('rollback')
+                    return message, 400
+
+                insert_args = [
+                    {
+                        "word_id": word_id,
+                        "attribute_id": attrdict[a['attrkey']],
+                        "attrvalue": a['attrvalue']
+                    }
+                    for a in attributes_adding
+                ]
+                if insert_args:
+                    sql = """insert into word_attribute (word_id, attribute_id, attrvalue)
+                    values (%(word_id)s, %(attribute_id)s, %(attrvalue)s)
+                    """
+                    cursor.executemany(sql, insert_args)
 
             cursor.execute('commit')
 
@@ -243,7 +255,7 @@ def add_word():
 def update_word(word_id):
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, dlernen_json_schema.UPDATEWORD_PAYLOAD_SCHEMA)
+        jsonschema.validate(payload, dlernen_json_schema.WORD_PAYLOAD_SCHEMA)
     except jsonschema.ValidationError as e:
         message = "bad payload: %s" % e.message
         return message, 400
