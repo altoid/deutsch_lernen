@@ -17,7 +17,7 @@
     {% if wordlist.list_type != 'standard' %}
     <h2>Code:</h2>
     Should be a sql statement that selects a single column called 'word_id.'<br>
-    <textarea name="sqlcode" rows="20" cols="70">{{ wordlist.sqlcode }}</textarea>
+    <textarea class="sqlcode" name="sqlcode">{{ wordlist.sqlcode }}</textarea>
     <br>
     {% endif %}
     <input type="submit" value="Update list details"/>
