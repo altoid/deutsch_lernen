@@ -119,6 +119,11 @@ class APIWordListMetadataUpdate(unittest.TestCase):
         r = requests.post("%s/api/wordlist/metadata" % config.Config.BASE_URL, json=add_payload)
         obj = r.json()
         self.wordlist_id = obj['wordlist_id']
+        self.wordlist_id = obj['wordlist_id']
+        self.contents_url = "%s/api/wordlist/%s/contents" % (config.Config.BASE_URL, self.wordlist_id)
+        self.metadata_url = "%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, self.wordlist_id)
+        self.wordlist_url = "%s/api/wordlist/%s" % (config.Config.BASE_URL, self.wordlist_id)
+
 
     def tearDown(self):
         r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, self.wordlist_id))
@@ -138,7 +143,7 @@ class APIWordListMetadataUpdate(unittest.TestCase):
             "sqlcode": sqlcode
         }
 
-        r = requests.put("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, self.wordlist_id), json=payload)
+        r = requests.put(self.metadata_url, json=payload)
         self.assertEqual(r.status_code, 200)
         obj = r.json()
 
@@ -156,7 +161,7 @@ class APIWordListMetadataUpdate(unittest.TestCase):
             "sqlcode": sqlcode
         }
 
-        r = requests.put("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, self.wordlist_id), json=payload)
+        r = requests.put(self.metadata_url, json=payload)
         self.assertEqual(r.status_code, 200)
         obj = r.json()
 
@@ -169,7 +174,7 @@ class APIWordListMetadataUpdate(unittest.TestCase):
             "sqlcode": sqlcode
         }
 
-        r = requests.put("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, self.wordlist_id), json=payload)
+        r = requests.put(self.metadata_url, json=payload)
         self.assertEqual(r.status_code, 200)
         obj = r.json()
 
@@ -198,7 +203,7 @@ class APIWordListMetadataUpdate(unittest.TestCase):
             "sqlcode": sqlcode
         }
 
-        r = requests.put("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, self.wordlist_id), json=payload)
+        r = requests.put(self.metadata_url, json=payload)
         self.assertEqual(r.status_code, 200)
 
         payload = {
@@ -206,7 +211,7 @@ class APIWordListMetadataUpdate(unittest.TestCase):
             "sqlcode": None
         }
 
-        r = requests.put("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, self.wordlist_id), json=payload)
+        r = requests.put(self.metadata_url, json=payload)
         self.assertEqual(r.status_code, 200)
 
         obj = r.json()
@@ -222,7 +227,7 @@ class APIWordListMetadataUpdate(unittest.TestCase):
         payload = {
         }
 
-        r = requests.put("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, self.wordlist_id), json=payload)
+        r = requests.put(self.metadata_url, json=payload)
         self.assertEqual(r.status_code, 200)
         obj = r.json()
 
@@ -242,7 +247,7 @@ class APIWordListMetadataUpdate(unittest.TestCase):
             "name": new_name,
         }
 
-        r = requests.put("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, self.wordlist_id), json=payload)
+        r = requests.put(self.metadata_url, json=payload)
         self.assertEqual(r.status_code, 200)
         obj = r.json()
 
@@ -256,7 +261,7 @@ class APIWordListMetadataUpdate(unittest.TestCase):
             "citation": citation
         }
 
-        r = requests.put("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, self.wordlist_id), json=payload)
+        r = requests.put(self.metadata_url, json=payload)
         self.assertEqual(r.status_code, 200)
         obj = r.json()
 
@@ -270,7 +275,7 @@ class APIWordListMetadataUpdate(unittest.TestCase):
             "sqlcode": sqlcode,
         }
 
-        r = requests.put("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, self.wordlist_id), json=payload)
+        r = requests.put(self.metadata_url, json=payload)
         self.assertEqual(r.status_code, 200)
         obj = r.json()
 
@@ -288,7 +293,7 @@ class APIWordListMetadataUpdate(unittest.TestCase):
             "name": new_name,
         }
 
-        r = requests.put("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, self.wordlist_id), json=payload)
+        r = requests.put(self.metadata_url, json=payload)
         self.assertEqual(r.status_code, 400)
 
     # update the citation to a bullshit value; should not succeed.
@@ -299,7 +304,7 @@ class APIWordListMetadataUpdate(unittest.TestCase):
             "citation": citation,
         }
 
-        r = requests.put("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, self.wordlist_id), json=payload)
+        r = requests.put(self.metadata_url, json=payload)
         self.assertEqual(r.status_code, 400)
 
     # update the sqlcode to a bullshit value; should not succeed.
@@ -310,8 +315,64 @@ class APIWordListMetadataUpdate(unittest.TestCase):
             "sqlcode": sqlcode
         }
 
-        r = requests.put("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, self.wordlist_id), json=payload)
+        r = requests.put(self.metadata_url, json=payload)
         self.assertEqual(r.status_code, 422)
+
+    # update the name of a standard list but with sqlcode set to None in the payload.  this case broke the UI.
+    def test_8_known_word(self):
+        # first, make sure the list has stuff in it.
+
+        payload = {
+            'words': [
+                'haben'
+            ]
+        }
+
+        r = requests.put(self.contents_url, json=payload)
+        self.assertEqual(r.status_code, 200)
+        result = r.json()
+        self.assertEqual('standard', result['list_type'])
+
+        new_name = self.list_name + "__RENAMED"
+        payload = {
+            "name": new_name,
+            "citation": None,
+            "sqlcode": None
+        }
+
+        r = requests.put(self.metadata_url, json=payload)
+        self.assertEqual(r.status_code, 200)
+        result = r.json()
+        self.assertEqual(new_name, result['name'])
+        self.assertEqual('standard', result['list_type'])
+
+    def test_8_unknown_word(self):
+        # first, make sure the list has stuff in it.
+
+        gibberish = ''.join(random.choices(string.ascii_lowercase, k=10))
+        payload = {
+            'words': [
+                gibberish
+            ]
+        }
+
+        r = requests.put(self.contents_url, json=payload)
+        self.assertEqual(r.status_code, 200)
+        result = r.json()
+        self.assertEqual('standard', result['list_type'])
+
+        new_name = self.list_name + "__RENAMED"
+        payload = {
+            "name": new_name,
+            "citation": None,
+            "sqlcode": None
+        }
+
+        r = requests.put(self.metadata_url, json=payload)
+        self.assertEqual(r.status_code, 200)
+        result = r.json()
+        self.assertEqual(new_name, result['name'])
+        self.assertEqual('standard', result['list_type'])
 
 # TODO we will need more tests to deal with update operations on nonempty lists.
 
