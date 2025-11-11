@@ -128,9 +128,6 @@ FIXME - bug:
     look up a word, doesn't matter if it's real
     there is no return-to-list link in the resultant lookup page
 
-FIXME - we have word lookup by word and by word_id.  should just have lookup by id only.  if we don't have the
-    id look for the word in the word table.
-
 TODO - programmatically determine whether a verb is irregular.
 ------
 metadata:
@@ -179,13 +176,6 @@ by word:  there will  be 0 or more associated word ids.  for every word id, fetc
 for the respective part of speech.
 
 we can also get word lists by word id, so for each word we fetch we can get the word lists it's in, if desired.
-
-adding a word:
-how do we add a noun that has multiple genders?
-fill-in form can have fields for each gender
-when adding a noun, force capitalization of first letter.
-
-ADDWORD_PAYLOAD_SCHEMA should refer to pos_id, not pos_name.
 
 editing/updating a word:
 
