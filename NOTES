@@ -129,6 +129,9 @@ FIXME - bug:
     there is no return-to-list link in the resultant lookup page
 
 TODO - programmatically determine whether a verb is irregular.
+
+TODO - web lookup should do a partial match if no results are found.  (but don't match any definitions)
+
 ------
 metadata:
 - name

@@ -185,7 +185,7 @@ def update_wordlist_metadata(wordlist_id):
                 # this is well-behaved if citation and sqlcode are not given.
 
                 if 'sqlcode' in update_args:
-                    if wordlist_metadata['list_type'] == 'standard':
+                    if wordlist_metadata['list_type'] == 'standard' and update_args['sqlcode']:
                         return "can't add sqlcode to a nonempty list", 400
 
                     validate_sqlcode(cursor, update_args['sqlcode'])

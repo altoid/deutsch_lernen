@@ -13,6 +13,10 @@ bp = Blueprint('api_word', __name__)
 
 
 def process_word_query_result(rows):
+    """
+    take the rows returned by the query in get_words_from_word_ids and morph them into the format specified
+    by WORDS_RESPONSE_SCHEMA.
+    """
     dict_result = {}
     for r in rows:
         if not dict_result.get(r['word_id']):
@@ -82,50 +86,30 @@ def get_word_by_id(word_id):
 @bp.route('/api/word/<string:word>')
 def get_word(word):
     """
-    return attributes for every word that matches <word>.  since
-    words are not unique (e.g. Bank), it is possible to return more than
-    one set of attributes for a given word.  ex: 'braten' is a noun
-    and a verb.
+    return every word that matches the given word.  will return 0 or more results, since the same word
+    may appear more than once.  e.g. 'braten' is a noun and a verb.
 
-    URL:  /api/word/<word>    optioral ?partial={true|false}  -- default is false, meaning exact match.
+    URL:  /api/word/<word>    optional ?partial={true|false}  -- default is false, meaning exact match.
 
-    :param word:
-    :return:
-
+    if partial is specified, return every word where the given word is a substring of the word OR an attribute value.
     """
 
     partial = request.args.get('partial', default='False').lower() == 'true'
 
     exact_match_sql = """
-select
-    pos_name,
-    word,
-    word_id,
-    attrkey,
-    attrvalue,
-    attrvalue_id,
-    pf.sort_order
-from
-    mashup_v
-inner join pos_form pf on pf.attribute_id = mashup_v.attribute_id and pf.pos_id = mashup_v.pos_id
-where word = %s
-order by word_id, pf.sort_order
-"""
-
-    partial_match_sql = """
-    select
-        pos_name,
-        word,
-        word_id,
-        attrkey,
-        attrvalue,
-        attrvalue_id,
-        pf.sort_order
+    select distinct
+        word_id
     from
         mashup_v
-    inner join pos_form pf on pf.attribute_id = mashup_v.attribute_id and pf.pos_id = mashup_v.pos_id
-    where word like %s or attrvalue like %s
-    order by word_id, pf.sort_order
+    where word = %s
+    """
+
+    partial_match_sql = """
+    select distinct
+        word_id
+    from
+        mashup_v
+    where word like %s or (attrvalue like %s and attrkey <> 'definition')
     """
 
     if partial:
@@ -139,7 +123,9 @@ order by word_id, pf.sort_order
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         cursor.execute(query, query_args)
         rows = cursor.fetchall()
-        result = process_word_query_result(rows)
+        word_ids = list(map(lambda x: x['word_id'], rows))
+
+        result = get_words_from_word_ids(word_ids)
         if not result:
             return "no match for %s" % word, 404
 

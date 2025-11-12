@@ -6,9 +6,6 @@ from pprint import pprint
 import requests
 from dlernen.config import Config
 
-# TODO:  change the way --partial works.  currently all we are doing is displaying all of the attrvalues
-#   that match the argument.  what we should be doing is returning all of the words that have attrvalues
-#   that match the string, then displaying those.
 
 def widest_attrkey_len(result):
     """
@@ -27,7 +24,6 @@ def hanging_tag_width(result):
 
 
 def display_result(result, tagwidth, keywidth):
-
     tag = "%s (%s)" % (result['word'], result['pos_name'])
     print("%s" % ('=' * 66))
 
