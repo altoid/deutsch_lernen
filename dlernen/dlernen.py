@@ -122,8 +122,8 @@ def lookup_by_post():
         elif r.status_code == 200:
             results = r.json()
 
+    results = sorted(results, key=lambda x: x['word'])
     template_args = []
-
     for result in results:
         # FIXME - gracefully handle status code <> 200
         url = "%s/api/wordlists/%s" % (current_app.config['DB_URL'], result['word_id'])
