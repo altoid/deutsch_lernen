@@ -87,6 +87,15 @@ def get_lookup_render_template(word, **kwargs):
     elif r.status_code == 200:
         results = r.json()
 
+    # if nothing found, redo the query as a partial match.
+    url = "%s/api/word/%s?partial=true" % (current_app.config['DB_URL'], word)
+    results = []
+    r = requests.get(url)
+    if r.status_code == 404:
+        pass
+    elif r.status_code == 200:
+        results = r.json()
+
     template_args = []
 
     for result in results:
