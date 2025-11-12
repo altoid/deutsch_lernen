@@ -122,7 +122,7 @@ def lookup_by_post():
         elif r.status_code == 200:
             results = r.json()
 
-    results = sorted(results, key=lambda x: x['word'])
+    results = sorted(results, key=lambda x: str.lower(x['word']))
     template_args = []
     for result in results:
         # FIXME - gracefully handle status code <> 200
