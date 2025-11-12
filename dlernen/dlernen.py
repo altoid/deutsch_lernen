@@ -77,40 +77,6 @@ def home():
     return render_template('home.html')
 
 
-def get_lookup_render_template(word, **kwargs):
-    return_to_wordlist_id = kwargs.get('return_to_wordlist_id')
-    url = "%s/api/word/%s" % (current_app.config['DB_URL'], word)
-    results = []
-    r = requests.get(url)
-    if r.status_code == 404:
-        pass
-    elif r.status_code == 200:
-        results = r.json()
-
-    # if nothing found, redo the query as a partial match.
-    url = "%s/api/word/%s?partial=true" % (current_app.config['DB_URL'], word)
-    results = []
-    r = requests.get(url)
-    if r.status_code == 404:
-        pass
-    elif r.status_code == 200:
-        results = r.json()
-
-    template_args = []
-
-    for result in results:
-        # FIXME - gracefully handle status code <> 200
-        url = "%s/api/wordlists/%s" % (current_app.config['DB_URL'], result['word_id'])
-        r = requests.get(url)
-        member_wordlists = r.json()
-        template_args.append((result, member_wordlists))
-
-    return render_template('lookup.html',
-                           word=word,
-                           return_to_wordlist_id=return_to_wordlist_id,
-                           template_args=template_args)
-
-
 @bp.route('/lookup/<int:word_id>', methods=['GET'])
 def lookup_by_get(word_id):
     # for when a word appears as a hyperlink in a page.
@@ -139,7 +105,36 @@ def lookup_by_post():
     # for looking up a word entered into a form.
     word = request.form.get('lookup')
     return_to_wordlist_id = request.form.get('return_to_wordlist_id')
-    return get_lookup_render_template(word, return_to_wordlist_id=return_to_wordlist_id)
+    url = "%s/api/word/%s" % (current_app.config['DB_URL'], word)
+    results = []
+    r = requests.get(url)
+    if r.status_code == 404:
+        pass
+    elif r.status_code == 200:
+        results = r.json()
+
+    # if nothing found, redo the query as a partial match.
+    if not results:
+        url = "%s/api/word/%s?partial=true" % (current_app.config['DB_URL'], word)
+        r = requests.get(url)
+        if r.status_code == 404:
+            pass
+        elif r.status_code == 200:
+            results = r.json()
+
+    template_args = []
+
+    for result in results:
+        # FIXME - gracefully handle status code <> 200
+        url = "%s/api/wordlists/%s" % (current_app.config['DB_URL'], result['word_id'])
+        r = requests.get(url)
+        member_wordlists = r.json()
+        template_args.append((result, member_wordlists))
+
+    return render_template('lookup.html',
+                           word=word,
+                           return_to_wordlist_id=return_to_wordlist_id,
+                           template_args=template_args)
 
 
 @bp.route('/wordlists')
