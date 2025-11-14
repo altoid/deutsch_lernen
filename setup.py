@@ -10,6 +10,7 @@ setup(
         'flask',
         'mysql-connector-python',
         'jsonschema',
-        'requests'
+        'requests',
+        'click'
     ],
 )
