@@ -1,6 +1,5 @@
 import unittest
 import jsonschema
-import requests
 from dlernen import dlernen_json_schema, config, create_app
 from flask import url_for
 import json
@@ -32,9 +31,9 @@ class APITests(unittest.TestCase):
 
     def test_dummy(self):
         with self.app.test_request_context():
-            pprint(self.app.config)
+            # pprint(self.app.config)
             url = url_for('api_misc.get_pos', _external=True)
-            print(url)
+            # print(url)
 
     def test_pos_structure(self):
         with self.app.test_request_context():
@@ -45,60 +44,69 @@ class APITests(unittest.TestCase):
             jsonschema.validate(pos_structure, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
 
     def test_real_quiz_data(self):
-        url = "%s/api/quiz_data/%s" % (config.Config.DB_URL, 'plurals')
-        r = requests.get(url)
-        quiz_data = r.json()
+        with self.app.test_request_context():
+            url = url_for('api_quiz.quiz_data', quiz_key='plurals', _external=True)
+            r = self.client.get(url)
+            quiz_data = json.loads(r.data)
 
-        jsonschema.validate(quiz_data, dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA)
+            jsonschema.validate(quiz_data, dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA)
 
     def test_empty_quiz_data_no_match(self):
-        url = "%s/api/quiz_data/%s" % (config.Config.DB_URL, 'aoeuaoeuaeou')
-        r = requests.get(url)
-        self.assertEqual(404, r.status_code)
+        with self.app.test_request_context():
+            url = url_for('api_quiz.get_quiz_by_key', quiz_key='aoeuaoeuaoeu', _external=True)
+            r = self.client.get(url)
+            self.assertEqual(404, r.status_code)
 
     def test_get_word_by_word_exact(self):
-        r = requests.get(config.Config.BASE_URL + "/api/word/verderben")
-        results = r.json()
-        self.assertGreater(len(results), 0)
-        jsonschema.validate(results, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
+        with self.app.test_request_context():
+            url = url_for('api_word.get_word', word='verderben', _external=True)
+            r = self.client.get(url)
+            results = json.loads(r.data)
+            self.assertGreater(len(results), 0)
+            jsonschema.validate(results, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
 
     def test_get_word_no_match(self):
-        r = requests.get(config.Config.BASE_URL + "/api/word/anehuintaoedhunateohdu")
-        self.assertEqual(404, r.status_code)
+        with self.app.test_request_context():
+            url = url_for('api_word.get_word', word='anehuintaoedhunateohdu', _external=True)
+            r = self.client.get(url)
+            self.assertEqual(404, r.status_code)
 
     def test_get_word_by_word_partial(self):
-        r = requests.get(config.Config.BASE_URL + "/api/word/geh?partial=true")
-        results = r.json()
-        self.assertGreater(len(results), 0)
-        jsonschema.validate(results, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
+        with self.app.test_request_context():
+            url = url_for('api_word.get_word', word='geh', partial=True, _external=True)
+            r = self.client.get(url)
+            results = json.loads(r.data)
+            self.assertGreater(len(results), 0)
+            jsonschema.validate(results, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
 
     def test_get_words_empty_list_1(self):
-        url = "%s/api/words" % config.Config.DB_URL
-        payload = {
-        }
+        with self.app.test_request_context():
+            url = url_for('api_word.get_words', _external=True)
+            payload = {
+            }
 
-        r = requests.put(url, json=payload)
-        result = json.loads(r.text)
-        self.assertEqual([], result)
+            r = self.client.put(url, json=payload)
+            result = json.loads(r.data)
+            self.assertEqual([], result)
 
     def test_get_words_empty_list_2(self):
-        url = "%s/api/words" % config.Config.DB_URL
-        payload = {
-            "word_ids": []
-        }
+        with self.app.test_request_context():
+            url = url_for('api_word.get_words', _external=True)
+            payload = {
+                "word_ids": []
+            }
 
-        r = requests.put(url, json=payload)
-        result = json.loads(r.text)
-        self.assertEqual([], result)
+            r = self.client.put(url, json=payload)
+            result = json.loads(r.data)
+            self.assertEqual([], result)
 
-
-class APIWordlists(unittest.TestCase):
-    # get all wordlists
+    # TODO move this to another file
     def test_real_wordlist(self):
-        r = requests.get(config.Config.BASE_URL + "/api/wordlists")
-        self.assertEqual(r.status_code, 200)
-        results = r.json()
-        self.assertGreater(len(results), 0)
-        jsonschema.validate(results, dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
+        with self.app.test_request_context():
+            r = self.client.get(url_for('api_wordlist.get_wordlists', _external=True))
+            self.assertEqual(r.status_code, 200)
+            results = json.loads(r.data)
+            self.assertGreater(len(results), 0)
+            jsonschema.validate(results, dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
 
 
