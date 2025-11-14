@@ -669,8 +669,7 @@ def get_wordlists_by_word_id(word_id):
         result = []
         if wordlist_ids:
             args = ','.join([str(x) for x in wordlist_ids])
-            url = url_for('api_wordlist.get_wordlists', wordlist_id=args)
-            url = "%s%s" % (current_app.config['DB_URL'], url)
+            url = url_for('api_wordlist.get_wordlists', wordlist_id=args, _external=True)
             r = requests.get(url)
 
             result = json.loads(r.text)

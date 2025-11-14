@@ -1,8 +1,6 @@
-import mysql.connector.errors
-from flask import Blueprint, current_app, request
+from flask import Blueprint, current_app, url_for
 from mysql.connector import connect
 from dlernen import dlernen_json_schema
-import requests
 from pprint import pprint
 from contextlib import closing
 import jsonschema
@@ -74,4 +72,12 @@ def get_pos():
         return result
 
 
+@bp.route('/api/misc')
+def api_misc():
+    # fiddling with flask
 
+    pprint(dict(current_app.config))
+    url = url_for('api_misc.gender_rules', _external=True)
+    pprint(url)
+
+    return 'OK', 200

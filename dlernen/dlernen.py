@@ -64,9 +64,6 @@ def post_test():
     return j
 
 
-# TODO - delete an attrkey value - /api/<word_id>/attrkey/<attrvalue_id>
-
-
 @bp.errorhandler(500)
 def server_error(e):
     return render_template('500.html'), 500
@@ -84,12 +81,10 @@ def lookup_by_get(word_id):
 
     # FIXME - gracefully handle status code <> 200
 
-    url = "%s/api/word/%s" % (current_app.config['DB_URL'], word_id)
-    r = requests.get(url)
+    r = requests.get(url_for('api_word.get_word_by_id', word_id=word_id, _external=True))
     result = r.json()
 
-    url = "%s/api/wordlists/%s" % (current_app.config['DB_URL'], word_id)
-    r = requests.get(url)
+    r = requests.get(url_for('api_wordlist.get_wordlists_by_word_id', word_id=word_id, _external=True))
     member_wordlists = r.json()
 
     template_args = [(result, member_wordlists)]
@@ -105,9 +100,8 @@ def lookup_by_post():
     # for looking up a word entered into a form.
     word = request.form.get('lookup')
     return_to_wordlist_id = request.form.get('return_to_wordlist_id')
-    url = "%s/api/word/%s" % (current_app.config['DB_URL'], word)
     results = []
-    r = requests.get(url)
+    r = requests.get(url_for('api_word.get_word', word=word, _external=True))
     if r.status_code == 404:
         pass
     elif r.status_code == 200:
@@ -115,8 +109,7 @@ def lookup_by_post():
 
     # if nothing found, redo the query as a partial match.
     if not results:
-        url = "%s/api/word/%s?partial=true" % (current_app.config['DB_URL'], word)
-        r = requests.get(url)
+        r = requests.get(url_for('api_word.get_word', word=word, partial=True, _external=True))
         if r.status_code == 404:
             pass
         elif r.status_code == 200:
@@ -126,8 +119,7 @@ def lookup_by_post():
     template_args = []
     for result in results:
         # FIXME - gracefully handle status code <> 200
-        url = "%s/api/wordlists/%s" % (current_app.config['DB_URL'], result['word_id'])
-        r = requests.get(url)
+        r = requests.get(url_for('api_wordlist.get_wordlists_by_word_id', word_id=result['word_id'], _external=True))
         member_wordlists = r.json()
         template_args.append((result, member_wordlists))
 
@@ -139,7 +131,7 @@ def lookup_by_post():
 
 @bp.route('/wordlists')
 def wordlists():
-    url = "%s/api/wordlists" % current_app.config['DB_URL']
+    url = url_for('api_wordlist.get_wordlists', _external=True)
     r = requests.get(url)
     if r:
         result = json.loads(r.text)
@@ -150,7 +142,7 @@ def wordlists():
 
 @bp.route('/list_attributes/<int:wordlist_id>')
 def list_attributes(wordlist_id):
-    url = "%s/api/wordlist/%s/metadata" % (current_app.config['DB_URL'], wordlist_id)
+    url = url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
     if r:
         result = r.json()
@@ -168,16 +160,14 @@ def list_attributes(wordlist_id):
 @bp.route('/wordlist/<int:wordlist_id>')
 def wordlist(wordlist_id):
     nchunks = request.args.get('nchunks', current_app.config['NCHUNKS'], type=int)
-    url = "%s/api/wordlist/%s" % (current_app.config['DB_URL'], wordlist_id)
-    r = requests.get(url)
+    r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True))
     if r.status_code == 404:
         flash("wordlist %s not found" % wordlist_id)
         return redirect('/wordlists')
 
     if r.status_code == 422:
         # unprocessable content - the sqlcode is not valid.  redirect to the list attributes page to fix it.
-        url = "%s/api/wordlist/%s/metadata" % (current_app.config['DB_URL'], wordlist_id)
-        r = requests.get(url)
+        r = requests.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True))
         result = r.json()
         if result['sqlcode'] is None:
             result['sqlcode'] = ''
@@ -222,7 +212,7 @@ def addlist():
 
     if not name:
         flash("Die Liste muss einen Namen haben")
-        return redirect('/wordlists')
+        return redirect(url_for('dlernen.wordlists'))
 
     if citation is not None:
         x = citation.strip()
@@ -234,10 +224,10 @@ def addlist():
         'citation': citation
     }
 
-    url = "%s/api/wordlist/metadata" % current_app.config['DB_URL']
+    url = url_for('api_wordlist.create_wordlist_metadata', _external=True)
     r = requests.post(url, json=payload)
     if r.status_code == 200:
-        return redirect('/wordlists')
+        return redirect(url_for('dlernen.wordlists'))
 
     raise Exception("something went wrong in POST: to %s - %s [%s]" % (url, r.text, r.status_code))
 
@@ -245,12 +235,11 @@ def addlist():
 @bp.route('/deletelist', methods=['POST'])
 def deletelist():
     doomed = request.form.getlist('deletelist')
-    url = "%s/api/wordlists" % current_app.config['DB_URL']
     payload = {
         'deletelist': doomed
     }
 
-    r = requests.delete(url, data=payload)
+    r = requests.delete(url_for('api_wordlist.delete_wordlists', _external=True), data=payload)
     if r.status_code == 200:
         return redirect('/wordlists')
     raise Exception("something went wrong in /api/wordlists: %s" % r.text)
@@ -297,7 +286,7 @@ def edit_list_attributes():
         'citation': citation
     }
 
-    url = "%s/api/wordlist/%s/metadata" % (current_app.config['DB_URL'], wordlist_id)
+    url = url_for('api_wordlist.update_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
     r = requests.put(url, json=payload)
     if r.status_code == 200:
         target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
@@ -325,7 +314,7 @@ def add_to_list():
 
     # TODO - for now, we can only add a word to a wordlist, not a word_id.
     payload = None
-    url = "%s/api/word/%s" % (current_app.config['DB_URL'], word)
+    url = url_for('api_word.get_word', word=word, _external=True)
     r = requests.get(url)
     if r.status_code == 404:
         payload = {
@@ -343,7 +332,7 @@ def add_to_list():
     if not payload:
         raise Exception("add_to_list could not make payload")
 
-    url = "%s/api/wordlist/%s/contents" % (current_app.config['DB_URL'], wordlist_id)
+    url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True)
     r = requests.put(url, json=payload)
     if r.status_code != 200:
         raise Exception("well, shit")
@@ -359,7 +348,7 @@ def update_notes():
     }
     wordlist_id = request.form['wordlist_id']
 
-    url = "%s/api/wordlist/%s/contents" % (current_app.config['DB_URL'], wordlist_id)
+    url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True)
     r = requests.put(url, json=payload)
     if r.status_code == 200:
         target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
@@ -375,11 +364,13 @@ def delete_from_list():
     unknown_deleting = request.form.getlist('unknown_wordlist')
 
     for word_id in known_deleting:
-        url = "%s/api/wordlist/%s/%s" % (current_app.config['DB_URL'], wordlist_id, int(word_id))
+        url = url_for('api_wordlist.delete_from_wordlist_by_id', wordlist_id=wordlist_id, word_id=word_id,
+                      _external=True)
         r = requests.delete(url)
 
     for word in unknown_deleting:
-        url = "%s/api/wordlist/%s/%s" % (current_app.config['DB_URL'], wordlist_id, word)
+        url = url_for('api_wordlist.delete_from_wordlist_by_word', wordlist_id=wordlist_id, word=word,
+                      _external=True)
         r = requests.delete(url)
 
     # TODO - change API to allow batch delete.  we could do this with a single request
@@ -392,7 +383,7 @@ def delete_from_list():
 def edit_word_form(word):
     wordlist_id = request.args.get('wordlist_id')
 
-    url = "%s/api/word/metadata?word=%s" % (current_app.config['BASE_URL'], word)
+    url = url_for('api_word.word_metadata', word=word, _external=True)
     r = requests.get(url)
     if r:
         pos_infos = r.json()
@@ -464,7 +455,7 @@ def update_dict():
                     }
                 )
 
-        url = "%s/api/word" % current_app.config['DB_URL']
+        url = url_for('api_word.add_word', _external=True)
         r = requests.post(url, json=payload)
         if r.status_code != 200:
             raise Exception("failed to insert word '%s'" % word)
@@ -477,7 +468,7 @@ def update_dict():
             'word': word,
             'word_id': obj['word_id']
         }
-        url = "%s/api/wordlists" % current_app.config['DB_URL']
+        url = url_for('api_wordlist.refresh_wordlists', _external=True)
         r = requests.put(url, json=refresh_payload)
         if r.status_code != 200:
             raise Exception("failed to refresh word lists")
@@ -524,7 +515,7 @@ def update_dict():
         elif v:
             payload['attributes_updating'].append(v)
 
-    url = "%s/api/word/%s" % (current_app.config['DB_URL'], word_id)
+    url = url_for('api_word.update_word', word_id=word_id, _external=True)
     r = requests.put(url, json=payload)
 
     wordlist_id = request.form.get('wordlist_id')
