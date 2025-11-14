@@ -1,6 +1,6 @@
 import unittest
 import jsonschema
-from dlernen import dlernen_json_schema, config, create_app
+from dlernen import dlernen_json_schema, create_app
 from flask import url_for
 import json
 from pprint import pprint

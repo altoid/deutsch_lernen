@@ -21,7 +21,7 @@ class APIWordlist(unittest.TestCase):
         self.wordlist_url = "%s/api/wordlist/%s" % (config.Config.BASE_URL, self.wordlist_id)
 
     def tearDown(self):
-        r = requests.delete("%s/api/wordlist/%s" % (config.Config.BASE_URL, self.wordlist_id))
+        r = requests.delete(self.wordlist_url)
 
     # the setup for this class creates a list with just a name.
 
@@ -39,7 +39,7 @@ class APIWordlist(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         obj = r.json()
 
-        r = requests.get("%s/api/wordlist/%s" % (config.Config.BASE_URL, self.wordlist_id))
+        r = requests.get(self.wordlist_url)
         self.assertEqual(r.status_code, 200)
         obj = r.json()
 
@@ -98,7 +98,7 @@ class APIWordlist(unittest.TestCase):
         r = requests.put(self.contents_url, json=update_payload)
         self.assertEqual(r.status_code, 200)
 
-        r = requests.get("%s/api/wordlist/%s" % (config.Config.BASE_URL, self.wordlist_id))
+        r = requests.get(self.wordlist_url)
         self.assertEqual(r.status_code, 200)
         obj = r.json()
 
@@ -291,7 +291,7 @@ class APIWordlist(unittest.TestCase):
             ]
         }
 
-        r = requests.put("%s/api/wordlist/%s/contents" % (config.Config.BASE_URL, self.wordlist_id),
+        r = requests.put(self.contents_url,
                          json=update_payload)
         self.assertEqual(200, r.status_code)
         obj = r.json()
@@ -303,7 +303,7 @@ class APIWordlist(unittest.TestCase):
             'sqlcode': 'select id word_id from word where id = 555'
         }
 
-        r = requests.put("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, self.wordlist_id), json=payload)
+        r = requests.put(self.metadata_url, json=payload)
         self.assertEqual(200, r.status_code)
         obj = r.json()
         self.assertEqual('smart', obj['list_type'])
@@ -312,7 +312,7 @@ class APIWordlist(unittest.TestCase):
             'sqlcode': None
         }
 
-        r = requests.put("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, self.wordlist_id), json=payload)
+        r = requests.put(self.metadata_url, json=payload)
         self.assertEqual(200, r.status_code)
         obj = r.json()
         self.assertEqual('empty', obj['list_type'])
@@ -361,7 +361,7 @@ class APIWordlist(unittest.TestCase):
             'sqlcode': 'select id word_id from word where id = 555'
         }
 
-        r = requests.put("%s/api/wordlist/%s/metadata" % (config.Config.BASE_URL, self.wordlist_id), json=payload)
+        r = requests.put(self.metadata_url, json=payload)
         self.assertEqual(200, r.status_code)
         obj = r.json()
 
