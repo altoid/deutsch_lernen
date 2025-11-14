@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, url_for
+from flask import Blueprint, current_app
 from mysql.connector import connect
 from dlernen import dlernen_json_schema
 from pprint import pprint
@@ -72,12 +72,11 @@ def get_pos():
         return result
 
 
-@bp.route('/api/misc')
-def api_misc():
-    # fiddling with flask
+@bp.route('/api/config')
+def get_config():
+    d = dict(current_app.config)
 
-    pprint(dict(current_app.config))
-    url = url_for('api_misc.gender_rules', _external=True)
-    pprint(url)
+    # timedelta objects aren't serializable, so do this
+    d['PERMANENT_SESSION_LIFETIME'] = d['PERMANENT_SESSION_LIFETIME'].total_seconds()
 
-    return 'OK', 200
+    return d, 200
