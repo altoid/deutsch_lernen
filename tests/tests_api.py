@@ -1,7 +1,8 @@
 import unittest
 import jsonschema
 import requests
-from dlernen import dlernen_json_schema, config
+from dlernen import dlernen_json_schema, config, create_app
+from flask import url_for
 import json
 from pprint import pprint
 import random
@@ -15,12 +16,33 @@ import string
 
 
 class APITests(unittest.TestCase):
-    def test_pos_structure(self):
-        url = "%s/api/pos" % config.Config.DB_URL
-        r = requests.get(url)
-        pos_structure = r.json()
+    def setUp(self):
+        self.app = create_app()
+        self.app.config.update(
+            TESTING=True,
+            SERVER_NAME='localhost.localdomain:5000'
+        )
 
-        jsonschema.validate(pos_structure, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
+        self.client = self.app.test_client()
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+
+    def tearDown(self):
+        self.app_context.pop()
+
+    def test_dummy(self):
+        with self.app.test_request_context():
+            pprint(self.app.config)
+            url = url_for('api_misc.get_pos', _external=True)
+            print(url)
+
+    def test_pos_structure(self):
+        with self.app.test_request_context():
+            url = url_for('api_misc.get_pos', _external=True)
+            r = self.client.get(url)
+            pos_structure = json.loads(r.data)
+
+            jsonschema.validate(pos_structure, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
 
     def test_real_quiz_data(self):
         url = "%s/api/quiz_data/%s" % (config.Config.DB_URL, 'plurals')
