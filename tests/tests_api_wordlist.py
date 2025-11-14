@@ -42,8 +42,8 @@ class APIWordlist(unittest.TestCase):
                                        _external=True))
         self.app_context.pop()
 
+    # do nothing, just make sure that setUp and tearDown work
     def test_nothing(self):
-        # do nothing, just make sure that setUp and tearDown work
         pass
 
     # add list with everything, incl. known and unknown words
