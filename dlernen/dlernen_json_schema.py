@@ -328,7 +328,7 @@ WORDLIST_CONTENTS_PAYLOAD_SCHEMA = {
             "type": "array",
             "items": {
                 "type": "string",
-                "pattern": STRING_PATTERN
+                "pattern": WORD_PATTERN
             }
         }
     }

@@ -4,7 +4,7 @@ from flask import url_for
 import json
 import random
 import string
-
+from pprint import pprint
 
 class APIWordlist(unittest.TestCase):
     # the setup for this class creates a list with just a name.
@@ -160,6 +160,26 @@ class APIWordlist(unittest.TestCase):
             self.assertEqual(1, len(obj['known_words']))
             self.assertEqual(0, len(obj['unknown_words']))
             self.assertEqual('standard', obj['list_type'])
+
+    # add an unknown word containing whitespace - should not succeed.  this case broke the UI
+    def test_bad_unknown_word(self):
+        with self.app.test_request_context():
+            garbage = 'bad dog %s' % ''.join(random.choices(string.ascii_lowercase, k=10))
+            payload = {
+                'words': [
+                    garbage
+                ]
+            }
+
+            r_put = self.client.put(self.contents_update_url, json=payload)
+            # should be a 400, which means that the payload did not pass validation.  anything else is a problem.
+            self.assertEqual(r_put.status_code, 400)
+
+            # make sure the garbage word didn't get added
+            r_get = self.client.get(self.wordlist_get_url)
+            self.assertEqual(r_get.status_code, 200)
+            obj = json.loads(r_get.data)
+            self.assertEqual('empty', obj['list_type'])
 
     # remove word by id from list
     def test_remove_word_by_id(self):

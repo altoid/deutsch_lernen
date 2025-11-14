@@ -335,7 +335,9 @@ def add_to_list():
     url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True)
     r = requests.put(url, json=payload)
     if r.status_code != 200:
-        raise Exception("well, shit")
+        flash(r.text)
+        target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
+        return redirect(target)
 
     target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
     return redirect(target)
