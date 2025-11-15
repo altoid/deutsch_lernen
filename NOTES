@@ -50,7 +50,7 @@ OK(venv) MacBookPro:deutsch_lernen dougtomm$
 
 to send a put request curl:
 
-curl -X PUT -H "Content-Type: application/json" -d @baddog.json http://127.0.0.1:5000/api/wordlist/3750/contents
+curl -X PUT  -w "%{http_code}" -H "Content-Type: application/json" -d @baddog.json http://127.0.0.1:5000/api/wordlist/3750/contents
 ------
 
 to run the tests:

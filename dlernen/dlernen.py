@@ -330,7 +330,11 @@ def add_to_list():
         }
 
     if not payload:
-        raise Exception("add_to_list could not make payload")
+        flash("""
+        could not deal with word "%s" [%s]:  %s
+        """ % (word, r.status_code, r.text))
+        target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
+        return redirect(target)
 
     url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True)
     r = requests.put(url, json=payload)
@@ -457,10 +461,18 @@ def update_dict():
                     }
                 )
 
+        wordlist_id = request.form.get('wordlist_id')
         url = url_for('api_word.add_word', _external=True)
         r = requests.post(url, json=payload)
         if r.status_code != 200:
-            raise Exception("failed to insert word '%s'" % word)
+            flash("could not insert word %s [%s]:  %s" % (word, r.status_code, r.text))
+            if wordlist_id:
+                target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
+            else:
+                # if we didn't add a word to any list, return to the editing form for this word.
+                target = url_for('dlernen.edit_word_form', word=word)
+
+            return redirect(target)
 
         obj = r.json()
 
@@ -475,7 +487,6 @@ def update_dict():
         if r.status_code != 200:
             raise Exception("failed to refresh word lists")
 
-        wordlist_id = request.form.get('wordlist_id')
         if wordlist_id:
             target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
         else:
