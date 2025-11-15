@@ -2,139 +2,8 @@ import unittest
 import jsonschema
 from dlernen import dlernen_json_schema
 
-SAMPLE_WORDS_RESULT = [
-    {
-        "attributes": [{'attrkey': 'definition',
-                        'sort_order': 5,
-                        'attrvalue_id': 123,
-                        'attrvalue': 'to spoil, deteriorate, go bad'},
-                       {'attrkey': 'first_person_singular',
-                        'sort_order': 6,
-                        'attrvalue_id': 123,
-                        'attrvalue': 'verderbe'},
-                       {'attrkey': 'second_person_singular',
-                        'sort_order': 7,
-                        'attrvalue_id': 123,
-                        'attrvalue': 'verdirbst'},
-                       {'attrkey': 'third_person_singular',
-                        'sort_order': 8,
-                        'attrvalue_id': 123,
-                        'attrvalue': 'verdirbt'},
-                       {'attrkey': 'first_person_plural',
-                        'sort_order': 9,
-                        'attrvalue_id': 123,
-                        'attrvalue': 'verderben'},
-                       {'attrkey': 'second_person_plural',
-                        'sort_order': 10,
-                        'attrvalue_id': 123,
-                        'attrvalue': 'verderbt'},
-                       {'attrkey': 'third_person_plural',
-                        'sort_order': 11,
-                        'attrvalue_id': 123,
-                        'attrvalue': 'verderben'},
-                       {'attrkey': 'third_person_past',
-                        'sort_order': 16,
-                        'attrvalue_id': 123,
-                        'attrvalue': 'verdarb'},
-                       {'attrkey': 'past_participle',
-                        'sort_order': 17,
-                        'attrvalue_id': 123,
-                        'attrvalue': 'verdorben'}],
-        "pos_name": "Verb",
-        "word": "verderben",
-        "word_id": 2267
-    }
-]
-
-SAMPLE_POS_STRUCTURE_RESPONSE = [
-    # 0 or more of these
-    {
-        # required
-        "name": "Verb",
-
-        # required but can be empty
-        "attributes": [
-            {
-                # both of these are required
-                "attrkey": "definition",
-                "sort_order": 5,
-            },
-            {
-                "attrkey": "first_person_singular",
-                "sort_order": 6
-            }
-        ]
-    },
-    {
-        "name": "Conjunction",
-        "attributes": [
-            {
-                "attrkey": "definition",
-                "sort_order": 0
-            }
-        ]
-    }
-]
-
-SAMPLE_WORDLISTS_RESULT = [
-    {
-        "name": "sample_word_list",
-        "wordlist_id": 1234,
-        "count": 111,
-        "list_type": "standard"
-    }
-]
-
-SAMPLE_QUIZ_DATA_RESULT = [
-    {
-        'quiz_id': 3,
-        'word_id': 868,
-        'word': 'Tarnung',
-        'attributes': {
-            'article': {
-                'attrvalue': 'die',
-                'attribute_id': 1,
-                'correct_count': 0,
-                'last_presentation': None,
-                'presentation_count': 0,
-            },
-            'plural': {
-                'attrvalue': 'Tarnungen',
-                'attribute_id': 3,
-                'correct_count': 0,
-                'last_presentation': None,
-                'presentation_count': 0,
-            }
-        }
-    }
-]
-
-SAMPLE_WORDLIST_RESPONSE = {
-    "name": "sample_word_list",
-    "wordlist_id": 1234,
-    "count": 111,
-    "list_type": "standard",
-    "known_words": [
-        {
-            "word": "aoeuaeou",
-            "word_id": 123,
-            "definition": "hell if i know"
-        },
-        {
-            "word": "Iethdsenihtd",
-            "word_id": 465,
-            "article": "das",
-            "definition": "an odd noun"
-        }
-    ],
-    "citation": "where i got this",
-    "source_is_url": False,
-    "unknown_words": [
-        "othuedtiu", "tehuidntuh", "tuehdinteuh"
-    ],
-    "notes": "lots of stuff"
-}
-
+# none of the tests here uses the API or hits the database.  these tests make sure that the JSONSCHEMA documents
+# are defined correctly.
 
 class CheckDocumentDefinitions(unittest.TestCase):
     """
@@ -161,29 +30,61 @@ class CheckDocumentDefinitions(unittest.TestCase):
                 jsonschema.Draft202012Validator.check_schema(jdoc)
 
 
-class SchemaTests(unittest.TestCase):
-    def test_pos_structure_response_sample_1(self):
-        jsonschema.validate(SAMPLE_POS_STRUCTURE_RESPONSE, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
+class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
+    valid_docs = [
+    ]
 
-    def test_pos_structure_response_sample_2(self):
-        doc = [
-        ]
+    invalid_docs = [
+    ]
 
-        jsonschema.validate(doc, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, dlernen_json_schema.NULL_SCHEMA)
 
-    def test_pos_structure_response_sample_3(self):
-        doc = [
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, dlernen_json_schema.NULL_SCHEMA)
+
+
+class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
+    valid_docs = [
+        # FIXME - the schema defines an array.  maybe it shouldn't.
+        [
+            # 0 or more of these
             {
-                "name": "voib",
-                "attributes": []  # can't be empty
+                # required
+                "name": "Verb",
+
+                # required but can be empty
+                "attributes": [
+                    {
+                        # both of these are required
+                        "attrkey": "definition",
+                        "sort_order": 5,
+                    },
+                    {
+                        "attrkey": "first_person_singular",
+                        "sort_order": 6
+                    }
+                ]
+            },
+            {
+                "name": "Conjunction",
+                "attributes": [
+                    {
+                        "attrkey": "definition",
+                        "sort_order": 0
+                    }
+                ]
             }
-        ]
-
-        with self.assertRaises(jsonschema.exceptions.ValidationError):
-            jsonschema.validate(doc, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
-
-    def test_pos_structure_response_sample_4(self):
-        doc = [
+        ],
+        [
+            # empty is ok.
+        ],
+        [
             {
                 "name": "voib",
                 "attributes": [
@@ -194,24 +95,144 @@ class SchemaTests(unittest.TestCase):
                 ]
             }
         ]
+    ]
 
-        jsonschema.validate(doc, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
+    invalid_docs = [
+        [
+            {
+                "name": "voib",
+                "attributes": []  # can't be empty
+            }
+        ]
+    ]
 
-    def test_word_sample(self):
-        jsonschema.validate(SAMPLE_WORDS_RESULT, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
 
-    def test_quiz_data_sample(self):
-        jsonschema.validate(SAMPLE_QUIZ_DATA_RESULT, dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA)
-
-    def test_wordlists_sample(self):
-        jsonschema.validate(SAMPLE_WORDLISTS_RESULT, dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
-
-    def test_wordlist_response_sample(self):
-        jsonschema.validate(SAMPLE_WORDLIST_RESPONSE, dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA)
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
 
 
-class WordPayload(unittest.TestCase):
-    valid_payloads = [
+class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
+    valid_docs = [
+        {
+            "name": "sample_word_list",
+            "wordlist_id": 1234,
+            "count": 111,
+            "list_type": "standard",
+            "known_words": [
+                {
+                    "word": "aoeuaeou",
+                    "word_id": 123,
+                    "definition": "hell if i know"
+                },
+                {
+                    "word": "Iethdsenihtd",
+                    "word_id": 465,
+                    "article": "das",
+                    "definition": "an odd noun"
+                }
+            ],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [
+                "othuedtiu", "tehuidntuh", "tuehdinteuh"
+            ],
+            "notes": "lots of stuff"
+        }
+    ]
+
+    invalid_docs = [
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA)
+
+
+class Test_WORDLISTS_RESPONSE_SCHEMA(unittest.TestCase):
+    valid_docs = [
+        [
+            {
+                "name": "sample_word_list",
+                "wordlist_id": 1234,
+                "count": 111,
+                "list_type": "standard"
+            }
+        ]
+    ]
+
+    invalid_docs = [
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
+
+
+class Test_QUIZ_DATA_RESPONSE_SCHEMA(unittest.TestCase):
+    valid_docs = [
+        [
+            {
+                'quiz_id': 3,
+                'word_id': 868,
+                'word': 'Tarnung',
+                'attributes': {
+                    'article': {
+                        'attrvalue': 'die',
+                        'attribute_id': 1,
+                        'correct_count': 0,
+                        'last_presentation': None,
+                        'presentation_count': 0,
+                    },
+                    'plural': {
+                        'attrvalue': 'Tarnungen',
+                        'attribute_id': 3,
+                        'correct_count': 0,
+                        'last_presentation': None,
+                        'presentation_count': 0,
+                    }
+                }
+            }
+        ]
+    ]
+
+    invalid_docs = [
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA)
+
+
+class Test_WORD_PAYLOAD_SCHEMA(unittest.TestCase):
+    valid_docs = [
         {
             # empty payload is allowed
         },
@@ -248,7 +269,7 @@ class WordPayload(unittest.TestCase):
         }
     ]
 
-    invalid_payloads = [
+    invalid_docs = [
         {
             "attributes_adding": [
                 {
@@ -327,39 +348,84 @@ class WordPayload(unittest.TestCase):
         }
     ]
 
-    def test_valid_payloads(self):
-        for jdoc in self.valid_payloads:
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
                 jsonschema.validate(jdoc, dlernen_json_schema.WORD_PAYLOAD_SCHEMA)
 
-    def test_invalid_payloads(self):
-        for jdoc in self.invalid_payloads:
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
                     jsonschema.validate(jdoc, dlernen_json_schema.WORD_PAYLOAD_SCHEMA)
 
 
-class WordsResponse(unittest.TestCase):
-    valid_payloads = [
+class Test_WORDS_RESPONSE_SCHEMA(unittest.TestCase):
+    valid_docs = [
+        [
+            {
+                "attributes": [
+                    {'attrkey': 'definition',
+                     'sort_order': 5,
+                     'attrvalue_id': 123,
+                     'attrvalue': 'to spoil, deteriorate, go bad'},
+                    {'attrkey': 'first_person_singular',
+                     'sort_order': 6,
+                     'attrvalue_id': 123,
+                     'attrvalue': 'verderbe'},
+                    {'attrkey': 'second_person_singular',
+                     'sort_order': 7,
+                     'attrvalue_id': 123,
+                     'attrvalue': 'verdirbst'},
+                    {'attrkey': 'third_person_singular',
+                     'sort_order': 8,
+                     'attrvalue_id': 123,
+                     'attrvalue': 'verdirbt'},
+                    {'attrkey': 'first_person_plural',
+                     'sort_order': 9,
+                     'attrvalue_id': 123,
+                     'attrvalue': 'verderben'},
+                    {'attrkey': 'second_person_plural',
+                     'sort_order': 10,
+                     'attrvalue_id': 123,
+                     'attrvalue': 'verderbt'},
+                    {'attrkey': 'third_person_plural',
+                     'sort_order': 11,
+                     'attrvalue_id': 123,
+                     'attrvalue': 'verderben'},
+                    {'attrkey': 'third_person_past',
+                     'sort_order': 16,
+                     'attrvalue_id': 123,
+                     'attrvalue': 'verdarb'},
+                    {'attrkey': 'past_participle',
+                     'sort_order': 17,
+                     'attrvalue_id': 123,
+                     'attrvalue': 'verdorben'}
+                ],
+                "pos_name": "Verb",
+                "word": "verderben",
+                "word_id": 2267
+            }
+        ]
     ]
 
-    invalid_payloads = [
+    invalid_docs = [
     ]
 
-    def test_valid_payloads(self):
-        for jdoc in self.valid_payloads:
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
                 jsonschema.validate(jdoc, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
 
-    def test_invalid_payloads(self):
-        for jdoc in self.invalid_payloads:
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
                     jsonschema.validate(jdoc, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
 
 
-class WordlistContentsPayload(unittest.TestCase):
-    valid_payloads = [
+class Test_WORDLIST_CONTENTS_PAYLOAD_SCHEMA(unittest.TestCase):
+    valid_docs = [
         {
         },
         {
@@ -387,7 +453,7 @@ class WordlistContentsPayload(unittest.TestCase):
         }
     ]
 
-    invalid_payloads = [
+    invalid_docs = [
         {
             "words": [
                 ""
@@ -399,26 +465,31 @@ class WordlistContentsPayload(unittest.TestCase):
             ]
         },
         {
+            "words": [
+                "unknown words should not have spaces."
+            ]
+        },
+        {
             "words": "value should be an array"
         }
     ]
 
-    def test_valid_payloads(self):
-        for jdoc in self.valid_payloads:
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
                 jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_CONTENTS_PAYLOAD_SCHEMA)
 
-    def test_invalid_payloads(self):
-        for jdoc in self.invalid_payloads:
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
                     jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_CONTENTS_PAYLOAD_SCHEMA)
 
 
-class WordlistMetadataPayload(unittest.TestCase):
+class Test_WORDLIST_METADATA_PAYLOAD_SCHEMA(unittest.TestCase):
     # note:  these tests don't validate sqlcode.  that happens in the API tests.
 
-    valid_payloads = [
+    valid_docs = [
         {
             "name": "saetuasasue",
             "citation": "anteohusntaeo",
@@ -443,7 +514,7 @@ class WordlistMetadataPayload(unittest.TestCase):
         }
     ]
 
-    invalid_payloads = [
+    invalid_docs = [
         {
             "name": "  leading and trailing whitespace not allowed  "
         },
@@ -458,19 +529,19 @@ class WordlistMetadataPayload(unittest.TestCase):
         }
     ]
 
-    def test_valid_payloads(self):
-        for jdoc in self.valid_payloads:
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
                 jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
 
-    def test_invalid_payloads(self):
-        for jdoc in self.invalid_payloads:
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
                     jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
 
 
-class WordlistMetadataResponse(unittest.TestCase):
+class Test_WORDLIST_METADATA_RESPONSE_SCHEMA(unittest.TestCase):
     valid_responses = [
         {
             "wordlist_id": 1234,
@@ -578,12 +649,12 @@ class WordlistMetadataResponse(unittest.TestCase):
         }
     ]
 
-    def test_valid_payloads(self):
+    def test_valid_docs(self):
         for jdoc in self.valid_responses:
             with self.subTest(jdoc=jdoc):
                 jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
 
-    def test_invalid_payloads(self):
+    def test_invalid_docs(self):
         for jdoc in self.invalid_responses:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):

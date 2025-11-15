@@ -12,6 +12,12 @@ ID_PATTERN = WORD_PATTERN
 # separate regex for multiline strings.
 MULTILINE_STRING_PATTERN = r"""\S"""
 
+NULL_SCHEMA = {
+    # to assist in creating test classes.  a doc with ANY content should not validate against this schema.
+    # if we see this error we know we forgot to change the schema when we copy-pasted the test class.
+    "type": "null"
+}
+
 REFRESH_WORDLISTS_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/refresh_wordlists",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
