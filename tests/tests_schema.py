@@ -57,45 +57,45 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
     schema = dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA
 
     valid_docs = [
-        # FIXME - the schema defines an array.  maybe it shouldn't.
         [
-            # 0 or more of these
+            # 1 or more of these
             {
                 # required
-                "name": "Verb",
+                "pos_name": "Verb",
 
                 # required but can be empty
                 "attributes": [
                     {
-                        # both of these are required
+                        # all of these are required
                         "attrkey": "definition",
+                        "attribute_id": 1234,
                         "sort_order": 5,
                     },
                     {
                         "attrkey": "first_person_singular",
+                        "attribute_id": 1234,
                         "sort_order": 6
                     }
                 ]
             },
             {
-                "name": "Conjunction",
+                "pos_name": "Conjunction",
                 "attributes": [
                     {
                         "attrkey": "definition",
+                        "attribute_id": 1234,
                         "sort_order": 0
                     }
                 ]
             }
         ],
         [
-            # empty is ok.
-        ],
-        [
             {
-                "name": "voib",
+                "pos_name": "voib",
                 "attributes": [
                     {
                         "attrkey": "definition",
+                        "attribute_id": 1234,
                         "sort_order": 0,
                     }
                 ]
@@ -109,7 +109,71 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "name": "voib",
                 "attributes": []  # can't be empty
             }
-        ]
+        ],
+        [
+            {
+                "name": "voib",
+                "attributes": [
+                    {
+                        # "attrkey": "whatevs",
+                        "attribute_id": 1234,
+                        "sort_order": 11
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                "name": "voib",
+                "attributes": [
+                    {
+                        "attrkey": "whatevs",
+                        # "attribute_id": 1234,
+                        "sort_order": 11
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                "name": "voib",
+                "attributes": [
+                    {
+                        "attrkey": "whatevs",
+                        "attribute_id": 1234,
+                        # "sort_order": 11
+                    }
+                ]
+            }
+        ],
+        [
+            # empty is bad.  it means there are no parts of speech in the database!
+        ],
+        [
+            {
+                "name": "no_attributes",
+                # "attributes": [
+                #     {
+                #         # "attrkey": "whatevs",
+                #         "attribute_id": 1234,
+                #         "sort_order": 11
+                #     }
+                # ]
+            }
+        ],
+        [
+            {
+                # "name": "voib",
+                "attributes": [
+                    {
+                        "attrkey": "missing_pos",
+                        "attribute_id": 1234,
+                        "sort_order": 11
+                    }
+                ]
+            }
+        ],
+
     ]
 
     def test_valid_docs(self):

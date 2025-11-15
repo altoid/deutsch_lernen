@@ -565,11 +565,12 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
     attributes for each part of speech, along with their sort ordering
     """,
     "type": "array",
+    "minItems": 1,
     "items": {
         "type": "object",
-        "required": ["name", "attributes"],
+        "required": ["pos_name", "attributes"],
         "properties": {
-            "name": {
+            "pos_name": {
                 "type": "string",
                 "pattern": ID_PATTERN
             },
@@ -578,11 +579,15 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
                 "minItems": 1,
                 "items": {
                     "type": "object",
-                    "required": ["attrkey", "sort_order"],
+                    "required": ["attrkey", "attribute_id", "sort_order"],
                     "properties": {
                         "attrkey": {
                             "type": "string",
                             "pattern": ID_PATTERN
+                        },
+                        "attribute_id": {
+                            "type": "integer",
+                            "minimum": 0
                         },
                         "sort_order": {
                             "type": "integer",

@@ -40,7 +40,7 @@ def get_pos():
     """
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
-        select p.name, a.attrkey, pf.sort_order
+        select p.name, a.attrkey, a.id AS attribute_id, pf.sort_order
         from pos_form pf
         inner join pos p on p.id = pf.pos_id
         inner join attribute a on a.id = pf.attribute_id;
@@ -56,6 +56,7 @@ def get_pos():
             temp_result[r['name']].append(
                 {
                     "attrkey": r['attrkey'],
+                    "attribute_id": r['attribute_id'],
                     "sort_order": r['sort_order']
                 }
             )
@@ -64,7 +65,7 @@ def get_pos():
         for k in temp_result.keys():
             result.append(
                 {
-                    "name": k.lower(),
+                    "pos_name": k.lower(),
                     "attributes": temp_result[k]
                 }
             )
