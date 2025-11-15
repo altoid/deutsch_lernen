@@ -5,12 +5,14 @@ from dlernen import dlernen_json_schema
 # none of the tests here uses the API or hits the database.  these tests make sure that the JSONSCHEMA documents
 # are defined correctly.
 
+
 class CheckDocumentDefinitions(unittest.TestCase):
     """
     run check_schema on all the document types.
     """
 
     all_the_docs = [
+        dlernen_json_schema.NULL_SCHEMA,
         dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA,
         dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA,
         dlernen_json_schema.REFRESH_WORDLISTS_PAYLOAD_SCHEMA,
@@ -31,6 +33,8 @@ class CheckDocumentDefinitions(unittest.TestCase):
 
 
 class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
+    schema = dlernen_json_schema.NULL_SCHEMA
+
     valid_docs = [
     ]
 
@@ -40,16 +44,18 @@ class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, dlernen_json_schema.NULL_SCHEMA)
+                jsonschema.validate(jdoc, self.schema)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, dlernen_json_schema.NULL_SCHEMA)
+                    jsonschema.validate(jdoc, self.schema)
 
 
 class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA
+
     valid_docs = [
         # FIXME - the schema defines an array.  maybe it shouldn't.
         [
@@ -109,21 +115,22 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
+                jsonschema.validate(jdoc, self.schema)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
+                    jsonschema.validate(jdoc, self.schema)
 
 
 class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA
+
     valid_docs = [
         {
             "name": "sample_word_list",
             "wordlist_id": 1234,
-            "count": 111,
             "list_type": "standard",
             "known_words": [
                 {
@@ -144,25 +151,171 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
                 "othuedtiu", "tehuidntuh", "tuehdinteuh"
             ],
             "notes": "lots of stuff"
+        },
+        {
+            "name": "no words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "null citation and notes",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [],
+            "citation": None,
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": None
         }
     ]
 
     invalid_docs = [
+        {
+            "name": "bad dog",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [
+                "whitespace not allowed"
+            ],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "whitespace in word",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [
+                {
+                    "word": "whitespace in word",
+                    "word_id": 1234,
+                }
+            ],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "missing word id",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [
+                {
+                    "word": "missing_word_id"
+                }
+            ],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "bullshit list type",
+            "wordlist_id": 1234,
+            "list_type": "bullshit",
+            "known_words": [],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            # "name": "no words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "no words",
+            # "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "no words",
+            "wordlist_id": 1234,
+            # "list_type": "standard",
+            "known_words": [],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "no words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [],
+            # "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "no words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [],
+            "citation": "where i got this",
+            # "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "no words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [],
+            "citation": "where i got this",
+            "source_is_url": False,
+            # "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "no words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            # "notes": "lots of stuff"
+        },
+        {
+            # empty doc not allowed
+        }
     ]
 
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA)
+                jsonschema.validate(jdoc, self.schema)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA)
+                    jsonschema.validate(jdoc, self.schema)
 
 
 class Test_WORDLISTS_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA
+
     valid_docs = [
         [
             {
@@ -180,16 +333,18 @@ class Test_WORDLISTS_RESPONSE_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
+                jsonschema.validate(jdoc, self.schema)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
+                    jsonschema.validate(jdoc, self.schema)
 
 
 class Test_QUIZ_DATA_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA
+
     valid_docs = [
         [
             {
@@ -222,16 +377,18 @@ class Test_QUIZ_DATA_RESPONSE_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA)
+                jsonschema.validate(jdoc, self.schema)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA)
+                    jsonschema.validate(jdoc, self.schema)
 
 
 class Test_WORD_PAYLOAD_SCHEMA(unittest.TestCase):
+    schema = dlernen_json_schema.WORD_PAYLOAD_SCHEMA
+
     valid_docs = [
         {
             # empty payload is allowed
@@ -351,16 +508,18 @@ class Test_WORD_PAYLOAD_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, dlernen_json_schema.WORD_PAYLOAD_SCHEMA)
+                jsonschema.validate(jdoc, self.schema)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, dlernen_json_schema.WORD_PAYLOAD_SCHEMA)
+                    jsonschema.validate(jdoc, self.schema)
 
 
 class Test_WORDS_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = dlernen_json_schema.WORDS_RESPONSE_SCHEMA
+
     valid_docs = [
         [
             {
@@ -415,16 +574,18 @@ class Test_WORDS_RESPONSE_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
+                jsonschema.validate(jdoc, self.schema)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
+                    jsonschema.validate(jdoc, self.schema)
 
 
 class Test_WORDLIST_CONTENTS_PAYLOAD_SCHEMA(unittest.TestCase):
+    schema = dlernen_json_schema.WORDLIST_CONTENTS_PAYLOAD_SCHEMA
+
     valid_docs = [
         {
         },
@@ -477,17 +638,19 @@ class Test_WORDLIST_CONTENTS_PAYLOAD_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_CONTENTS_PAYLOAD_SCHEMA)
+                jsonschema.validate(jdoc, self.schema)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_CONTENTS_PAYLOAD_SCHEMA)
+                    jsonschema.validate(jdoc, self.schema)
 
 
 class Test_WORDLIST_METADATA_PAYLOAD_SCHEMA(unittest.TestCase):
     # note:  these tests don't validate sqlcode.  that happens in the API tests.
+
+    schema = dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA
 
     valid_docs = [
         {
@@ -532,16 +695,18 @@ class Test_WORDLIST_METADATA_PAYLOAD_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
+                jsonschema.validate(jdoc, self.schema)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
+                    jsonschema.validate(jdoc, self.schema)
 
 
 class Test_WORDLIST_METADATA_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA
+
     valid_responses = [
         {
             "wordlist_id": 1234,
@@ -652,10 +817,10 @@ class Test_WORDLIST_METADATA_RESPONSE_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_responses:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
+                jsonschema.validate(jdoc, self.schema)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_responses:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
+                    jsonschema.validate(jdoc, self.schema)
