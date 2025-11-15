@@ -62,6 +62,7 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
             {
                 # required
                 "pos_name": "Verb",
+                "pos_id": 1234,
 
                 # required but can be empty
                 "attributes": [
@@ -80,6 +81,7 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
             },
             {
                 "pos_name": "Conjunction",
+                "pos_id": 1234,
                 "attributes": [
                     {
                         "attrkey": "definition",
@@ -92,6 +94,7 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
         [
             {
                 "pos_name": "voib",
+                "pos_id": 1234,
                 "attributes": [
                     {
                         "attrkey": "definition",
@@ -106,13 +109,15 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
     invalid_docs = [
         [
             {
-                "name": "voib",
+                "pos_name": "voib",
+                "pos_id": 1234,
                 "attributes": []  # can't be empty
             }
         ],
         [
             {
-                "name": "voib",
+                "pos_name": "voib",
+                "pos_id": 1234,
                 "attributes": [
                     {
                         # "attrkey": "whatevs",
@@ -124,7 +129,8 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
         ],
         [
             {
-                "name": "voib",
+                "pos_name": "voib",
+                "pos_id": 1234,
                 "attributes": [
                     {
                         "attrkey": "whatevs",
@@ -136,7 +142,8 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
         ],
         [
             {
-                "name": "voib",
+                "pos_name": "voib",
+                "pos_id": 1234,
                 "attributes": [
                     {
                         "attrkey": "whatevs",
@@ -151,7 +158,8 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
         ],
         [
             {
-                "name": "no_attributes",
+                "pos_name": "no_attributes",
+                "pos_id": 1234,
                 # "attributes": [
                 #     {
                 #         # "attrkey": "whatevs",
@@ -163,7 +171,21 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
         ],
         [
             {
-                # "name": "voib",
+                # "pos_name": "voib",
+                "pos_id": 1234,
+                "attributes": [
+                    {
+                        "attrkey": "missing_pos",
+                        "attribute_id": 1234,
+                        "sort_order": 11
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                "pos_name": "voib",
+                # "pos_id": 1234,
                 "attributes": [
                     {
                         "attrkey": "missing_pos",

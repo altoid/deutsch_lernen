@@ -568,11 +568,15 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
     "minItems": 1,
     "items": {
         "type": "object",
-        "required": ["pos_name", "attributes"],
+        "required": ["pos_name", "pos_id", "attributes"],
         "properties": {
             "pos_name": {
                 "type": "string",
                 "pattern": ID_PATTERN
+            },
+            "pos_id": {
+                "type": "integer",
+                "minimum": 0
             },
             "attributes": {
                 "type": "array",

@@ -40,7 +40,7 @@ def get_pos():
     """
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
-        select p.name, a.attrkey, a.id AS attribute_id, pf.sort_order
+        select p.name, a.attrkey, a.id AS attribute_id, pf.sort_order, pf.pos_id
         from pos_form pf
         inner join pos p on p.id = pf.pos_id
         inner join attribute a on a.id = pf.attribute_id;
@@ -49,11 +49,14 @@ def get_pos():
         cursor.execute(sql)
         rows = cursor.fetchall()
 
-        temp_result = {}
+        name_to_attrs = {}
+        name_to_ids = {}
         for r in rows:
-            if r['name'] not in temp_result:
-                temp_result[r['name']] = []
-            temp_result[r['name']].append(
+            if r['name'] not in name_to_attrs:
+                name_to_attrs[r['name']] = []
+            if r['name'] not in name_to_ids:
+                name_to_ids[r['name']] = r['pos_id']
+            name_to_attrs[r['name']].append(
                 {
                     "attrkey": r['attrkey'],
                     "attribute_id": r['attribute_id'],
@@ -62,11 +65,12 @@ def get_pos():
             )
 
         result = []
-        for k in temp_result.keys():
+        for k in name_to_attrs.keys():
             result.append(
                 {
                     "pos_name": k.lower(),
-                    "attributes": temp_result[k]
+                    "pos_id": name_to_ids[k],
+                    "attributes": name_to_attrs[k]
                 }
             )
 
