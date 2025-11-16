@@ -348,6 +348,23 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 ]
             }
         ],
+        [
+            {
+                "pos_name": "voib",
+                "pos_id": 1234,
+                "word": None,
+                "word_id": None,
+                "attributes": [
+                    {
+                        "attrkey": "missing_pos",
+                        "attribute_id": 1234,
+                        "sort_order": 11,
+                        "attrvalue": "if word info is null then there should be nulls for attrs too",
+                        "attrvalue_id": 1234,
+                    }
+                ]
+            }
+        ],
     ]
 
     def test_valid_docs(self):

@@ -615,7 +615,7 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
                             # we require the attrvalue and attrvalue_id fields to be present.  both must be null,
                             # or both must be not null.  this is the only way enforce that.
                             {"$ref": "#/$attr_defs/attr_properties_null"},
-                            {"$ref": "#/$attr_defs/attr_properties_not_null"},
+                            # {"$ref": "#/$attr_defs/attr_properties_not_null"},
                         ]
                     }
                 }
