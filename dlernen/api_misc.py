@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, url_for
+from flask import Blueprint, url_for, request, current_app
 from mysql.connector import connect
 from dlernen import dlernen_json_schema
 from pprint import pprint
@@ -35,15 +35,28 @@ def gender_rules():
 
 @bp.route('/api/pos')
 def get_pos():
+    # TODO - make sure the word conforms to dlernen_json_schema.WORD_PATTERN
+    word = request.args.get('word')
+    
     """
     fetch the part-of-speech info from the database and format it
     """
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
-        select p.name, a.attrkey, a.id AS attribute_id, pf.sort_order, pf.pos_id
-        from pos_form pf
-        inner join pos p on p.id = pf.pos_id
-        inner join attribute a on a.id = pf.attribute_id;
+        SELECT p.NAME AS pos_name,
+               p.id   AS pos_id,
+               a.attrkey,
+               a.id   AS attribute_id,
+               pf.sort_order,
+               NULL   AS word,
+               NULL   AS word_id,
+               NULL   AS attrvalue,
+               NULL   AS attrvalue_id
+        FROM   pos_form pf
+               INNER JOIN pos p
+                       ON p.id = pf.pos_id
+               INNER JOIN attribute a
+                       ON a.id = pf.attribute_id 
         """
 
         cursor.execute(sql)
@@ -51,18 +64,22 @@ def get_pos():
 
         name_to_attrs = {}
         name_to_ids = {}
+        pos_to_word_info = {}
+
         for r in rows:
-            if r['name'] not in name_to_attrs:
-                name_to_attrs[r['name']] = []
-            if r['name'] not in name_to_ids:
-                name_to_ids[r['name']] = r['pos_id']
-            name_to_attrs[r['name']].append(
+            if r['pos_name'] not in name_to_attrs:
+                name_to_attrs[r['pos_name']] = []
+            if r['pos_name'] not in name_to_ids:
+                name_to_ids[r['pos_name']] = r['pos_id']
+            if r['pos_name'] not in pos_to_word_info:
+                pos_to_word_info[r['pos_name']] = (r['word'], r['word_id'])
+            name_to_attrs[r['pos_name']].append(
                 {
                     "attrkey": r['attrkey'],
                     "attribute_id": r['attribute_id'],
                     "sort_order": r['sort_order'],
-                    "attrvalue": None,
-                    "attrvalue_id": None
+                    "attrvalue": r['attrvalue'],
+                    "attrvalue_id": r['attrvalue_id']
                 }
             )
 
@@ -72,8 +89,8 @@ def get_pos():
                 {
                     "pos_name": k.lower(),
                     "pos_id": name_to_ids[k],
-                    "word": None,
-                    "word_id": None,
+                    "word": pos_to_word_info[k][0],
+                    "word_id": pos_to_word_info[k][1],
                     "attributes": name_to_attrs[k]
                 }
             )
