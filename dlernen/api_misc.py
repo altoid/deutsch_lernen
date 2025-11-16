@@ -60,7 +60,9 @@ def get_pos():
                 {
                     "attrkey": r['attrkey'],
                     "attribute_id": r['attribute_id'],
-                    "sort_order": r['sort_order']
+                    "sort_order": r['sort_order'],
+                    "attrvalue": None,
+                    "attrvalue_id": None
                 }
             )
 

@@ -71,11 +71,15 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                         "attrkey": "definition",
                         "attribute_id": 1234,
                         "sort_order": 5,
+                        "attrvalue": "aoeu",
+                        "attrvalue_id": 1234,
                     },
                     {
                         "attrkey": "first_person_singular",
                         "attribute_id": 1234,
-                        "sort_order": 6
+                        "sort_order": 6,
+                        "attrvalue": None,
+                        "attrvalue_id": None,
                     }
                 ]
             },
@@ -86,7 +90,9 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                     {
                         "attrkey": "definition",
                         "attribute_id": 1234,
-                        "sort_order": 0
+                        "sort_order": 0,
+                        "attrvalue": "aoeu",
+                        "attrvalue_id": 1234,
                     }
                 ]
             }
@@ -100,6 +106,8 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                         "attrkey": "definition",
                         "attribute_id": 1234,
                         "sort_order": 0,
+                        "attrvalue": None,
+                        "attrvalue_id": None,
                     }
                 ]
             }
@@ -111,7 +119,37 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
             {
                 "pos_name": "voib",
                 "pos_id": 1234,
-                "attributes": []  # can't be empty
+                "attributes": [],  # can't be empty
+            }
+        ],
+        [
+            {
+                "pos_name": "voib",
+                "pos_id": 1234,
+                "attributes": [
+                    {
+                        "attrkey": "whatevs",
+                        "attribute_id": 1234,
+                        "sort_order": 11,
+                        "attrvalue": "id cannot be null if there is a value",
+                        "attrvalue_id": None,
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                "pos_name": "voib",
+                "pos_id": 1234,
+                "attributes": [
+                    {
+                        "attrkey": "whatevs",
+                        "attribute_id": 1234,
+                        "sort_order": 11,
+                        "attrvalue": None,  # if this is null, attrvalue_id must be null too.
+                        "attrvalue_id": 1234,
+                    }
+                ]
             }
         ],
         [
@@ -122,7 +160,9 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                     {
                         # "attrkey": "whatevs",
                         "attribute_id": 1234,
-                        "sort_order": 11
+                        "sort_order": 11,
+                        "attrvalue": "aoeu",
+                        "attrvalue_id": 1234,
                     }
                 ]
             }
@@ -135,7 +175,9 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                     {
                         "attrkey": "whatevs",
                         # "attribute_id": 1234,
-                        "sort_order": 11
+                        "sort_order": 11,
+                        "attrvalue": "aoeu",
+                        "attrvalue_id": 1234,
                     }
                 ]
             }
@@ -148,7 +190,39 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                     {
                         "attrkey": "whatevs",
                         "attribute_id": 1234,
-                        # "sort_order": 11
+                        # "sort_order": 11,
+                        "attrvalue": "aoeu",
+                        "attrvalue_id": 1234,
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                "pos_name": "voib",
+                "pos_id": 1234,
+                "attributes": [
+                    {
+                        "attrkey": "whatevs",
+                        "attribute_id": 1234,
+                        "sort_order": 11,
+                        # "attrvalue": "aoeu",
+                        "attrvalue_id": 1234,
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                "pos_name": "voib",
+                "pos_id": 1234,
+                "attributes": [
+                    {
+                        "attrkey": "whatevs",
+                        "attribute_id": 1234,
+                        "sort_order": 11,
+                        "attrvalue": "aoeu",
+                        # "attrvalue_id": 1234,
                     }
                 ]
             }
@@ -164,7 +238,7 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 #     {
                 #         # "attrkey": "whatevs",
                 #         "attribute_id": 1234,
-                #         "sort_order": 11
+                #         "sort_order": 11,
                 #     }
                 # ]
             }
@@ -177,7 +251,7 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                     {
                         "attrkey": "missing_pos",
                         "attribute_id": 1234,
-                        "sort_order": 11
+                        "sort_order": 11,
                     }
                 ]
             }
@@ -190,7 +264,7 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                     {
                         "attrkey": "missing_pos",
                         "attribute_id": 1234,
-                        "sort_order": 11
+                        "sort_order": 11,
                     }
                 ]
             }

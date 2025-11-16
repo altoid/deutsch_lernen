@@ -583,10 +583,19 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
                 "minItems": 1,
                 "items": {
                     "type": "object",
-                    "required": ["attrkey", "attribute_id", "sort_order"],
+                    "required": [
+                        "attrkey",
+                        "attribute_id",
+                        "sort_order",
+                        "attrvalue",
+                        "attrvalue_id"
+                    ],
 
                     "anyOf": [
-                        {"$ref": "#/$defs/attr_properties"},
+                        # we require the attrvalue and attrvalue_id fields to be present.  both must be null,
+                        # or both must be not null.  this is the only way enforce that.
+                        {"$ref": "#/$defs/attr_properties_null"},
+                        {"$ref": "#/$defs/attr_properties_not_null"},
                     ]
                 }
             }
@@ -594,7 +603,7 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
     },
 
     "$defs": {
-        "attr_properties": {
+        "attr_properties_not_null": {
             "properties": {
                 "attrkey": {
                     "type": "string",
@@ -607,8 +616,39 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
                 "sort_order": {
                     "type": "integer",
                     "minimum": 0
+                },
+                "attrvalue": {
+                    "type": "string",
+                    "pattern": STRING_PATTERN
+                },
+                "attrvalue_id": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "attr_properties_null": {
+            "properties": {
+                "attrkey": {
+                    "type": "string",
+                    "pattern": ID_PATTERN
+                },
+                "attribute_id": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "sort_order": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "attrvalue": {
+                    "type": "null"
+                },
+                "attrvalue_id": {
+                    "type": "null"
                 }
             }
         }
+
     }
 }
