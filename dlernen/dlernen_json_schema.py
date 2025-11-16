@@ -579,33 +579,34 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
                 "minimum": 0
             },
             "attributes": {
-                "anyOf": [
-                    { "$ref": "#/$defs/attributes" },
-                ]
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                    "type": "object",
+                    "required": ["attrkey", "attribute_id", "sort_order"],
+
+                    "anyOf": [
+                        {"$ref": "#/$defs/attr_properties"},
+                    ]
+                }
             }
         }
     },
 
     "$defs": {
-        "attributes": {
-            "type": "array",
-            "minItems": 1,
-            "items": {
-                "type": "object",
-                "required": ["attrkey", "attribute_id", "sort_order"],
-                "properties": {
-                    "attrkey": {
-                        "type": "string",
-                        "pattern": ID_PATTERN
-                    },
-                    "attribute_id": {
-                        "type": "integer",
-                        "minimum": 0
-                    },
-                    "sort_order": {
-                        "type": "integer",
-                        "minimum": 0
-                    }
+        "attr_properties": {
+            "properties": {
+                "attrkey": {
+                    "type": "string",
+                    "pattern": ID_PATTERN
+                },
+                "attribute_id": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "sort_order": {
+                    "type": "integer",
+                    "minimum": 0
                 }
             }
         }
