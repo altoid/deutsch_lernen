@@ -6,32 +6,6 @@ from dlernen import dlernen_json_schema
 # are defined correctly.
 
 
-class CheckDocumentDefinitions(unittest.TestCase):
-    """
-    run check_schema on all the document types.
-    """
-
-    all_the_docs = [
-        dlernen_json_schema.NULL_SCHEMA,
-        dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA,
-        dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA,
-        dlernen_json_schema.REFRESH_WORDLISTS_PAYLOAD_SCHEMA,
-        dlernen_json_schema.WORD_PAYLOAD_SCHEMA,
-        dlernen_json_schema.WORD_METADATA_RESPONSE_SCHEMA,
-        dlernen_json_schema.WORDLIST_CONTENTS_PAYLOAD_SCHEMA,
-        dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA,
-        dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA,
-        dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA,
-        dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA,
-        dlernen_json_schema.WORDS_RESPONSE_SCHEMA,
-    ]
-
-    def test_check_schema_docs(self):
-        for jdoc in self.all_the_docs:
-            with self.subTest(jdoc=jdoc):
-                jsonschema.Draft202012Validator.check_schema(jdoc)
-
-
 class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
     schema = dlernen_json_schema.NULL_SCHEMA
 
@@ -52,6 +26,9 @@ class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
                     jsonschema.validate(jdoc, self.schema)
 
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
 
 class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
     schema = dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA
@@ -63,6 +40,8 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 # required
                 "pos_name": "Verb",
                 "pos_id": 1234,
+                "word": "aoeu",
+                "word_id": 1234,
 
                 # required but can be empty
                 "attributes": [
@@ -86,6 +65,8 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
             {
                 "pos_name": "Conjunction",
                 "pos_id": 1234,
+                "word": "aoeu",
+                "word_id": 1234,
                 "attributes": [
                     {
                         "attrkey": "definition",
@@ -101,6 +82,8 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
             {
                 "pos_name": "voib",
                 "pos_id": 1234,
+                "word": None,
+                "word_id": None,
                 "attributes": [
                     {
                         "attrkey": "definition",
@@ -119,6 +102,8 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
             {
                 "pos_name": "voib",
                 "pos_id": 1234,
+                "word": "aoeu",
+                "word_id": 1234,
                 "attributes": [],  # can't be empty
             }
         ],
@@ -126,6 +111,8 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
             {
                 "pos_name": "voib",
                 "pos_id": 1234,
+                "word": "aoeu",
+                "word_id": 1234,
                 "attributes": [
                     {
                         "attrkey": "whatevs",
@@ -141,6 +128,8 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
             {
                 "pos_name": "voib",
                 "pos_id": 1234,
+                "word": "aoeu",
+                "word_id": 1234,
                 "attributes": [
                     {
                         "attrkey": "whatevs",
@@ -156,6 +145,8 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
             {
                 "pos_name": "voib",
                 "pos_id": 1234,
+                "word": "aoeu",
+                "word_id": 1234,
                 "attributes": [
                     {
                         # "attrkey": "whatevs",
@@ -171,6 +162,8 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
             {
                 "pos_name": "voib",
                 "pos_id": 1234,
+                "word": "aoeu",
+                "word_id": 1234,
                 "attributes": [
                     {
                         "attrkey": "whatevs",
@@ -186,6 +179,8 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
             {
                 "pos_name": "voib",
                 "pos_id": 1234,
+                "word": "aoeu",
+                "word_id": 1234,
                 "attributes": [
                     {
                         "attrkey": "whatevs",
@@ -201,6 +196,8 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
             {
                 "pos_name": "voib",
                 "pos_id": 1234,
+                "word": "aoeu",
+                "word_id": 1234,
                 "attributes": [
                     {
                         "attrkey": "whatevs",
@@ -216,6 +213,8 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
             {
                 "pos_name": "voib",
                 "pos_id": 1234,
+                "word": "aoeu",
+                "word_id": 1234,
                 "attributes": [
                     {
                         "attrkey": "whatevs",
@@ -234,11 +233,15 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
             {
                 "pos_name": "no_attributes",
                 "pos_id": 1234,
+                "word": "aoeu",
+                "word_id": 1234,
                 # "attributes": [
                 #     {
-                #         # "attrkey": "whatevs",
+                #         "attrkey": "whatevs",
                 #         "attribute_id": 1234,
                 #         "sort_order": 11,
+                #         "attrvalue": "aoeu",
+                #         "attrvalue_id": 1234,
                 #     }
                 # ]
             }
@@ -247,11 +250,15 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
             {
                 # "pos_name": "voib",
                 "pos_id": 1234,
+                "word": "aoeu",
+                "word_id": 1234,
                 "attributes": [
                     {
                         "attrkey": "missing_pos",
                         "attribute_id": 1234,
                         "sort_order": 11,
+                        "attrvalue": "aoeu",
+                        "attrvalue_id": 1234,
                     }
                 ]
             }
@@ -260,16 +267,87 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
             {
                 "pos_name": "voib",
                 # "pos_id": 1234,
+                "word": "aoeu",
+                "word_id": 1234,
                 "attributes": [
                     {
                         "attrkey": "missing_pos",
                         "attribute_id": 1234,
                         "sort_order": 11,
+                        "attrvalue": "aoeu",
+                        "attrvalue_id": 1234,
                     }
                 ]
             }
         ],
-
+        [
+            {
+                "pos_name": "voib",
+                "pos_id": 1234,
+                # "word": "aoeu",
+                "word_id": 1234,
+                "attributes": [
+                    {
+                        "attrkey": "missing_pos",
+                        "attribute_id": 1234,
+                        "sort_order": 11,
+                        "attrvalue": "aoeu",
+                        "attrvalue_id": 1234,
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                "pos_name": "voib",
+                "pos_id": 1234,
+                "word": "aoeu",
+                # "word_id": 1234,
+                "attributes": [
+                    {
+                        "attrkey": "missing_pos",
+                        "attribute_id": 1234,
+                        "sort_order": 11,
+                        "attrvalue": "aoeu",
+                        "attrvalue_id": 1234,
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                "pos_name": "voib",
+                "pos_id": 1234,
+                "word": "aoeu",
+                "word_id": None,
+                "attributes": [
+                    {
+                        "attrkey": "missing_pos",
+                        "attribute_id": 1234,
+                        "sort_order": 11,
+                        "attrvalue": "word and word id must be both null or not null",
+                        "attrvalue_id": 1234,
+                    }
+                ]
+            }
+        ],
+        [
+            {
+                "pos_name": "voib",
+                "pos_id": 1234,
+                "word": None,
+                "word_id": 1234,
+                "attributes": [
+                    {
+                        "attrkey": "missing_pos",
+                        "attribute_id": 1234,
+                        "sort_order": 11,
+                        "attrvalue": "word and word id must be both null or not null",
+                        "attrvalue_id": 1234,
+                    }
+                ]
+            }
+        ],
     ]
 
     def test_valid_docs(self):
@@ -282,6 +360,9 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
                     jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
 class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
@@ -472,6 +553,9 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
                     jsonschema.validate(jdoc, self.schema)
 
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
 
 class Test_WORDLISTS_RESPONSE_SCHEMA(unittest.TestCase):
     schema = dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA
@@ -500,6 +584,9 @@ class Test_WORDLISTS_RESPONSE_SCHEMA(unittest.TestCase):
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
                     jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
 class Test_QUIZ_DATA_RESPONSE_SCHEMA(unittest.TestCase):
@@ -544,6 +631,9 @@ class Test_QUIZ_DATA_RESPONSE_SCHEMA(unittest.TestCase):
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
                     jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
 class Test_WORD_PAYLOAD_SCHEMA(unittest.TestCase):
@@ -676,6 +766,9 @@ class Test_WORD_PAYLOAD_SCHEMA(unittest.TestCase):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
                     jsonschema.validate(jdoc, self.schema)
 
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
 
 class Test_WORDS_RESPONSE_SCHEMA(unittest.TestCase):
     schema = dlernen_json_schema.WORDS_RESPONSE_SCHEMA
@@ -742,6 +835,9 @@ class Test_WORDS_RESPONSE_SCHEMA(unittest.TestCase):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
                     jsonschema.validate(jdoc, self.schema)
 
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
 
 class Test_WORDLIST_CONTENTS_PAYLOAD_SCHEMA(unittest.TestCase):
     schema = dlernen_json_schema.WORDLIST_CONTENTS_PAYLOAD_SCHEMA
@@ -806,6 +902,9 @@ class Test_WORDLIST_CONTENTS_PAYLOAD_SCHEMA(unittest.TestCase):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
                     jsonschema.validate(jdoc, self.schema)
 
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
 
 class Test_WORDLIST_METADATA_PAYLOAD_SCHEMA(unittest.TestCase):
     # note:  these tests don't validate sqlcode.  that happens in the API tests.
@@ -862,6 +961,9 @@ class Test_WORDLIST_METADATA_PAYLOAD_SCHEMA(unittest.TestCase):
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
                     jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
 class Test_WORDLIST_METADATA_RESPONSE_SCHEMA(unittest.TestCase):
@@ -984,3 +1086,6 @@ class Test_WORDLIST_METADATA_RESPONSE_SCHEMA(unittest.TestCase):
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
                     jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)

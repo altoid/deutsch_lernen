@@ -72,6 +72,8 @@ def get_pos():
                 {
                     "pos_name": k.lower(),
                     "pos_id": name_to_ids[k],
+                    "word": None,
+                    "word_id": None,
                     "attributes": name_to_attrs[k]
                 }
             )

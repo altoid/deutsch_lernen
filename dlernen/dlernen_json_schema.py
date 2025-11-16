@@ -568,41 +568,103 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
     "minItems": 1,
     "items": {
         "type": "object",
-        "required": ["pos_name", "pos_id", "attributes"],
-        "properties": {
-            "pos_name": {
-                "type": "string",
-                "pattern": ID_PATTERN
-            },
-            "pos_id": {
-                "type": "integer",
-                "minimum": 0
-            },
-            "attributes": {
-                "type": "array",
-                "minItems": 1,
-                "items": {
-                    "type": "object",
-                    "required": [
-                        "attrkey",
-                        "attribute_id",
-                        "sort_order",
-                        "attrvalue",
-                        "attrvalue_id"
-                    ],
+        "required": [
+            "pos_name",
+            "pos_id",
+            "attributes",
+            "word",
+            "word_id"
+        ],
+        "anyOf": [
+            {"$ref": "#/$defs/word_info_null"},
+            {"$ref": "#/$defs/word_info_not_null"},
+        ],
+    },
 
-                    "anyOf": [
-                        # we require the attrvalue and attrvalue_id fields to be present.  both must be null,
-                        # or both must be not null.  this is the only way enforce that.
-                        {"$ref": "#/$defs/attr_properties_null"},
-                        {"$ref": "#/$defs/attr_properties_not_null"},
-                    ]
+    "$defs": {
+        "word_info_null": {
+            "properties": {
+                "pos_name": {
+                    "type": "string",
+                    "pattern": ID_PATTERN
+                },
+                "pos_id": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "word": {
+                    "type": "null",
+                },
+                "word_id": {
+                    "type": "null",
+                },
+                "attributes": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "attrkey",
+                            "attribute_id",
+                            "sort_order",
+                            "attrvalue",
+                            "attrvalue_id"
+                        ],
+
+                        "anyOf": [
+                            # we require the attrvalue and attrvalue_id fields to be present.  both must be null,
+                            # or both must be not null.  this is the only way enforce that.
+                            {"$ref": "#/$attr_defs/attr_properties_null"},
+                            {"$ref": "#/$attr_defs/attr_properties_not_null"},
+                        ]
+                    }
+                }
+            }
+        },
+        "word_info_not_null": {
+            "properties": {
+                "pos_name": {
+                    "type": "string",
+                    "pattern": ID_PATTERN
+                },
+                "pos_id": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "word": {
+                    "type": "string",
+                    "pattern": WORD_PATTERN
+                },
+                "word_id": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "attributes": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "attrkey",
+                            "attribute_id",
+                            "sort_order",
+                            "attrvalue",
+                            "attrvalue_id"
+                        ],
+
+                        "anyOf": [
+                            # we require the attrvalue and attrvalue_id fields to be present.  both must be null,
+                            # or both must be not null.  this is the only way enforce that.
+                            {"$ref": "#/$attr_defs/attr_properties_null"},
+                            {"$ref": "#/$attr_defs/attr_properties_not_null"},
+                        ]
+                    }
                 }
             }
         }
     },
 
-    "$defs": {
+    "$attr_defs": {
         "attr_properties_not_null": {
             "properties": {
                 "attrkey": {
