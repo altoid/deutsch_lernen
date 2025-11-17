@@ -12,6 +12,10 @@ ID_PATTERN = WORD_PATTERN
 # separate regex for multiline strings.
 MULTILINE_STRING_PATTERN = r"""\S"""
 
+ATTRIBUTES_ADDING = 'attributes_adding'
+ATTRIBUTES_DELETING = 'attributes_deleting'
+ATTRIBUTES_UPDATING = 'attributes_updating'
+
 NULL_SCHEMA = {
     # to assist in creating test classes.  a doc with ANY content should not validate against this schema.
     # if we see this error we know we forgot to change the schema when we copy-pasted the test class.
@@ -56,11 +60,12 @@ WORD_PAYLOAD_SCHEMA = {
             "pattern": WORD_PATTERN
         },
         "pos_name": {
+            # FIXME we should be passing the pos_id, not the name.
             # this is optional.  required for adding a word and ignored on updates
             "type": "string",
             "pattern": ID_PATTERN
         },
-        "attributes_adding": {
+        ATTRIBUTES_ADDING: {
             "type": "array",
             "items": {
                 "type": "object",
@@ -69,6 +74,7 @@ WORD_PAYLOAD_SCHEMA = {
                     "attrkey"
                 ],
                 "properties": {
+                    # FIXME we should be passing the attribute id, not the key.
                     "attrkey": {
                         "type": "string",
                         "pattern": ID_PATTERN
@@ -80,14 +86,14 @@ WORD_PAYLOAD_SCHEMA = {
                 }
             }
         },
-        "attributes_deleting": {
+        ATTRIBUTES_DELETING: {
             "type": "array",
             "items": {
                 "type": "integer",
                 "minimum": 1
             }
         },
-        "attributes_updating": {
+        ATTRIBUTES_UPDATING: {
             "type": "array",
             "items": {
                 "type": "object",
