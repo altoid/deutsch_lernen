@@ -11,7 +11,7 @@ bp = Blueprint('app_patch_words', __name__)
 @bp.cli.command('patch_words')
 @click.option('--wordlist_ids', '-l', multiple=True)
 def patch_words(wordlist_ids):
-    # to run this, use the command:  python -m flask --app run api_misc patch_words [-l id -l id -l id ...]
+    # to run this, use the command:  python -m flask --app run app_patch_words patch_words [-l id -l id -l id ...]
     # it has to be invoked from the dlernen directory.
     # need -l for each list id because click sucks but we can't use argparse.
     wordlist_ids = list(wordlist_ids)
