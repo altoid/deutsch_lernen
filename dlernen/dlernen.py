@@ -2,6 +2,7 @@ from flask import Blueprint, request, render_template, redirect, url_for, flash,
 from pprint import pprint
 import requests
 import json
+from dlernen import dlernen_json_schema as js
 
 bp = Blueprint('dlernen', __name__)
 
@@ -66,7 +67,7 @@ def post_test():
 
 @bp.errorhandler(500)
 def server_error(e):
-    return render_template('500.html'), 500
+    return render_template('500.html', message=str(e), ), 500
 
 
 @bp.route('/')
@@ -384,35 +385,196 @@ def delete_from_list():
     target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
     return redirect(target)
 
+# FIXME - it looks like changing the spelling of a word through the UI won't work - we will have
+#   to change the spelling for each instance of word/pos_id.
+
 
 @bp.route('/word/<string:word>')
 def edit_word_form(word):
     wordlist_id = request.args.get('wordlist_id')
 
-    url = url_for('api_word.word_metadata', word=word, _external=True)
+    url = url_for('api_misc.get_pos', word=word, _external=True)
     r = requests.get(url)
+    pos_structure = r.json()
+    # pprint(pos_structure)
+
+    # construct the field names for all the attributes.  field name formats are described in addword.html.
+    form_data = {}
+
+    # field_values_before is a mapping of field names to field values.  when the form is submitted,
+    # we will get another such mapping, with whatever changes were made.  we implement the dictionary
+    # update by diffing these and making the appropriate changes to the database.
+
+    field_values_before = {}
+    field_names_to_attrkeys = {}  # FIXME this should not be needed
+    pos_id_to_pos_name = {}  # FIXME this should not be needed
+
+    for p in pos_structure:
+        pos_id_to_pos_name[p['pos_id']] = p['pos_name']
+
+        if p['pos_name'] not in form_data:
+            form_data[p['pos_name']] = []
+        for a in p['attributes']:
+            t = [p['pos_id'], a['attribute_id']]
+            if p['word_id']:
+                t.append(p['word_id'])
+                if a['attrvalue_id']:
+                    t.append(a['attrvalue_id'])
+            t = list(map(str, t))  # convert to str so join won't choke
+            field_name = '-'.join(t)
+            field_value = a['attrvalue'] if a['attrvalue'] else ""
+            d = {
+                'field_name': field_name,
+                'field_value': field_value,
+                'label': a['attrkey'],
+                'sort_order': a['sort_order']
+            }
+            form_data[p['pos_name']].append(d)
+            field_values_before[field_name] = field_value
+            field_names_to_attrkeys[field_name] = a['attrkey']
+        form_data[p['pos_name']] = sorted(form_data[p['pos_name']], key=lambda x: x['sort_order'])
+
+    # pprint(form_data)
+    # pprint(field_values_before)
+
+    # url = url_for('api_word.word_metadata', word=word, _external=True)
+    # r = requests.get(url)
     if r:
-        pos_infos = r.json()
         return render_template('addword.html',
                                word=word,
                                wordlist_id=wordlist_id,
                                return_to_wordlist_id=wordlist_id,
-                               pos_infos=pos_infos)
+                               form_data=form_data,
+                               field_values_before=json.dumps(field_values_before),
+                               field_names_to_attrkeys=json.dumps(field_names_to_attrkeys),
+                               pos_id_to_pos_name=json.dumps(pos_id_to_pos_name))
 
     abort(r.status_code)
 
 
 @bp.route('/update_dict', methods=['POST'])
 def update_dict():
-    tag = request.form.get('tag')
-    if not tag:
-        word = request.form.get('word')
-        wordlist_id = request.form.get('wordlist_id')
-        if word is not None:
-            flash("Select a Part of Speech")
-            return redirect(url_for('dlernen.edit_word_form', word=word, wordlist_id=wordlist_id))
+    word = request.form.get('word', '').strip()
+    word_before = request.form.get('word_before')
+    wordlist_id = request.form.get('wordlist_id')
+    field_values_before = json.loads(request.form.get('field_values_before'))
+    field_names_to_attrkeys = json.loads(request.form.get('field_names_to_attrkeys'))
+    pos_id_to_pos_name = json.loads(request.form.get('pos_id_to_pos_name'))
+    field_values_after = {}
+    for k in field_values_before.keys():
+        field_values_after[k] = request.form.get(k).strip()
 
-        raise Exception("select a part of speech")
+    pprint(field_values_before)
+    pprint(field_values_after)
+    pprint(field_names_to_attrkeys)
+    pprint(pos_id_to_pos_name)
+
+    # go through all the attribute values and diff before/after.  we will construct add/update
+    # payloads and send them off to the API.  we will have to construct one request per
+    # word added/modified until i get around to batching it all in a single request.
+
+    # we have to construct payloads for each (word, pos_id) that has changes.
+    # make a dict mapping these tuples to payload objects.  also track whether
+    # (word, pos_id) is associated with a word id.  if not, then we are adding.
+
+    word_payloads = {}
+    word_ids = {}
+
+    for k in field_values_before.keys():
+        value_before = field_values_before[k]
+        value_after = field_values_after[k]
+        ids = k.split('-')
+        pos_id = int(ids[0])
+        attribute_id = int(ids[1])
+        word_id = str(ids[2]) if len(ids) > 2 else None
+        attrvalue_id = str(ids[3]) if len(ids) > 3 else None
+
+        t = (word, pos_id)
+        if t not in word_payloads:
+            word_payloads[t] = {}
+
+        payload = word_payloads[t]
+        if word_id:
+            word_ids[t] = word_id
+
+        if value_before and not value_after:
+            # we will have a word_id and an attrvalue_id in this case
+            if js.ATTRIBUTES_DELETING not in payload:
+                payload[js.ATTRIBUTES_DELETING] = []
+            payload[js.ATTRIBUTES_DELETING].append(int(attrvalue_id))
+        elif value_after and not value_before:
+            # we *might* have a word_id
+            if js.ATTRIBUTES_ADDING not in payload:
+                payload[js.ATTRIBUTES_ADDING] = []
+            payload[js.ATTRIBUTES_ADDING].append({'attrvalue': value_after, 'attrkey': field_names_to_attrkeys[k]})
+            if word_id:
+                word_ids[t] = word_id
+
+        elif value_after != value_before:
+            # we will have a word_id and an attrvalue_id
+            if js.ATTRIBUTES_UPDATING not in payload:
+                payload[js.ATTRIBUTES_UPDATING] = []
+            payload[js.ATTRIBUTES_UPDATING].append({'attrvalue_id': int(attrvalue_id), 'attrvalue': value_after})
+        else:
+            # unchanged, so who cares
+            pass
+
+    # did we change the spelling of the word?  if so add new spelling to all the payloads.
+    # the update request will take care of proper capitalization.
+    if word and word != word_before:
+        for k in word_payloads.keys():
+            word_payloads[k]['word'] = word
+
+    # go through the payloads and insert word and pos_name in payloads that we are POSTing.
+    for k in word_payloads.keys():
+        if not word_payloads[k]:
+            continue
+
+        if k not in word_ids:
+            word_payloads[k]['word'] = word
+            word_payloads[k]['pos_name'] = pos_id_to_pos_name[str(k[1])]
+
+    # get rid of empty payloads
+    word_payloads = {key: value for key, value in word_payloads.items() if value}
+
+    pprint(word_payloads)
+    pprint(word_ids)
+
+    refresh_needed = False
+    for k, payload in word_payloads.items():
+        if k in word_ids:
+            # we are updating
+            word_id = word_ids[k]
+            url = url_for('api_word.update_word', word_id=word_id, _external=True)
+            r = requests.put(url, json=payload)
+            if r.status_code != 200:
+                flash("could not update word %s [%s]:  %s" % (word, r.status_code, r.text))
+        else:
+            # we are adding a new word
+            url = url_for('api_word.add_word', _external=True)
+            r = requests.post(url, json=payload)
+            if r.status_code != 200:
+                flash("could not insert word %s [%s]:  %s" % (word, r.status_code, r.text))
+            else:
+                refresh_needed = True
+
+    pprint("refresh:  %s" % refresh_needed)
+    if refresh_needed:
+        refresh_payload = {
+            'word': word,
+        }
+        url = url_for('api_wordlist.refresh_wordlists', _external=True)
+        r = requests.put(url, json=refresh_payload)
+        if r.status_code != 200:
+            raise Exception("failed to refresh word lists")
+
+    if wordlist_id:
+        target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
+    else:
+        # if we didn't add a word to any list, return to the editing form for this word.
+        target = url_for('dlernen.edit_word_form', word=word)
+
+    return redirect(target)
 
     # tag is <pos_id>-<pos_name>-<word_id> for the editing case and <pos_id>-<pos_name> for the adding case.
 
@@ -515,18 +677,18 @@ def update_dict():
     if word:
         payload['word'] = word.strip()
 
-    for k, v in attrs_from_form.items():
-        if 'attrvalue' not in v and 'attrvalue_id' in v:
-            payload["attributes_deleting"].append(int(v['attrvalue_id']))
-        elif 'attrvalue_id' not in v and 'attrvalue' in v:
+    for k, payload in attrs_from_form.items():
+        if 'attrvalue' not in payload and 'attrvalue_id' in payload:
+            payload["attributes_deleting"].append(int(payload['attrvalue_id']))
+        elif 'attrvalue_id' not in payload and 'attrvalue' in payload:
             payload["attributes_adding"].append(
                 {
                     'attrkey': k,
-                    'attrvalue': v['attrvalue']
+                    'attrvalue': payload['attrvalue']
                 }
             )
-        elif v:
-            payload['attributes_updating'].append(v)
+        elif payload:
+            payload['attributes_updating'].append(payload)
 
     url = url_for('api_word.update_word', word_id=word_id, _external=True)
     r = requests.put(url, json=payload)

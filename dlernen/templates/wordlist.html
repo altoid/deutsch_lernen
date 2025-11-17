@@ -46,7 +46,7 @@ Wordlist:  {{ result.name }}
                                             {{ r.word }}
                                         </a>
                                     </td>
-                                    <td>{{ r.definition }}</td>
+                                    <td>{{ r.definition if r.definition else '(no definition)' }}</td>
                                 </tr>
                                 {% endfor %}
                             </table>

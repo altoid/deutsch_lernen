@@ -30,17 +30,12 @@ REFRESH_WORDLISTS_PAYLOAD_SCHEMA = {
     "type": "object",
     "required": [
         "word",
-        "word_id"
     ],
     "properties": {
         "word": {
             "type": "string",
             "pattern": WORD_PATTERN
         },
-        "word_id": {
-            "type": "integer",
-            "minimum": 1
-        }
     }
 }
 
@@ -495,11 +490,11 @@ WORDLIST_RESPONSE_SCHEMA = {
                     },
                     "article": {
                         "type": ["string", "null"],
-                        "minLength": 1
+                        "pattern": WORD_PATTERN
                     },
                     "definition": {
-                        "type": "string",
-                        "minLength": 1
+                        "type": ["string", "null"],
+                        "pattern": STRING_PATTERN
                     }
                 }
             }

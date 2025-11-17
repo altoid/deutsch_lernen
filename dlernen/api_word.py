@@ -264,7 +264,7 @@ def update_word(word_id):
             cursor.execute('start transaction')
 
             sql = """
-            select attrkey, attribute_id, attrvalue_id
+            select attrkey, attribute_id, attrvalue_id, pos_name
             from mashup_v
             where word_id = %(word_id)s
             """
@@ -272,6 +272,7 @@ def update_word(word_id):
             rows = cursor.fetchall()
             defined_attrvalue_ids = {r['attrvalue_id'] for r in rows}
             defined_attrkeys = {r['attrkey'] for r in rows}
+            is_noun = rows[0]['pos_name'].lower() == 'noun'
 
             if len(defined_attrvalue_ids) == 0:
                 # word_id is bogus
@@ -315,6 +316,11 @@ def update_word(word_id):
 
             # jsonschema definition guarantees that word, if present, will not contain whitespace
             word = payload.get('word')
+
+            # capitalize appropriately.
+            word = word.casefold()
+            if is_noun:
+                word = word.capitalize()
 
             # checks complete, let's do this.
             attrdict = {r['attrkey']: r['attribute_id'] for r in rows}

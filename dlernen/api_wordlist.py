@@ -306,7 +306,6 @@ def __get_wordlist(wordlist_id):
             cursor.execute(known_words_sql, (wordlist_id,))
 
         known_words = cursor.fetchall()
-
         result['known_words'] = known_words
 
         unknown_words_sql = """
@@ -569,15 +568,10 @@ order by name
 @bp.route('/api/wordlists', methods=['PUT'])
 def refresh_wordlists():
     """
-    this is used when a word in some wordlist's unknowns has been defined.  we are given the word
-    and the newly minted word id.  we'll look for every wordlist where the given word was an unknown,
-    remove it from the unknowns and put it into the knowns.
-
-    payload:
-    {
-        'word': 'whatever',
-        'word_id':  <word_id>
-    }
+    this is used when a word in some wordlist's unknowns has been defined.  we'll look for every wordlist where
+    the given word was an unknown, remove it from the unknowns and put it into the knowns.
+    if a word has multiple word ids (because it's more than one part of speech), then all incarnations
+    of the word will be put into the knowns.
     """
 
     try:
@@ -591,20 +585,22 @@ def refresh_wordlists():
             cursor.execute('start transaction')
 
             sql = """
+            select id as word_id
+            from word
+            where word = %(word)s
+            """
+            cursor.execute(sql, {'word': payload['word']})
+            word_ids = cursor.fetchall()
+
+            sql = """
             select wordlist_id
             from wordlist_unknown_word
             where word = %(word)s
             """
             cursor.execute(sql, {'word': payload['word']})
-            rows = cursor.fetchall()
+            wordlist_ids = cursor.fetchall()
 
-            sql = """
-            delete from wordlist_unknown_word
-            where word = %(word)s
-            """
-            cursor.execute(sql, {'word': payload['word']})
-
-            insert_args = [(r['wordlist_id'], payload['word_id']) for r in rows]
+            insert_args = [(r['wordlist_id'], w['word_id']) for r in wordlist_ids for w in word_ids]
             if insert_args:
                 sql = """
                 insert ignore
@@ -613,6 +609,13 @@ def refresh_wordlists():
                 """
 
                 cursor.executemany(sql, insert_args)
+
+            sql = """
+            delete from wordlist_unknown_word
+            where word = %(word)s
+            """
+            cursor.execute(sql, {'word': payload['word']})
+
             cursor.execute('commit')
             return "OK"
         except Exception as e:

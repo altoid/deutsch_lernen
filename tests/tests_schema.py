@@ -30,6 +30,43 @@ class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
+class Test_REFRESH_WORDLISTS_PAYLOAD_SCHEMA(unittest.TestCase):
+    schema = dlernen_json_schema.REFRESH_WORDLISTS_PAYLOAD_SCHEMA
+
+    valid_docs = [
+        {
+            "word": "oaeuhntoaeu"
+        }
+    ]
+
+    invalid_docs = [
+        {},
+        {
+            "word": None
+        },
+        {
+            "word": ""
+        },
+        {
+            "word": " "
+        }
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, self.schema)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
 class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
     schema = dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA
 
@@ -386,6 +423,34 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
     schema = dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA
 
     valid_docs = [
+        {'citation': None,
+         'known_words': [{'article': None,
+                          'definition': "it's an adjective",
+                          'word': 'anohteduntaheoud',
+                          'word_id': 9185},
+                         {'article': None,
+                          'definition': "no it's a floor cleaner",
+                          'word': 'anohteduntaheoud',
+                          'word_id': 9186},
+                         {'article': None,
+                          'definition': "now it's a noun",
+                          'word': 'Anohteduntaheoud',
+                          'word_id': 9187},
+                         {'article': None,
+                          'definition': None,  # null is OK
+                          'word': 'anohteduntaheoud',
+                          'word_id': 9188},
+                         {'article': None,
+                          'definition': "look it's a verb",
+                          'word': 'anohteduntaheoud',
+                          'word_id': 9189}],
+         'list_type': 'standard',
+         'name': 'aaa fake list 1',
+         'notes': None,
+         'source_is_url': False,
+         'sqlcode': None,
+         'unknown_words': [],
+         'wordlist_id': 4237},
         {
             "name": "sample_word_list",
             "wordlist_id": 1234,
