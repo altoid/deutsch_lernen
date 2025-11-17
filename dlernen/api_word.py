@@ -315,7 +315,7 @@ def update_word(word_id):
                 return message, 400
 
             # jsonschema definition guarantees that word, if present, will not contain whitespace
-            word = payload.get('word')
+            word = payload.get('word', '')
 
             # capitalize appropriately.
             word = word.casefold()

@@ -581,7 +581,7 @@ class APITestsWordPUT(unittest.TestCase):
 
     # changing the spelling of a word works.
     def test_change_spelling(self):
-        new_word = 'aoeuaeouoeau'
+        new_word = 'Aoeuaeouoeau'
         update_payload = {
             'word': new_word
         }
