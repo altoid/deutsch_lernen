@@ -18,7 +18,6 @@ class ValidateData(unittest.TestCase):
         self.app = create_app()
         self.app.config.update(
             TESTING=True,
-            SERVER_NAME='localhost.localdomain:5000'
         )
 
         self.client = self.app.test_client()
