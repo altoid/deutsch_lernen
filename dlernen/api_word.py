@@ -1,7 +1,7 @@
 from flask import Blueprint, request, current_app
 from pprint import pprint
 from mysql.connector import connect
-from dlernen import dlernen_json_schema, common
+from dlernen import dlernen_json_schema as js, common
 from contextlib import closing
 import jsonschema
 import sys
@@ -74,7 +74,7 @@ def get_word_by_id(word_id):
     word_ids = [word_id]
     words = get_words_from_word_ids(word_ids)
 
-    jsonschema.validate(words, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
+    jsonschema.validate(words, js.WORDS_RESPONSE_SCHEMA)
 
     if words:
         return words[0]
@@ -128,7 +128,7 @@ def get_word(word):
         if not result:
             return "no match for %s" % word, 404
 
-        jsonschema.validate(result, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
+        jsonschema.validate(result, js.WORDS_RESPONSE_SCHEMA)
 
         return result
 
@@ -140,7 +140,7 @@ def add_word():
     """
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, dlernen_json_schema.WORD_PAYLOAD_SCHEMA)
+        jsonschema.validate(payload, js.WORD_PAYLOAD_SCHEMA)
 
         # word isn't required in the json schema but we need it here.
         if not payload.get('word'):
@@ -168,9 +168,11 @@ def add_word():
         try:
             cursor.execute('start transaction')
             check_sql = """
-            select distinct attrkey, attribute_id, pos_id
-            from mashup_v
-            where pos_name = %(pos_name)s
+            select attrkey, attribute_id, pos_id 
+            from pos_form 
+                inner join pos on pos_id = pos.id 
+                inner join attribute on attribute_id = attribute.id 
+            where pos.name = %(pos_name)s
             """
 
             # jsonschema doc definition guarantees that payload['word'] and payload['pos_name']
@@ -204,7 +206,7 @@ def add_word():
             word_id = result['word_id']
 
             defined_attrkeys = set(attrdict.keys())
-            attributes_adding = payload.get('attributes_adding')
+            attributes_adding = payload.get(js.ATTRIBUTES_ADDING)
             if attributes_adding:
                 request_attrkeys = {a['attrkey'] for a in attributes_adding}
                 undefined_attrkeys = request_attrkeys - defined_attrkeys
@@ -244,7 +246,7 @@ def add_word():
 def update_word(word_id):
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, dlernen_json_schema.WORD_PAYLOAD_SCHEMA)
+        jsonschema.validate(payload, js.WORD_PAYLOAD_SCHEMA)
     except jsonschema.ValidationError as e:
         message = "bad payload: %s" % e.message
         return message, 400
@@ -430,7 +432,7 @@ def get_words_in_wordlists():
 
     result = get_words_from_word_ids(word_ids)
 
-    jsonschema.validate(result, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
+    jsonschema.validate(result, js.WORDS_RESPONSE_SCHEMA)
 
     return result
 
@@ -448,7 +450,7 @@ def get_words():
     word_ids = payload.get('word_ids', [])
     result = get_words_from_word_ids(word_ids)
 
-    jsonschema.validate(result, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
+    jsonschema.validate(result, js.WORDS_RESPONSE_SCHEMA)
 
     return result
 
@@ -535,7 +537,7 @@ left join  mashup_v on mashup_v.pos_id = pos_info.pos_id and mashup_v.attribute_
         for v in result.values():
             v['pos_fields'] = sorted(v['pos_fields'], key=lambda x: x['sort_order'])
         result = list(result.values())
-        jsonschema.validate(result, dlernen_json_schema.WORD_METADATA_RESPONSE_SCHEMA)
+        jsonschema.validate(result, js.WORD_METADATA_RESPONSE_SCHEMA)
         return result
 
 
