@@ -99,14 +99,3 @@ class APITests(unittest.TestCase):
             r = self.client.put(url, json=payload)
             result = json.loads(r.data)
             self.assertEqual([], result)
-
-    # TODO move this to another file
-    def test_real_wordlist(self):
-        with self.app.test_request_context():
-            r = self.client.get(url_for('api_wordlist.get_wordlists', _external=True))
-            self.assertEqual(r.status_code, 200)
-            results = json.loads(r.data)
-            self.assertGreater(len(results), 0)
-            jsonschema.validate(results, dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
-
-

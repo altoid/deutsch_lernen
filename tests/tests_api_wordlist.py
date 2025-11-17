@@ -6,6 +6,7 @@ import random
 import string
 from pprint import pprint
 
+
 class APIWordlist(unittest.TestCase):
     # the setup for this class creates a list with just a name.
     def setUp(self):
