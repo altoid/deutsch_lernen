@@ -429,7 +429,7 @@ class APITestsWordPUT(unittest.TestCase):
         self.app_context = self.app.app_context()
         self.app_context.push()
 
-        self.word = "APITestsWordPut_" + ''.join(random.choices(string.ascii_lowercase, k=10))
+        self.word = "Apitestswordput_" + ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": self.word,
             "pos_name": "noun"

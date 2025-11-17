@@ -180,6 +180,10 @@ def add_word():
             word = payload['word']
             pos_name = payload['pos_name']
 
+            word = word.lower()
+            if pos_name.lower() == 'noun':
+                word = word.capitalize()
+
             d = {
                 'pos_name': pos_name
             }
