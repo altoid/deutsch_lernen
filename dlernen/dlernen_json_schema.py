@@ -55,7 +55,6 @@ WORD_PAYLOAD_SCHEMA = {
             "pattern": WORD_PATTERN
         },
         "pos_id": {
-            # FIXME we should be passing the pos_id, not the name.
             # this is optional.  required for adding a word and ignored on updates
             "type": "integer",
             "minimum": 1
