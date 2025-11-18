@@ -87,7 +87,7 @@ THE -n AND -r OPTIONS NO LONGER WORK
 
         payload['presentation_count'] += 1
 
-        url = "%s/api/quiz_data" % config.Config.DB_URL
+        url = "%s/api/quiz_data" % URL
         r = requests.post(url, data=payload)
 
     print('bis bald')

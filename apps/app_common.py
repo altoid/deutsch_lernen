@@ -2,9 +2,11 @@ import requests
 from dlernen import config
 from pprint import pprint
 
+URL = 'http://localhost.localdomain:8000'
+
 
 def get_next_word_to_test(wordlist_ids, quiz_key):
-    url = "%s/api/quiz_data/%s" % (config.Config.DB_URL, quiz_key)
+    url = "%s/api/quiz_data/%s" % (URL, quiz_key)
     if wordlist_ids:
         wordlist_ids = ','.join(list(map(str, wordlist_ids)))
         url = "%s?wordlist_id=%s" % (url, wordlist_ids)
@@ -16,7 +18,7 @@ def get_next_word_to_test(wordlist_ids, quiz_key):
 
     # dig the word_ids out of the result and then find the articles for each word that is a noun.
     word_ids = [x['word_id'] for x in quiz_data]
-    url = "%s/api/words" % config.Config.DB_URL
+    url = "%s/api/words" % URL
     payload = {
         "word_ids": word_ids
     }
