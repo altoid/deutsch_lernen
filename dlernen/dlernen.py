@@ -393,7 +393,6 @@ def edit_word_form(word):
     url = url_for('api_misc.get_pos', word=word, _external=True)
     r = requests.get(url)
     pos_structure = r.json()
-    # pprint(pos_structure)
 
     # construct the field names for all the attributes.  field name formats are described in addword.html.
     form_data = {}
@@ -404,10 +403,8 @@ def edit_word_form(word):
 
     field_values_before = {}
     field_names_to_attrkeys = {}  # FIXME this should not be needed
-    pos_id_to_pos_name = {}  # FIXME this should not be needed
 
     for p in pos_structure:
-        pos_id_to_pos_name[p['pos_id']] = p['pos_name']
 
         if p['pos_name'] not in form_data:
             form_data[p['pos_name']] = []
@@ -438,8 +435,7 @@ def edit_word_form(word):
                                return_to_wordlist_id=wordlist_id,
                                form_data=form_data,
                                field_values_before=json.dumps(field_values_before),
-                               field_names_to_attrkeys=json.dumps(field_names_to_attrkeys),
-                               pos_id_to_pos_name=json.dumps(pos_id_to_pos_name))
+                               field_names_to_attrkeys=json.dumps(field_names_to_attrkeys))
 
     abort(r.status_code)
 
@@ -451,7 +447,6 @@ def update_dict():
     wordlist_id = request.form.get('wordlist_id')
     field_values_before = json.loads(request.form.get('field_values_before'))
     field_names_to_attrkeys = json.loads(request.form.get('field_names_to_attrkeys'))
-#    pos_id_to_pos_name = json.loads(request.form.get('pos_id_to_pos_name'))
     field_values_after = {}
     for k in field_values_before.keys():
         field_values_after[k] = request.form.get(k).strip()
@@ -459,7 +454,6 @@ def update_dict():
     pprint(field_values_before)
     pprint(field_values_after)
     pprint(field_names_to_attrkeys)
-#    pprint(pos_id_to_pos_name)
 
     # go through all the attribute values and diff before/after.  we will construct add/update
     # payloads and send them off to the API.  we will have to construct one request per
