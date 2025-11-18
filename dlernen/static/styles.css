@@ -22,6 +22,10 @@ table.tableau {
     width: 100%
 }
 
+.wordedit {
+    border: 1px solid;
+}
+
 td {
     vertical-align: top
 }

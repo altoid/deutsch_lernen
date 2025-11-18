@@ -39,21 +39,33 @@ words (word+pos pairs) with their attributes in one go.
     {% endif %}
     <br>
 
-    <table>
+    <table class="wordedit">
         {% for pos_name in form_data.keys() %}
-        <tr>
-            <td>
-                {{ pos_name }}
-            </td>
-            <td></td>
-        </tr>
-            {% for field in form_data[pos_name] %}
             <tr>
-                <td>
+                <td class="wordedit" rowspan="{{ form_data[pos_name]|length }}">
+                    {{ pos_name }}
+                </td>
+                {% for field in form_data[pos_name][:1] %}
+                <td class="wordedit">
                     <label for="{{ field.field_name }}">{{ field.label }}</label>
                     {# 'for' links with the input's id, not its name #}
                 </td>
-                <td>
+                <td class="wordedit">
+                    <input type="text"
+                           id="{{ field.field_name }}"
+                           name="{{ field.field_name }}"
+                           value="{{ field.field_value }}"
+                           size="60">
+                </td>
+                {% endfor %}
+            </tr>
+            {% for field in form_data[pos_name][1:] %}
+            <tr>
+                <td class="wordedit">
+                    <label for="{{ field.field_name }}">{{ field.label }}</label>
+                    {# 'for' links with the input's id, not its name #}
+                </td>
+                <td class="wordedit">
                     <input type="text"
                            id="{{ field.field_name }}"
                            name="{{ field.field_name }}"
