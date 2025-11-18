@@ -485,7 +485,7 @@ def update_dict():
         value_after = field_values_after[k]
         ids = k.split('-')
         pos_id = int(ids[0])
-        attribute_id = int(ids[1])
+        # attribute_id = int(ids[1])   # unused, but this part is needed in field names to make them unique.
         word_id = str(ids[2]) if len(ids) > 2 else None
         attrvalue_id = str(ids[3]) if len(ids) > 3 else None
 
