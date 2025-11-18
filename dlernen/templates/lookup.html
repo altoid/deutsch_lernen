@@ -17,12 +17,8 @@ Lookup
     {% if return_to_wordlist_id != none %}
     <input type="hidden" value="{{return_to_wordlist_id}}" name="wordlist_id"/>
     {% endif %}
-    <table>
-        <tr>
-            <td>Look up word:</td>
-            <td><input type="text" name="lookup" size="30"/></td>
-        </tr>
-    </table>
+    Suche nach Wort:
+    <input type="text" name="lookup" size="30"/>
     <input type="submit" value="Submit"/>
 </form>
 <br>
@@ -39,7 +35,7 @@ Lookup
             </a>
             {% endif %}
         </h1>
-        <p>{{ tuple[0]['pos_name'] }}
+        <h3>{{ tuple[0]['pos_name'] }}</h3>
         <table>
             {% for attr in tuple[0]['attributes'] %}
             <tr>
@@ -54,9 +50,11 @@ Lookup
         </table>
         {% if tuple[1] %}
             <h2>Wortlisten, die dieses Wort enthalten</h2>
+            <ul>
             {% for wl in tuple[1] %}
-            <a href="{{ url_for('dlernen.wordlist', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a><br>
+                <li><a href="{{ url_for('dlernen.wordlist', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a></li>
             {% endfor %}
+            </ul>
         {% else %}
             <h2>(no member wordlists)</h2>
         {% endif %}
