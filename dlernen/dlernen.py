@@ -385,9 +385,6 @@ def delete_from_list():
     target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
     return redirect(target)
 
-# FIXME - it looks like changing the spelling of a word through the UI won't work - we will have
-#   to change the spelling for each instance of word/pos_id.
-
 
 @bp.route('/word/<string:word>')
 def edit_word_form(word):
@@ -434,11 +431,6 @@ def edit_word_form(word):
             field_names_to_attrkeys[field_name] = a['attrkey']
         form_data[p['pos_name']] = sorted(form_data[p['pos_name']], key=lambda x: x['sort_order'])
 
-    # pprint(form_data)
-    # pprint(field_values_before)
-
-    # url = url_for('api_word.word_metadata', word=word, _external=True)
-    # r = requests.get(url)
     if r:
         return render_template('addword.html',
                                word=word,

@@ -111,61 +111,6 @@ WORD_PAYLOAD_SCHEMA = {
     }
 }
 
-WORD_METADATA_RESPONSE_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/word_metadata",
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Quiz Data List",
-    "description": "",
-    "type": "array",
-    "items": {
-        "type": "object",
-        "required": [
-            "tag",
-            "pos_name",
-            "pos_fields"
-        ],
-        "properties": {
-            "tag": {
-                "type": "string",
-                "minLength": 1
-            },
-            "pos_name": {
-                "type": "string",
-                "pattern": ID_PATTERN
-            },
-            "pos_fields": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "required": [
-                        "attrkey",
-                        "field_key",
-                        "sort_order"
-                    ],
-                    "properties": {
-                        "attrkey": {
-                            "type": "string",
-                            "pattern": ID_PATTERN
-                        },
-                        "attrvalue": {
-                            "type": "string",
-                            "pattern": STRING_PATTERN
-                        },
-                        "fieldkey": {
-                            "type": "string",
-                            "minLength": 1
-                        },
-                        "sort_order": {
-                            "type": "integer",
-                            "minimum": 0
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
 # TODO revisit this.  keys that are hardcoded values found in the database is a bad idea.
 QUIZ_DATA_RESPONSE_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/quiz_data",
