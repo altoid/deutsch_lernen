@@ -7,18 +7,24 @@ from dlernen import create_app
 
 
 class APIWordListMetadataCreate(unittest.TestCase):
-    def setUp(self):
-        self.app = create_app()
-        self.app.config.update(
+    app = None
+    app_context = None
+    client = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
             TESTING=True,
         )
 
-        self.client = self.app.test_client()
-        self.app_context = self.app.app_context()
-        self.app_context.push()
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
 
-    def tearDown(self):
-        self.app_context.pop()
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
 
     # do nothing, just make sure that setUp and tearDown work
     def test_nothing(self):
@@ -133,17 +139,27 @@ class APIWordListMetadataCreate(unittest.TestCase):
 
 
 class APIWordListMetadataUpdate(unittest.TestCase):
-    # the setup for this class creates a list with just a name.
-    def setUp(self):
-        self.app = create_app()
-        self.app.config.update(
+    app = None
+    app_context = None
+    client = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
             TESTING=True,
         )
 
-        self.client = self.app.test_client()
-        self.app_context = self.app.app_context()
-        self.app_context.push()
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
 
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
+
+    # the setup for this class creates a list with just a name.
+    def setUp(self):
         self.list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
         add_payload = {
             'name': self.list_name
@@ -165,13 +181,10 @@ class APIWordListMetadataUpdate(unittest.TestCase):
         with self.app.test_request_context():
             self.client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=self.wordlist_id,
                                        _external=True))
-        self.app_context.pop()
 
     # do nothing, just make sure that setUp and tearDown work
     def test_nothing(self):
         pass
-
-    # the setup for this class creates a list with just a name.
 
     # update the name and set citation and sqlcode to nontrivial values, in a single request.
     # check everything, including list type.

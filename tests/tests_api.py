@@ -15,24 +15,24 @@ import string
 
 
 class APITests(unittest.TestCase):
-    def setUp(self):
-        self.app = create_app()
-        self.app.config.update(
+    app = None
+    app_context = None
+    client = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
             TESTING=True,
         )
 
-        self.client = self.app.test_client()
-        self.app_context = self.app.app_context()
-        self.app_context.push()
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
 
-    def tearDown(self):
-        self.app_context.pop()
-
-    def test_dummy(self):
-        with self.app.test_request_context():
-            # pprint(self.app.config)
-            url = url_for('api_misc.get_pos', _external=True)
-            # print(url)
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
 
     def test_pos_structure(self):
         with self.app.test_request_context():

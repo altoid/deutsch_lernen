@@ -2,9 +2,6 @@ import unittest
 import json
 from dlernen import create_app
 from flask import url_for
-from pprint import pprint
-import random
-import string
 from mysql.connector import connect
 from contextlib import closing
 
@@ -14,21 +11,24 @@ from contextlib import closing
 # and all of the wordlists.  the tests will succeed if the results pass validation.
 
 class ValidateData(unittest.TestCase):
-    def setUp(self):
-        self.app = create_app()
-        self.app.config.update(
+    app = None
+    app_context = None
+    client = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
             TESTING=True,
         )
 
-        self.client = self.app.test_client()
-        self.app_context = self.app.app_context()
-        self.app_context.push()
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
 
-        with self.app.test_request_context():
-            pass
-
-    def tearDown(self):
-        self.app_context.pop()
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
 
     # do nothing, just make sure that setUp and tearDown work
     def test_nothing(self):
