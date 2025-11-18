@@ -731,7 +731,7 @@ class Test_WORD_PAYLOAD_SCHEMA(unittest.TestCase):
             "pos_id": 1234,
             "attributes_adding": [
                 {
-                    "attrkey": "key",
+                    "attribute_id": 1111,
                     "attrvalue": "value"
                 }
             ],
@@ -762,15 +762,7 @@ class Test_WORD_PAYLOAD_SCHEMA(unittest.TestCase):
         {
             "attributes_adding": [
                 {
-                    "attrkey": "  noWhitespaceInKey",
-                    "attrvalue": "aoeu"
-                }
-            ]
-        },
-        {
-            "attributes_adding": [
-                {
-                    "attrkey": "key",
+                    "attribute_id": 444,
                     "attrvalue": " "  # must have at least 1 non-whitespace character
                 }
             ]
@@ -778,14 +770,14 @@ class Test_WORD_PAYLOAD_SCHEMA(unittest.TestCase):
         {
             "attributes_adding": [
                 {
-                    "attrkey": "keyAndValueBothRequired"
+                    "attribute_id": 2345  # key and value both required
                 }
             ]
         },
         {
             "attributes_adding": [
                 {
-                    "attrvalue": "keyAndValueBothRequired"
+                    "attrvalue": "key and value both required"
                 }
             ]
         },

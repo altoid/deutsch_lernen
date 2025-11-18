@@ -65,13 +65,12 @@ WORD_PAYLOAD_SCHEMA = {
                 "type": "object",
                 "required": [
                     "attrvalue",
-                    "attrkey"
+                    "attribute_id"
                 ],
                 "properties": {
-                    # FIXME we should be passing the attribute id, not the key.
-                    "attrkey": {
-                        "type": "string",
-                        "pattern": ID_PATTERN
+                    "attribute_id": {
+                        "type": "integer",
+                        "minimum": 1
                     },
                     "attrvalue": {
                         "type": "string",

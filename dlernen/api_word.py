@@ -158,7 +158,7 @@ def add_word():
 
     # checks:
     # - pos_id is valid
-    # - attrkeys are valid for the POS
+    # - attribute ids are valid for the POS
     #
     # note:  adding a word with no attributes is allowed
     #
@@ -169,7 +169,7 @@ def add_word():
         try:
             cursor.execute('start transaction')
             check_sql = """
-            select pos.name AS pos_name, attrkey, attribute_id, pos_id 
+            select pos.name AS pos_name, attribute_id, pos_id 
             from pos_form 
                 inner join pos on pos_id = pos.id 
                 inner join attribute on attribute_id = attribute.id 
@@ -193,29 +193,26 @@ def add_word():
             if rows[0]['pos_name'].casefold() == 'noun':
                 word = word.capitalize()
 
-            # maps attr keys to attr ids
-            attrdict = {r['attrkey']: r['attribute_id'] for r in rows}
-
             sql = "insert into word (word, pos_id) values (%s, %s)"
             cursor.execute(sql, (word, pos_id))
             cursor.execute("select last_insert_id() word_id")
             result = cursor.fetchone()
             word_id = result['word_id']
 
-            defined_attrkeys = set(attrdict.keys())
+            defined_attribute_ids = {x['attribute_id'] for x in rows}
             attributes_adding = payload.get(js.ATTRIBUTES_ADDING)
             if attributes_adding:
-                request_attrkeys = {a['attrkey'] for a in attributes_adding}
-                undefined_attrkeys = request_attrkeys - defined_attrkeys
-                if len(undefined_attrkeys) > 0:
-                    message = "attrkey keys not defined:  %s" % ', '.join(list(undefined_attrkeys))
+                request_attribute_ids = {a['attribute_id'] for a in attributes_adding}
+                undefined_attribute_ids = request_attribute_ids - defined_attribute_ids
+                if len(undefined_attribute_ids) > 0:
+                    message = "attribute ids not defined:  %s" % ', '.join(list(map(str, undefined_attribute_ids)))
                     cursor.execute('rollback')
                     return message, 400
 
                 insert_args = [
                     {
                         "word_id": word_id,
-                        "attribute_id": attrdict[a['attrkey']],
+                        "attribute_id": a['attribute_id'],
                         "attrvalue": a['attrvalue']
                     }
                     for a in attributes_adding
@@ -250,10 +247,10 @@ def update_word(word_id):
 
     # checks:
     # word_id exists
-    # zero-length or non-existent attrkey list is ok
+    # zero-length or non-existent attribute list is ok
     # attrvalue ids exist and belong to the word, for both update and delete cases
     # attrvalue ids in deleting and updating are disjoint
-    # attrkeys are defined for the word, for both update and add cases
+    # attribute ids are defined for the word
     #
     # jsonschema doc definitions guarantee that word contains no whitespace and that attrvalues have
     # at least one non-whitespace character.  so no checks needed for these.
@@ -263,14 +260,14 @@ def update_word(word_id):
             cursor.execute('start transaction')
 
             sql = """
-            select attrkey, attribute_id, attrvalue_id, pos_name
+            select attribute_id, attrvalue_id, pos_name
             from mashup_v
             where word_id = %(word_id)s
             """
             cursor.execute(sql, {'word_id': word_id})
             rows = cursor.fetchall()
             defined_attrvalue_ids = {r['attrvalue_id'] for r in rows}
-            defined_attrkeys = {r['attrkey'] for r in rows}
+            defined_attribute_ids = {r['attribute_id'] for r in rows}
             is_noun = rows[0]['pos_name'].lower() == 'noun'
 
             if len(defined_attrvalue_ids) == 0:
@@ -306,10 +303,10 @@ def update_word(word_id):
                 cursor.execute('rollback')
                 return message, 400
 
-            payload_adding_attrkeys = {a['attrkey'] for a in payload.get('attributes_adding', set())}
-            undefined_attrkeys = payload_adding_attrkeys - defined_attrkeys
-            if len(undefined_attrkeys) > 0:
-                message = "attrkeys not defined:  %s" % ', '.join(list(undefined_attrkeys))
+            payload_adding_attribute_ids = {a['attribute_id'] for a in payload.get(js.ATTRIBUTES_ADDING, set())}
+            undefined_attribute_ids = payload_adding_attribute_ids - defined_attribute_ids
+            if len(undefined_attribute_ids) > 0:
+                message = "attrids not defined:  %s" % ', '.join(list(undefined_attribute_ids))
                 cursor.execute('rollback')
                 return message, 400
 
@@ -322,7 +319,6 @@ def update_word(word_id):
                 word = word.capitalize()
 
             # checks complete, let's do this.
-            attrdict = {r['attrkey']: r['attribute_id'] for r in rows}
 
             if word:
                 sql = """
@@ -358,9 +354,9 @@ def update_word(word_id):
                 {
                     'attrvalue': a['attrvalue'].strip(),
                     'word_id': word_id,
-                    'attribute_id': attrdict[a['attrkey']]
+                    'attribute_id': a['attribute_id']
                 }
-                for a in payload.get('attributes_adding', set())
+                for a in payload.get(js.ATTRIBUTES_ADDING, set())
             ]
             if insert_args:
                 cursor.executemany(sql, insert_args)

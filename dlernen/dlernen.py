@@ -402,7 +402,6 @@ def edit_word_form(word):
     # update by diffing these and making the appropriate changes to the database.
 
     field_values_before = {}
-    field_names_to_attrkeys = {}  # FIXME this should not be needed
 
     for p in pos_structure:
 
@@ -425,7 +424,6 @@ def edit_word_form(word):
             }
             form_data[p['pos_name']].append(d)
             field_values_before[field_name] = field_value
-            field_names_to_attrkeys[field_name] = a['attrkey']
         form_data[p['pos_name']] = sorted(form_data[p['pos_name']], key=lambda x: x['sort_order'])
 
     if r:
@@ -434,8 +432,7 @@ def edit_word_form(word):
                                wordlist_id=wordlist_id,
                                return_to_wordlist_id=wordlist_id,
                                form_data=form_data,
-                               field_values_before=json.dumps(field_values_before),
-                               field_names_to_attrkeys=json.dumps(field_names_to_attrkeys))
+                               field_values_before=json.dumps(field_values_before))
 
     abort(r.status_code)
 
@@ -446,14 +443,12 @@ def update_dict():
     word_before = request.form.get('word_before')
     wordlist_id = request.form.get('wordlist_id')
     field_values_before = json.loads(request.form.get('field_values_before'))
-    field_names_to_attrkeys = json.loads(request.form.get('field_names_to_attrkeys'))
     field_values_after = {}
     for k in field_values_before.keys():
         field_values_after[k] = request.form.get(k).strip()
 
-    pprint(field_values_before)
-    pprint(field_values_after)
-    pprint(field_names_to_attrkeys)
+    # pprint(field_values_before)
+    # pprint(field_values_after)
 
     # go through all the attribute values and diff before/after.  we will construct add/update
     # payloads and send them off to the API.  we will have to construct one request per
@@ -471,7 +466,7 @@ def update_dict():
         value_after = field_values_after[k]
         ids = k.split('-')
         pos_id = int(ids[0])
-        # attribute_id = int(ids[1])   # unused, but this part is needed in field names to make them unique.
+        attribute_id = int(ids[1])
         word_id = str(ids[2]) if len(ids) > 2 else None
         attrvalue_id = str(ids[3]) if len(ids) > 3 else None
 
@@ -492,7 +487,7 @@ def update_dict():
             # we *might* have a word_id
             if js.ATTRIBUTES_ADDING not in payload:
                 payload[js.ATTRIBUTES_ADDING] = []
-            payload[js.ATTRIBUTES_ADDING].append({'attrvalue': value_after, 'attrkey': field_names_to_attrkeys[k]})
+            payload[js.ATTRIBUTES_ADDING].append({'attrvalue': value_after, 'attribute_id': attribute_id})
             if word_id:
                 word_ids[t] = word_id
 
@@ -523,8 +518,8 @@ def update_dict():
     # get rid of empty payloads
     word_payloads = {key: value for key, value in word_payloads.items() if value}
 
-    pprint(word_payloads)
-    pprint(word_ids)
+    # pprint(word_payloads)
+    # pprint(word_ids)
 
     refresh_needed = False
     for k, payload in word_payloads.items():
@@ -544,7 +539,7 @@ def update_dict():
             else:
                 refresh_needed = True
 
-    pprint("refresh:  %s" % refresh_needed)
+    # pprint("refresh:  %s" % refresh_needed)
     if refresh_needed:
         refresh_payload = {
             'word': word,

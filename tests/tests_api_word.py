@@ -45,15 +45,15 @@ class APITestsWordEndToEnd(unittest.TestCase):
             "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
             "attributes_adding": [
                 {
-                    "attrkey": "article",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['article'],
                     "attrvalue": "der"
                 },
                 {
-                    "attrkey": "plural",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['plural'],
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attrkey": "definition",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -142,15 +142,15 @@ class APITestsWordEndToEnd(unittest.TestCase):
         update_payload = {
             "attributes_adding": [
                 {
-                    "attrkey": "article",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['article'],
                     "attrvalue": "der"
                 },
                 {
-                    "attrkey": "plural",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['plural'],
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attrkey": "definition",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -219,15 +219,15 @@ class APITestsWordEndToEnd(unittest.TestCase):
             "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
             "attributes": [
                 {
-                    "attrkey": "article",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['article'],
                     "attrvalue": "der"
                 },
                 {
-                    "attrkey": "plural",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['plural'],
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attrkey": "definition",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -256,15 +256,15 @@ class APITestsWordEndToEnd(unittest.TestCase):
             "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
             "attributes": [
                 {
-                    "attrkey": "article",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['article'],
                     "attrvalue": "der"
                 },
                 {
-                    "attrkey": "plural",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['plural'],
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attrkey": "definition",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -279,7 +279,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
             "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
             "attributes": [
                 {
-                    "attrkey": "definition",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -343,15 +343,15 @@ class APITestsWordPOST(unittest.TestCase):
             "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
             "attributes_adding": [
                 {
-                    "attrkey": "article",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['article'],
                     "attrvalue": "der"
                 },
                 {
-                    "attrkey": "plural",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['plural'],
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attrkey": "definition",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -365,15 +365,15 @@ class APITestsWordPOST(unittest.TestCase):
             "word": "aonsetuhasoentuh",
             "attributes_adding": [
                 {
-                    "attrkey": "article",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['article'],
                     "attrvalue": "der"
                 },
                 {
-                    "attrkey": "plural",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['plural'],
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attrkey": "definition",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -387,23 +387,19 @@ class APITestsWordPOST(unittest.TestCase):
         r = self.client.post(url_for('api_word.add_word', _external=True), json=payload)
         self.assertNotEqual(r.status_code, 200)
 
-    # attr keys are bullshit
-    def test_bullshit_attrkeys(self):
+    # attr ids are bullshit
+    def test_bullshit_attribute_ids(self):
         payload = {
             "word": "aoeiaoueaou",
             "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
             "attributes_adding": [
                 {
-                    "attrkey": "stinky",
-                    "attrvalue": "der"
-                },
-                {
-                    "attrkey": "foofoo",
+                    "attribute_id": 5346345,
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attrkey": "definition",
-                    "attrvalue": "legal attrkey here"
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attrvalue": "legal attribute_id here"
                 }
             ]
         }
@@ -417,15 +413,15 @@ class APITestsWordPOST(unittest.TestCase):
             "pos_id": 92378456,
             "attributes_adding": [
                 {
-                    "attrkey": "article",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['article'],
                     "attrvalue": "der"
                 },
                 {
-                    "attrkey": "plural",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['plural'],
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attrkey": "definition",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -549,7 +545,7 @@ class APITestsWordPUT(unittest.TestCase):
         r = self.client.put(url_for('api_word.update_word', word_id=self.word_id, _external=True), json=update_payload)
         self.assertNotEqual(200, r.status_code)
 
-    # zero-length attrkey value
+    # zero-length attribute value
     def test_zero_length_attrvalue(self):
         # updating with attrvalue = "" not allowed.
         update_payload = {
@@ -626,16 +622,17 @@ class APITestsWordPUT(unittest.TestCase):
         obj = json.loads(r.data)
         self.assertEqual(new_word, obj['word'])
 
-    # updating attrkey values works.
+    # updating attribute values works.
     def test_update_attrs(self):
         # since we created the word with no attributes, add one that we can update.
 
-        attrkey = "definition"
+        attrkey = 'definition'
+        attribute_id = self.keyword_mappings['attribute_names_to_ids'][attrkey]
         payload = {
             'attributes_adding': [
                 {
                     "attrvalue": "male bovine excrement",
-                    "attrkey": attrkey
+                    "attribute_id": attribute_id
                 }
             ]
         }
@@ -731,11 +728,12 @@ class APIWordUpdate(unittest.TestCase):
     def test_add_update_delete_attribute_1(self):
         # add, update, and delete the same attr value in 3 separate requests
         old_def = "it smells like cereal here"
-        attrkey = "definition"
+        attrkey = 'definition'
+        attribute_id = self.keyword_mappings['attribute_names_to_ids'][attrkey]
         payload = {
             "attributes_adding": [
                 {
-                    "attrkey": attrkey,
+                    "attribute_id": attribute_id,
                     "attrvalue": old_def
                 }
             ]
@@ -785,16 +783,16 @@ class APIWordUpdate(unittest.TestCase):
         self.assertIsNone(defn['attrvalue'])
 
     def test_add_update_delete_attribute_2(self):
-        # add, update, and delete attrkey values in a single request
+        # add, update, and delete attribute values in a single request
         old_def = "it smells like cereal here"
         payload = {
             "attributes_adding": [
                 {
-                    "attrkey": "definition",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
                     "attrvalue": old_def
                 },
                 {
-                    "attrkey": "first_person_singular",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['first_person_singular'],
                     "attrvalue": "mr_lonely"
                 }
             ]
@@ -813,7 +811,7 @@ class APIWordUpdate(unittest.TestCase):
         payload = {
             "attributes_adding": [
                 {
-                    "attrkey": "second_person_singular",
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['second_person_singular'],
                     "attrvalue": sps_val
                 }
             ],
@@ -842,11 +840,12 @@ class APIWordUpdate(unittest.TestCase):
     def test_update_delete_same_attr(self):
         # error if we attempt to update and delete the same attr id.
         old_def = "it smells like cereal here"
-        attrkey = "definition"
+        attrkey = 'definition'
+        attribute_id = self.keyword_mappings['attribute_names_to_ids'][attrkey]
         payload = {
             "attributes_adding": [
                 {
-                    "attrkey": attrkey,
+                    "attribute_id": attribute_id,
                     "attrvalue": old_def
                 }
             ]
