@@ -54,6 +54,7 @@ def get_words_from_word_ids(word_ids):
     from
         mashup_v
     where word_id in (%s)
+    order by sort_order
     """ % format_args
 
     result = []
