@@ -169,7 +169,7 @@ def add_word():
         try:
             cursor.execute('start transaction')
             check_sql = """
-            select pos.name AS pos_name, attribute_id, pos_id 
+            select attribute.attrkey, pos.name AS pos_name, attribute_id, pos_id 
             from pos_form 
                 inner join pos on pos_id = pos.id 
                 inner join attribute on attribute_id = attribute.id 
@@ -202,6 +202,7 @@ def add_word():
             defined_attribute_ids = {x['attribute_id'] for x in rows}
             attributes_adding = payload.get(js.ATTRIBUTES_ADDING)
             if attributes_adding:
+                attr_ids_to_keys = {x['attribute_id']: x['attrkey'] for x in rows}
                 request_attribute_ids = {a['attribute_id'] for a in attributes_adding}
                 undefined_attribute_ids = request_attribute_ids - defined_attribute_ids
                 if len(undefined_attribute_ids) > 0:
@@ -213,7 +214,9 @@ def add_word():
                     {
                         "word_id": word_id,
                         "attribute_id": a['attribute_id'],
-                        "attrvalue": a['attrvalue']
+                        "attrvalue": a['attrvalue'].capitalize() if attr_ids_to_keys[
+                                                                        a['attribute_id']].casefold() == 'plural' else
+                        a['attrvalue']
                     }
                     for a in attributes_adding
                 ]
@@ -260,7 +263,7 @@ def update_word(word_id):
             cursor.execute('start transaction')
 
             sql = """
-            select attribute_id, attrvalue_id, pos_name
+            select attribute_id, attrvalue_id, pos_name, attrkey
             from mashup_v
             where word_id = %(word_id)s
             """
@@ -319,6 +322,7 @@ def update_word(word_id):
                 word = word.capitalize()
 
             # checks complete, let's do this.
+            attrvalue_ids_to_keys = {x['attrvalue_id']: x['attrkey'] for x in rows}
 
             if word:
                 sql = """
@@ -338,7 +342,9 @@ def update_word(word_id):
             """
             update_args = [
                 {
-                    'attrvalue': a['attrvalue'].strip(),
+                    "attrvalue": a['attrvalue'].capitalize()
+                    if attrvalue_ids_to_keys[a['attrvalue_id']].casefold() == 'plural'
+                    else a['attrvalue'],
                     'attrvalue_id': a['attrvalue_id']
                 }
                 for a in payload.get('attributes_updating', set())

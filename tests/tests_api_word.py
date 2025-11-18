@@ -1,6 +1,6 @@
 import unittest
 import json
-from dlernen import create_app
+from dlernen import create_app, dlernen_json_schema as js
 from flask import url_for
 from pprint import pprint
 import random
@@ -83,6 +83,85 @@ class APITestsWordEndToEnd(unittest.TestCase):
         # delete it again, should not cause error
         r = self.client.delete(url_for('api_word.get_word_by_id', word_id=word_id, _external=True))
         self.assertEqual(r.status_code, 200)
+
+    # enforce capitalization of nouns
+    def test_noun_capitalization(self):
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+        word_capitalized = word.capitalize()
+
+        add_payload = {
+            "word": word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun']
+        }
+
+        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 200)
+        obj = json.loads(r.data)
+        self.assertEqual(word_capitalized, obj['word'])
+
+    # enforce capitalization of noun plurals on add
+    def test_noun_plurals_adding(self):
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+        word_capitalized = word.capitalize()
+        attrkey = 'plural'
+        add_payload = {
+            "word": word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
+            js.ATTRIBUTES_ADDING: [
+                {
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][attrkey],
+                    "attrvalue": word
+                },
+            ]
+        }
+
+        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 200)
+        obj = json.loads(r.data)
+        plural = list(filter(lambda x: x['attrkey'] == attrkey, obj['attributes']))[0]
+        self.assertEqual(word_capitalized, plural['attrvalue'])
+
+    # enforce capitalization of noun plurals on update
+    def test_noun_plurals_updating(self):
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+        word_capitalized = word.capitalize()
+        attrkey = 'plural'
+        payload = {
+            "word": word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
+            js.ATTRIBUTES_ADDING: [
+                {
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][attrkey],
+                    "attrvalue": word
+                },
+            ]
+        }
+
+        r = self.client.post(url_for('api_word.add_word', _external=True), json=payload)
+        self.assertEqual(r.status_code, 200)
+        obj = json.loads(r.data)
+
+        plural_attr = list(filter(lambda x: x['attrkey'] == attrkey, obj['attributes']))[0]
+        self.assertEqual(word_capitalized, plural_attr['attrvalue'])
+
+        new_word = ''.join(random.choices(string.ascii_lowercase, k=10))
+        new_word_capitalized = new_word.capitalize()
+
+        payload = {
+            js.ATTRIBUTES_UPDATING: [
+                {
+                    "attrvalue": new_word,
+                    "attrvalue_id": plural_attr['attrvalue_id'],
+                }
+            ]
+        }
+
+        r = self.client.put(url_for('api_word.update_word', word_id=obj['word_id'], _external=True), json=payload)
+        self.assertEqual(r.status_code, 200)
+
+        obj = json.loads(r.data)
+        plural = list(filter(lambda x: x['attrkey'] == attrkey, obj['attributes']))[0]
+        self.assertEqual(new_word_capitalized, plural['attrvalue'])
 
     # add a word with empty attributes list
     def test_add_empty_attributes_list(self):
