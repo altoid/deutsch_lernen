@@ -728,7 +728,7 @@ class Test_WORD_PAYLOAD_SCHEMA(unittest.TestCase):
         {
             # fully specified payload
             "word": "werd",
-            "pos_name": "something",
+            "pos_id": 1234,
             "attributes_adding": [
                 {
                     "attrkey": "key",
@@ -825,15 +825,6 @@ class Test_WORD_PAYLOAD_SCHEMA(unittest.TestCase):
         },
         {
             "word": "cannot have whitespace"
-        },
-        {
-            "pos_name": "cannot have whitespace"
-        },
-        {
-            "pos_name": ""
-        },
-        {
-            "pos_name": " "
         }
     ]
 

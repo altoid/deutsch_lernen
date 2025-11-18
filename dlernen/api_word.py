@@ -147,8 +147,8 @@ def add_word():
         if not payload.get('word'):
             raise Exception("no word in add word request")
 
-        # same with pos_name.
-        if not payload.get('pos_name'):
+        # same with pos_id.
+        if not payload.get('pos_id'):
             raise Exception("no part of speech in add word request")
 
     except jsonschema.ValidationError as e:
@@ -157,7 +157,7 @@ def add_word():
         return "bad payload: %s" % str(e), 400
 
     # checks:
-    # - pos_name is valid
+    # - pos_id is valid
     # - attrkeys are valid for the POS
     #
     # note:  adding a word with no attributes is allowed
@@ -169,37 +169,33 @@ def add_word():
         try:
             cursor.execute('start transaction')
             check_sql = """
-            select attrkey, attribute_id, pos_id 
+            select pos.name AS pos_name, attrkey, attribute_id, pos_id 
             from pos_form 
                 inner join pos on pos_id = pos.id 
                 inner join attribute on attribute_id = attribute.id 
-            where pos.name = %(pos_name)s
+            where pos.id = %(pos_id)s
             """
 
-            # jsonschema doc definition guarantees that payload['word'] and payload['pos_name']
+            # jsonschema doc definition guarantees that payload['word']
             # will not contain whitespace.
             word = payload['word']
-            pos_name = payload['pos_name']
+            pos_id = payload['pos_id']
 
-            word = word.lower()
-            if pos_name.lower() == 'noun':
-                word = word.capitalize()
-
-            d = {
-                'pos_name': pos_name
-            }
-
-            cursor.execute(check_sql, d)
+            cursor.execute(check_sql, {'pos_id': pos_id})
             rows = cursor.fetchall()
+
+            if not rows:
+                cursor.execute('rollback')
+                return "unknown part of speech:  id = %s" % payload['pos_id'], 400
+
+            # capitalize correctly
+            word = word.casefold()
+            if rows[0]['pos_name'].casefold() == 'noun':
+                word = word.capitalize()
 
             # maps attr keys to attr ids
             attrdict = {r['attrkey']: r['attribute_id'] for r in rows}
 
-            if not attrdict:
-                cursor.execute('rollback')
-                return "unknown part of speech:  %s" % payload['pos_name'], 400
-
-            pos_id = rows[0]['pos_id']
             sql = "insert into word (word, pos_id) values (%s, %s)"
             cursor.execute(sql, (word, pos_id))
             cursor.execute("select last_insert_id() word_id")

@@ -114,7 +114,7 @@ def get_pos():
                 pos_to_word_info[r['pos_name']] = (r['word'], r['word_id'])
             name_to_attrs[r['pos_name']].append(
                 {
-                    "attrkey": r['attrkey'],
+                    "attrkey": r['attrkey'].casefold(),
                     "attribute_id": r['attribute_id'],
                     "sort_order": r['sort_order'],
                     "attrvalue": r['attrvalue'],
@@ -126,7 +126,7 @@ def get_pos():
         for k in name_to_attrs.keys():
             result.append(
                 {
-                    "pos_name": k.lower(),
+                    "pos_name": k.casefold(),
                     "pos_id": name_to_ids[k],
                     "word": pos_to_word_info[k][0],
                     "word_id": pos_to_word_info[k][1],
@@ -150,7 +150,7 @@ def get_pos_keyword_mappings():
 
     mappings = {
         "pos_names_to_ids": {
-           x['pos_name']:x['pos_id'] for x in pos_structure
+           x['pos_name']: x['pos_id'] for x in pos_structure
         },
         "attribute_names_to_ids": {
             y['attrkey']: y['attribute_id'] for x in pos_structure for y in x['attributes']

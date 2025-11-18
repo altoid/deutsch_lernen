@@ -451,7 +451,7 @@ def update_dict():
     wordlist_id = request.form.get('wordlist_id')
     field_values_before = json.loads(request.form.get('field_values_before'))
     field_names_to_attrkeys = json.loads(request.form.get('field_names_to_attrkeys'))
-    pos_id_to_pos_name = json.loads(request.form.get('pos_id_to_pos_name'))
+#    pos_id_to_pos_name = json.loads(request.form.get('pos_id_to_pos_name'))
     field_values_after = {}
     for k in field_values_before.keys():
         field_values_after[k] = request.form.get(k).strip()
@@ -459,7 +459,7 @@ def update_dict():
     pprint(field_values_before)
     pprint(field_values_after)
     pprint(field_names_to_attrkeys)
-    pprint(pos_id_to_pos_name)
+#    pprint(pos_id_to_pos_name)
 
     # go through all the attribute values and diff before/after.  we will construct add/update
     # payloads and send them off to the API.  we will have to construct one request per
@@ -524,7 +524,7 @@ def update_dict():
 
         if k not in word_ids:
             word_payloads[k]['word'] = word
-            word_payloads[k]['pos_name'] = pos_id_to_pos_name[str(k[1])]
+            word_payloads[k]['pos_id'] = k[1]
 
     # get rid of empty payloads
     word_payloads = {key: value for key, value in word_payloads.items() if value}

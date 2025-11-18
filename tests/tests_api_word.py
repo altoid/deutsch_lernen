@@ -10,6 +10,8 @@ import string
 class APITestsWordEndToEnd(unittest.TestCase):
     app = None
     app_context = None
+    keyword_mappings = None
+    client = None
 
     @classmethod
     def setUpClass(cls):
@@ -21,6 +23,10 @@ class APITestsWordEndToEnd(unittest.TestCase):
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
+
+        with cls.app.test_request_context():
+            r = cls.client.get(url_for('api_misc.get_pos_keyword_mappings', _external=True))
+            cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
     def tearDownClass(cls):
@@ -36,7 +42,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word,
-            "pos_name": "noun",
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
             "attributes_adding": [
                 {
                     "attrkey": "article",
@@ -83,7 +89,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word,
-            "pos_name": "noun",
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
             "attributes_adding": [
             ]
         }
@@ -105,7 +111,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word,
-            "pos_name": "noun"
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
         }
         r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
         self.assertEqual(r.status_code, 200)
@@ -126,7 +132,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word,
-            "pos_name": "noun",
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
         }
         r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
         self.assertEqual(r.status_code, 200)
@@ -210,7 +216,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         word = "test_add_twice_%s" % ''.join(random.choices(string.ascii_lowercase, k=10))
         payload = {
             "word": word,
-            "pos_name": "noun",
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
             "attributes": [
                 {
                     "attrkey": "article",
@@ -247,7 +253,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         word = "test_add_twice_%s" % ''.join(random.choices(string.ascii_lowercase, k=10))
         payload = {
             "word": word,
-            "pos_name": "noun",
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
             "attributes": [
                 {
                     "attrkey": "article",
@@ -270,7 +276,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
 
         payload = {
             "word": word,
-            "pos_name": "adjective",
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
             "attributes": [
                 {
                     "attrkey": "definition",
@@ -303,8 +309,10 @@ class APITestsWordPOST(unittest.TestCase):
     # this class tests error conditions.  tests that the api works correctly with correct input are
     # in APITestsWordEndToEnd
 
+    client = None
     app = None
     app_context = None
+    keyword_mappings = None
 
     @classmethod
     def setUpClass(cls):
@@ -317,6 +325,10 @@ class APITestsWordPOST(unittest.TestCase):
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
 
+        with cls.app.test_request_context():
+            r = cls.client.get(url_for('api_misc.get_pos_keyword_mappings', _external=True))
+            cls.keyword_mappings = json.loads(r.data)
+
     @classmethod
     def tearDownClass(cls):
         cls.app_context.pop()
@@ -328,7 +340,7 @@ class APITestsWordPOST(unittest.TestCase):
     # word not in payload
     def test_word_not_in_payload(self):
         payload = {
-            "pos_name": "noun",
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
             "attributes_adding": [
                 {
                     "attrkey": "article",
@@ -379,7 +391,7 @@ class APITestsWordPOST(unittest.TestCase):
     def test_bullshit_attrkeys(self):
         payload = {
             "word": "aoeiaoueaou",
-            "pos_name": "noun",
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
             "attributes_adding": [
                 {
                     "attrkey": "stinky",
@@ -402,7 +414,7 @@ class APITestsWordPOST(unittest.TestCase):
     def test_bullshit_pos(self):
         payload = {
             "word": "aeioeauaoeu",
-            "pos_name": "uiauiauoeu",
+            "pos_id": 92378456,
             "attributes_adding": [
                 {
                     "attrkey": "article",
@@ -426,6 +438,7 @@ class APITestsWordPUT(unittest.TestCase):
     app = None
     app_context = None
     client = None
+    keyword_mappings = None
 
     @classmethod
     def setUpClass(cls):
@@ -438,6 +451,10 @@ class APITestsWordPUT(unittest.TestCase):
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
 
+        with cls.app.test_request_context():
+            r = cls.client.get(url_for('api_misc.get_pos_keyword_mappings', _external=True))
+            cls.keyword_mappings = json.loads(r.data)
+
     @classmethod
     def tearDownClass(cls):
         cls.app_context.pop()
@@ -446,7 +463,7 @@ class APITestsWordPUT(unittest.TestCase):
         self.word = "Apitestswordput_" + ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": self.word,
-            "pos_name": "noun"
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun']
         }
 
         with self.app.test_request_context():
@@ -669,6 +686,7 @@ class APIWordUpdate(unittest.TestCase):
     app = None
     app_context = None
     client = None
+    keyword_mappings = None
 
     @classmethod
     def setUpClass(cls):
@@ -681,6 +699,10 @@ class APIWordUpdate(unittest.TestCase):
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
 
+        with cls.app.test_request_context():
+            r = cls.client.get(url_for('api_misc.get_pos_keyword_mappings', _external=True))
+            cls.keyword_mappings = json.loads(r.data)
+
     @classmethod
     def tearDownClass(cls):
         cls.app_context.pop()
@@ -690,7 +712,7 @@ class APIWordUpdate(unittest.TestCase):
         self.verb = ''.join(random.choices(string.ascii_lowercase, k=11))
         add_payload = {
             "word": self.verb,
-            "pos_name": "verb"
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['verb'],
         }
 
         with self.app.test_request_context():
