@@ -31,51 +31,47 @@ words (word+pos pairs) with their attributes in one go.
     <input type="hidden" name="wordlist_id" value="{{wordlist_id}}">
     {% endif %}
 
-    {% if word %}
-    <input type="text" name="word" value="{{word}}">
-    <input type="hidden" name="word_before" value="{{ word }}">
-    {% else %}
-    <input type="text" name="word">
-    {% endif %}
-    <br>
-
     <table class="wordedit">
+        <tr>
+            <th class="wordedit">
+                word
+            </th>
+        </tr>
+        <tr>
+            <td class="wordedit">
+                {% if word %}
+                <input type="text"
+                       class="wordedit"
+                       name="word"
+                       value="{{word}}">
+                <input type="hidden" name="word_before" value="{{ word }}">
+                {% else %}
+                <input type="text"
+                       class="wordedit"
+                       name="word">
+                {% endif %}
+            </td>
+        </tr>
         {% for pos_name in form_data.keys() %}
-            <tr>
-                <td class="wordedit" rowspan="{{ form_data[pos_name]|length }}">
-                    {{ pos_name }}
-                </td>
-                {% for field in form_data[pos_name][:1] %}
-                <td class="wordedit">
-                    <label for="{{ field.field_name }}">{{ field.label }}</label>
-                    {# 'for' links with the input's id, not its name #}
-                </td>
-                <td class="wordedit">
-                    <input type="text"
-                           id="{{ field.field_name }}"
-                           name="{{ field.field_name }}"
-                           value="{{ field.field_value }}"
-                           size="60">
-                </td>
-                {% endfor %}
-            </tr>
-            {% for field in form_data[pos_name][1:] %}
-            <tr>
-                <td class="wordedit">
-                    <label for="{{ field.field_name }}">{{ field.label }}</label>
-                    {# 'for' links with the input's id, not its name #}
-                </td>
-                <td class="wordedit">
-                    <input type="text"
-                           id="{{ field.field_name }}"
-                           name="{{ field.field_name }}"
-                           value="{{ field.field_value }}"
-                           size="60">
-                </td>
-            </tr>
-            {% endfor %}
+        <tr>
+            <th class="wordedit">
+                {{ pos_name }}
+            </th>
+        </tr>
+        {% for field in form_data[pos_name] %}
+        <tr>
+            <td class="wordedit">
+                <input type="text"
+                       class="wordedit"
+                       placeholder="{{ field.label }}"
+                       name="{{ field.field_name }}"
+                       value="{{ field.field_value }}">
+            </td>
+        </tr>
+        {% endfor %}
         {% endfor %}
     </table>
+    <br>
     <input type="submit" value="Submit"/>
 </form>
 {% endblock %}
