@@ -236,8 +236,9 @@ def add_words_to_list(cursor, wordlist_id, words):
 
     cursor.execute(sql, arglist)
     rows = cursor.fetchall()
-    known_words = {x['word'] for x in rows}
-    unknown_words = words - known_words
+    known_words = {x['word'].casefold() for x in rows}
+    given_words = {x.casefold() for x in arglist}
+    unknown_words = given_words - known_words
     wkw_tuples = [(wordlist_id, r['word_id']) for r in rows]
     if wkw_tuples:
         ins_sql = """
