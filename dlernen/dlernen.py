@@ -459,7 +459,7 @@ def update_dict():
     # (word, pos_id) is associated with a word id.  if not, then we are adding.
 
     word_payloads = {}
-    word_ids = {}
+    word_pos_to_word_id = {}
 
     for k in field_values_before.keys():
         value_before = field_values_before[k]
@@ -476,7 +476,7 @@ def update_dict():
 
         payload = word_payloads[t]
         if word_id:
-            word_ids[t] = word_id
+            word_pos_to_word_id[t] = word_id
 
         if value_before and not value_after:
             # we will have a word_id and an attrvalue_id in this case
@@ -489,7 +489,7 @@ def update_dict():
                 payload[js.ATTRIBUTES_ADDING] = []
             payload[js.ATTRIBUTES_ADDING].append({'attrvalue': value_after, 'attribute_id': attribute_id})
             if word_id:
-                word_ids[t] = word_id
+                word_pos_to_word_id[t] = word_id
 
         elif value_after != value_before:
             # we will have a word_id and an attrvalue_id
@@ -511,7 +511,7 @@ def update_dict():
         if not word_payloads[k]:
             continue
 
-        if k not in word_ids:
+        if k not in word_pos_to_word_id:
             word_payloads[k]['word'] = word
             word_payloads[k]['pos_id'] = k[1]
 
@@ -523,9 +523,9 @@ def update_dict():
 
     refresh_needed = False
     for k, payload in word_payloads.items():
-        if k in word_ids:
+        if k in word_pos_to_word_id:
             # we are updating
-            word_id = word_ids[k]
+            word_id = word_pos_to_word_id[k]
             url = url_for('api_word.update_word', word_id=word_id, _external=True)
             r = requests.put(url, json=payload)
             if r.status_code != 200:
