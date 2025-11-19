@@ -8,7 +8,8 @@ bp = Blueprint('app_patch_words', __name__)
 
 @bp.cli.command('patch_words')
 @click.option('--wordlist_ids', '-l', multiple=True)
-def patch_words(wordlist_ids):
+@click.option('--attributes', '-a', multiple=True)
+def patch_words(wordlist_ids, attributes):
     # to run this, use the command:  python -m flask --app run app_patch_words patch_words [-l id -l id -l id ...]
     # it has to be invoked from the dlernen directory.
     # need -l for each list id because click sucks but we can't use argparse.
@@ -18,8 +19,17 @@ def patch_words(wordlist_ids):
     pos_structure = r.json()
     verb_structure = list(filter(lambda x: x['pos_name'].casefold() == 'verb', pos_structure))[0]
 
+    verb_attrs = {x['attrkey'] for x in verb_structure['attributes']}
     sort_order_to_attrid = {x['sort_order']: x['attribute_id'] for x in verb_structure['attributes']}
     wordlist_ids = list(wordlist_ids)
+
+    attrkeys_to_patch = set(attributes) if attributes else verb_attrs
+
+    unknown_attrs = attrkeys_to_patch - verb_attrs
+    if unknown_attrs:
+        message = "unknown attributes:  %s" % unknown_attrs
+        print(message)
+        return message, 400
 
     args = None
     if wordlist_ids:
@@ -35,11 +45,6 @@ def patch_words(wordlist_ids):
 
     words_to_patch = []
 
-    # get all the verbs
-    attrkeys_to_patch = {
-        'third_person_past',
-        #        'past_participle'
-    }
     result = list(filter(lambda x: x['pos_name'] == 'Verb', result))
     for w in result:
         tpp = list(filter(lambda x: x['attrkey'] in attrkeys_to_patch and x['attrvalue'] is None, w['attributes']))
@@ -66,7 +71,7 @@ def patch_words(wordlist_ids):
 
         payload['attributes_adding'].clear()
 
-        # TODO - loop over attrkeys_to_patch
+        print("============================= %s" % p['word'])
         for i in ordering:
             k = sort_order_to_attrkey[i]
             v = keys_to_values[k]
@@ -75,7 +80,7 @@ def patch_words(wordlist_ids):
                 # don't bash an already-set value
                 continue
 
-            answer = input("%s [%s] ---> " % (p['word'], k))
+            answer = input("[%s] ---> " % (k))
             answer = answer.strip()
 
             if not answer:
