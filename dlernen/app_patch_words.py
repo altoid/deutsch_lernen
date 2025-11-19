@@ -3,8 +3,6 @@ from pprint import pprint
 import click
 import requests
 
-# miscellaneous /api endpoints are here.
-
 bp = Blueprint('app_patch_words', __name__)
 
 
@@ -14,6 +12,13 @@ def patch_words(wordlist_ids):
     # to run this, use the command:  python -m flask --app run app_patch_words patch_words [-l id -l id -l id ...]
     # it has to be invoked from the dlernen directory.
     # need -l for each list id because click sucks but we can't use argparse.
+
+    url = url_for('api_misc.get_pos', _external=True)
+    r = requests.get(url)
+    pos_structure = r.json()
+    verb_structure = list(filter(lambda x: x['pos_name'].casefold() == 'verb', pos_structure))[0]
+
+    sort_order_to_attrid = {x['sort_order']: x['attribute_id'] for x in verb_structure['attributes']}
     wordlist_ids = list(wordlist_ids)
 
     args = None
@@ -31,13 +36,13 @@ def patch_words(wordlist_ids):
     words_to_patch = []
 
     # get all the verbs
-    attrs_to_patch = {
+    attrkeys_to_patch = {
         'third_person_past',
         #        'past_participle'
     }
     result = list(filter(lambda x: x['pos_name'] == 'Verb', result))
     for w in result:
-        tpp = list(filter(lambda x: x['attrkey'] in attrs_to_patch and x['attrvalue'] is None, w['attributes']))
+        tpp = list(filter(lambda x: x['attrkey'] in attrkeys_to_patch and x['attrvalue'] is None, w['attributes']))
         if tpp:
             words_to_patch.append(w)
 
@@ -47,35 +52,24 @@ def patch_words(wordlist_ids):
         print("nothing to do")
         return 'OK', 200
 
-    # from the first word, extract all of the attr keys and their sort orders.  these are the same for
-    # each of the words retrieved.
-    # TODO this will have to do until i make an api call that retrieves the attr keys and sort orders for all
-    #   the parts of speech.
-    sort_order_to_attrkey = {}
-    for a in words_to_patch[0]['attributes']:
-        if a['attrkey'] in attrs_to_patch:
-            sort_order_to_attrkey[a['sort_order']] = a['attrkey']
-
-#    pprint(sort_order_to_attrkey)
-    ordering = sorted(list(sort_order_to_attrkey.keys()))
-#    pprint(ordering)
-
     payload = {
         "attributes_adding": []
     }
 
     for p in words_to_patch:
-        attrkey_to_attrvalue = {}
-        for a in p['attributes']:
-            if a['attrkey'] in attrs_to_patch:
-                attrkey_to_attrvalue[a['attrkey']] = a['attrvalue']
-#        pprint(attrkey_to_attrvalue)
+        attrs_to_patch = list(filter(lambda x: x['attrkey'] in attrkeys_to_patch and x['attrvalue'] is None,
+                                     p['attributes']))
+
+        keys_to_values = {x['attrkey']: x['attrvalue'] for x in attrs_to_patch}
+        sort_order_to_attrkey = {x['sort_order']: x['attrkey'] for x in attrs_to_patch}
+        ordering = sorted(list(sort_order_to_attrkey.keys()))
 
         payload['attributes_adding'].clear()
 
+        # TODO - loop over attrkeys_to_patch
         for i in ordering:
             k = sort_order_to_attrkey[i]
-            v = attrkey_to_attrvalue[k]
+            v = keys_to_values[k]
 
             if v:
                 # don't bash an already-set value
@@ -93,15 +87,14 @@ def patch_words(wordlist_ids):
 
             d = {
                 "attrvalue": answer,
-                "attrkey": sort_order_to_attrkey[i]
+                "attribute_id": sort_order_to_attrid[i]
             }
             payload["attributes_adding"].append(d)
-
-#        pprint(payload)
 
         url = url_for("api_word.update_word", word_id=p['word_id'], _external=True)
         r = requests.put(url, json=payload)
         if r.status_code != 200:
             pprint(p)
+            print(r.text)
             return 'BAD', r.status_code
 
