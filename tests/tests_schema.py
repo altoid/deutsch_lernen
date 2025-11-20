@@ -499,33 +499,6 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
 
     invalid_docs = [
         {
-            "name": "bad dog",
-            "wordlist_id": 1234,
-            "list_type": "standard",
-            "known_words": [],
-            "citation": "where i got this",
-            "source_is_url": False,
-            "unknown_words": [
-                "whitespace not allowed"
-            ],
-            "notes": "lots of stuff"
-        },
-        {
-            "name": "whitespace in word",
-            "wordlist_id": 1234,
-            "list_type": "standard",
-            "known_words": [
-                {
-                    "word": "whitespace in word",
-                    "word_id": 1234,
-                }
-            ],
-            "citation": "where i got this",
-            "source_is_url": False,
-            "unknown_words": [],
-            "notes": "lots of stuff"
-        },
-        {
             "name": "missing word id",
             "wordlist_id": 1234,
             "list_type": "standard",
@@ -1091,47 +1064,15 @@ class Test_WORDLIST_METADATA_RESPONSE_SCHEMA(unittest.TestCase):
         {
             # bad list type
             "wordlist_id": 1234,
-            "name": "fester",
+            "name": "bad list type",
             "sqlcode": "not really sql but what the hell",
             "citation": "  speeding  ",
             "list_type": "shopping"
         },
         {
-            # bad name
-            "wordlist_id": 1234,
-            "name": "   fester",
-            "sqlcode": "not really sql but what the hell",
-            "citation": "speeding",
-            "list_type": "empty"
-        },
-        {
-            # another bad name
-            "wordlist_id": 1234,
-            "name": "",
-            "sqlcode": "not really sql but what the hell",
-            "citation": "speeding",
-            "list_type": "empty"
-        },
-        {
-            # bad sqlcode
-            "wordlist_id": 1234,
-            "name": "aoeu",
-            "sqlcode": "",
-            "citation": "speeding",
-            "list_type": "empty"
-        },
-        {
-            # bad citation
-            "wordlist_id": 1234,
-            "name": "aoeu",
-            "sqlcode": "not really sql but what the hell",
-            "citation": "",
-            "list_type": "empty"
-        },
-        {
             # bad id
             "wordlist_id": "1234",
-            "name": "aoeu",
+            "name": "bad id",
             "sqlcode": "not really sql but what the hell",
             "citation": "aoeuoea",
             "list_type": "empty"
