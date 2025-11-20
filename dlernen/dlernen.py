@@ -445,10 +445,7 @@ def update_dict():
     field_values_before = json.loads(request.form.get('field_values_before'))
     field_values_after = {}
     for k in field_values_before.keys():
-        field_values_after[k] = request.form.get(k).strip()
-
-    # pprint(field_values_before)
-    # pprint(field_values_after)
+        field_values_after[k] = request.form.get(k)
 
     # go through all the attribute values and diff before/after.  we will construct add/update
     # payloads and send them off to the API.  we will have to construct one request per
@@ -462,8 +459,11 @@ def update_dict():
     word_pos_to_word_id = {}
 
     for k in field_values_before.keys():
-        value_before = field_values_before[k]
-        value_after = field_values_after[k]
+        value_before_unstripped = field_values_before[k]
+        value_after_unstripped = field_values_after[k]
+        value_before_stripped = value_before_unstripped.strip()
+        value_after_stripped = value_after_unstripped.strip()
+
         ids = k.split('-')
         pos_id = int(ids[0])
         attribute_id = int(ids[1])
@@ -478,27 +478,36 @@ def update_dict():
         if word_id:
             word_pos_to_word_id[t] = word_id
 
-        if value_before and not value_after:
+        if value_before_stripped and not value_after_stripped:
+            # we are deleting the attribute value.
             # we will have a word_id and an attrvalue_id in this case
             if js.ATTRIBUTES_DELETING not in payload:
                 payload[js.ATTRIBUTES_DELETING] = []
             payload[js.ATTRIBUTES_DELETING].append(int(attrvalue_id))
-        elif value_after and not value_before:
+        elif value_after_stripped and not value_before_stripped:
+            # we are adding a new attribute value.
             # we *might* have a word_id
             if js.ATTRIBUTES_ADDING not in payload:
                 payload[js.ATTRIBUTES_ADDING] = []
-            payload[js.ATTRIBUTES_ADDING].append({'attrvalue': value_after, 'attribute_id': attribute_id})
+            payload[js.ATTRIBUTES_ADDING].append({'attrvalue': value_after_unstripped,
+                                                  'attribute_id': attribute_id})
             if word_id:
                 word_pos_to_word_id[t] = word_id
-
-        elif value_after != value_before:
+        elif value_after_stripped != value_before_stripped:
+            # we are changing an existing value.
             # we will have a word_id and an attrvalue_id
             if js.ATTRIBUTES_UPDATING not in payload:
                 payload[js.ATTRIBUTES_UPDATING] = []
-            payload[js.ATTRIBUTES_UPDATING].append({'attrvalue_id': int(attrvalue_id), 'attrvalue': value_after})
+            payload[js.ATTRIBUTES_UPDATING].append({'attrvalue_id': int(attrvalue_id),
+                                                    'attrvalue': value_after_unstripped})
         else:
-            # unchanged, so who cares
-            pass
+            # stripped values are unchanged, but it may happen that the unstripped values are different
+            # because we added/removed leading/trailing whitespace and did nothing else.
+            if value_after_stripped and (value_before_unstripped != value_after_unstripped):
+                if js.ATTRIBUTES_UPDATING not in payload:
+                    payload[js.ATTRIBUTES_UPDATING] = []
+                payload[js.ATTRIBUTES_UPDATING].append({'attrvalue_id': int(attrvalue_id),
+                                                        'attrvalue': value_after_unstripped})
 
     # did we change the spelling of the word?  if so add new spelling to all the payloads.
     # the update request will take care of proper capitalization.
@@ -518,9 +527,6 @@ def update_dict():
     # get rid of empty payloads
     word_payloads = {key: value for key, value in word_payloads.items() if value}
 
-    # pprint(word_payloads)
-    # pprint(word_ids)
-
     refresh_needed = False
     for k, payload in word_payloads.items():
         if k in word_pos_to_word_id:
@@ -539,7 +545,6 @@ def update_dict():
             else:
                 refresh_needed = True
 
-    # pprint("refresh:  %s" % refresh_needed)
     if refresh_needed:
         refresh_payload = {
             'word': word,

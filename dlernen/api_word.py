@@ -358,7 +358,7 @@ def update_word(word_id):
             """
             insert_args = [
                 {
-                    'attrvalue': a['attrvalue'].strip(),
+                    'attrvalue': a['attrvalue'],
                     'word_id': word_id,
                     'attribute_id': a['attribute_id']
                 }
