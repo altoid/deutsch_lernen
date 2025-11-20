@@ -102,16 +102,12 @@ def get_pos():
         rows = cursor.fetchall()
 
         name_to_attrs = {}
-        name_to_ids = {}
-        pos_to_word_info = {}
+        pos_name_to_ids = {x['pos_name']: x['pos_id'] for x in rows}
+        pos_to_word_info = {x['pos_name']: (x['word'], x['word_id']) for x in rows}
 
         for r in rows:
             if r['pos_name'] not in name_to_attrs:
                 name_to_attrs[r['pos_name']] = []
-            if r['pos_name'] not in name_to_ids:
-                name_to_ids[r['pos_name']] = r['pos_id']
-            if r['pos_name'] not in pos_to_word_info:
-                pos_to_word_info[r['pos_name']] = (r['word'], r['word_id'])
             name_to_attrs[r['pos_name']].append(
                 {
                     "attrkey": r['attrkey'].casefold(),
@@ -127,7 +123,7 @@ def get_pos():
             result.append(
                 {
                     "pos_name": k.casefold(),
-                    "pos_id": name_to_ids[k],
+                    "pos_id": pos_name_to_ids[k],
                     "word": pos_to_word_info[k][0],
                     "word_id": pos_to_word_info[k][1],
                     "attributes": name_to_attrs[k]
