@@ -25,7 +25,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         cls.app_context.push()
 
         with cls.app.test_request_context():
-            r = cls.client.get(url_for('api_misc.get_pos_keyword_mappings', _external=True))
+            r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
             cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
@@ -405,7 +405,7 @@ class APITestsWordPOST(unittest.TestCase):
         cls.app_context.push()
 
         with cls.app.test_request_context():
-            r = cls.client.get(url_for('api_misc.get_pos_keyword_mappings', _external=True))
+            r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
             cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
@@ -527,7 +527,7 @@ class APITestsWordPUT(unittest.TestCase):
         cls.app_context.push()
 
         with cls.app.test_request_context():
-            r = cls.client.get(url_for('api_misc.get_pos_keyword_mappings', _external=True))
+            r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
             cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
@@ -776,7 +776,7 @@ class APIWordUpdate(unittest.TestCase):
         cls.app_context.push()
 
         with cls.app.test_request_context():
-            r = cls.client.get(url_for('api_misc.get_pos_keyword_mappings', _external=True))
+            r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
             cls.keyword_mappings = json.loads(r.data)
 
     @classmethod

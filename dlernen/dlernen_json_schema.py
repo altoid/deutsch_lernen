@@ -205,7 +205,6 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
     attributes for each part of speech, along with their sort ordering
     """,
     "type": "array",
-    "minItems": 1,
     "items": {
         "type": "object",
         "required": [

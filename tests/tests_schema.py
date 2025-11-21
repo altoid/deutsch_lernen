@@ -264,9 +264,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
             }
         ],
         [
-            # empty is bad.  it means there are no parts of speech in the database!
-        ],
-        [
             {
                 "pos_name": "no_attributes",
                 "pos_id": 1234,

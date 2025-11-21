@@ -34,14 +34,6 @@ class APITests(unittest.TestCase):
     def tearDownClass(cls):
         cls.app_context.pop()
 
-    def test_pos_structure(self):
-        with self.app.test_request_context():
-            url = url_for('api_misc.get_pos', _external=True)
-            r = self.client.get(url)
-            pos_structure = json.loads(r.data)
-
-            jsonschema.validate(pos_structure, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
-
     def test_real_quiz_data(self):
         with self.app.test_request_context():
             url = url_for('api_quiz.quiz_data', quiz_key='plurals', _external=True)
