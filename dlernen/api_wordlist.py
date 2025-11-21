@@ -234,6 +234,7 @@ def add_words_to_list(cursor, wordlist_id, words):
     where word in (%s)
     """ % format_list
 
+    case_folded_to_as_is = {x.casefold(): x for x in arglist}
     cursor.execute(sql, arglist)
     rows = cursor.fetchall()
     known_words = {x['word'].casefold() for x in rows}
@@ -252,7 +253,7 @@ def add_words_to_list(cursor, wordlist_id, words):
         insert ignore into wordlist_unknown_word (wordlist_id, word)
         values (%s, %s)
         """
-        wuw_tuples = [(wordlist_id, x) for x in unknown_words]
+        wuw_tuples = [(wordlist_id, case_folded_to_as_is[x]) for x in unknown_words]
         cursor.executemany(ins_sql, wuw_tuples)
 
 
