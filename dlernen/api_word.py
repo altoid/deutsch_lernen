@@ -182,14 +182,25 @@ def add_word():
 
     # pos_structure is a length-1 array, get the first element
     pos_structure = pos_structure[0]
+
+    # capitalize correctly
+    word = word.casefold()
+    if pos_structure['pos_name'].casefold() == 'noun':
+        word = word.capitalize()
+
+    defined_attribute_ids = {x['attribute_id'] for x in pos_structure['attributes']}
+    attr_ids_to_keys = {x['attribute_id']: x['attrkey'] for x in pos_structure['attributes']}
+    attributes_adding = payload.get(js.ATTRIBUTES_ADDING)
+    if attributes_adding:
+        request_attribute_ids = {a['attribute_id'] for a in attributes_adding}
+        undefined_attribute_ids = request_attribute_ids - defined_attribute_ids
+        if len(undefined_attribute_ids) > 0:
+            message = "attribute ids not defined:  %s" % ', '.join(list(map(str, undefined_attribute_ids)))
+            return message, 400
+
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
-
-            # capitalize correctly
-            word = word.casefold()
-            if pos_structure['pos_name'].casefold() == 'noun':
-                word = word.capitalize()
 
             sql = "insert into word (word, pos_id) values (%s, %s)"
             cursor.execute(sql, (word, pos_id))
@@ -197,17 +208,7 @@ def add_word():
             result = cursor.fetchone()
             word_id = result['word_id']
 
-            defined_attribute_ids = {x['attribute_id'] for x in pos_structure['attributes']}
-            attributes_adding = payload.get(js.ATTRIBUTES_ADDING)
             if attributes_adding:
-                attr_ids_to_keys = {x['attribute_id']: x['attrkey'] for x in pos_structure['attributes']}
-                request_attribute_ids = {a['attribute_id'] for a in attributes_adding}
-                undefined_attribute_ids = request_attribute_ids - defined_attribute_ids
-                if len(undefined_attribute_ids) > 0:
-                    message = "attribute ids not defined:  %s" % ', '.join(list(map(str, undefined_attribute_ids)))
-                    cursor.execute('rollback')
-                    return message, 400
-
                 insert_args = [
                     {
                         "word_id": word_id,
@@ -272,52 +273,52 @@ def update_word(word_id):
     is_noun = pos_structure['pos_name'].lower() == 'noun'
     attrvalue_ids_to_keys = {a['attrvalue_id']: a['attrkey'] for a in pos_structure['attributes']}
 
+    payload_updating_attrvalue_ids = {a['attrvalue_id'] for a in payload.get(js.ATTRIBUTES_UPDATING, set())}
+    undefined_attrvalue_ids = payload_updating_attrvalue_ids - defined_attrvalue_ids
+    if len(undefined_attrvalue_ids) > 0:
+        ids = list(map(str, undefined_attrvalue_ids))
+        message = "attrvalue_ids not defined:  %s" % ', '.join(ids)
+        return message, 400
+
+    payload_deleting_attrvalue_ids = set(payload.get(js.ATTRIBUTES_DELETING, []))
+    undefined_attrvalue_ids = payload_deleting_attrvalue_ids - defined_attrvalue_ids
+    if len(undefined_attrvalue_ids) > 0:
+        ids = list(map(str, undefined_attrvalue_ids))
+        message = "attrvalue_ids not defined:  %s" % ', '.join(ids)
+        return message, 400
+
+    deleting_and_updating_ids = payload_deleting_attrvalue_ids & payload_updating_attrvalue_ids
+    if deleting_and_updating_ids:
+        ids = list(map(str, deleting_and_updating_ids))
+        message = "attempting to delete and update attr ids:  %s" % ', '.join(ids)
+        return message, 400
+
+    payload_adding_attribute_ids = {a['attribute_id'] for a in payload.get(js.ATTRIBUTES_ADDING, set())}
+    undefined_attribute_ids = payload_adding_attribute_ids - defined_attribute_ids
+    if len(undefined_attribute_ids) > 0:
+        ids = list(map(str, undefined_attribute_ids))
+        message = "attrids not defined:  %s" % ', '.join(ids)
+        return message, 400
+
+    # checks complete, let's do this.
+
+    # jsonschema definition guarantees that word, if present, will not contain whitespace
+    word = payload.get('word', '')
+
+    # capitalize appropriately.
+    word = word.casefold()
+    if is_noun:
+        word = word.capitalize()
+
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
 
-            payload_updating_attrvalue_ids = {a['attrvalue_id'] for a in payload.get(js.ATTRIBUTES_UPDATING, set())}
-            undefined_attrvalue_ids = payload_updating_attrvalue_ids - defined_attrvalue_ids
-            if len(undefined_attrvalue_ids) > 0:
-                message = "attrvalue_ids not defined:  %s" % ', '.join(list(undefined_attrvalue_ids))
-                cursor.execute('rollback')
-                return message, 400
-
-            payload_deleting_attrvalue_ids = set(payload.get(js.ATTRIBUTES_DELETING, []))
-            undefined_attrvalue_ids = payload_deleting_attrvalue_ids - defined_attrvalue_ids
-            if len(undefined_attrvalue_ids) > 0:
-                message = "attrvalue_ids not defined:  %s" % ', '.join(list(undefined_attrvalue_ids))
-                cursor.execute('rollback')
-                return message, 400
-
-            deleting_and_updating_ids = payload_deleting_attrvalue_ids & payload_updating_attrvalue_ids
-            if deleting_and_updating_ids:
-                message = "attempting to delete and update attr ids:  %s" % ', '.join(list(deleting_and_updating_ids))
-                cursor.execute('rollback')
-                return message, 400
-
-            payload_adding_attribute_ids = {a['attribute_id'] for a in payload.get(js.ATTRIBUTES_ADDING, set())}
-            undefined_attribute_ids = payload_adding_attribute_ids - defined_attribute_ids
-            if len(undefined_attribute_ids) > 0:
-                message = "attrids not defined:  %s" % ', '.join(list(undefined_attribute_ids))
-                cursor.execute('rollback')
-                return message, 400
-
-            # jsonschema definition guarantees that word, if present, will not contain whitespace
-            word = payload.get('word', '')
-
-            # capitalize appropriately.
-            word = word.casefold()
-            if is_noun:
-                word = word.capitalize()
-
-            # checks complete, let's do this.
-
             if word:
                 sql = """
-                update word set word = %(word)s
-                where id = %(word_id)s
-                """
+                    update word set word = %(word)s
+                    where id = %(word_id)s
+                    """
                 d = {
                     'word': word,
                     'word_id': word_id
