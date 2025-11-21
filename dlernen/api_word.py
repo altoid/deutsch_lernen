@@ -1,4 +1,5 @@
-from flask import Blueprint, request, current_app
+from flask import Blueprint, request, current_app, url_for
+import requests
 from pprint import pprint
 from mysql.connector import connect
 from dlernen import dlernen_json_schema as js, common
@@ -156,6 +157,11 @@ def add_word():
     except Exception as e:
         return "bad payload: %s" % str(e), 400
 
+    # jsonschema doc definition guarantees that payload['word']
+    # will not contain whitespace.
+    word = payload['word']
+    pos_id = payload['pos_id']
+
     # checks:
     # - pos_id is valid
     # - attribute ids are valid for the POS
@@ -165,32 +171,24 @@ def add_word():
     # jsonschema doc definitions guarantee that word contains no whitespace and that attrvalues have
     # at least one non-whitespace character.  so no checks needed for these.
 
+    url = url_for('api_pos.get_pos', _external=True)
+    r = requests.get(url)
+    pos_structures = r.json()
+    pos_structure = list(filter(lambda x: x['pos_id'] == pos_id, pos_structures))
+    if not pos_structure:
+        # pos_id is bogus
+        message = "unknown part of speech:  %s" % pos_id
+        return message, 404
+
+    # pos_structure is a length-1 array, get the first element
+    pos_structure = pos_structure[0]
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
-            check_sql = """
-            select attribute.attrkey, pos.name AS pos_name, attribute_id, pos_id 
-            from pos_form 
-                inner join pos on pos_id = pos.id 
-                inner join attribute on attribute_id = attribute.id 
-            where pos.id = %(pos_id)s
-            """
-
-            # jsonschema doc definition guarantees that payload['word']
-            # will not contain whitespace.
-            word = payload['word']
-            pos_id = payload['pos_id']
-
-            cursor.execute(check_sql, {'pos_id': pos_id})
-            rows = cursor.fetchall()
-
-            if not rows:
-                cursor.execute('rollback')
-                return "unknown part of speech:  id = %s" % payload['pos_id'], 400
 
             # capitalize correctly
             word = word.casefold()
-            if rows[0]['pos_name'].casefold() == 'noun':
+            if pos_structure['pos_name'].casefold() == 'noun':
                 word = word.capitalize()
 
             sql = "insert into word (word, pos_id) values (%s, %s)"
@@ -199,10 +197,10 @@ def add_word():
             result = cursor.fetchone()
             word_id = result['word_id']
 
-            defined_attribute_ids = {x['attribute_id'] for x in rows}
+            defined_attribute_ids = {x['attribute_id'] for x in pos_structure['attributes']}
             attributes_adding = payload.get(js.ATTRIBUTES_ADDING)
             if attributes_adding:
-                attr_ids_to_keys = {x['attribute_id']: x['attrkey'] for x in rows}
+                attr_ids_to_keys = {x['attribute_id']: x['attrkey'] for x in pos_structure['attributes']}
                 request_attribute_ids = {a['attribute_id'] for a in attributes_adding}
                 undefined_attribute_ids = request_attribute_ids - defined_attribute_ids
                 if len(undefined_attribute_ids) > 0:
@@ -258,35 +256,34 @@ def update_word(word_id):
     # jsonschema doc definitions guarantee that word contains no whitespace and that attrvalues have
     # at least one non-whitespace character.  so no checks needed for these.
 
+    url = url_for('api_pos.get_pos_for_word_id', word_id=word_id, _external=True)
+    r = requests.get(url)
+    pos_structure = r.json()
+    if not pos_structure:
+        # word_id is bogus
+        message = "word_id %s not found" % word_id
+        return message, 404
+
+    # pos_structure is a length-1 array, get the first element
+    pos_structure = pos_structure[0]
+
+    defined_attrvalue_ids = {a['attrvalue_id'] for a in pos_structure['attributes']}
+    defined_attribute_ids = {a['attribute_id'] for a in pos_structure['attributes']}
+    is_noun = pos_structure['pos_name'].lower() == 'noun'
+    attrvalue_ids_to_keys = {a['attrvalue_id']: a['attrkey'] for a in pos_structure['attributes']}
+
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
 
-            sql = """
-            select attribute_id, attrvalue_id, pos_name, attrkey
-            from mashup_v
-            where word_id = %(word_id)s
-            """
-            cursor.execute(sql, {'word_id': word_id})
-            rows = cursor.fetchall()
-            defined_attrvalue_ids = {r['attrvalue_id'] for r in rows}
-            defined_attribute_ids = {r['attribute_id'] for r in rows}
-            is_noun = rows[0]['pos_name'].lower() == 'noun'
-
-            if len(defined_attrvalue_ids) == 0:
-                # word_id is bogus
-                message = "word_id %s not found" % word_id
-                cursor.execute('rollback')
-                return message, 404
-
-            payload_updating_attrvalue_ids = {a['attrvalue_id'] for a in payload.get('attributes_updating', set())}
+            payload_updating_attrvalue_ids = {a['attrvalue_id'] for a in payload.get(js.ATTRIBUTES_UPDATING, set())}
             undefined_attrvalue_ids = payload_updating_attrvalue_ids - defined_attrvalue_ids
             if len(undefined_attrvalue_ids) > 0:
                 message = "attrvalue_ids not defined:  %s" % ', '.join(list(undefined_attrvalue_ids))
                 cursor.execute('rollback')
                 return message, 400
 
-            payload_deleting_attrvalue_ids = set(payload.get('attributes_deleting', []))
+            payload_deleting_attrvalue_ids = set(payload.get(js.ATTRIBUTES_DELETING, []))
             undefined_attrvalue_ids = payload_deleting_attrvalue_ids - defined_attrvalue_ids
             if len(undefined_attrvalue_ids) > 0:
                 message = "attrvalue_ids not defined:  %s" % ', '.join(list(undefined_attrvalue_ids))
@@ -315,7 +312,6 @@ def update_word(word_id):
                 word = word.capitalize()
 
             # checks complete, let's do this.
-            attrvalue_ids_to_keys = {x['attrvalue_id']: x['attrkey'] for x in rows}
 
             if word:
                 sql = """
@@ -340,7 +336,7 @@ def update_word(word_id):
                     else a['attrvalue'],
                     'attrvalue_id': a['attrvalue_id']
                 }
-                for a in payload.get('attributes_updating', set())
+                for a in payload.get(js.ATTRIBUTES_UPDATING, set())
             ]
             if update_args:
                 cursor.executemany(sql, update_args)
