@@ -14,7 +14,7 @@ def patch_words(wordlist_ids, attributes):
     # it has to be invoked from the dlernen directory.
     # need -l for each list id because click sucks but we can't use argparse.
 
-    url = url_for('api_misc.get_pos', _external=True)
+    url = url_for('api_pos.get_pos', _external=True)
     r = requests.get(url)
     pos_structure = r.json()
     verb_structure = list(filter(lambda x: x['pos_name'].casefold() == 'verb', pos_structure))[0]

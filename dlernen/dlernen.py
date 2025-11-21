@@ -390,7 +390,7 @@ def delete_from_list():
 def edit_word_form(word):
     wordlist_id = request.args.get('wordlist_id')
 
-    url = url_for('api_misc.get_pos', word=word, _external=True)
+    url = url_for('api_pos.get_pos_for_word', word=word, _external=True)
     r = requests.get(url)
     pos_structure = r.json()
 
