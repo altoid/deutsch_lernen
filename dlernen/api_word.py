@@ -299,13 +299,6 @@ def update_word(word_id):
                 cursor.execute('rollback')
                 return message, 400
 
-            payload_updating_attrvalue_ids = {a['attrvalue_id'] for a in payload.get('attributes_updating', set())}
-            undefined_attrvalue_ids = payload_updating_attrvalue_ids - defined_attrvalue_ids
-            if len(undefined_attrvalue_ids) > 0:
-                message = "attrvalue_ids not defined:  %s" % ', '.join(list(undefined_attrvalue_ids))
-                cursor.execute('rollback')
-                return message, 400
-
             payload_adding_attribute_ids = {a['attribute_id'] for a in payload.get(js.ATTRIBUTES_ADDING, set())}
             undefined_attribute_ids = payload_adding_attribute_ids - defined_attribute_ids
             if len(undefined_attribute_ids) > 0:
