@@ -135,6 +135,41 @@ def get_word(word):
         return result
 
 
+def save_attributes(word_id, attributes_adding, attributes_deleting, cursor):
+    if attributes_adding:
+        args = [
+            {
+                "word_id": word_id,
+                "attribute_id": a['attribute_id'],
+                "attrvalue": a['attrvalue']
+            }
+            for a in attributes_adding
+        ]
+
+        sql = """
+        insert into word_attribute (word_id, attribute_id, attrvalue)
+        values (%(word_id)s, %(attribute_id)s, %(attrvalue)s)
+        on duplicate key update attrvalue=%(attrvalue)s
+        """
+        cursor.executemany(sql, args)
+
+    if attributes_deleting:
+        sql = """
+        delete from word_attribute 
+        where word_id = %(word_id)s and attribute_id = %(attribute_id)s
+        """
+
+        args = [
+            {
+                'word_id': word_id,
+                'attribute_id': a['attribute_id']
+            }
+            for a in attributes_deleting
+        ]
+
+        cursor.executemany(sql, args)
+
+
 @bp.route('/api/word', methods=['POST'])
 def add_word():
     """
@@ -142,7 +177,7 @@ def add_word():
     """
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, js.WORD_PAYLOAD_SCHEMA)
+        jsonschema.validate(payload, js.WORD_ADD_PAYLOAD_SCHEMA)
 
         # word isn't required in the json schema but we need it here.
         if not payload.get('word'):
@@ -165,6 +200,7 @@ def add_word():
     # checks:
     # - pos_id is valid
     # - attribute ids are valid for the POS
+    # - attribute ids are unique; we don't provide multiple values for the same attribute
     #
     # note:  adding a word with no attributes is allowed
     #
@@ -190,13 +226,28 @@ def add_word():
 
     defined_attribute_ids = {x['attribute_id'] for x in pos_structure['attributes']}
     attr_ids_to_keys = {x['attribute_id']: x['attrkey'] for x in pos_structure['attributes']}
-    attributes_adding = payload.get(js.ATTRIBUTES_ADDING)
-    if attributes_adding:
-        request_attribute_ids = {a['attribute_id'] for a in attributes_adding}
+    attributes = payload.get(js.ATTRIBUTES)
+    attributes_adding = None
+    if attributes:
+        request_attribute_ids = {a['attribute_id'] for a in attributes}
         undefined_attribute_ids = request_attribute_ids - defined_attribute_ids
         if len(undefined_attribute_ids) > 0:
             message = "attribute ids not defined:  %s" % ', '.join(list(map(str, undefined_attribute_ids)))
             return message, 400
+
+        request_attribute_ids_list = [a['attribute_id'] for a in attributes]
+        if len(request_attribute_ids_list) != len(request_attribute_ids):
+            message = "multiple values provided for the same attribute", 400
+            return message, 400
+
+        attributes_adding = []
+        for a in attributes:
+            if 'attrvalue' in a:
+                attributes_adding.append(a)
+
+        for a in attributes_adding:
+            if attr_ids_to_keys[a['attribute_id']].casefold() == 'plural':
+                a['attrvalue'] = a['attrvalue'].capitalize()
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
@@ -208,22 +259,7 @@ def add_word():
             result = cursor.fetchone()
             word_id = result['word_id']
 
-            if attributes_adding:
-                insert_args = [
-                    {
-                        "word_id": word_id,
-                        "attribute_id": a['attribute_id'],
-                        "attrvalue": a['attrvalue'].capitalize() if attr_ids_to_keys[
-                                                                        a['attribute_id']].casefold() == 'plural' else
-                        a['attrvalue']
-                    }
-                    for a in attributes_adding
-                ]
-                if insert_args:
-                    sql = """insert into word_attribute (word_id, attribute_id, attrvalue)
-                    values (%(word_id)s, %(attribute_id)s, %(attrvalue)s)
-                    """
-                    cursor.executemany(sql, insert_args)
+            save_attributes(word_id, attributes_adding, None, cursor)
 
             cursor.execute('commit')
 
@@ -242,17 +278,17 @@ def add_word():
 def update_word(word_id):
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, js.WORD_PAYLOAD_SCHEMA)
+        jsonschema.validate(payload, js.WORD_UPDATE_PAYLOAD_SCHEMA)
     except jsonschema.ValidationError as e:
         message = "bad payload: %s" % e.message
         return message, 400
 
     # checks:
     # word_id exists
-    # zero-length or non-existent attribute list is ok
-    # attrvalue ids exist and belong to the word, for both update and delete cases
-    # attrvalue ids in deleting and updating are disjoint
+    # attrvalue ids exist and belong to the word
     # attribute ids are defined for the word
+    # attribute ids being written/deleted are disjoint.
+    # we aren't trying to write more than one value for the same attribute
     #
     # jsonschema doc definitions guarantee that word contains no whitespace and that attrvalues have
     # at least one non-whitespace character.  so no checks needed for these.
@@ -268,47 +304,52 @@ def update_word(word_id):
     # pos_structure is a length-1 array, get the first element
     pos_structure = pos_structure[0]
 
-    defined_attrvalue_ids = {a['attrvalue_id'] for a in pos_structure['attributes']}
     defined_attribute_ids = {a['attribute_id'] for a in pos_structure['attributes']}
-    is_noun = pos_structure['pos_name'].lower() == 'noun'
-    attrvalue_ids_to_keys = {a['attrvalue_id']: a['attrkey'] for a in pos_structure['attributes']}
 
-    payload_updating_attrvalue_ids = {a['attrvalue_id'] for a in payload.get(js.ATTRIBUTES_UPDATING, set())}
-    undefined_attrvalue_ids = payload_updating_attrvalue_ids - defined_attrvalue_ids
-    if len(undefined_attrvalue_ids) > 0:
-        ids = list(map(str, undefined_attrvalue_ids))
-        message = "attrvalue_ids not defined:  %s" % ', '.join(ids)
+    given_attribute_ids = {a['attribute_id'] for a in payload.get(js.ATTRIBUTES, set())}
+    undefined_attribute_ids = given_attribute_ids - defined_attribute_ids
+    if len(undefined_attribute_ids) > 0:
+        ids = list(map(str, undefined_attribute_ids))
+        message = "attribute_ids not defined:  %s" % ', '.join(ids)
         return message, 400
 
-    payload_deleting_attrvalue_ids = set(payload.get(js.ATTRIBUTES_DELETING, []))
-    undefined_attrvalue_ids = payload_deleting_attrvalue_ids - defined_attrvalue_ids
-    if len(undefined_attrvalue_ids) > 0:
-        ids = list(map(str, undefined_attrvalue_ids))
-        message = "attrvalue_ids not defined:  %s" % ', '.join(ids)
-        return message, 400
+    attributes = payload.get(js.ATTRIBUTES, [])
+    attributes_adding = []
+    attributes_deleting = []
+    for a in attributes:
+        if 'attrvalue' in a:
+            attributes_adding.append(a)
+        else:
+            attributes_deleting.append(a)
 
-    deleting_and_updating_ids = payload_deleting_attrvalue_ids & payload_updating_attrvalue_ids
+    attrids_adding_list = [x['attribute_id'] for x in attributes_adding]
+    attrids_adding_set = set(attrids_adding_list)
+    if len(attrids_adding_set) != len(attrids_adding_list):
+        return "attempting to write multiple values for an attribute", 400
+
+    attrids_deleting_set = {x['attribute_id'] for x in attributes_deleting}
+
+    deleting_and_updating_ids = attrids_deleting_set & attrids_adding_set
     if deleting_and_updating_ids:
         ids = list(map(str, deleting_and_updating_ids))
         message = "attempting to delete and update attr ids:  %s" % ', '.join(ids)
         return message, 400
 
-    payload_adding_attribute_ids = {a['attribute_id'] for a in payload.get(js.ATTRIBUTES_ADDING, set())}
-    undefined_attribute_ids = payload_adding_attribute_ids - defined_attribute_ids
-    if len(undefined_attribute_ids) > 0:
-        ids = list(map(str, undefined_attribute_ids))
-        message = "attrids not defined:  %s" % ', '.join(ids)
-        return message, 400
-
     # checks complete, let's do this.
 
-    # jsonschema definition guarantees that word, if present, will not contain whitespace
     word = payload.get('word', '')
 
     # capitalize appropriately.
+    is_noun = pos_structure['pos_name'].casefold() == 'noun'
     word = word.casefold()
     if is_noun:
         word = word.capitalize()
+
+    # noun plurals must be capitalized.
+    attr_ids_to_keys = {a['attribute_id']: a['attrkey'] for a in pos_structure['attributes']}
+    for a in attributes_adding:
+        if attr_ids_to_keys[a['attribute_id']].casefold() == 'plural':
+            a['attrvalue'] = a['attrvalue'].capitalize()
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
@@ -325,45 +366,7 @@ def update_word(word_id):
                 }
                 cursor.execute(sql, d)
 
-            sql = """
-            update word_attribute
-            set attrvalue = %(attrvalue)s
-            where id = %(attrvalue_id)s
-            """
-            update_args = [
-                {
-                    "attrvalue": a['attrvalue'].capitalize()
-                    if attrvalue_ids_to_keys[a['attrvalue_id']].casefold() == 'plural'
-                    else a['attrvalue'],
-                    'attrvalue_id': a['attrvalue_id']
-                }
-                for a in payload.get(js.ATTRIBUTES_UPDATING, set())
-            ]
-            if update_args:
-                cursor.executemany(sql, update_args)
-
-            sql = """
-            insert ignore into word_attribute(attribute_id, word_id, attrvalue)
-            values (%(attribute_id)s, %(word_id)s, %(attrvalue)s)
-            """
-            insert_args = [
-                {
-                    'attrvalue': a['attrvalue'],
-                    'word_id': word_id,
-                    'attribute_id': a['attribute_id']
-                }
-                for a in payload.get(js.ATTRIBUTES_ADDING, set())
-            ]
-            if insert_args:
-                cursor.executemany(sql, insert_args)
-
-            sql = """
-            delete from word_attribute where id = %s
-            """
-            if payload_deleting_attrvalue_ids:
-                # args to executemany have to be a 2d list, i.e. list of lists
-                args = [[x] for x in payload_deleting_attrvalue_ids]
-                cursor.executemany(sql, args)
+            save_attributes(word_id, attributes_adding, attributes_deleting, cursor)
 
             cursor.execute('commit')
 

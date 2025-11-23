@@ -18,9 +18,7 @@ ID_PATTERN = WORD_PATTERN
 # separate regex for multiline strings.
 MULTILINE_STRING_PATTERN = r"""\S"""
 
-ATTRIBUTES_ADDING = 'attributes_adding'
-ATTRIBUTES_DELETING = 'attributes_deleting'
-ATTRIBUTES_UPDATING = 'attributes_updating'
+ATTRIBUTES = 'attributes'
 
 ##########################################################
 #
@@ -57,33 +55,32 @@ REFRESH_WORDLISTS_PAYLOAD_SCHEMA = {
     }
 }
 
-WORD_PAYLOAD_SCHEMA = {
+WORD_ADD_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/updateword_payload",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Payload for add/update word",
     "description": "Payload for add/update word",
     "type": "object",
     "required": [
-        # no required fields
+        "word",
+        "pos_id"
     ],
     "properties": {
         "word": {
-            # this is optional but required when adding a word.
             "type": "string",
             "pattern": WORD_PATTERN
         },
         "pos_id": {
-            # this is optional.  required for adding a word and ignored on updates
             "type": "integer",
             "minimum": 1
         },
-        ATTRIBUTES_ADDING: {
+        ATTRIBUTES: {
             "type": "array",
             "items": {
                 "type": "object",
                 "required": [
-                    "attrvalue",
                     "attribute_id"
+                    # attrvalue is not required.  if not provided, the attribute is deleted.
                 ],
                 "properties": {
                     "attribute_id": {
@@ -96,24 +93,39 @@ WORD_PAYLOAD_SCHEMA = {
                     }
                 }
             }
+        }
+    }
+}
+
+WORD_UPDATE_PAYLOAD_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/updateword_payload",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Payload for add/update word",
+    "description": "Payload for add/update word",
+    "type": "object",
+    "required": [
+        "word_id"
+    ],
+    "properties": {
+        "word": {
+            # not required, but if present, we are making a spelling change
+            "type": "string",
+            "pattern": WORD_PATTERN
         },
-        ATTRIBUTES_DELETING: {
-            "type": "array",
-            "items": {
-                "type": "integer",
-                "minimum": 1
-            }
+        "word_id": {
+            "type": "integer",
+            "minimum": 1
         },
-        ATTRIBUTES_UPDATING: {
+        ATTRIBUTES: {
             "type": "array",
             "items": {
                 "type": "object",
                 "required": [
-                    "attrvalue",
-                    "attrvalue_id"
+                    "attribute_id"
+                    # attrvalue is not required.  if not provided, the attribute is deleted.
                 ],
                 "properties": {
-                    "attrvalue_id": {
+                    "attribute_id": {
                         "type": "integer",
                         "minimum": 1
                     },
@@ -344,7 +356,6 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
                 }
             }
         }
-
     }
 }
 

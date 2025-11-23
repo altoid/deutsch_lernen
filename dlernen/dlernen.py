@@ -411,8 +411,7 @@ def edit_word_form(word):
             t = [p['pos_id'], a['attribute_id']]
             if p['word_id']:
                 t.append(p['word_id'])
-                if a['attrvalue_id']:
-                    t.append(a['attrvalue_id'])
+
             t = list(map(str, t))  # convert to str so join won't choke
             field_name = '-'.join(t)
             field_value = a['attrvalue'] if a['attrvalue'] else ""
@@ -443,9 +442,7 @@ def update_dict():
     word_before = request.form.get('word_before')
     wordlist_id = request.form.get('wordlist_id')
     field_values_before = json.loads(request.form.get('field_values_before'))
-    field_values_after = {}
-    for k in field_values_before.keys():
-        field_values_after[k] = request.form.get(k)
+    field_values_after = {k: request.form.get(k) for k in field_values_before.keys()}
 
     # go through all the attribute values and diff before/after.  we will construct add/update
     # payloads and send them off to the API.  we will have to construct one request per
@@ -468,7 +465,6 @@ def update_dict():
         pos_id = int(ids[0])
         attribute_id = int(ids[1])
         word_id = str(ids[2]) if len(ids) > 2 else None
-        attrvalue_id = str(ids[3]) if len(ids) > 3 else None
 
         t = (word, pos_id)
         if t not in word_payloads:
@@ -476,38 +472,38 @@ def update_dict():
 
         payload = word_payloads[t]
         if word_id:
-            word_pos_to_word_id[t] = word_id
+            word_pos_to_word_id[t] = int(word_id)
 
         if value_before_stripped and not value_after_stripped:
             # we are deleting the attribute value.
-            # we will have a word_id and an attrvalue_id in this case
-            if js.ATTRIBUTES_DELETING not in payload:
-                payload[js.ATTRIBUTES_DELETING] = []
-            payload[js.ATTRIBUTES_DELETING].append(int(attrvalue_id))
+            # we will have a word_id in this case
+            if js.ATTRIBUTES not in payload:
+                payload[js.ATTRIBUTES] = []
+            payload[js.ATTRIBUTES].append({'attribute_id': attribute_id})
         elif value_after_stripped and not value_before_stripped:
             # we are adding a new attribute value.
             # we *might* have a word_id
-            if js.ATTRIBUTES_ADDING not in payload:
-                payload[js.ATTRIBUTES_ADDING] = []
-            payload[js.ATTRIBUTES_ADDING].append({'attrvalue': value_after_unstripped,
-                                                  'attribute_id': attribute_id})
-            if word_id:
-                word_pos_to_word_id[t] = word_id
+            if js.ATTRIBUTES not in payload:
+                payload[js.ATTRIBUTES] = []
+            payload[js.ATTRIBUTES].append({'attrvalue': value_after_unstripped,
+                                           'attribute_id': attribute_id})
+            # if word_id:
+            #     word_pos_to_word_id[t] = word_id
         elif value_after_stripped != value_before_stripped:
             # we are changing an existing value.
-            # we will have a word_id and an attrvalue_id
-            if js.ATTRIBUTES_UPDATING not in payload:
-                payload[js.ATTRIBUTES_UPDATING] = []
-            payload[js.ATTRIBUTES_UPDATING].append({'attrvalue_id': int(attrvalue_id),
-                                                    'attrvalue': value_after_unstripped})
+            # we will have a word_id
+            if js.ATTRIBUTES not in payload:
+                payload[js.ATTRIBUTES] = []
+            payload[js.ATTRIBUTES].append({'attribute_id': attribute_id,
+                                           'attrvalue': value_after_unstripped})
         else:
             # stripped values are unchanged, but it may happen that the unstripped values are different
             # because we added/removed leading/trailing whitespace and did nothing else.
             if value_after_stripped and (value_before_unstripped != value_after_unstripped):
-                if js.ATTRIBUTES_UPDATING not in payload:
-                    payload[js.ATTRIBUTES_UPDATING] = []
-                payload[js.ATTRIBUTES_UPDATING].append({'attrvalue_id': int(attrvalue_id),
-                                                        'attrvalue': value_after_unstripped})
+                if js.ATTRIBUTES not in payload:
+                    payload[js.ATTRIBUTES] = []
+                payload[js.ATTRIBUTES].append({'attribute_id': attribute_id,
+                                               'attrvalue': value_after_unstripped})
 
     # did we change the spelling of the word?  if so add new spelling to all the payloads.
     # the update request will take care of proper capitalization.
@@ -515,12 +511,15 @@ def update_dict():
         for k in word_payloads.keys():
             word_payloads[k]['word'] = word
 
-    # go through the payloads and insert word and pos_name in payloads that we are POSTing.
+    # go through the payloads and insert word and pos_name in payloads that we are POSTing,
+    # or word_id for those we are PUTting.
     for k in word_payloads.keys():
         if not word_payloads[k]:
             continue
 
-        if k not in word_pos_to_word_id:
+        if k in word_pos_to_word_id:
+            word_payloads[k]['word_id'] = word_pos_to_word_id[k]
+        else:
             word_payloads[k]['word'] = word
             word_payloads[k]['pos_id'] = k[1]
 

@@ -1,13 +1,13 @@
 import unittest
 import jsonschema
-from dlernen import dlernen_json_schema
+from dlernen import dlernen_json_schema as js
 
 # none of the tests here uses the API or hits the database.  these tests make sure that the JSONSCHEMA documents
 # are defined correctly.
 
 
 class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
-    schema = dlernen_json_schema.NULL_SCHEMA
+    schema = js.NULL_SCHEMA
 
     valid_docs = [
     ]
@@ -31,7 +31,7 @@ class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
 
 
 class Test_REFRESH_WORDLISTS_PAYLOAD_SCHEMA(unittest.TestCase):
-    schema = dlernen_json_schema.REFRESH_WORDLISTS_PAYLOAD_SCHEMA
+    schema = js.REFRESH_WORDLISTS_PAYLOAD_SCHEMA
 
     valid_docs = [
         {
@@ -68,7 +68,7 @@ class Test_REFRESH_WORDLISTS_PAYLOAD_SCHEMA(unittest.TestCase):
 
 
 class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA
+    schema = js.POS_STRUCTURE_RESPONSE_SCHEMA
 
     valid_docs = [
         [
@@ -417,7 +417,7 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
 
 
 class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA
+    schema = js.WORDLIST_RESPONSE_SCHEMA
 
     valid_docs = [
         {'citation': None,
@@ -610,7 +610,7 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
 
 
 class Test_WORDLISTS_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA
+    schema = js.WORDLISTS_RESPONSE_SCHEMA
 
     valid_docs = [
         [
@@ -642,7 +642,7 @@ class Test_WORDLISTS_RESPONSE_SCHEMA(unittest.TestCase):
 
 
 class Test_QUIZ_DATA_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA
+    schema = js.QUIZ_DATA_RESPONSE_SCHEMA
 
     valid_docs = [
         [
@@ -688,106 +688,222 @@ class Test_QUIZ_DATA_RESPONSE_SCHEMA(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
-class Test_WORD_PAYLOAD_SCHEMA(unittest.TestCase):
-    schema = dlernen_json_schema.WORD_PAYLOAD_SCHEMA
+class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
+    schema = js.WORD_ADD_PAYLOAD_SCHEMA
 
     valid_docs = [
-        {
-            # empty payload is allowed
-        },
         {
             # fully specified payload
             "word": "werd",
             "pos_id": 1234,
-            "attributes_adding": [
+            js.ATTRIBUTES: [
                 {
                     "attribute_id": 1111,
                     "attrvalue": "value"
-                }
-            ],
-            "attributes_deleting": [
-                12,
-                34,
-                56
-            ],
-            "attributes_updating": [
+                },
                 {
-                    "attrvalue_id": 123,
-                    "attrvalue": "new value"
+                    "attribute_id": 3243,
+                    # attrvalue not required.
                 }
             ]
         },
         {
             # without any attribute values is valid
-            "word": "valid"
+            "word": "valid",
+            "pos_id": 23,
         },
         {
-            "attributes_adding": [],
-            "attributes_deleting": [],
-            "attributes_updating": []
+            # empty attribute list is valid
+            "word": "valid",
+            "pos_id": 23,
+            js.ATTRIBUTES: []
         }
     ]
 
     invalid_docs = [
         {
-            "attributes_adding": [
+            # empty payload is not allowed
+        },
+        {
+            # "word": "aoeu",
+            "pos_id": 123
+        },
+        {
+            "word": "aoeu",
+            # "pos_id": 123
+        },
+        {
+            "word": "",
+            "pos_id": 1234
+        },
+        {
+            "word": " ",
+            "pos_id": 1234
+        },
+        {
+            "word": "cannot have whitespace",
+            "pos_id": 234
+        },
+        {
+            "word": "aoeu",
+            "pos_id": 234,
+            js.ATTRIBUTES: [
                 {
-                    "attribute_id": 444,
-                    "attrvalue": " "  # must have at least 1 non-whitespace character
+                    # has to have an attribute id
                 }
             ]
         },
         {
-            "attributes_adding": [
+            "word": "aoeu",
+            "pos_id": 234,
+            js.ATTRIBUTES: [
                 {
-                    "attribute_id": 2345  # key and value both required
+                    "attribute_id": "id has to be a string"
                 }
             ]
         },
         {
-            "attributes_adding": [
+            "word": "aoeu",
+            "pos_id": 234,
+            js.ATTRIBUTES: [
                 {
-                    "attrvalue": "key and value both required"
+                    "attribute_id": 234,
+                    "attrvalue": ""
                 }
             ]
         },
         {
-            "attributes_updating": [
+            "word": "aoeu",
+            "pos_id": 234,
+            js.ATTRIBUTES: [
                 {
-                    "attrvalue_id": 1234,
-                    "attrvalue": "   "  # must have at least 1 non-whitespace character
+                    "attribute_id": 234,
+                    "attrvalue": "  "
                 }
             ]
         },
         {
-            "attributes_updating": [
+            "word": "aoeu",
+            "pos_id": 234,
+            js.ATTRIBUTES: [
                 {
-                    # id and value both required
-                    "attrvalue_id": 1234
+                    "attribute_id": 234,
+                    "attrvalue": None
                 }
             ]
         },
         {
-            "attributes_updating": [
+            "word": "aoeu",
+            "pos_id": 234,
+            js.ATTRIBUTES: [
                 {
-                    "attrvalue": "id and value both required"
+                    "attribute_id": 234,
+                    "attrvalue": 1234
+                }
+            ]
+        },
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, self.schema)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
+class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
+    schema = js.WORD_UPDATE_PAYLOAD_SCHEMA
+
+    valid_docs = [
+        {
+            # fully specified payload
+            "word_id": 1234,
+            js.ATTRIBUTES: [
+                {
+                    "attribute_id": 1111,
+                    "attrvalue": "value"
+                },
+                {
+                    "attribute_id": 3243,
+                    # attrvalue not required.
                 }
             ]
         },
         {
-            "attributes_deleting": [
-                "has to be", "a list of ints"
-            ]
+            # without any attribute values is valid
+            "word_id": 23,
         },
         {
-            "word": ""
-        },
-        {
-            "word": " "
-        },
-        {
-            "word": "cannot have whitespace"
+            # empty attribute list is valid
+            "word_id": 23,
+            js.ATTRIBUTES: []
         }
+    ]
+
+    invalid_docs = [
+        {
+            # empty payload is not allowed
+        },
+        {
+            "word_id": 234,
+            js.ATTRIBUTES: [
+                {
+                    # has to have an attribute id
+                }
+            ]
+        },
+        {
+            "word_id": 234,
+            js.ATTRIBUTES: [
+                {
+                    "attribute_id": "id has to be a string"
+                }
+            ]
+        },
+        {
+            "word_id": 234,
+            js.ATTRIBUTES: [
+                {
+                    "attribute_id": 234,
+                    "attrvalue": ""
+                }
+            ]
+        },
+        {
+            "word_id": 234,
+            js.ATTRIBUTES: [
+                {
+                    "attribute_id": 234,
+                    "attrvalue": "  "
+                }
+            ]
+        },
+        {
+            "word_id": 234,
+            js.ATTRIBUTES: [
+                {
+                    "attribute_id": 234,
+                    "attrvalue": None
+                }
+            ]
+        },
+        {
+            "word_id": 234,
+            js.ATTRIBUTES: [
+                {
+                    "attribute_id": 234,
+                    "attrvalue": 1234
+                }
+            ]
+        },
     ]
 
     def test_valid_docs(self):
@@ -806,7 +922,7 @@ class Test_WORD_PAYLOAD_SCHEMA(unittest.TestCase):
 
 
 class Test_WORDS_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = dlernen_json_schema.WORDS_RESPONSE_SCHEMA
+    schema = js.WORDS_RESPONSE_SCHEMA
 
     valid_docs = [
         [
@@ -875,7 +991,7 @@ class Test_WORDS_RESPONSE_SCHEMA(unittest.TestCase):
 
 
 class Test_WORDLIST_CONTENTS_PAYLOAD_SCHEMA(unittest.TestCase):
-    schema = dlernen_json_schema.WORDLIST_CONTENTS_PAYLOAD_SCHEMA
+    schema = js.WORDLIST_CONTENTS_PAYLOAD_SCHEMA
 
     valid_docs = [
         {
@@ -944,7 +1060,7 @@ class Test_WORDLIST_CONTENTS_PAYLOAD_SCHEMA(unittest.TestCase):
 class Test_WORDLIST_METADATA_PAYLOAD_SCHEMA(unittest.TestCase):
     # note:  these tests don't validate sqlcode.  that happens in the API tests.
 
-    schema = dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA
+    schema = js.WORDLIST_METADATA_PAYLOAD_SCHEMA
 
     valid_docs = [
         {
@@ -1002,7 +1118,7 @@ class Test_WORDLIST_METADATA_PAYLOAD_SCHEMA(unittest.TestCase):
 
 
 class Test_WORDLIST_METADATA_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA
+    schema = js.WORDLIST_METADATA_RESPONSE_SCHEMA
 
     valid_responses = [
         {
