@@ -1,14 +1,21 @@
 :root {
     --sidebar-width:  200px;
+    --background-color: #eeeeff;
+    --link-color: blue;
 }
 
 body {
-    background-color: #fbeee2;
+    /* background-color: #fbeee2;*/
+    background-color: var(--background-color);
     font-family: helvetica
 }
 
 a {
     text-decoration: none
+}
+
+a:link, a:visited {
+    color: var(--link-color);
 }
 
 ul {
@@ -76,7 +83,7 @@ td.word_attributes {
 .sidebar a {
     display: block;
     text-decoration: none;
-    color: #fbeee2;
+    color: var(--background-color);
     font-size: large;
     padding: 20px;
 }
