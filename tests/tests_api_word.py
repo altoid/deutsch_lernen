@@ -700,8 +700,6 @@ class APITestsWordPUT(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         obj = json.loads(r.data)
 
-        attr_changed = list(filter(lambda x: x['attrkey'] == attrkey, obj['attributes']))
-        victim = attr_changed[0]['attrvalue_id']
         new_value = 'changed to this'
         payload = {
             'word_id': self.word_id,
@@ -720,7 +718,7 @@ class APITestsWordPUT(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         obj = json.loads(r.data)
 
-        a = list(filter(lambda x: x['attrvalue_id'] == victim, obj['attributes']))
+        a = list(filter(lambda x: x['attrkey'] == attrkey, obj['attributes']))
         self.assertEqual(1, len(a))
         self.assertEqual(new_value, a[0]['attrvalue'])
 

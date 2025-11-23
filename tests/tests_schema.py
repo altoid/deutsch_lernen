@@ -88,14 +88,12 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                         "attribute_id": 1234,
                         "sort_order": 5,
                         "attrvalue": "aoeu",
-                        "attrvalue_id": 1234,
                     },
                     {
                         "attrkey": "first_person_singular",
                         "attribute_id": 1234,
                         "sort_order": 6,
                         "attrvalue": None,
-                        "attrvalue_id": None,
                     }
                 ]
             },
@@ -109,8 +107,7 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                         "attrkey": "definition",
                         "attribute_id": 1234,
                         "sort_order": 0,
-                        "attrvalue": "aoeu",
-                        "attrvalue_id": 1234,
+                        "attrvalue": "aoeu"
                     }
                 ]
             }
@@ -126,8 +123,7 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                         "attrkey": "definition",
                         "attribute_id": 1234,
                         "sort_order": 0,
-                        "attrvalue": None,
-                        "attrvalue_id": None,
+                        "attrvalue": None
                     }
                 ]
             }
@@ -152,45 +148,10 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "word_id": 1234,
                 "attributes": [
                     {
-                        "attrkey": "whatevs",
-                        "attribute_id": 1234,
-                        "sort_order": 11,
-                        "attrvalue": "id cannot be null if there is a value",
-                        "attrvalue_id": None,
-                    }
-                ]
-            }
-        ],
-        [
-            {
-                "pos_name": "voib",
-                "pos_id": 1234,
-                "word": "aoeu",
-                "word_id": 1234,
-                "attributes": [
-                    {
-                        "attrkey": "whatevs",
-                        "attribute_id": 1234,
-                        "sort_order": 11,
-                        "attrvalue": None,  # if this is null, attrvalue_id must be null too.
-                        "attrvalue_id": 1234,
-                    }
-                ]
-            }
-        ],
-        [
-            {
-                "pos_name": "voib",
-                "pos_id": 1234,
-                "word": "aoeu",
-                "word_id": 1234,
-                "attributes": [
-                    {
                         # "attrkey": "whatevs",
                         "attribute_id": 1234,
                         "sort_order": 11,
-                        "attrvalue": "aoeu",
-                        "attrvalue_id": 1234,
+                        "attrvalue": "aoeu"
                     }
                 ]
             }
@@ -206,8 +167,7 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                         "attrkey": "whatevs",
                         # "attribute_id": 1234,
                         "sort_order": 11,
-                        "attrvalue": "aoeu",
-                        "attrvalue_id": 1234,
+                        "attrvalue": "aoeu"
                     }
                 ]
             }
@@ -223,8 +183,7 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                         "attrkey": "whatevs",
                         "attribute_id": 1234,
                         # "sort_order": 11,
-                        "attrvalue": "aoeu",
-                        "attrvalue_id": 1234,
+                        "attrvalue": "aoeu"
                     }
                 ]
             }
@@ -240,25 +199,7 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                         "attrkey": "whatevs",
                         "attribute_id": 1234,
                         "sort_order": 11,
-                        # "attrvalue": "aoeu",
-                        "attrvalue_id": 1234,
-                    }
-                ]
-            }
-        ],
-        [
-            {
-                "pos_name": "voib",
-                "pos_id": 1234,
-                "word": "aoeu",
-                "word_id": 1234,
-                "attributes": [
-                    {
-                        "attrkey": "whatevs",
-                        "attribute_id": 1234,
-                        "sort_order": 11,
-                        "attrvalue": "aoeu",
-                        # "attrvalue_id": 1234,
+                        # "attrvalue": "aoeu"
                     }
                 ]
             }
@@ -274,8 +215,7 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 #         "attrkey": "whatevs",
                 #         "attribute_id": 1234,
                 #         "sort_order": 11,
-                #         "attrvalue": "aoeu",
-                #         "attrvalue_id": 1234,
+                #         "attrvalue": "aoeu"
                 #     }
                 # ]
             }
@@ -291,8 +231,7 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                         "attrkey": "missing_pos",
                         "attribute_id": 1234,
                         "sort_order": 11,
-                        "attrvalue": "aoeu",
-                        "attrvalue_id": 1234,
+                        "attrvalue": "aoeu"
                     }
                 ]
             }
@@ -309,7 +248,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                         "attribute_id": 1234,
                         "sort_order": 11,
                         "attrvalue": "aoeu",
-                        "attrvalue_id": 1234,
                     }
                 ]
             }
@@ -325,8 +263,7 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                         "attrkey": "missing_pos",
                         "attribute_id": 1234,
                         "sort_order": 11,
-                        "attrvalue": "aoeu",
-                        "attrvalue_id": 1234,
+                        "attrvalue": "aoeu"
                     }
                 ]
             }
@@ -343,7 +280,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                         "attribute_id": 1234,
                         "sort_order": 11,
                         "attrvalue": "aoeu",
-                        "attrvalue_id": 1234,
                     }
                 ]
             }
@@ -360,7 +296,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                         "attribute_id": 1234,
                         "sort_order": 11,
                         "attrvalue": "word and word id must be both null or not null",
-                        "attrvalue_id": 1234,
                     }
                 ]
             }
@@ -377,7 +312,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                         "attribute_id": 1234,
                         "sort_order": 11,
                         "attrvalue": "word and word id must be both null or not null",
-                        "attrvalue_id": 1234,
                     }
                 ]
             }
@@ -394,7 +328,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                         "attribute_id": 1234,
                         "sort_order": 11,
                         "attrvalue": "if word info is null then there should be nulls for attrs too",
-                        "attrvalue_id": 1234,
                     }
                 ]
             }
@@ -930,39 +863,30 @@ class Test_WORDS_RESPONSE_SCHEMA(unittest.TestCase):
                 "attributes": [
                     {'attrkey': 'definition',
                      'sort_order': 5,
-                     'attrvalue_id': 123,
                      'attrvalue': 'to spoil, deteriorate, go bad'},
                     {'attrkey': 'first_person_singular',
                      'sort_order': 6,
-                     'attrvalue_id': 123,
                      'attrvalue': 'verderbe'},
                     {'attrkey': 'second_person_singular',
                      'sort_order': 7,
-                     'attrvalue_id': 123,
                      'attrvalue': 'verdirbst'},
                     {'attrkey': 'third_person_singular',
                      'sort_order': 8,
-                     'attrvalue_id': 123,
                      'attrvalue': 'verdirbt'},
                     {'attrkey': 'first_person_plural',
                      'sort_order': 9,
-                     'attrvalue_id': 123,
                      'attrvalue': 'verderben'},
                     {'attrkey': 'second_person_plural',
                      'sort_order': 10,
-                     'attrvalue_id': 123,
                      'attrvalue': 'verderbt'},
                     {'attrkey': 'third_person_plural',
                      'sort_order': 11,
-                     'attrvalue_id': 123,
                      'attrvalue': 'verderben'},
                     {'attrkey': 'third_person_past',
                      'sort_order': 16,
-                     'attrvalue_id': 123,
                      'attrvalue': 'verdarb'},
                     {'attrkey': 'past_participle',
                      'sort_order': 17,
-                     'attrvalue_id': 123,
                      'attrvalue': 'verdorben'}
                 ],
                 "pos_name": "Verb",

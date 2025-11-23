@@ -26,7 +26,6 @@ def process_word_query_result(rows):
         attr = {
             "attrkey": r['attrkey'],
             "attrvalue": r['attrvalue'],
-            "attrvalue_id": r['attrvalue_id'],
             "sort_order": r['sort_order']
         }
         dict_result[r['word_id']]['word'] = r['word']
@@ -50,7 +49,6 @@ def get_words_from_word_ids(word_ids):
         word_id,
         attrkey,
         attrvalue,
-        attrvalue_id,
         sort_order
     from
         mashup_v

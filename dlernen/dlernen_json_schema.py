@@ -257,15 +257,12 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
                             "attrkey",
                             "attribute_id",
                             "sort_order",
-                            "attrvalue",
-                            "attrvalue_id"
+                            "attrvalue"
                         ],
 
                         "anyOf": [
-                            # we require the attrvalue and attrvalue_id fields to be present.  both must be null,
-                            # or both must be not null.  this is the only way enforce that.
+                            # attrvalue has to be null if the word info is null.
                             {"$ref": "#/$attr_defs/attr_properties_null"},
-                            # {"$ref": "#/$attr_defs/attr_properties_not_null"},
                         ]
                     }
                 }
@@ -296,15 +293,11 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
                             "attrkey",
                             "attribute_id",
                             "sort_order",
-                            "attrvalue",
-                            "attrvalue_id"
+                            "attrvalue"
                         ],
 
                         "anyOf": [
-                            # we require the attrvalue and attrvalue_id fields to be present.  both must be null,
-                            # or both must be not null.  this is the only way enforce that.
-                            {"$ref": "#/$attr_defs/attr_properties_null"},
-                            {"$ref": "#/$attr_defs/attr_properties_not_null"},
+                            {"$ref": "#/$attr_defs/attr_properties"},
                         ]
                     }
                 }
@@ -313,28 +306,6 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
     },
 
     "$attr_defs": {
-        "attr_properties_not_null": {
-            "properties": {
-                "attrkey": {
-                    "type": "string"
-                },
-                "attribute_id": {
-                    "type": "integer",
-                    "minimum": 0
-                },
-                "sort_order": {
-                    "type": "integer",
-                    "minimum": 0
-                },
-                "attrvalue": {
-                    "type": "string"
-                },
-                "attrvalue_id": {
-                    "type": "integer",
-                    "minimum": 0
-                }
-            }
-        },
         "attr_properties_null": {
             "properties": {
                 "attrkey": {
@@ -350,9 +321,24 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
                 },
                 "attrvalue": {
                     "type": "null"
+                }
+            }
+        },
+        "attr_properties": {
+            "properties": {
+                "attrkey": {
+                    "type": "string"
                 },
-                "attrvalue_id": {
-                    "type": "null"
+                "attribute_id": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "sort_order": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "attrvalue": {
+                    "type": ["string", "null"]
                 }
             }
         }
@@ -647,7 +633,7 @@ WORDS_RESPONSE_SCHEMA = {
                 "type": "array",
                 "items": {
                     "type": "object",
-                    "required": ["attrkey", "sort_order", "attrvalue", "attrvalue_id"],
+                    "required": ["attrkey", "sort_order", "attrvalue"],
                     "properties": {
                         "attrkey": {
                             "type": "string"
@@ -658,9 +644,6 @@ WORDS_RESPONSE_SCHEMA = {
                         },
                         "attrvalue": {
                             "type": ["string", "null"]
-                        },
-                        "attrvalue_id": {
-                            "type": ["integer", "null"]
                         }
                     }
                 }

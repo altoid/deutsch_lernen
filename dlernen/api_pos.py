@@ -30,8 +30,7 @@ def __get_pos(sql, args):
                     "attrkey": r['attrkey'].casefold(),
                     "attribute_id": r['attribute_id'],
                     "sort_order": r['sort_order'],
-                    "attrvalue": r['attrvalue'],
-                    "attrvalue_id": r['attrvalue_id']
+                    "attrvalue": r['attrvalue']
                 }
             )
 
@@ -71,7 +70,6 @@ def get_pos_for_word_id(word_id):
                     word,
                     attribute_id,
                     attrvalue,
-                    attrvalue_id,
                     pos_id
              FROM   mashup_v
              WHERE  word_id = %(word_id)s)
@@ -82,8 +80,7 @@ def get_pos_for_word_id(word_id):
            pd.sort_order,
            wd.word,
            wd.word_id,
-           wd.attrvalue,
-           wd.attrvalue_id
+           wd.attrvalue
     FROM   pos_data pd
            INNER JOIN word_data AS wd
                   ON pd.attribute_id = wd.attribute_id
@@ -113,7 +110,6 @@ def get_pos_for_word(word):
                     word,
                     attribute_id,
                     attrvalue,
-                    attrvalue_id,
                     pos_id
              FROM   mashup_v
              WHERE  word = %(word)s)
@@ -124,8 +120,7 @@ def get_pos_for_word(word):
            pd.sort_order,
            wd.word,
            wd.word_id,
-           wd.attrvalue,
-           wd.attrvalue_id
+           wd.attrvalue
     FROM   pos_data pd
            LEFT JOIN word_data AS wd
                   ON pd.attribute_id = wd.attribute_id
@@ -145,8 +140,7 @@ def get_pos():
            pf.sort_order,
            NULL   AS word,
            NULL   AS word_id,
-           NULL   AS attrvalue,
-           NULL   AS attrvalue_id
+           NULL   AS attrvalue
     FROM   pos_form pf
            INNER JOIN pos p
                    ON p.id = pf.pos_id
