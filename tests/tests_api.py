@@ -4,8 +4,6 @@ from dlernen import dlernen_json_schema, create_app
 from flask import url_for
 import json
 from pprint import pprint
-import random
-import string
 
 
 # FIXME - correcting the spelling of a word through the UI isn't working
