@@ -58,8 +58,8 @@ REFRESH_WORDLISTS_PAYLOAD_SCHEMA = {
 WORD_ADD_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/updateword_payload",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Payload for add/update word",
-    "description": "Payload for add/update word",
+    "title": "Payload for add word",
+    "description": "Payload for add word",
     "type": "object",
     "required": [
         "word",
@@ -100,21 +100,17 @@ WORD_ADD_PAYLOAD_SCHEMA = {
 WORD_UPDATE_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/updateword_payload",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Payload for add/update word",
-    "description": "Payload for add/update word",
+    "title": "Payload for update word",
+    "description": "Payload for update word",
     "type": "object",
     "required": [
-        "word_id"
+        # no required properties.
     ],
     "properties": {
         "word": {
             # not required, but if present, we are making a spelling change
             "type": "string",
             "pattern": WORD_PATTERN
-        },
-        "word_id": {
-            "type": "integer",
-            "minimum": 1
         },
         ATTRIBUTES: {
             "type": "array",
@@ -652,4 +648,3 @@ WORDS_RESPONSE_SCHEMA = {
     }
     # the attributes - article, definition, etc. - are all optional but the attributes keyword is not.
 }
-

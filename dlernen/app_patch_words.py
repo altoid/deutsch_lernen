@@ -58,7 +58,7 @@ def patch_words(wordlist_ids, attributes):
         return 'OK', 200
 
     payload = {
-        "attributes_adding": []
+        "attributes": []
     }
 
     for p in words_to_patch:
@@ -69,7 +69,7 @@ def patch_words(wordlist_ids, attributes):
         sort_order_to_attrkey = {x['sort_order']: x['attrkey'] for x in attrs_to_patch}
         ordering = sorted(list(sort_order_to_attrkey.keys()))
 
-        payload['attributes_adding'].clear()
+        payload['attributes'].clear()
 
         print("============================= %s" % p['word'])
         for i in ordering:
@@ -94,7 +94,7 @@ def patch_words(wordlist_ids, attributes):
                 "attrvalue": answer,
                 "attribute_id": sort_order_to_attrid[i]
             }
-            payload["attributes_adding"].append(d)
+            payload["attributes"].append(d)
 
         url = url_for("api_word.update_word", word_id=p['word_id'], _external=True)
         r = requests.put(url, json=payload)

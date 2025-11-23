@@ -758,7 +758,6 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
     valid_docs = [
         {
             # fully specified payload
-            "word_id": 1234,
             js.ATTRIBUTES: [
                 {
                     "attribute_id": 1111,
@@ -771,22 +770,16 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
             ]
         },
         {
-            # without any attribute values is valid
-            "word_id": 23,
+            # empty payload is valid
         },
         {
             # empty attribute list is valid
-            "word_id": 23,
             js.ATTRIBUTES: []
         }
     ]
 
     invalid_docs = [
         {
-            # empty payload is not allowed
-        },
-        {
-            "word_id": 234,
             js.ATTRIBUTES: [
                 {
                     # has to have an attribute id
@@ -794,7 +787,6 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
             ]
         },
         {
-            "word_id": 234,
             js.ATTRIBUTES: [
                 {
                     "attribute_id": "id has to be a string"
@@ -802,7 +794,6 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
             ]
         },
         {
-            "word_id": 234,
             js.ATTRIBUTES: [
                 {
                     "attribute_id": 234,
@@ -811,7 +802,6 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
             ]
         },
         {
-            "word_id": 234,
             js.ATTRIBUTES: [
                 {
                     "attribute_id": 234,
@@ -820,7 +810,6 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
             ]
         },
         {
-            "word_id": 234,
             js.ATTRIBUTES: [
                 {
                     "attribute_id": 234,
@@ -829,9 +818,9 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
             ]
         },
         {
-            "word_id": 234,
             js.ATTRIBUTES: [
                 {
+                    # attrvalue has to be a string
                     "attribute_id": 234,
                     "attrvalue": 1234
                 }

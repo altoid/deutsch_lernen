@@ -505,11 +505,13 @@ def update_dict():
                 payload[js.ATTRIBUTES].append({'attribute_id': attribute_id,
                                                'attrvalue': value_after_unstripped})
 
-    # did we change the spelling of the word?  if so add new spelling to all the payloads.
+    # did we change the spelling of the word?  if so add new spelling to all the payloads
+    # for which word ids exist.
     # the update request will take care of proper capitalization.
     if word and word != word_before:
         for k in word_payloads.keys():
-            word_payloads[k]['word'] = word
+            if k in word_pos_to_word_id:
+                word_payloads[k]['word'] = word
 
     # go through the payloads and insert word and pos_name in payloads that we are POSTing,
     # or word_id for those we are PUTting.
@@ -517,9 +519,7 @@ def update_dict():
         if not word_payloads[k]:
             continue
 
-        if k in word_pos_to_word_id:
-            word_payloads[k]['word_id'] = word_pos_to_word_id[k]
-        else:
+        if k not in word_pos_to_word_id:
             word_payloads[k]['word'] = word
             word_payloads[k]['pos_id'] = k[1]
 
