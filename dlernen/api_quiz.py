@@ -3,6 +3,7 @@ from mysql.connector import connect
 from dlernen import quiz_sql, dlernen_json_schema, common
 from contextlib import closing
 import jsonschema
+from pprint import pprint
 
 # /api/quiz and quiz_metadata endpoints are here.
 
@@ -147,4 +148,4 @@ def post_quiz_answer():
         cursor.execute(update, request.form)
         cursor.execute('commit')
 
-    return 'OK'
+    return 'OK', 200
