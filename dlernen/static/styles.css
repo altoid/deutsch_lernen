@@ -1,27 +1,68 @@
+/*
+body has a default margin that is > 0; looks like 10 or so.
+
+colors are inherited from enclosing elements.
+
+these are NOT inherited:
+height
+width
+margin
+padding
+border
+
+*/
 :root {
     --sidebar-width:  200px;
-    --background-color: #eeeeff;
+/*    --background-color: #eeeeff;*/
+    --background-color: green;
     --link-color: blue;
+    --sidebar-text-color: tomato;
+}
+
+html {
+    min-height: 100vh;
 }
 
 body {
     /* background-color: #fbeee2;*/
     background-color: var(--background-color);
-    font-family: helvetica
+    font-family: helvetica;
+    min-height: 100vh;
 }
 
-a {
-    text-decoration: none
+.content {
+    margin-left: var(--sidebar-width);
+    padding: 10px;
+    background-color: blue;
+    min-height: 100vh;
 }
 
-a:link, a:visited {
-    color: var(--link-color);
+.addword {
+    background-color: tomato;
+    padding: 10px;
+    min-height: 100vh;
 }
 
-ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
+.sidebar {
+    height: 100%;
+    width: var(--sidebar-width);
+    position: fixed;
+    z-index: 1;
+    background-color: black;
+
+    /* this sets the coordinate of the top left corner of the sidebar.
+    without these there is a space around
+    the sidebar.  */
+    top: 0;
+    left: 0;
+}
+
+.sidebar a {
+    display: block;
+    text-decoration: none;
+    color: var(--sidebar-text-color);
+    font-size: large;
+    padding: 20px;
 }
 
 textarea.notes {
@@ -35,16 +76,11 @@ textarea.sqlcode {
     height: 250px;
 }
 
-table.tableau {
-    width: 100%
-}
-
-.wordedit {
-    /*border: 1px solid;*/
-}
-
-input[type="text"].wordedit {
-    width: 400px
+.banner {
+    background-color: pink;
+    text-align: center;
+    width: 100%;
+    font-size: xx-large
 }
 
 th.wordedit {
@@ -60,35 +96,29 @@ td.word_attributes {
     width: 200px
 }
 
-.banner {
-    background-color: pink;
-    text-align: center;
-    width: 100%;
-    font-size: xx-large
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
 }
 
-.sidebar {
-    height: 100%;
-    width: var(--sidebar-width);
-    position: fixed;
-    z-index: 1;
-    background-color: black;
-
-    /* this sets the coordinate of the top left corner of the sidebar.  without these there is a space around
-    the sidebar.  */
-    top: 0;
-    left: 0;
+a {
+    text-decoration: none
 }
 
-.sidebar a {
-    display: block;
-    text-decoration: none;
-    color: var(--background-color);
-    font-size: large;
-    padding: 20px;
+a:link, a:visited {
+    color: var(--link-color);
 }
 
-.content {
-    margin-left: var(--sidebar-width);
-    padding: 0px 10px
+table.tableau {
+    width: 100%
 }
+
+.wordedit {
+    /*border: 1px solid;*/
+}
+
+input[type="text"].wordedit {
+    width: 400px
+}
+
