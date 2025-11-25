@@ -1,8 +1,9 @@
 import requests
 from flask import url_for
-
+from pprint import pprint
 
 # FIXME - properly handle the return values of requests.get/put
+
 
 def get_next_word_to_test(wordlist_ids, quiz_key):
     if wordlist_ids:

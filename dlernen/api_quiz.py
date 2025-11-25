@@ -79,7 +79,7 @@ def quiz_data(quiz_key):
     """
 
     word_ids = []
-    wordlist_ids = request.args.get('wordlist_id', '')  # this will come in as a comma-separated string.
+    wordlist_ids = request.args.get('wordlist_ids', '')  # this will come in as a comma-separated string.
     if wordlist_ids:
         wordlist_ids = wordlist_ids.split(',')
         wordlist_ids = list(set(wordlist_ids))

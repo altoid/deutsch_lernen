@@ -1,9 +1,8 @@
 from flask import Blueprint, url_for
 from pprint import pprint
-import click
 import requests
-from app_common import get_next_word_to_test
 import click
+from dlernen import app_common
 
 bp = Blueprint('app_quiz_definitions', __name__)
 
@@ -19,7 +18,7 @@ def quiz_definitions(wordlist_ids):
 
     counter = 0
     while True:
-        row = get_next_word_to_test(wordlist_ids, 'definitions')
+        row = app_common.get_next_word_to_test(wordlist_ids, 'definitions')
 
         if not row:
             print("es gibt keine Welten mehr zu erobern")
