@@ -13,6 +13,7 @@ Lookup {{ word }}
 
 {% block body %}
 {{ super() }}
+<div class="addword">
 <form action="/lookup" method="post">
     {% if return_to_wordlist_id != none %}
     <input type="hidden" value="{{return_to_wordlist_id}}" name="wordlist_id"/>
@@ -74,4 +75,5 @@ Lookup {{ word }}
 {% else %}
     {{ word }} not found.  Click <a href="{{ url_for('dlernen.edit_word_form', word=word) }}">here</a> to define it.
 {% endif %}
+</div>
 {% endblock %}
