@@ -101,7 +101,7 @@ def patch_words(wordlist_ids, attributes):
 
         url = url_for("api_word.update_word", word_id=p['word_id'], _external=True)
         r = requests.put(url, json=payload)
-        if r.status_code != 200:
+        if not r:
             pprint(p)
             print(r.text)
             return 'BAD', r.status_code

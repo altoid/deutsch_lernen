@@ -11,20 +11,14 @@ def chunkify(arr, **kwargs):
     if not arr:
         return []
 
-    nchunks = kwargs.get('nchunks')
-    chunksize = kwargs.get('chunksize')
-    if not nchunks and not chunksize:
+    nchunks = kwargs.get('nchunks', 1)
+    if not nchunks:
         # return the whole array as one chunk
         return [arr]
 
-    if nchunks and chunksize:
-        raise Exception('set chunksize or nchunks but not both')
-
-    arraysize = len(arr)
-    if nchunks:
-        # round up array size to nearest multiple of nchunks
-        arraysize = ((arraysize + nchunks - 1) // nchunks) * nchunks
-        chunksize = arraysize // nchunks
+    # round up array size to nearest multiple of nchunks
+    arraysize = ((len(arr) + nchunks - 1) // nchunks) * nchunks
+    chunksize = arraysize // nchunks
 
     # add one more increment of chunksize so that our zip array includes
     # the last elements
@@ -254,10 +248,12 @@ def addlist():
 
     url = url_for('api_wordlist.create_wordlist_metadata', _external=True)
     r = requests.post(url, json=payload)
-    if r.status_code == 200:
+    if r:
         return redirect(url_for('dlernen.wordlists'))
 
-    raise Exception("something went wrong in POST: to %s - %s [%s]" % (url, r.text, r.status_code))
+    return render_template("error.html",
+                           message=r.text,
+                           status_code=r.status_code)
 
 
 @bp.route('/deletelist', methods=['POST'])
@@ -268,9 +264,12 @@ def deletelist():
     }
 
     r = requests.delete(url_for('api_wordlist.delete_wordlists', _external=True), data=payload)
-    if r.status_code == 200:
+    if r:
         return redirect('/wordlists')
-    raise Exception("something went wrong in /api/wordlists: %s" % r.text)
+
+    return render_template("error.html",
+                           message=r.text,
+                           status_code=r.status_code)
 
 
 @bp.route('/edit_list_attributes', methods=['POST'])
@@ -316,9 +315,10 @@ def edit_list_attributes():
 
     url = url_for('api_wordlist.update_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
     r = requests.put(url, json=payload)
-    if r.status_code == 200:
+    if r:
         target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
         return redirect(target)
+
     if r.status_code == 422:
         # unprocessable content - the sqlcode is not valid.  redirect to the list attributes page to fix it.
         payload = {
@@ -331,7 +331,10 @@ def edit_list_attributes():
         return render_template('list_attributes.html',
                                wordlist=payload,
                                return_to_wordlist_id=wordlist_id)
-    raise Exception("something went wrong in %s PUT: %s (%s)" % (url, r.text, r.status_code))
+
+    return render_template("error.html",
+                           message=r.text,
+                           status_code=r.status_code)
 
 
 # TODO if this is for a POST request, why does it call requests.put()?
@@ -377,11 +380,13 @@ def update_notes():
 
     url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True)
     r = requests.put(url, json=payload)
-    if r.status_code == 200:
+    if r:
         target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
         return redirect(target)
 
-    raise Exception("something went wrong in /api/wordlist PUT: %s" % r.text)
+    return render_template("error.html",
+                           message=r.text,
+                           status_code=r.status_code)
 
 
 @bp.route('/delete_from_list', methods=['POST'])
@@ -394,11 +399,19 @@ def delete_from_list():
         url = url_for('api_wordlist.delete_from_wordlist_by_id', wordlist_id=wordlist_id, word_id=word_id,
                       _external=True)
         r = requests.delete(url)
+        if not r:
+            return render_template("error.html",
+                                   message=r.text,
+                                   status_code=r.status_code)
 
     for word in unknown_deleting:
         url = url_for('api_wordlist.delete_from_wordlist_by_word', wordlist_id=wordlist_id, word=word,
                       _external=True)
         r = requests.delete(url)
+        if not r:
+            return render_template("error.html",
+                                   message=r.text,
+                                   status_code=r.status_code)
 
     # TODO - change API to allow batch delete.  we could do this with a single request
 
@@ -560,16 +573,16 @@ def update_dict():
             word_id = word_pos_to_word_id[k]
             url = url_for('api_word.update_word', word_id=word_id, _external=True)
             r = requests.put(url, json=payload)
-            if r.status_code != 200:
+            if not r:
                 flash("could not update word %s [%s]:  %s" % (word, r.status_code, r.text))
         else:
             # we are adding a new word
             url = url_for('api_word.add_word', _external=True)
             r = requests.post(url, json=payload)
-            if r.status_code != 200:
-                flash("could not insert word %s [%s]:  %s" % (word, r.status_code, r.text))
-            else:
+            if r:
                 refresh_needed = True
+            else:
+                flash("could not insert word %s [%s]:  %s" % (word, r.status_code, r.text))
 
     if refresh_needed:
         refresh_payload = {
