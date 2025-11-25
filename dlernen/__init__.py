@@ -8,6 +8,7 @@ from dlernen.api_wordlist import bp as api_wordlist_bp
 from dlernen.api_word import bp as api_word_bp
 from dlernen.api_pos import bp as api_pos_bp
 from dlernen.app_patch_words import bp as app_patch_words_bp
+from dlernen.app_quiz_definitions import bp as app_quiz_definitions_bp
 
 
 def create_app():
@@ -23,5 +24,6 @@ def create_app():
     app.register_blueprint(api_pos_bp)
 
     app.register_blueprint(app_patch_words_bp)
+    app.register_blueprint(app_quiz_definitions_bp)
 
     return app

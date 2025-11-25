@@ -20,6 +20,7 @@ TODO - when a lookup returns more than 5 words, put a list of matches at the top
 TODO - Nouns should be three separate parts of speech, one for each gender
 
 TODO - convert quiz apps into a blueprint
+    quiz_definitions
 
 TODO - make an option to quiz apps to specify the subquery desired - i.e. just look for words with a crappy score.
     rewrite quiz word select so that each subquery is a function returns a list of word ids.  get word ids
@@ -27,26 +28,6 @@ TODO - make an option to quiz apps to specify the subquery desired - i.e. just l
 
 TODO - autosave word list notes.
     https://www.google.com/search?q=html+textarea+auto+save&newwindow=1&sca_esv=d160e5e212cd680a&ei=6TYeafOSLJvE0PEPiJingAU&ved=0ahUKEwizq5_LlP-QAxUbIjQIHQjMCVAQ4dUDCBE&uact=5&oq=html+textarea+auto+save&gs_lp=Egxnd3Mtd2l6LXNlcnAiF2h0bWwgdGV4dGFyZWEgYXV0byBzYXZlMgUQIRigATIFECEYoAEyBRAhGKABMgUQIRigATIFECEYoAEyBRAhGJ8FMgUQIRifBUiyZlCcHFj2YXABeAGQAQCYAaACoAH7E6oBBzEyLjEwLjG4AQPIAQD4AQGYAhigAvwUwgIKEAAYsAMY1gQYR8ICERAuGIAEGLEDGNEDGIMBGMcBwgIOEAAYgAQYsQMYgwEYigXCAgoQABiABBhDGIoFwgIIEAAYgAQYsQPCAg4QLhiABBixAxjRAxjHAcICCxAAGIAEGLEDGIMBwgIQEAAYgAQYsQMYQxiDARiKBcICERAAGIAEGLEDGIMBGIoFGI0GwgINEAAYgAQYsQMYQxiKBcICBRAAGIAEwgIGEAAYFhgewgIIEAAYFhgKGB7CAgUQABjvBcICCBAAGIAEGKIEwgIIEAAYogQYiQXCAgUQIRirApgDAIgGAZAGCJIHBzEyLjExLjGgB76CAbIHBzExLjExLjG4B_UUwgcIMC4xLjIyLjHIB2E&sclient=gws-wiz-serp
-
-TODO review return values of requests.get.  see function wordlists() as example.  should be checking that
-    the response is valid before inspecting json.
-    it's not in the documentation (https://requests.readthedocs.io/en/latest/api/#requests.Response) but
-    the response object implements a __bool__ method that lets you do
-    if response:
-        bla
-    else:
-        bla
-    this fun fact is in the source code, which the documention points to.  better to check response.status_code
-    explicitly
-
-TODO for the above, check these files:
-    api_misc.py             get
-    api_pos.py              get
-    api_quiz.py             get
-    api_word.py             get
-    api_wordlist.py         get
-    app_patch_words.py      get
-    dlernen.py              get
 
 TODO - look for opportunities to use dictionary and set comprehensions.
 
