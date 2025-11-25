@@ -13,27 +13,27 @@ border
 */
 :root {
     --sidebar-width:  200px;
-/*    --background-color: #eeeeff;*/
-    --background-color: green;
+    --background-color: #eeeeff;
     --link-color: blue;
-    --sidebar-text-color: tomato;
+    --sidebar-text-color: white;
 }
 
 body {
     /* background-color: #fbeee2;*/
-    background-color: var(--background-color);
+
+    /* add a div class to each page to make this awful BG color not happen. */
+    background-color: blue;
     font-family: helvetica;
+    margin: 0px;
 }
 
 .content {
     margin-left: var(--sidebar-width);
-    padding: 10px;
-    background-color: blue;
     min-height: 100vh;
 }
 
 .addword {
-    background-color: tomato;
+    background-color: var(--background-color);
     padding: 10px;
     min-height: 100vh;
 }
