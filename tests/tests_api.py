@@ -36,6 +36,7 @@ class APITests(unittest.TestCase):
         with self.app.test_request_context():
             url = url_for('api_quiz.quiz_data', quiz_key='plurals', _external=True)
             r = self.client.get(url)
+            self.assertEqual(200, r.status_code)
             quiz_data = json.loads(r.data)
 
             jsonschema.validate(quiz_data, dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA)
@@ -50,6 +51,7 @@ class APITests(unittest.TestCase):
         with self.app.test_request_context():
             url = url_for('api_word.get_word', word='verderben', _external=True)
             r = self.client.get(url)
+            self.assertEqual(200, r.status_code)
             results = json.loads(r.data)
             self.assertGreater(len(results), 0)
             jsonschema.validate(results, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
@@ -64,6 +66,7 @@ class APITests(unittest.TestCase):
         with self.app.test_request_context():
             url = url_for('api_word.get_word', word='geh', partial=True, _external=True)
             r = self.client.get(url)
+            self.assertEqual(200, r.status_code)
             results = json.loads(r.data)
             self.assertGreater(len(results), 0)
             jsonschema.validate(results, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
@@ -75,6 +78,7 @@ class APITests(unittest.TestCase):
             }
 
             r = self.client.put(url, json=payload)
+            self.assertEqual(200, r.status_code)
             result = json.loads(r.data)
             self.assertEqual([], result)
 
@@ -86,5 +90,6 @@ class APITests(unittest.TestCase):
             }
 
             r = self.client.put(url, json=payload)
+            self.assertEqual(200, r.status_code)
             result = json.loads(r.data)
             self.assertEqual([], result)
