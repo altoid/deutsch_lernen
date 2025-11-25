@@ -19,15 +19,10 @@ border
     --sidebar-text-color: tomato;
 }
 
-html {
-    min-height: 100vh;
-}
-
 body {
     /* background-color: #fbeee2;*/
     background-color: var(--background-color);
     font-family: helvetica;
-    min-height: 100vh;
 }
 
 .content {
