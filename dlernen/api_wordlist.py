@@ -31,6 +31,12 @@ SQL_FOR_WORDLIST_FROM_SQLCODE = """
     order by m.word        
 """
 
+SQL_TO_VALIDATE_SQLCODE = """
+    with matching as ( %s )
+    select word_id
+    from matching
+"""
+
 
 def validate_sqlcode(cursor, sqlcode):
     # throw an exception if the sqlcode snippet isn't useful for constructing a wordlist.
@@ -39,7 +45,7 @@ def validate_sqlcode(cursor, sqlcode):
 
     if sqlcode is not None:
         x = sqlcode.strip()
-        sql = SQL_FOR_WORDLIST_FROM_SQLCODE % x
+        sql = SQL_TO_VALIDATE_SQLCODE % x
 
         cursor.execute(sql)
 
