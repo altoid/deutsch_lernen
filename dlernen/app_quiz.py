@@ -4,7 +4,7 @@ import requests
 import click
 from dlernen import app_common
 
-bp = Blueprint('app_quiz_definitions', __name__)
+bp = Blueprint('app_quiz', __name__)
 
 
 @bp.cli.command('quiz_definitions')
