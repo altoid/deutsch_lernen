@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}
-Lookup
+Lookup {{ word }}
 {% endblock %}
 
 {#
@@ -21,16 +21,25 @@ Lookup
     <input type="text" name="lookup" size="30"/>
     <input type="submit" value="Submit"/>
 </form>
-<br>
+
 {% if template_args %}
+    <ul>
+    {% for tuple in template_args %}
+        <li>
+            <a href="#{{ tuple[0]['word'] }}">{{ tuple[0]['word'] }}</a>
+        </li>
+    {% endfor %}
+    </ul>
     {% for tuple in template_args %}
         <h1>
             {% if return_to_wordlist_id != none %}
-            <a href="{{ url_for('dlernen.edit_word_form', word=tuple[0]['word'], wordlist_id=return_to_wordlist_id) }}">
+            <a name="{{ tuple[0]['word'] }}"
+               href="{{ url_for('dlernen.edit_word_form', word=tuple[0]['word'], wordlist_id=return_to_wordlist_id) }}">
                 {{ tuple[0]['word'] }}
             </a>
             {% else %}
-            <a href="{{ url_for('dlernen.edit_word_form', word=tuple[0]['word']) }}">
+            <a name="{{ tuple[0]['word'] }}"
+               href="{{ url_for('dlernen.edit_word_form', word=tuple[0]['word']) }}">
                 {{ tuple[0]['word'] }}
             </a>
             {% endif %}
