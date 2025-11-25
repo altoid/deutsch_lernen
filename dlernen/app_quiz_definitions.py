@@ -36,7 +36,7 @@ def quiz_definitions(wordlist_ids):
         answer = input(prompt).strip().lower()
 
         if answer.startswith('q'):
-            continue
+            break
 
         print(row['attributes']['definition']['attrvalue'])
 
