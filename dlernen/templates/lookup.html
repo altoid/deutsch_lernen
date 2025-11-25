@@ -23,12 +23,15 @@ Lookup {{ word }}
 </form>
 
 {% if template_args %}
+    {% if template_args|length > 5 %}
+    <h1>Words matching "{{ word }}"</h1>
     <ul>
-    {% for tuple in template_args %}
+        {% for tuple in template_args %}
         <li>
             <a href="#{{ tuple[0]['word'] }}">{{ tuple[0]['word'] }}</a>
         </li>
-    {% endfor %}
+        {% endfor %}
+    {% endif %}
     </ul>
     {% for tuple in template_args %}
         <h1>
