@@ -16,6 +16,9 @@ def patch_words(wordlist_ids, attributes):
 
     url = url_for('api_pos.get_pos', _external=True)
     r = requests.get(url)
+    if not r:
+        return r.text, r.status_code
+
     pos_structure = r.json()
     verb_structure = list(filter(lambda x: x['pos_name'].casefold() == 'verb', pos_structure))[0]
 
@@ -39,7 +42,7 @@ def patch_words(wordlist_ids, attributes):
 
     r = requests.get(url)
     if not r:
-        return 'oh shit', r.status_code
+        return r.text, r.status_code
 
     result = r.json()
 

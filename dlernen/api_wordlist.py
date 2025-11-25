@@ -676,6 +676,8 @@ def get_wordlists_by_word_id(word_id):
             args = ','.join([str(x) for x in wordlist_ids])
             url = url_for('api_wordlist.get_wordlists', wordlist_id=args, _external=True)
             r = requests.get(url)
+            if not r:
+                return r.text, r.status_code
 
             result = json.loads(r.text)
             result = sorted(result, key=lambda x: x['name'].casefold())

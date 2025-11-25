@@ -176,22 +176,14 @@ def add_word():
     try:
         payload = request.get_json()
         jsonschema.validate(payload, js.WORD_ADD_PAYLOAD_SCHEMA)
-
-        # word isn't required in the json schema but we need it here.
-        if not payload.get('word'):
-            raise Exception("no word in add word request")
-
-        # same with pos_id.
-        if not payload.get('pos_id'):
-            raise Exception("no part of speech in add word request")
-
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
     except Exception as e:
         return "bad payload: %s" % str(e), 400
 
-    # jsonschema doc definition guarantees that payload['word']
-    # will not contain whitespace.
+    # word and pos_id are required fields in the json schema.  so if the payload passes validation we know these
+    # are present.
+
     word = payload['word']
     pos_id = payload['pos_id']
 
@@ -207,6 +199,9 @@ def add_word():
 
     url = url_for('api_pos.get_pos', _external=True)
     r = requests.get(url)
+    if not r:
+        return r.text, r.status_code
+
     pos_structures = r.json()
     pos_structure = list(filter(lambda x: x['pos_id'] == pos_id, pos_structures))
     if not pos_structure:
@@ -293,6 +288,9 @@ def update_word(word_id):
 
     url = url_for('api_pos.get_pos_for_word_id', word_id=word_id, _external=True)
     r = requests.get(url)
+    if not r:
+        return r.text, r.status_code
+
     pos_structure = r.json()
     if not pos_structure:
         # word_id is bogus

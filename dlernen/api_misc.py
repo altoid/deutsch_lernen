@@ -1,9 +1,7 @@
-from flask import Blueprint, request, current_app
+from flask import Blueprint, current_app
 from mysql.connector import connect
-from dlernen import dlernen_json_schema
 from pprint import pprint
 from contextlib import closing
-import jsonschema
 
 # miscellaneous /api endpoints are here.
 

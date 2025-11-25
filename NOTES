@@ -1,3 +1,67 @@
+TODO - really need a better way to deal with reflexive verbs
+
+TODO - import word lists
+    CSV:  word, pos, definition
+
+TODO - notes for individual words.  there is already a notes column in the word table.  be aware that
+    each word/pos_id pair will have its own notes, as these are a key in the word table.
+
+FIXME - bug:
+    go to a wordlist
+    select a word - note the return-to-list link
+    look up a word, doesn't matter if it's real
+    there is no return-to-list link in the resultant lookup page
+
+TODO - programmatically determine whether a verb is irregular.
+
+TODO - when a lookup returns more than 5 words, put a list of matches at the top with links to the words below,
+    a la a TOC
+
+TODO - Nouns should be three separate parts of speech, one for each gender
+
+TODO - convert quiz apps into a blueprint
+
+TODO - make an option to quiz apps to specify the subquery desired - i.e. just look for words with a crappy score.
+    rewrite quiz word select so that each subquery is a function returns a list of word ids.  get word ids
+    from all the subqueries/functions, combine them into a set, then use random.choice to pick a word id.
+
+TODO - autosave word list notes.
+    https://www.google.com/search?q=html+textarea+auto+save&newwindow=1&sca_esv=d160e5e212cd680a&ei=6TYeafOSLJvE0PEPiJingAU&ved=0ahUKEwizq5_LlP-QAxUbIjQIHQjMCVAQ4dUDCBE&uact=5&oq=html+textarea+auto+save&gs_lp=Egxnd3Mtd2l6LXNlcnAiF2h0bWwgdGV4dGFyZWEgYXV0byBzYXZlMgUQIRigATIFECEYoAEyBRAhGKABMgUQIRigATIFECEYoAEyBRAhGJ8FMgUQIRifBUiyZlCcHFj2YXABeAGQAQCYAaACoAH7E6oBBzEyLjEwLjG4AQPIAQD4AQGYAhigAvwUwgIKEAAYsAMY1gQYR8ICERAuGIAEGLEDGNEDGIMBGMcBwgIOEAAYgAQYsQMYgwEYigXCAgoQABiABBhDGIoFwgIIEAAYgAQYsQPCAg4QLhiABBixAxjRAxjHAcICCxAAGIAEGLEDGIMBwgIQEAAYgAQYsQMYQxiDARiKBcICERAAGIAEGLEDGIMBGIoFGI0GwgINEAAYgAQYsQMYQxiKBcICBRAAGIAEwgIGEAAYFhgewgIIEAAYFhgKGB7CAgUQABjvBcICCBAAGIAEGKIEwgIIEAAYogQYiQXCAgUQIRirApgDAIgGAZAGCJIHBzEyLjExLjGgB76CAbIHBzExLjExLjG4B_UUwgcIMC4xLjIyLjHIB2E&sclient=gws-wiz-serp
+
+TODO review return values of requests.get.  see function wordlists() as example.  should be checking that
+    the response is valid before inspecting json.
+    it's not in the documentation (https://requests.readthedocs.io/en/latest/api/#requests.Response) but
+    the response object implements a __bool__ method that lets you do
+    if response:
+        bla
+    else:
+        bla
+    this fun fact is in the source code, which the documention points to.  better to check response.status_code
+    explicitly
+
+TODO for the above, check these files:
+    api_misc.py             get
+    api_pos.py              get
+    api_quiz.py             get
+    api_word.py             get
+    api_wordlist.py         get
+    app_patch_words.py      get
+    dlernen.py              get
+
+TODO - look for opportunities to use dictionary and set comprehensions.
+
+TODO - create word lists from api calls since wordlists from sql don't give us enough.  examples:
+    words in 5 or more lists
+    irregular verbs - maintaining this manually isn't enough
+
+FIXME - place names should be properly capitalized.  sometimes they have an article.
+
+TODO - parse definitions, and for each word in the definition that is in the dictionary, make a hyperlink to its
+    lookup page.  this may cause hyperlinks to appear in english definitions, but too bad.  to do this, tokenize
+    the definition including spaces, look up each token in the dictionary.
+
+TODO - different colors for lookup results page, word list, word lists, etc.
+------
 to do local development install:
 
 (venv) MacBookPro:deutsch_lernen dougtomm$ pwd
@@ -48,7 +112,7 @@ OK(venv) MacBookPro:deutsch_lernen dougtomm$
 
 ------
 
-to send a put request curl:
+to send a put request with curl:
 
 curl -X PUT  -w "%{http_code}" -H "Content-Type: application/json" -d @baddog.json http://127.0.0.1:5000/api/wordlist/3750/contents
 ------
@@ -88,17 +152,6 @@ backups are run through cron; see crontab -l
 
 ------
 
-TODO review return values of requests.get.  see function wordlists() as example.  should be checking that
-    the response is valid before inspecting json.
-    it's not in the documentation (https://requests.readthedocs.io/en/latest/api/#requests.Response) but
-    the response object implements a __bool__ method that lets you do
-    if response:
-        bla
-    else:
-        bla
-    this fun fact is in the source code, which the documention points to.  better to check response.status_code
-    explicitly
-
 tests:
 
 1. new word being added is nonempty when stripped - don't add '' or '   ' as words.
@@ -112,29 +165,6 @@ review how attribute values are stored.  make sure we aren't storing empty strin
 should be null in the database.
 
 ----
-TODO - in add/edit word page, get rid of the radio button selectors for part of speech.  the system should
-    figure out the POS from the fields that are filled in.  it should be possible to add a word that is every
-    part of speech just by filling in all the fields.
-
-TODO - need a way to add a word from scratch, either an app or through UI.  currently no way to add 'der Leiter'
-    because 'die Leiter' is already there.  fortunately the data model itself permits this case.
-
-TODO - really need a better way to deal with reflexive verbs
-
-FIXME - smart wordlists aren't recursive - smart lists of other smart lists doesn't work
-
-TODO - import word lists
-
-TODO - notes for individual words.  there is already a notes column in the word table.
-
-FIXME - bug:
-    go to a wordlist
-    select a word - note the return-to-list link
-    look up a word, doesn't matter if it's real
-    there is no return-to-list link in the resultant lookup page
-
-TODO - programmatically determine whether a verb is irregular.
-------
 metadata:
 - name
 - id

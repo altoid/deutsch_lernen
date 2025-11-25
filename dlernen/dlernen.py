@@ -80,12 +80,20 @@ def lookup_by_get(word_id):
     # for when a word appears as a hyperlink in a page.
     return_to_wordlist_id = request.args.get('return_to_wordlist_id')
 
-    # FIXME - gracefully handle status code <> 200
-
     r = requests.get(url_for('api_word.get_word_by_id', word_id=word_id, _external=True))
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+
     result = r.json()
 
     r = requests.get(url_for('api_wordlist.get_wordlists_by_word_id', word_id=word_id, _external=True))
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+
     member_wordlists = r.json()
 
     template_args = [(result, member_wordlists)]
@@ -107,6 +115,10 @@ def lookup_by_post():
         pass
     elif r.status_code == 200:
         results = r.json()
+    else:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
 
     # if nothing found, redo the query as a partial match.
     if not results:
@@ -115,12 +127,20 @@ def lookup_by_post():
             pass
         elif r.status_code == 200:
             results = r.json()
+        else:
+            return render_template("error.html",
+                                   message=r.text,
+                                   status_code=r.status_code)
 
     results = sorted(results, key=lambda x: str.lower(x['word']))
     template_args = []
     for result in results:
-        # FIXME - gracefully handle status code <> 200
         r = requests.get(url_for('api_wordlist.get_wordlists_by_word_id', word_id=result['word_id'], _external=True))
+        if not r:
+            return render_template("error.html",
+                                   message=r.text,
+                                   status_code=r.status_code)
+
         member_wordlists = r.json()
         template_args.append((result, member_wordlists))
 
@@ -155,7 +175,9 @@ def list_attributes(wordlist_id):
                                wordlist=result,
                                return_to_wordlist_id=wordlist_id)
 
-    abort(r.status_code)
+    return render_template("error.html",
+                           message=r.text,
+                           status_code=r.status_code)
 
 
 @bp.route('/wordlist/<int:wordlist_id>')
@@ -179,24 +201,29 @@ def wordlist(wordlist_id):
                                wordlist=result,
                                return_to_wordlist_id=wordlist_id)
 
-    result = r.json()
-    if result['notes'] is None:
-        # otherwise the word 'None' is rendered in the form
-        result['notes'] = ''
+    if r:
+        result = r.json()
+        if result['notes'] is None:
+            # otherwise the word 'None' is rendered in the form
+            result['notes'] = ''
 
-    if result['list_type'] == 'smart':
-        words = chunkify(result['known_words'], nchunks=nchunks)
-        return render_template('smart_wordlist.html',
+        if result['list_type'] == 'smart':
+            words = chunkify(result['known_words'], nchunks=nchunks)
+            return render_template('smart_wordlist.html',
+                                   result=result,
+                                   words=words)
+
+        known_words = chunkify(result['known_words'], nchunks=nchunks)
+        unknown_words = chunkify(result['unknown_words'], nchunks=nchunks)
+
+        return render_template('wordlist.html',
                                result=result,
-                               words=words)
+                               known_words=known_words,
+                               unknown_words=unknown_words)
 
-    known_words = chunkify(result['known_words'], nchunks=nchunks)
-    unknown_words = chunkify(result['unknown_words'], nchunks=nchunks)
-
-    return render_template('wordlist.html',
-                           result=result,
-                           known_words=known_words,
-                           unknown_words=unknown_words)
+    return render_template("error.html",
+                           message=r.text,
+                           status_code=r.status_code)
 
 
 @bp.route('/addlist', methods=['POST'])
@@ -310,20 +337,15 @@ def edit_list_attributes():
 # TODO if this is for a POST request, why does it call requests.put()?
 @bp.route('/add_to_list', methods=['POST'])
 def add_to_list():
+    # the get_word function will check that the word is not garbage, no need to do it here.
     word = request.form['word'].strip()
     wordlist_id = request.form['wordlist_id']
 
     # TODO - for now, we can only add a word to a wordlist, not a word_id.
-    payload = None
     url = url_for('api_word.get_word', word=word, _external=True)
     r = requests.get(url)
-    if r.status_code == 404:
-        payload = {
-            "words": [
-                word
-            ]
-        }
-    elif r.status_code == 200:
+    payload = None
+    if r.status_code == 404 or r.status_code == 200:
         payload = {
             "words": [
                 word
@@ -339,10 +361,8 @@ def add_to_list():
 
     url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True)
     r = requests.put(url, json=payload)
-    if r.status_code != 200:
+    if not r:
         flash(r.text)
-        target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
-        return redirect(target)
 
     target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
     return redirect(target)
@@ -392,6 +412,11 @@ def edit_word_form(word):
 
     url = url_for('api_pos.get_pos_for_word', word=word, _external=True)
     r = requests.get(url)
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+
     pos_structure = r.json()
 
     # construct the field names for all the attributes.  field name formats are described in addword.html.
@@ -404,7 +429,7 @@ def edit_word_form(word):
     field_values_before = {}
 
     for p in pos_structure:
-
+        # FIXME - initialize form_data with a dict comprehension
         if p['pos_name'] not in form_data:
             form_data[p['pos_name']] = []
         for a in p['attributes']:
@@ -433,7 +458,9 @@ def edit_word_form(word):
                                form_data=form_data,
                                field_values_before=json.dumps(field_values_before))
 
-    abort(r.status_code)
+    return render_template("error.html",
+                           message=r.text,
+                           status_code=r.status_code)
 
 
 @bp.route('/update_dict', methods=['POST'])
@@ -550,8 +577,10 @@ def update_dict():
         }
         url = url_for('api_wordlist.refresh_wordlists', _external=True)
         r = requests.put(url, json=refresh_payload)
-        if r.status_code != 200:
-            raise Exception("failed to refresh word lists")
+        if not r:
+            return render_template("error.html",
+                                   message="failed to refresh word lists:  %s" % r.text,
+                                   status_code=r.status_code)
 
     if wordlist_id:
         target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
