@@ -13,7 +13,7 @@ Lookup {{ word }}
 
 {% block body %}
 {{ super() }}
-<div class="addword">
+<div class="lookup">
 <form action="/lookup" method="post">
     {% if return_to_wordlist_id != none %}
     <input type="hidden" value="{{return_to_wordlist_id}}" name="wordlist_id"/>
