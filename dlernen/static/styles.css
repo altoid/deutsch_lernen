@@ -90,9 +90,20 @@ body {
 .sidebar a {
     display: block;
     text-decoration: none;
-    color: var(--sidebar-text-color);
     font-size: large;
     padding: 20px;
+}
+
+a {
+    text-decoration: none
+}
+
+.sidebar a:link, .sidebar a:visited {
+    color: var(--sidebar-text-color);
+}
+
+.content a:link, .content a:visited {
+    color: var(--link-color);
 }
 
 textarea.notes {
@@ -130,14 +141,6 @@ ul {
     list-style-type: none;
     margin: 0;
     padding: 0;
-}
-
-a {
-    text-decoration: none
-}
-
-a:link, a:visited {
-    color: var(--link-color);
 }
 
 table.tableau {
