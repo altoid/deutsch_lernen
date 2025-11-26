@@ -6,44 +6,49 @@ Manage Word Lists
 
 {% block body %}
 {{ super() }}
-<h1>Create a List</h1>
-<form action="/addlist" method="post">
-    <table>
-        <tr>
-            <td>List Name:</td>
-            <td><input type="text" name="name" size="100"/></td>
-        </tr>
-        <tr>
-            <td>Source:</td>
-            <td><input type="text" name="citation" size="100"/></td>
-        </tr>
-    </table>
-    <input type="submit" value="Add List"/>
-</form>
-<h1>Word Lists</h1>
-<form action="/deletelist" method="post">
-    <input type="submit" value="Delete Selected Lists"/>
-    <table>
-        {% for r in rows %}
-        <tr>
-            <td>
-                <input type="checkbox" name="deletelist" value="{{ r.wordlist_id }}">
-            </td>
-            <td>
-                {% if r.list_type == 'smart' %}
-                (*)
-                {% endif %}
-            </td>
-            <td>
-                <a href="{{ url_for('dlernen.wordlist', wordlist_id=r.wordlist_id) }}">{{ r.name }}</a> ({{ r.count }})
-            </td>
-            <td>
-                [{{ r.wordlist_id }}]
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-    <input type="submit" value="Delete Selected Lists"/>
-</form>
+<div class="wordlists">
+    {% include 'header.html' %}
+    <h1>Create a List</h1>
+    <form action="/addlist" method="post">
+        <table>
+            <tr>
+                <td>List Name:</td>
+                <td><input type="text" name="name" size="100"/></td>
+            </tr>
+            <tr>
+                <td>Source:</td>
+                <td><input type="text" name="citation" size="100"/></td>
+            </tr>
+        </table>
+        <input type="submit" value="Add List"/>
+    </form>
+    <h1>Word Lists</h1>
+    <form action="/deletelist" method="post">
+        <input type="submit" value="Delete Selected Lists"/>
+        <table>
+            {% for r in rows %}
+            <tr>
+                <td>
+                    <input type="checkbox" name="deletelist" value="{{ r.wordlist_id }}">
+                </td>
+                <td>
+                    {% if r.list_type == 'smart' %}
+                    (*)
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('dlernen.wordlist', wordlist_id=r.wordlist_id) }}">
+                        {{ r.name }}
+                    </a> ({{ r.count }})
+                </td>
+                <td>
+                    [{{ r.wordlist_id }}]
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        <input type="submit" value="Delete Selected Lists"/>
+    </form>
+</div>
 {% endblock %}
 

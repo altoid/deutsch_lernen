@@ -17,58 +17,61 @@ words (word+pos pairs) with their attributes in one go.
 
 {% block body %}
 {{ super() }}
-{% if word %}
-<h1>{{ word }}</h1>
-{% else %}
-<h1>New Word</h1>
-{% endif %}
-<form action="/update_dict" method="post">
-    <input type="hidden" name="field_values_before" value="{{ field_values_before }}">
-    {% if wordlist_id %}
-    <input type="hidden" name="wordlist_id" value="{{wordlist_id}}">
+<div class="addword">
+    {% include 'header.html' %}
+    {% if word %}
+    <h1>{{ word }}</h1>
+    {% else %}
+    <h1>New Word</h1>
     {% endif %}
+    <form action="/update_dict" method="post">
+        <input type="hidden" name="field_values_before" value="{{ field_values_before }}">
+        {% if wordlist_id %}
+        <input type="hidden" name="wordlist_id" value="{{wordlist_id}}">
+        {% endif %}
 
-    <table class="wordedit">
-        <tr>
-            <th class="wordedit">
-                Wort - Die Rechtschreibung kann hier korrigiert werden
-            </th>
-        </tr>
-        <tr>
-            <td class="wordedit">
-                {% if word %}
-                <input type="text"
-                       class="wordedit"
-                       name="word"
-                       value="{{word}}">
-                <input type="hidden" name="word_before" value="{{ word }}">
-                {% else %}
-                <input type="text"
-                       class="wordedit"
-                       name="word">
-                {% endif %}
-            </td>
-        </tr>
-        {% for pos_name in form_data.keys() %}
-        <tr>
-            <th class="wordedit">
-                {{ pos_name }}
-            </th>
-        </tr>
-        {% for field in form_data[pos_name] %}
-        <tr>
-            <td class="wordedit">
-                <input type="text"
-                       class="wordedit"
-                       placeholder="{{ field.label }}"
-                       name="{{ field.field_name }}"
-                       value="{{ field.field_value }}">
-            </td>
-        </tr>
-        {% endfor %}
-        {% endfor %}
-    </table>
-    <br>
-    <input type="submit" value="Submit"/>
-</form>
+        <table class="wordedit">
+            <tr>
+                <th class="wordedit">
+                    Wort - Die Rechtschreibung kann hier korrigiert werden
+                </th>
+            </tr>
+            <tr>
+                <td class="wordedit">
+                    {% if word %}
+                    <input type="text"
+                           class="wordedit"
+                           name="word"
+                           value="{{word}}">
+                    <input type="hidden" name="word_before" value="{{ word }}">
+                    {% else %}
+                    <input type="text"
+                           class="wordedit"
+                           name="word">
+                    {% endif %}
+                </td>
+            </tr>
+            {% for pos_name in form_data.keys() %}
+            <tr>
+                <th class="wordedit">
+                    {{ pos_name }}
+                </th>
+            </tr>
+            {% for field in form_data[pos_name] %}
+            <tr>
+                <td class="wordedit">
+                    <input type="text"
+                           class="wordedit"
+                           placeholder="{{ field.label }}"
+                           name="{{ field.field_name }}"
+                           value="{{ field.field_value }}">
+                </td>
+            </tr>
+            {% endfor %}
+            {% endfor %}
+        </table>
+        <br>
+        <input type="submit" value="Submit"/>
+    </form>
+</div>
 {% endblock %}

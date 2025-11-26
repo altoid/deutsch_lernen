@@ -2,24 +2,28 @@
 
 {% block body %}
 {{ super() }}
-<form action="/edit_list_attributes" method="post">
-    <input type="hidden" value="{{ wordlist.wordlist_id }}" name="wordlist_id"/>
-    <table>
-        <tr>
-            <td>List Name:</td>
-            <td><input type="text" value="{{ wordlist.name }}" name="name" size="60"></td>
-        </tr>
-        <tr>
-            <td>Source:</td>
-            <td><input type="text" value="{{ wordlist.citation }}" name="citation" size="60"></td>
-        </tr>
-    </table>
-    {% if wordlist.list_type != 'standard' %}
-    <h2>Code:</h2>
-    Should be a sql statement that selects a single column called 'word_id.'<br>
-    <textarea class="sqlcode" name="sqlcode">{{ wordlist.sqlcode }}</textarea>
-    <br>
-    {% endif %}
-    <input type="submit" value="Update list details"/>
-</form>
+<div class="listattributes">
+    {% include 'header.html' %}
+    <form action="/edit_list_attributes" method="post">
+        <input type="hidden" value="{{ wordlist.wordlist_id }}" name="wordlist_id"/>
+        <table>
+            <tr>
+                <td>List Name:</td>
+                <td><input type="text" value="{{ wordlist.name }}" name="name" size="60"></td>
+            </tr>
+            <tr>
+                <td>Source:</td>
+                <td><input type="text" value="{{ wordlist.citation }}" name="citation" size="60"></td>
+            </tr>
+        </table>
+        {% if wordlist.list_type != 'standard' %}
+        <h2>Code:</h2>
+        Should be a sql statement that selects a single column called 'word_id.'<br>
+        <textarea class="sqlcode" name="sqlcode">{{ wordlist.sqlcode }}</textarea>
+        <br>
+        {% endif %}
+        <input type="submit" value="Update list details"/>
+    </form>
+</div>
 {% endblock %}
+

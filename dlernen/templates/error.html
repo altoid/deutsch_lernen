@@ -1,6 +1,18 @@
-{% extends "base.html" %}
-
-{% block body %}
-<h1>{{ status_code }}</h1>
-Got error from the server:  {{ message }}
-{% endblock %}
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="/static/styles.css">
+    <title>
+        {% block title %}
+        {% endblock %}
+    </title>
+</head>
+<body class="error">
+<div class="error">
+    <h1>{{ status_code }}</h1>
+    Got error from the server: {{ message }}
+</div>
+</body>
+</html>

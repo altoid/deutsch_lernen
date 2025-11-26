@@ -1,0 +1,25 @@
+{#
+has to be included after the div for each page, so that this will be rendered
+with the styles for that page.
+#}
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<table class="banner">
+    {% for message in messages %}
+    <tr>
+        <td>
+            {{ message }}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+{% endwith %}
+{% if return_to_wordlist_id is defined and return_to_wordlist_id != none %}
+<table>
+    <tr>
+        <td><a href="{{ url_for('dlernen.wordlist', wordlist_id=return_to_wordlist_id) }}">zur Liste zurückkehren</a>
+        </td>
+    </tr>
+</table>
+{% endif %}

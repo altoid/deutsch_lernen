@@ -59,11 +59,6 @@ def post_test():
     return j
 
 
-@bp.errorhandler(500)
-def server_error(e):
-    return render_template('500.html', message=str(e), ), 500
-
-
 @bp.route('/')
 def home():
     return render_template('home.html')
@@ -152,7 +147,9 @@ def wordlists():
         result = json.loads(r.text)
         return render_template('wordlists.html', rows=result)
 
-    abort(r.status_code)
+    return render_template("error.html",
+                           message=r.text,
+                           status_code=r.status_code)
 
 
 @bp.route('/list_attributes/<int:wordlist_id>')

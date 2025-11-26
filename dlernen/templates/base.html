@@ -16,27 +16,6 @@
 </div>
 <div class="content">
     {% block body %}
-    {% with messages = get_flashed_messages() %}
-    {% if messages %}
-    <table class="banner">
-        {% for message in messages %}
-        <tr>
-            <td>
-                {{ message }}
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-    {% endif %}
-    {% endwith %}
-    <table>
-        {% if return_to_wordlist_id is defined and return_to_wordlist_id != none %}
-        <tr>
-            <td><a href="{{ url_for('dlernen.wordlist', wordlist_id=return_to_wordlist_id) }}">zur Liste zurückkehren</a>
-            </td>
-        </tr>
-        {% endif %}
-    </table>
     {% endblock %}
 </div>
 </body>

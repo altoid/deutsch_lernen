@@ -27,12 +27,47 @@ body {
     margin: 0px;
 }
 
+.error {
+    background-color:  tomato;
+    margin: 20px;
+}
+
 .content {
     margin-left: var(--sidebar-width);
     min-height: 100vh;
 }
 
+.home {
+    background-color: var(--background-color);
+    padding: 10px;
+    min-height: 100vh;
+}
+
+.addword {
+    background-color: var(--background-color);
+    padding: 10px;
+    min-height: 100vh;
+}
+
 .lookup {
+    background-color: var(--background-color);
+    padding: 10px;
+    min-height: 100vh;
+}
+
+.wordlist {
+    background-color: var(--background-color);
+    padding: 10px;
+    min-height: 100vh;
+}
+
+.wordlists {
+    background-color: var(--background-color);
+    padding: 10px;
+    min-height: 100vh;
+}
+
+.listattributes {
     background-color: var(--background-color);
     padding: 10px;
     min-height: 100vh;
