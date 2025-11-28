@@ -99,7 +99,7 @@ def lookup_by_post():
     word = request.form.get('lookup')
     return_to_wordlist_id = request.form.get('return_to_wordlist_id')
     results = []
-    r = requests.get(url_for('api_word.get_word', word=word, _external=True))
+    r = requests.get(url_for('api_word.get_word', word=word, partial=True, _external=True))
     if r.status_code == 404:
         pass
     elif r.status_code == 200:
@@ -109,17 +109,17 @@ def lookup_by_post():
                                message=r.text,
                                status_code=r.status_code)
 
-    # if nothing found, redo the query as a partial match.
-    if not results:
-        r = requests.get(url_for('api_word.get_word', word=word, partial=True, _external=True))
-        if r.status_code == 404:
-            pass
-        elif r.status_code == 200:
-            results = r.json()
-        else:
-            return render_template("error.html",
-                                   message=r.text,
-                                   status_code=r.status_code)
+    # # if nothing found, redo the query as a partial match.
+    # if not results:
+    #     r = requests.get(url_for('api_word.get_word', word=word, partial=True, _external=True))
+    #     if r.status_code == 404:
+    #         pass
+    #     elif r.status_code == 200:
+    #         results = r.json()
+    #     else:
+    #         return render_template("error.html",
+    #                                message=r.text,
+    #                                status_code=r.status_code)
 
     results = sorted(results, key=lambda x: str.lower(x['word']))
     template_args = []

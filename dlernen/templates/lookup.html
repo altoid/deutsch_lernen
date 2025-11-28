@@ -25,7 +25,7 @@ Lookup {{ word }}
     </form>
 
     {% if template_args %}
-    {% if template_args|length > 5 %}
+    {% if template_args|length > 1 %}
     <h1>Words matching "{{ word }}"</h1>
     <ul>
         {% for tuple in template_args %}
