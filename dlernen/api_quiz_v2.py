@@ -29,7 +29,7 @@ where quiz_key = '%(quiz_key)s'
 ),
 words_to_test as (
 select wa.* from word_attribute wa
-where word_id in (%(word_id_args)s)
+%(word_id_filter)s
 ),
 word_attributes_to_test as (
 select qa.quiz_id, qa.attribute_id, words_to_test.word_id, words_to_test.attrvalue from attrs_for_quiz qa
@@ -51,14 +51,49 @@ total_presentations as (
 select sum(presentation_count) as npresentations
 from word_scores
 )
-select *,
+select 'crappy_score' qname, word_scores.*, total_presentations.*,
 ifnull((presentation_count / npresentations) * raw_score, 0) as weighted_score
 from word_scores, total_presentations
 order by weighted_score, presentation_count desc
 limit 1
 """
 
-QUERIES = {
+RARE_SQL = """
+with
+attrs_for_quiz as (
+select qs.quiz_id, qs.attribute_id
+from quiz
+inner join quiz_structure qs on quiz.id = qs.quiz_id
+where quiz_key = '%(quiz_key)s'
+),
+words_to_test as (
+select wa.* from word_attribute wa
+%(word_id_filter)s
+),
+word_attributes_to_test as (
+select qa.quiz_id, qa.attribute_id, words_to_test.word_id, words_to_test.attrvalue from attrs_for_quiz qa
+inner join words_to_test on qa.attribute_id = words_to_test.attribute_id
+),
+word_scores as
+(
+select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue,
+    ifnull(qsc.presentation_count, 0) presentation_count,
+    ifnull(qsc.correct_count, 0) correct_count,
+    ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
+from word_attributes_to_test wat
+left join quiz_score qsc
+    on wat.quiz_id = qsc.quiz_id
+    and wat.attribute_id = qsc.attribute_id
+    and wat.word_id = qsc.word_id
+)
+
+select 'rare' qname, word_scores.* from word_scores
+where presentation_count <= 5
+order by presentation_count
+limit 1
+"""
+
+DEFINED_QUERIES = {
     'crappy_score',
     'been_too_long',
     'rare'
@@ -76,7 +111,10 @@ def get_word_to_test(quiz_key):
     # - rare (5 or fewer presentations)
     #
     queries = request.args.getlist('query')
-    undefined_queries = {x for x in queries} - QUERIES
+    if not queries:
+        queries = DEFINED_QUERIES
+
+    undefined_queries = {x for x in queries} - DEFINED_QUERIES
     if undefined_queries:
         return "unknown queries: %s" % ', '.join(undefined_queries), 400
 
@@ -86,6 +124,8 @@ def get_word_to_test(quiz_key):
         # 'quiz_key': quiz_key,
         'rows': [],
     }
+
+    words_chosen = []
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
@@ -99,25 +139,39 @@ def get_word_to_test(quiz_key):
         if not rows:
             return "quiz %s not found" % quiz_key, 404
 
+        word_id_filter = ""
+        word_ids = None
         if wordlist_ids:
             word_ids = get_word_ids_from_wordlists(wordlist_ids, cursor)
 
             word_id_args = ['%s'] * len(word_ids)
             word_id_args = ', '.join(word_id_args)
 
-            result['word_ids'] = word_ids
+            word_id_filter = " where word_id in (%(word_id_args)s) " % {'word_id_args': word_id_args}
 
+        if 'crappy_score' in queries:
             crappy_score_sql = CRAPPY_SCORE_SQL % {
                 'quiz_key': quiz_key,
-                'word_id_args': word_id_args
+                'word_id_filter': word_id_filter
             }
-            result['sql'] = crappy_score_sql
+
+            cursor.execute(crappy_score_sql, word_ids)
+            rows = cursor.fetchall()
+            if rows:
+                words_chosen.append(rows[0])
+
+        if 'rare' in queries:
+            crappy_score_sql = RARE_SQL % {
+                'quiz_key': quiz_key,
+                'word_id_filter': word_id_filter
+            }
 
             cursor.execute(crappy_score_sql, word_ids)
             print(cursor.statement)
             rows = cursor.fetchall()
-            pprint(rows)
+            if rows:
+                words_chosen.append(rows[0])
 
-            result['rows'] = rows
+        result['words_chosen'] = words_chosen
 
     return result, 200
