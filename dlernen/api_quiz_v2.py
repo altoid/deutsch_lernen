@@ -1,6 +1,6 @@
 from flask import Blueprint, request, current_app
 from mysql.connector import connect
-from dlernen import quiz_sql, dlernen_json_schema
+import random
 from contextlib import closing
 import jsonschema
 from pprint import pprint
@@ -51,6 +51,7 @@ total_presentations as (
 select sum(presentation_count) as npresentations
 from word_scores
 )
+
 select 'crappy_score' qname, word_scores.*, total_presentations.*,
 ifnull((presentation_count / npresentations) * raw_score, 0) as weighted_score
 from word_scores, total_presentations
@@ -90,6 +91,41 @@ left join quiz_score qsc
 select 'rare' qname, word_scores.* from word_scores
 where presentation_count <= 5
 order by presentation_count
+limit 1
+"""
+
+BEEN_TOO_LONG_SQL = """
+with
+attrs_for_quiz as (
+select qs.quiz_id, qs.attribute_id
+from quiz
+inner join quiz_structure qs on quiz.id = qs.quiz_id
+where quiz_key = '%(quiz_key)s'
+),
+words_to_test as (
+select wa.* from word_attribute wa
+%(word_id_filter)s
+),
+word_attributes_to_test as (
+select qa.quiz_id, qa.attribute_id, words_to_test.word_id, words_to_test.attrvalue from attrs_for_quiz qa
+inner join words_to_test on qa.attribute_id = words_to_test.attribute_id
+),
+word_scores as
+(
+select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, qsc.last_presentation,
+    ifnull(qsc.presentation_count, 0) presentation_count,
+    ifnull(qsc.correct_count, 0) correct_count,
+    ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
+from word_attributes_to_test wat
+INNER join quiz_score qsc
+    on wat.quiz_id = qsc.quiz_id
+    and wat.attribute_id = qsc.attribute_id
+    and wat.word_id = qsc.word_id
+)
+
+select 'been_too_long' qname, word_scores.* from word_scores
+where curdate() - interval 30 day > last_presentation
+order by last_presentation
 limit 1
 """
 
@@ -150,28 +186,39 @@ def get_word_to_test(quiz_key):
             word_id_filter = " where word_id in (%(word_id_args)s) " % {'word_id_args': word_id_args}
 
         if 'crappy_score' in queries:
-            crappy_score_sql = CRAPPY_SCORE_SQL % {
+            sql = CRAPPY_SCORE_SQL % {
                 'quiz_key': quiz_key,
                 'word_id_filter': word_id_filter
             }
 
-            cursor.execute(crappy_score_sql, word_ids)
+            cursor.execute(sql, word_ids)
             rows = cursor.fetchall()
             if rows:
                 words_chosen.append(rows[0])
 
         if 'rare' in queries:
-            crappy_score_sql = RARE_SQL % {
+            sql = RARE_SQL % {
                 'quiz_key': quiz_key,
                 'word_id_filter': word_id_filter
             }
 
-            cursor.execute(crappy_score_sql, word_ids)
-            print(cursor.statement)
+            cursor.execute(sql, word_ids)
             rows = cursor.fetchall()
             if rows:
                 words_chosen.append(rows[0])
 
-        result['words_chosen'] = words_chosen
+        if 'been_too_long' in queries:
+            sql = BEEN_TOO_LONG_SQL % {
+                'quiz_key': quiz_key,
+                'word_id_filter': word_id_filter
+            }
+
+            cursor.execute(sql, word_ids)
+            rows = cursor.fetchall()
+            if rows:
+                words_chosen.append(rows[0])
+
+        # result['words_chosen'] = words_chosen
+        result['winner'] = random.choice(words_chosen)
 
     return result, 200
