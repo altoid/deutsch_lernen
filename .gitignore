@@ -2,7 +2,7 @@ venv/
 crontab
 **/*~
 **/*.pyc
-sql/deutsch.sql
+**/sql
 config.py
 **/*.bak
 **/*.BAK
