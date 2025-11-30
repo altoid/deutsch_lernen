@@ -231,3 +231,30 @@ def get_word_to_test(quiz_key):
             return winner
 
         return {}
+
+
+@bp.route('/<string:quiz_key>', methods=['POST'])
+def post_quiz_answer(quiz_key):
+    try:
+        payload = request.get_json()
+        jsonschema.validate(payload, dlernen_json_schema.QUIZ_ANSWER_PAYLOAD_SCHEMA)
+    except jsonschema.ValidationError as e:
+        message = "bad payload: %s" % e.message
+        return message, 400
+
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        cursor.execute('start transaction')
+        update = """
+            insert into quiz_score
+            (quiz_id, word_id, attribute_id, presentation_count, correct_count)
+            VALUES
+            (%(quiz_id)s, %(word_id)s, %(attribute_id)s, %(presentation_count)s, %(correct_count)s)
+            on duplicate key update
+            presentation_count = values(presentation_count),
+            correct_count = values(correct_count)
+            """
+
+        cursor.execute(update, payload)
+        cursor.execute('commit')
+
+    return 'OK', 200

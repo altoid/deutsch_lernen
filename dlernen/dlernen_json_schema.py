@@ -341,6 +341,43 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
     }
 }
 
+QUIZ_ANSWER_PAYLOAD_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/quiz_data",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Quiz Data List",
+    "description": "payload for posting a quiz answer",
+    "type": "object",
+    "required": [
+        "quiz_id",
+        "word_id",
+        "attribute_id",
+        "presentation_count",
+        "correct_count",
+    ],
+    "properties": {
+        "quiz_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "word_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "correct_count": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "presentation_count": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "attribute_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+    }
+}
+
 # TODO revisit this.  keys that are hardcoded values found in the database is a bad idea.
 QUIZ_DATA_RESPONSE_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/quiz_data",

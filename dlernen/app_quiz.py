@@ -6,6 +6,9 @@ import click
 bp = Blueprint('app_quiz', __name__)
 
 
+QUIZ_KEY = 'definitions'
+
+
 @bp.cli.command('quiz_definitions')
 @click.option('--wordlist_ids', '-l', multiple=True)
 @click.option('--queries', '-q', multiple=True)
@@ -20,7 +23,7 @@ def quiz_definitions(wordlist_ids, queries):
     while True:
         url = url_for('api_quiz_v2.get_word_to_test',
                       wordlist_id=wordlist_ids,
-                      quiz_key='definitions',
+                      quiz_key=QUIZ_KEY,
                       query=queries,
                       _external=True)
         r = requests.get(url)
@@ -67,6 +70,11 @@ def quiz_definitions(wordlist_ids, queries):
 
         payload['presentation_count'] += 1
 
-        r = requests.post(url_for('api_quiz.post_quiz_answer', _external=True), data=payload)
+        r = requests.post(url_for('api_quiz_v2.post_quiz_answer',
+                                  quiz_key=QUIZ_KEY,
+                                  _external=True), json=payload)
+
+        if not r:
+            return r.text, r.status_code
 
     print('bis bald')

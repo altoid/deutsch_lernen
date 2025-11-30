@@ -574,6 +574,72 @@ class Test_WORDLISTS_RESPONSE_SCHEMA(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
+class Test_QUIZ_ANSWER_PAYLOAD_SCHEMA(unittest.TestCase):
+    schema = js.QUIZ_ANSWER_PAYLOAD_SCHEMA
+
+    valid_docs = [
+        {
+            'quiz_id': 123,
+            'word_id': 123,
+            'attribute_id': 123,
+            'presentation_count': 123,
+            'correct_count': 123,
+        }
+    ]
+
+    invalid_docs = [
+        {
+            # 'quiz_id': 123,
+            'word_id': 123,
+            'attribute_id': 123,
+            'presentation_count': 123,
+            'correct_count': 123,
+        },
+        {
+            'quiz_id': 123,
+            # 'word_id': 123,
+            'attribute_id': 123,
+            'presentation_count': 123,
+            'correct_count': 123,
+        },
+        {
+            'quiz_id': 123,
+            'word_id': 123,
+            # 'attribute_id': 123,
+            'presentation_count': 123,
+            'correct_count': 123,
+        },
+        {
+            'quiz_id': 123,
+            'word_id': 123,
+            'attribute_id': 123,
+            # 'presentation_count': 123,
+            'correct_count': 123,
+        },
+        {
+            'quiz_id': 123,
+            'word_id': 123,
+            'attribute_id': 123,
+            'presentation_count': 123,
+            # 'correct_count': 123,
+        },
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, self.schema)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
 class Test_QUIZ_DATA_RESPONSE_SCHEMA(unittest.TestCase):
     schema = js.QUIZ_DATA_RESPONSE_SCHEMA
 

@@ -1,7 +1,3 @@
-from contextlib import closing
-from flask import current_app
-from mysql.connector import connect
-
 # no view functions here, just utilities needed by more than one blueprint.
 
 # helper function.  returns a list of all of the word_ids in the given wordlists.  works for
@@ -13,8 +9,6 @@ from mysql.connector import connect
 # with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
 #     get_word_ids_from_wordlists(wordlist_ids, cursor)
 #
-
-
 def get_word_ids_from_wordlists(wordlist_ids, cursor):
     if not wordlist_ids:
         return []
