@@ -364,7 +364,7 @@ QUIZ_DATA_RESPONSE_SCHEMA = {
                 "type": "integer",
                 "minimum": 1
             },
-            "qname": {
+            "query_name": {
                 "type": "string"
             },
             "word": {
@@ -435,8 +435,7 @@ QUIZ_DATA_RESPONSE_SCHEMA = {
                 "attrvalue",
                 "attribute_id",
                 "correct_count",
-                "presentation_count",
-                "last_presentation"
+                "presentation_count"
             ]
         }
     }
