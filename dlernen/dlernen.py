@@ -430,7 +430,7 @@ def edit_word_form(word):
     pos_structure = r.json()
 
     # construct the field names for all the attributes.  field name formats are described in addword.html.
-    form_data = {}
+    form_data = {p['pos_name']: [] for p in pos_structure}
 
     # field_values_before is a mapping of field names to field values.  when the form is submitted,
     # we will get another such mapping, with whatever changes were made.  we implement the dictionary
@@ -440,8 +440,6 @@ def edit_word_form(word):
 
     for p in pos_structure:
         # FIXME - initialize form_data with a dict comprehension
-        if p['pos_name'] not in form_data:
-            form_data[p['pos_name']] = []
         for a in p['attributes']:
             t = [p['pos_id'], a['attribute_id']]
             if p['word_id']:
