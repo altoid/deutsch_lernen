@@ -19,7 +19,7 @@ bp = Blueprint('api_quiz_v2', __name__, url_prefix='/api/v2/quiz')
 # +---------+--------------+---------+---------------+--------------------+---------------+-----------+----------------+----------------+
 # |       4 |            6 |    1687 | verrate       |                  0 |             0 |    0.0000 |              0 |     0.00000000 |
 
-CRAPPY_SCORE_SQL = """
+COMMON_SQL = """
 with
 attrs_for_quiz as (
 select qs.quiz_id, qs.attribute_id
@@ -28,16 +28,20 @@ inner join quiz_structure qs on quiz.id = qs.quiz_id
 where quiz_key = '%(quiz_key)s'
 ),
 words_to_test as (
-select wa.* from word_attribute wa
+select word, word_id, attrvalue, attribute_id from mashup_v
 %(word_id_filter)s
 ),
 word_attributes_to_test as (
-select qa.quiz_id, qa.attribute_id, words_to_test.word_id, words_to_test.attrvalue from attrs_for_quiz qa
+select qa.quiz_id, qa.attribute_id, words_to_test.word_id, words_to_test.attrvalue, words_to_test.word
+from attrs_for_quiz qa
 inner join words_to_test on qa.attribute_id = words_to_test.attribute_id
 ),
+"""
+
+CRAPPY_SCORE_SQL = COMMON_SQL + """
 word_scores as
 (
-select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue,
+select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word,
     ifnull(qsc.presentation_count, 0) presentation_count,
     ifnull(qsc.correct_count, 0) correct_count,
     ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
@@ -59,25 +63,10 @@ order by weighted_score, presentation_count desc
 limit 1
 """
 
-RARE_SQL = """
-with
-attrs_for_quiz as (
-select qs.quiz_id, qs.attribute_id
-from quiz
-inner join quiz_structure qs on quiz.id = qs.quiz_id
-where quiz_key = '%(quiz_key)s'
-),
-words_to_test as (
-select wa.* from word_attribute wa
-%(word_id_filter)s
-),
-word_attributes_to_test as (
-select qa.quiz_id, qa.attribute_id, words_to_test.word_id, words_to_test.attrvalue from attrs_for_quiz qa
-inner join words_to_test on qa.attribute_id = words_to_test.attribute_id
-),
+RARE_SQL = COMMON_SQL + """
 word_scores as
 (
-select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue,
+select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word,
     ifnull(qsc.presentation_count, 0) presentation_count,
     ifnull(qsc.correct_count, 0) correct_count,
     ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
@@ -94,25 +83,10 @@ order by presentation_count
 limit 1
 """
 
-BEEN_TOO_LONG_SQL = """
-with
-attrs_for_quiz as (
-select qs.quiz_id, qs.attribute_id
-from quiz
-inner join quiz_structure qs on quiz.id = qs.quiz_id
-where quiz_key = '%(quiz_key)s'
-),
-words_to_test as (
-select wa.* from word_attribute wa
-%(word_id_filter)s
-),
-word_attributes_to_test as (
-select qa.quiz_id, qa.attribute_id, words_to_test.word_id, words_to_test.attrvalue from attrs_for_quiz qa
-inner join words_to_test on qa.attribute_id = words_to_test.attribute_id
-),
+BEEN_TOO_LONG_SQL = COMMON_SQL + """
 word_scores as
 (
-select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, qsc.last_presentation,
+select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word, qsc.last_presentation,
     ifnull(qsc.presentation_count, 0) presentation_count,
     ifnull(qsc.correct_count, 0) correct_count,
     ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
@@ -155,10 +129,6 @@ def get_word_to_test(quiz_key):
         return "unknown queries: %s" % ', '.join(undefined_queries), 400
 
     result = {
-        # 'wordlist_ids': wordlist_ids,
-        # 'query': queries,
-        # 'quiz_key': quiz_key,
-        'rows': [],
     }
 
     words_chosen = []
@@ -218,7 +188,8 @@ def get_word_to_test(quiz_key):
             if rows:
                 words_chosen.append(rows[0])
 
-        # result['words_chosen'] = words_chosen
-        result['winner'] = random.choice(words_chosen)
+        pprint(words_chosen)
+        if words_chosen:
+            result['winner'] = random.choice(words_chosen)
 
     return result, 200
