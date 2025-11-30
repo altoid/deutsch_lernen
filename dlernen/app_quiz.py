@@ -2,14 +2,14 @@ from flask import Blueprint, url_for
 from pprint import pprint
 import requests
 import click
-from dlernen import app_common
 
 bp = Blueprint('app_quiz', __name__)
 
 
 @bp.cli.command('quiz_definitions')
 @click.option('--wordlist_ids', '-l', multiple=True)
-def quiz_definitions(wordlist_ids):
+@click.option('--queries', '-q', multiple=True)
+def quiz_definitions(wordlist_ids, queries):
     # to run this, use the command:
     #   python -m flask --app run app_quiz_definitions quiz_definitions [-l id -l id -l id ...]
     #
@@ -18,36 +18,45 @@ def quiz_definitions(wordlist_ids):
 
     counter = 0
     while True:
-        row = app_common.get_next_word_to_test(wordlist_ids, 'definitions')
+        url = url_for('api_quiz_v2.get_word_to_test',
+                      wordlist_id=wordlist_ids,
+                      quiz_key='definitions',
+                      query=queries,
+                      _external=True)
+        r = requests.get(url)
+        if not r:
+            return r.text, r.status_code
 
-        if not row:
+        attr_to_test = r.json()
+
+        if not attr_to_test:
             print("es gibt keine Welten mehr zu erobern")
             break
 
         counter += 1
         print("[%s]" % counter, end=' ')
 
-        if 'article' in row:
-            print(row['article'], end=' ')
+        if 'article' in attr_to_test:
+            print(attr_to_test['article'], end=' ')
 
-        print(row['word'])
+        print(attr_to_test['word'])
         prompt = "hit return for answer, q to quit:  --> "
         answer = input(prompt).strip().lower()
 
         if answer.startswith('q'):
             break
 
-        print(row['attributes']['definition']['attrvalue'])
+        print(attr_to_test['attrvalue'])
 
         prompt = "correct? --> "
         answer = input(prompt).strip().lower()
 
         payload = {
-            "quiz_id": row['quiz_id'],
-            "word_id": row['word_id'],
-            "attribute_id": row['attributes']['definition']['attribute_id'],
-            "presentation_count": row['attributes']['definition']['presentation_count'],
-            "correct_count": row['attributes']['definition']['correct_count']
+            "quiz_id": attr_to_test['quiz_id'],
+            "word_id": attr_to_test['word_id'],
+            "attribute_id": attr_to_test['attribute_id'],
+            "presentation_count": attr_to_test['presentation_count'],
+            "correct_count": attr_to_test['correct_count']
         }
 
         while len(answer) == 0:

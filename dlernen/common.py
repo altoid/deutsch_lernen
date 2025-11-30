@@ -4,13 +4,18 @@ from mysql.connector import connect
 
 # no view functions here, just utilities needed by more than one blueprint.
 
+# helper function.  returns a list of all of the word_ids in the given wordlists.  works for
+# standard and for smart lists.  since we are using UNION and not UNION ALL, there will be no dups
+# in the result.
+#
+# this should be called from within a context manager, e.g.
+#
+# with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+#     get_word_ids_from_wordlists(wordlist_ids, cursor)
+#
 
-def get_word_ids_from_wordlists(wordlist_ids):
-    """
-    helper function.  returns a list of all of the word_ids in the given wordlists.  works for
-    standard and for smart lists.
-    """
 
+def get_word_ids_from_wordlists(wordlist_ids, cursor):
     if not wordlist_ids:
         return []
 
@@ -26,27 +31,26 @@ def get_word_ids_from_wordlists(wordlist_ids):
     ]
 
     # make a UNION out of this and all the sqlcode routines for all the word lists
-    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        sql = """
-        select sqlcode
-        from wordlist
-        where id in (""" + wordlist_args + """)
-        and sqlcode is not NULL
-        """
+    sql = """
+    select sqlcode
+    from wordlist
+    where id in (""" + wordlist_args + """)
+    and sqlcode is not NULL
+    """
 
-        cursor.execute(sql, (*wordlist_ids,))
-        rows = cursor.fetchall()
+    cursor.execute(sql, (*wordlist_ids,))
+    rows = cursor.fetchall()
 
-        smartlist_clauses = list(map(lambda x: x['sqlcode'], rows))
+    smartlist_clauses = list(map(lambda x: x['sqlcode'], rows))
 
-        sql = ' UNION '.join(sql_for_standard_lists + smartlist_clauses)
+    sql = ' UNION '.join(sql_for_standard_lists + smartlist_clauses)
 
-        cursor.execute(sql, (*wordlist_ids,))
+    cursor.execute(sql, (*wordlist_ids,))
 
-        rows = cursor.fetchall()
+    rows = cursor.fetchall()
 
-        result = list(map(lambda x: x['word_id'], rows))
+    result = list(map(lambda x: x['word_id'], rows))
 
-        return result
+    return result
 
 

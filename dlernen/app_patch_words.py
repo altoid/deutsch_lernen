@@ -34,11 +34,7 @@ def patch_words(wordlist_ids, attributes):
         print(message)
         return message, 400
 
-    args = None
-    if wordlist_ids:
-        args = ','.join(wordlist_ids)
-
-    url = url_for('api_word.get_words_in_wordlists', wordlist_id=args, _external=True)
+    url = url_for('api_word.get_words_in_wordlists', wordlist_id=wordlist_ids, _external=True)
 
     r = requests.get(url)
     if not r:

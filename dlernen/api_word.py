@@ -401,14 +401,11 @@ def get_words_in_wordlists():
     """
     # TODO - currently no unit tests for this.  do we need any?
 
-    wordlist_ids = request.args.get('wordlist_id')  # this will come in as a comma-separated string.
-    if wordlist_ids:
-        wordlist_ids = wordlist_ids.split(',')
-        wordlist_ids = list(set(wordlist_ids))
-
-        word_ids = common.get_word_ids_from_wordlists(wordlist_ids)
-    else:
-        with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    wordlist_ids = request.args.getlist('wordlist_id')
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        if wordlist_ids:
+            word_ids = common.get_word_ids_from_wordlists(wordlist_ids, cursor)
+        else:
             sql = """
             select id as word_id from word
             """

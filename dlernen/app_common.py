@@ -17,6 +17,7 @@ def get_next_word_to_test(wordlist_ids, quiz_key):
         return None
 
     # dig the word_ids out of the result and then find the articles for each word that is a noun.
+    # FIXME - why TF are we doing this?
     word_ids = [x['word_id'] for x in quiz_data]
     payload = {
         "word_ids": word_ids

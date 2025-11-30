@@ -10,6 +10,8 @@ from dlernen.api_pos import bp as api_pos_bp
 from dlernen.app_patch_words import bp as app_patch_words_bp
 from dlernen.app_quiz import bp as app_quiz_bp
 
+from dlernen.api_quiz_v2 import bp as api_quiz_v2_bp
+
 
 def create_app():
     app = Flask(__name__)
@@ -19,6 +21,7 @@ def create_app():
     app.register_blueprint(dlernen_bp)
     app.register_blueprint(api_misc_bp)
     app.register_blueprint(api_quiz_bp)
+    app.register_blueprint(api_quiz_v2_bp)
     app.register_blueprint(api_wordlist_bp)
     app.register_blueprint(api_word_bp)
     app.register_blueprint(api_pos_bp)

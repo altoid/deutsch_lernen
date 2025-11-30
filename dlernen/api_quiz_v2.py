@@ -1,11 +1,11 @@
-from flask import Blueprint, request, current_app
+from flask import Blueprint, request, current_app, url_for
+import requests
 from mysql.connector import connect
 import random
 from contextlib import closing
 import jsonschema
-from dlernen import dlernen_json_schema
+from dlernen import dlernen_json_schema, common
 from pprint import pprint
-from common import get_word_ids_from_wordlists
 
 # /api/quiz and quiz_metadata endpoints are here.
 
@@ -156,11 +156,6 @@ def get_word_to_test(quiz_key):
     if undefined_queries:
         return "unknown queries: %s" % ', '.join(undefined_queries), 400
 
-    result = {
-    }
-
-    words_chosen = []
-
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
         select quiz_key
@@ -176,12 +171,14 @@ def get_word_to_test(quiz_key):
         word_id_filter = ""
         word_ids = None
         if wordlist_ids:
-            word_ids = get_word_ids_from_wordlists(wordlist_ids, cursor)
+            word_ids = common.get_word_ids_from_wordlists(wordlist_ids, cursor)
 
             word_id_args = ['%s'] * len(word_ids)
             word_id_args = ', '.join(word_id_args)
 
             word_id_filter = " and word_id in (%(word_id_args)s) " % {'word_id_args': word_id_args}
+
+        words_chosen = []
 
         if 'crappy_score' in queries:
             sql = CRAPPY_SCORE_SQL % {
@@ -216,10 +213,21 @@ def get_word_to_test(quiz_key):
             if rows:
                 words_chosen.append(rows[0])
 
-        pprint(words_chosen)
         jsonschema.validate(words_chosen, dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA)
         if words_chosen:
-            result['winner'] = random.choice(words_chosen)
-            result['words_chosen'] = words_chosen
+            winner = random.choice(words_chosen)
+            # if this is a noun, add its article to the response.
+            url = url_for('api_word.get_word_by_id', word_id=winner['word_id'], _external=True)
 
-    return result, 200
+            r = requests.get(url)
+            if not r:
+                return r.text, r.status_code
+
+            word_info = r.json()
+            if word_info['pos_name'].casefold() == 'noun':
+                article = list(filter(lambda x: x['attrkey'] == 'article', word_info['attributes']))
+                winner['article'] = article[0]['attrvalue']
+
+            return winner
+
+        return {}
