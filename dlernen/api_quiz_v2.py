@@ -30,6 +30,7 @@ where quiz_key = '%(quiz_key)s'
 ),
 words_to_test as (
 select word, word_id, attrvalue, attribute_id from mashup_v
+where attrvalue is not null
 %(word_id_filter)s
 ),
 word_attributes_to_test as (
@@ -180,7 +181,7 @@ def get_word_to_test(quiz_key):
             word_id_args = ['%s'] * len(word_ids)
             word_id_args = ', '.join(word_id_args)
 
-            word_id_filter = " where word_id in (%(word_id_args)s) " % {'word_id_args': word_id_args}
+            word_id_filter = " and word_id in (%(word_id_args)s) " % {'word_id_args': word_id_args}
 
         if 'crappy_score' in queries:
             sql = CRAPPY_SCORE_SQL % {
