@@ -502,17 +502,9 @@ def delete_wordlists():
 
 @bp.route('/api/wordlists', methods=['GET'])
 def get_wordlists():
-    """
-    request format is
-
-    ?wordlist_id=n,n,n ... - optional.  only return info for the given lists.
-
-    """
-
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        wordlist_ids = request.args.get('wordlist_id')
+        wordlist_ids = request.args.getlist('wordlist_id')
         if wordlist_ids:
-            wordlist_ids = wordlist_ids.split(',')
             wordlist_ids = list(set(wordlist_ids))
             where_clause = "where wordlist.id in (%s)" % (','.join(['%s'] * len(wordlist_ids)))
         else:
@@ -557,11 +549,12 @@ order by name
             elif r['count'] > 0:
                 list_type = 'standard'
 
-            dict_result[r['wordlist_id']] = {}
-            dict_result[r['wordlist_id']]['name'] = r['name']
-            dict_result[r['wordlist_id']]['wordlist_id'] = r['wordlist_id']
-            dict_result[r['wordlist_id']]['list_type'] = list_type
-            dict_result[r['wordlist_id']]['count'] = int(r['count'])
+            dict_result[r['wordlist_id']] = {
+                'name': r['name'],
+                'wordlist_id': r['wordlist_id'],
+                'list_type': list_type,
+                'count': int(r['count'])
+            }
 
             if r['sqlcode']:
                 cursor.execute(r['sqlcode'])
@@ -679,8 +672,7 @@ def get_wordlists_by_word_id(word_id):
 
         result = []
         if wordlist_ids:
-            args = ','.join([str(x) for x in wordlist_ids])
-            url = url_for('api_wordlist.get_wordlists', wordlist_id=args, _external=True)
+            url = url_for('api_wordlist.get_wordlists', wordlist_id=wordlist_ids, _external=True)
             r = requests.get(url)
             if not r:
                 return r.text, r.status_code
