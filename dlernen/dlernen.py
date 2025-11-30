@@ -439,7 +439,6 @@ def edit_word_form(word):
     field_values_before = {}
 
     for p in pos_structure:
-        # FIXME - initialize form_data with a dict comprehension
         for a in p['attributes']:
             t = [p['pos_id'], a['attribute_id']]
             if p['word_id']:
