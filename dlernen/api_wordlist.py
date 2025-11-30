@@ -502,7 +502,22 @@ def delete_wordlists():
 
 @bp.route('/api/wordlists', methods=['GET'])
 def get_wordlists():
+    """
+    request format is
+
+    ?wordlist_id=n,n,n ... - optional.  only return info for the given lists.
+
+    """
+
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        wordlist_ids = request.args.get('wordlist_id')
+        if wordlist_ids:
+            wordlist_ids = wordlist_ids.split(',')
+            wordlist_ids = list(set(wordlist_ids))
+            where_clause = "where wordlist.id in (%s)" % (','.join(['%s'] * len(wordlist_ids)))
+        else:
+            where_clause = ''
+
         sql = """
 with wordlist_counts as
 (
@@ -521,10 +536,13 @@ with wordlist_counts as
 select name, id wordlist_id, ifnull(lcount, 0) count, sqlcode
 from wordlist
 left join wordlist_counts wc on wc.wordlist_id = wordlist.id
+%(where_clause)s
 order by name
-        """
+        """ % {
+            'where_clause': where_clause
+        }
 
-        cursor.execute(sql)
+        cursor.execute(sql, wordlist_ids)
         rows = cursor.fetchall()
 
         # maps list id to list info
