@@ -3,6 +3,7 @@ from mysql.connector import connect
 import random
 from contextlib import closing
 import jsonschema
+from dlernen import dlernen_json_schema
 from pprint import pprint
 from common import get_word_ids_from_wordlists
 
@@ -56,8 +57,16 @@ select sum(presentation_count) as npresentations
 from word_scores
 )
 
-select 'crappy_score' qname, word_scores.*, total_presentations.*,
-ifnull((presentation_count / npresentations) * raw_score, 0) as weighted_score
+select 
+    'crappy_score' query_name, 
+    word_scores.word,
+    word_scores.word_id,
+    word_scores.quiz_id,
+    word_scores.attrvalue,
+    word_scores.correct_count,
+    word_scores.presentation_count,
+    word_scores.attribute_id,
+    ifnull((presentation_count / npresentations) * raw_score, 0) as weighted_score
 from word_scores, total_presentations
 order by weighted_score, presentation_count desc
 limit 1
@@ -77,7 +86,16 @@ left join quiz_score qsc
     and wat.word_id = qsc.word_id
 )
 
-select 'rare' qname, word_scores.* from word_scores
+select 
+    'rare' query_name, 
+    word_scores.word,
+    word_scores.word_id,
+    word_scores.quiz_id,
+    word_scores.attrvalue,
+    word_scores.correct_count,
+    word_scores.presentation_count,
+    word_scores.attribute_id
+from word_scores
 where presentation_count <= 5
 order by presentation_count
 limit 1
@@ -97,7 +115,16 @@ INNER join quiz_score qsc
     and wat.word_id = qsc.word_id
 )
 
-select 'been_too_long' qname, word_scores.* from word_scores
+select 
+    'been_too_long' query_name, 
+    word_scores.word,
+    word_scores.word_id,
+    word_scores.quiz_id,
+    word_scores.attrvalue,
+    word_scores.correct_count,
+    word_scores.presentation_count,
+    word_scores.attribute_id
+from word_scores
 where curdate() - interval 30 day > last_presentation
 order by last_presentation
 limit 1
@@ -189,7 +216,9 @@ def get_word_to_test(quiz_key):
                 words_chosen.append(rows[0])
 
         pprint(words_chosen)
+        jsonschema.validate(words_chosen, dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA)
         if words_chosen:
             result['winner'] = random.choice(words_chosen)
+            result['words_chosen'] = words_chosen
 
     return result, 200
