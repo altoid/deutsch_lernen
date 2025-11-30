@@ -213,7 +213,6 @@ def get_word_to_test(quiz_key):
             if rows:
                 words_chosen.append(rows[0])
 
-        jsonschema.validate(words_chosen, dlernen_json_schema.QUIZ_DATA_RESPONSE_SCHEMA)
         if words_chosen:
             winner = random.choice(words_chosen)
             # if this is a noun, add its article to the response.
@@ -227,6 +226,8 @@ def get_word_to_test(quiz_key):
             if word_info['pos_name'].casefold() == 'noun':
                 article = list(filter(lambda x: x['attrkey'] == 'article', word_info['attributes']))
                 winner['article'] = article[0]['attrvalue']
+
+            jsonschema.validate(winner, dlernen_json_schema.QUIZ_RESPONSE_SCHEMA)
 
             return winner
 

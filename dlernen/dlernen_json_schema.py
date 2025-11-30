@@ -378,102 +378,48 @@ QUIZ_ANSWER_PAYLOAD_SCHEMA = {
     }
 }
 
-# TODO revisit this.  keys that are hardcoded values found in the database is a bad idea.
-QUIZ_DATA_RESPONSE_SCHEMA = {
+QUIZ_RESPONSE_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/quiz_data",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Quiz Data List",
-    "description": "list of quiz query results",
-    "type": "array",
-    "items": {
-        "type": "object",
-        "required": [
-            "quiz_id",
-            "word_id",
-            "word"
-        ],
-        "properties": {
-            "quiz_id": {
-                "type": "integer",
-                "minimum": 1
-            },
-            "word_id": {
-                "type": "integer",
-                "minimum": 1
-            },
-            "query_name": {
-                "type": "string"
-            },
-            "word": {
-                "type": "string"
-            },
-            "attributes": {
-                "type": "object",
-                "properties": {
-                    "article": {
-                        "$ref": "#/$defs/quiz_attribute"
-                    },
-                    "plural": {
-                        "$ref": "#/$defs/quiz_attribute"
-                    },
-                    "definition": {
-                        "$ref": "#/$defs/quiz_attribute"
-                    },
-                    "first_person_singular": {
-                        "$ref": "#/$defs/quiz_attribute"
-                    },
-                    "second_person_singular": {
-                        "$ref": "#/$defs/quiz_attribute"
-                    },
-                    "third_person_singular": {
-                        "$ref": "#/$defs/quiz_attribute"
-                    },
-                    "first_person_plural": {
-                        "$ref": "#/$defs/quiz_attribute"
-                    },
-                    "second_person_plural": {
-                        "$ref": "#/$defs/quiz_attribute"
-                    },
-                    "third_person_plural": {
-                        "$ref": "#/$defs/quiz_attribute"
-                    },
-                    "past_participle": {
-                        "$ref": "#/$defs/quiz_attribute"
-                    }
-                }
-            }
-        }
-    },
+    "description": "properties of word to be quizzed",
+    "type": "object",
 
-    "$defs": {
-        "quiz_attribute": {
-            "type": "object",
-            "properties": {
-                "attrvalue": {
-                    "type": "string"
-                },
-                "correct_count": {
-                    "type": "integer",
-                    "minimum": 0
-                },
-                "presentation_count": {
-                    "type": "integer",
-                    "minimum": 0
-                },
-                "attribute_id": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "last_presentation": {
-                    "type": ["string", "null"]
-                }
-            },
-            "required": [
-                "attrvalue",
-                "attribute_id",
-                "correct_count",
-                "presentation_count"
-            ]
+    "required": [
+        "quiz_id",
+        "word_id",
+        "attribute_id",
+        "presentation_count",
+        "correct_count",
+        "word",
+        "attrvalue"
+    ],
+    "properties": {
+        "quiz_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "word_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "attribute_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "correct_count": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "presentation_count": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "word": {
+            "type": "string"
+        },
+        "attrvalue": {
+            "type": "string"
         }
     }
 }

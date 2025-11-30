@@ -2,6 +2,7 @@ import unittest
 import jsonschema
 from dlernen import dlernen_json_schema as js
 
+
 # none of the tests here uses the API or hits the database.  these tests make sure that the JSONSCHEMA documents
 # are defined correctly.
 
@@ -640,33 +641,19 @@ class Test_QUIZ_ANSWER_PAYLOAD_SCHEMA(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
-class Test_QUIZ_DATA_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = js.QUIZ_DATA_RESPONSE_SCHEMA
+class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = js.QUIZ_RESPONSE_SCHEMA
 
     valid_docs = [
-        [
-            {
-                'quiz_id': 3,
-                'word_id': 868,
-                'word': 'Tarnung',
-                'attributes': {
-                    'article': {
-                        'attrvalue': 'die',
-                        'attribute_id': 1,
-                        'correct_count': 0,
-                        'last_presentation': None,
-                        'presentation_count': 0,
-                    },
-                    'plural': {
-                        'attrvalue': 'Tarnungen',
-                        'attribute_id': 3,
-                        'correct_count': 0,
-                        'last_presentation': None,
-                        'presentation_count': 0,
-                    }
-                }
-            }
-        ]
+        {
+            'quiz_id': 3,
+            'word_id': 868,
+            'word': 'Tarnung',
+            'attrvalue': 'die',
+            'attribute_id': 1,
+            'correct_count': 0,
+            'presentation_count': 0,
+        }
     ]
 
     invalid_docs = [
