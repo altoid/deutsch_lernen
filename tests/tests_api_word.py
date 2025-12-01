@@ -770,6 +770,61 @@ class APIWordUpdate(unittest.TestCase):
     def test_nothing(self):
         pass
 
+    # this bit me in the aß.  changing ss to ß did not work.
+    def test_double_s_to_estzet(self):
+        new_word = self.verb + "ss"
+
+        payload = {
+            "word": new_word
+        }
+
+        r = self.client.put(url_for('api_word.update_word', word_id=self.word_id, _external=True), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        self.assertEqual(new_word, obj['word'])
+        first_change = new_word
+
+        new_word = self.verb + "ß"
+
+        payload = {
+            "word": new_word
+        }
+
+        r = self.client.put(url_for('api_word.update_word', word_id=self.word_id, _external=True), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        self.assertEqual(new_word, obj['word'])
+        self.assertNotEqual(first_change, obj['word'])
+
+    def test_estzet_to_double_s(self):
+        new_word = self.verb + "ß"
+
+        payload = {
+            "word": new_word
+        }
+
+        r = self.client.put(url_for('api_word.update_word', word_id=self.word_id, _external=True), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        self.assertEqual(new_word, obj['word'])
+        first_change = new_word
+
+        new_word = self.verb + "ss"
+
+        payload = {
+            "word": new_word
+        }
+
+        r = self.client.put(url_for('api_word.update_word', word_id=self.word_id, _external=True), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        self.assertEqual(new_word, obj['word'])
+        self.assertNotEqual(first_change, obj['word'])
+
     def test_add_update_delete_attribute_1(self):
         # add, update, and delete the same attr value in 3 separate requests
         old_def = "it smells like cereal here"

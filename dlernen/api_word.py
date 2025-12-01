@@ -337,9 +337,12 @@ def update_word(word_id):
 
     # capitalize appropriately.
     is_noun = pos_structure['pos_name'].casefold() == 'noun'
-    word = word.casefold()
+
+    # use lower() here, not casefold().  casefold() changes 'ß' to 'ss'.  so if we change the spelling
+    # of a word by changing ss to ß, nothing will happen.
+    word = word.lower()
     if is_noun:
-        word = word.capitalize()
+        word = word.capitalize()  # this will not change ß to ss
 
     # noun plurals must be capitalized.
     attr_ids_to_keys = {a['attribute_id']: a['attrkey'] for a in pos_structure['attributes']}
@@ -361,7 +364,6 @@ def update_word(word_id):
                     'word_id': word_id
                 }
                 cursor.execute(sql, d)
-
             save_attributes(word_id, attributes_adding, attributes_deleting, cursor)
 
             cursor.execute('commit')
