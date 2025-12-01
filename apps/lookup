@@ -67,7 +67,6 @@ if __name__ == '__main__':
         for result in all_results:
             display_result(result, tagwidth, keywidth)
 
-    # TODO:  record lookups in the lookup table.  need one post request for all word ids looked up.
     # beware that --partial with multiple args might cause some words to be double-counted, so need
     # to turn the word_ids into a set before posting.
     #
