@@ -657,6 +657,69 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
     ]
 
     invalid_docs = [
+        {
+            # 'quiz_id': 3,
+            'word_id': 868,
+            'word': 'Tarnung',
+            'attrvalue': 'die',
+            'attribute_id': 1,
+            'correct_count': 0,
+            'presentation_count': 0,
+        },
+        {
+            'quiz_id': 3,
+            # 'word_id': 868,
+            'word': 'Tarnung',
+            'attrvalue': 'die',
+            'attribute_id': 1,
+            'correct_count': 0,
+            'presentation_count': 0,
+        },
+        {
+            'quiz_id': 3,
+            'word_id': 868,
+            # 'word': 'Tarnung',
+            'attrvalue': 'die',
+            'attribute_id': 1,
+            'correct_count': 0,
+            'presentation_count': 0,
+        },
+        {
+            'quiz_id': 3,
+            'word_id': 868,
+            'word': 'Tarnung',
+            # 'attrvalue': 'die',
+            'attribute_id': 1,
+            'correct_count': 0,
+            'presentation_count': 0,
+        },
+        {
+            'quiz_id': 3,
+            'word_id': 868,
+            'word': 'Tarnung',
+            'attrvalue': 'die',
+            # 'attribute_id': 1,
+            'correct_count': 0,
+            'presentation_count': 0,
+        },
+        {
+            'quiz_id': 3,
+            'word_id': 868,
+            'word': 'Tarnung',
+            'attrvalue': 'die',
+            'attribute_id': 1,
+            # 'correct_count': 0,
+            'presentation_count': 0,
+        },
+        {
+            'quiz_id': 3,
+            'word_id': 868,
+            'word': 'Tarnung',
+            'attrvalue': 'die',
+            'attribute_id': 1,
+            'correct_count': 0,
+            # 'presentation_count': 0,
+        },
     ]
 
     def test_valid_docs(self):
