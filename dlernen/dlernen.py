@@ -542,6 +542,9 @@ def update_dict():
     # did we change the spelling of the word?  if so add new spelling to all the payloads
     # for which word ids exist.
     # the update request will take care of proper capitalization.
+    #
+    # don't do any folding to compare before/after, just compare raw strings.  this will
+    # mean that changing xxx to XXX looks like a spelling change, but the view function will deal with this.
     if word and word != word_before:
         for k in word_payloads.keys():
             if k in word_pos_to_word_id:

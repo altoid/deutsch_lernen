@@ -212,8 +212,9 @@ def add_word():
     # pos_structure is a length-1 array, get the first element
     pos_structure = pos_structure[0]
 
-    # capitalize correctly
-    word = word.casefold()
+    # capitalize correctly.  use lower() and not casefold() because casefold() can change what we type:
+    # ß will become ss for example.
+    word = word.lower()
     if pos_structure['pos_name'].casefold() == 'noun':
         word = word.capitalize()
 
