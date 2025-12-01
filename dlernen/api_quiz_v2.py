@@ -69,6 +69,7 @@ select
     word_scores.attribute_id,
     ifnull((presentation_count / npresentations) * raw_score, 0) as weighted_score
 from word_scores, total_presentations
+where raw_score < 0.95
 order by weighted_score, presentation_count desc
 limit 1
 """
