@@ -102,6 +102,34 @@ order by presentation_count
 limit 1
 """
 
+RANDOM_SQL = COMMON_SQL + """
+word_scores as
+(
+select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word,
+    ifnull(qsc.presentation_count, 0) presentation_count,
+    ifnull(qsc.correct_count, 0) correct_count,
+    ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
+from word_attributes_to_test wat
+left join quiz_score qsc
+    on wat.quiz_id = qsc.quiz_id
+    and wat.attribute_id = qsc.attribute_id
+    and wat.word_id = qsc.word_id
+)
+
+select 
+    'random' query_name, 
+    word_scores.word,
+    word_scores.word_id,
+    word_scores.quiz_id,
+    word_scores.attrvalue,
+    word_scores.correct_count,
+    word_scores.presentation_count,
+    word_scores.attribute_id
+from word_scores
+order by rand()
+limit 1
+"""
+
 BEEN_TOO_LONG_SQL = COMMON_SQL + """
 word_scores as
 (
@@ -134,7 +162,8 @@ limit 1
 DEFINED_QUERIES = {
     'crappy_score',
     'been_too_long',
-    'rare'
+    'rare',
+    'random'
 }
 
 
@@ -147,6 +176,7 @@ def get_word_to_test(quiz_key):
     # - crappy_score
     # - been_too_long
     # - rare (5 or fewer presentations)
+    # - random
     #
     queries = request.args.getlist('query')
     if not queries:
@@ -204,6 +234,17 @@ def get_word_to_test(quiz_key):
 
         if 'been_too_long' in queries:
             sql = BEEN_TOO_LONG_SQL % {
+                'quiz_key': quiz_key,
+                'word_id_filter': word_id_filter
+            }
+
+            cursor.execute(sql, word_ids)
+            rows = cursor.fetchall()
+            if rows:
+                words_chosen.append(rows[0])
+
+        if 'random' in queries:
+            sql = RANDOM_SQL % {
                 'quiz_key': quiz_key,
                 'word_id_filter': word_id_filter
             }
