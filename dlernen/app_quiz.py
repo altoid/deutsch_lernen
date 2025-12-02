@@ -48,7 +48,10 @@ def quiz_words(wordlist_ids, queries):
         candidates.append(attr_to_test['word'])
         random.shuffle(candidates)
 
-        print(attr_to_test['attrvalue'])
+        print()
+        print("################## %s" % attr_to_test['attrvalue'])
+        print()
+
         for i in range(len(candidates)):
             print("%s: %s" % (i, candidates[i]))
 
