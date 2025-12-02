@@ -15,14 +15,6 @@ Lookup {{ word }}
 {{ super() }}
 <div class="lookup">
     {% include 'header.html' %}
-    <form action="/lookup" method="post">
-        {% if return_to_wordlist_id != none %}
-        <input type="hidden" value="{{return_to_wordlist_id}}" name="wordlist_id"/>
-        {% endif %}
-        Suche nach Wort:
-        <input type="text" name="lookup" size="30"/>
-        <input type="submit" value="Submit"/>
-    </form>
 
     {% if template_args %}
     {% if template_args|length > 1 %}

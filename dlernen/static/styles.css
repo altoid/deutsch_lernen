@@ -85,6 +85,8 @@ body {
     the sidebar.  */
     top: 0;
     left: 0;
+    color: var(--sidebar-text-color);
+    font-size: large;
 }
 
 .sidebar a {

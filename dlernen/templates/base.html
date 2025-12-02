@@ -12,7 +12,10 @@
 <body>
 <div class="sidebar">
     <a href="{{ url_for('dlernen.wordlists') }}">Word lists</a>
-    <a href="{{ url_for('dlernen.home') }}">Suche nach Wort</a>
+    Suche nach Wort
+    <form action="/lookup" method="post">
+        <input type="text" name="lookup"/>
+    </form>
 </div>
 <div class="content">
     {% block body %}
