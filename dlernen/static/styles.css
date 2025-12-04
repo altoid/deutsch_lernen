@@ -91,21 +91,21 @@ td {
     text-align: right;
 }
 
-.quiz_report table, th, td {
+table.quiz_report, th.quiz_report, td.quiz_report {
     border: 1px solid;
     border-collapse: collapse;
     font-family: "courier new";
     vertical-align: bottom;
-    /* padding setting is ignored here */
 
     /* this will override the min-height set in the .quiz_report style.  without it, the table min-height
     is inhereted from there and will stretch vertically, causing unwanted vertical space in the table cells.
     doing this lets the table have a smaller min height, where stretching does not happen. */
     min-height: 1px;
-}
 
-td.quiz_report {
-    padding: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .sidebar {
