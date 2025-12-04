@@ -641,6 +641,229 @@ class Test_QUIZ_ANSWER_PAYLOAD_SCHEMA(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
+class Test_QUIZ_REPORT_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = js.QUIZ_REPORT_RESPONSE_SCHEMA
+
+    valid_docs = [
+        {
+            "quiz_key": "aoeu",
+            "quiz_id": 234,
+            "wordlist_name": "schindler",
+            "wordlist_id": 234,
+            "scores": [
+                {
+                    "word": "aoeu",
+                    "word_id": 2134,
+                    "presentation_count": 234,
+                    "correct_count": 234,
+                    "raw_score": 3.1416,
+                    "last_presentation": "yesterday when i was young"
+                }
+            ]
+        },
+        {
+            "quiz_key": "aoeu",
+            "quiz_id": 234,
+            "wordlist_name": "schindler",
+            "wordlist_id": 234,
+            "scores": [],
+        },
+    ]
+
+    invalid_docs = [
+        {
+            # "quiz_key": "aoeu",
+            "quiz_id": 234,
+            "wordlist_name": "schindler",
+            "wordlist_id": 234,
+            "scores": [
+                {
+                    "word": "aoeu",
+                    "word_id": 2134,
+                    "presentation_count": 234,
+                    "correct_count": 234,
+                    "raw_score": 3.1416,
+                    "last_presentation": "yesterday when i was young"
+                }
+            ]
+        },
+        {
+            "quiz_key": "aoeu",
+            # "quiz_id": 234,
+            "wordlist_name": "schindler",
+            "wordlist_id": 234,
+            "scores": [
+                {
+                    "word": "aoeu",
+                    "word_id": 2134,
+                    "presentation_count": 234,
+                    "correct_count": 234,
+                    "raw_score": 3.1416,
+                    "last_presentation": "yesterday when i was young"
+                }
+            ]
+        },
+        {
+            "quiz_key": "aoeu",
+            "quiz_id": 234,
+            # "wordlist_name": "schindler",
+            "wordlist_id": 234,
+            "scores": [
+                {
+                    "word": "aoeu",
+                    "word_id": 2134,
+                    "presentation_count": 234,
+                    "correct_count": 234,
+                    "raw_score": 3.1416,
+                    "last_presentation": "yesterday when i was young"
+                }
+            ]
+        },
+        {
+            "quiz_key": "aoeu",
+            "quiz_id": 234,
+            "wordlist_name": "schindler",
+            # "wordlist_id": 234,
+            "scores": [
+                {
+                    "word": "aoeu",
+                    "word_id": 2134,
+                    "presentation_count": 234,
+                    "correct_count": 234,
+                    "raw_score": 3.1416,
+                    "last_presentation": "yesterday when i was young"
+                }
+            ]
+        },
+        {
+            "quiz_key": "aoeu",
+            "quiz_id": 234,
+            "wordlist_name": "schindler",
+            "wordlist_id": 234,
+            # "scores": [
+            #     {
+            #         "word": "aoeu",
+            #         "word_id": 2134,
+            #         "presentation_count": 234,
+            #         "correct_count": 234,
+            #         "raw_score": 3.1416,
+            #         "last_presentation": "yesterday when i was young"
+            #     }
+            # ]
+        },
+        {
+            "quiz_key": "aoeu",
+            "quiz_id": 234,
+            "wordlist_name": "schindler",
+            "wordlist_id": 234,
+            "scores": [
+                {
+                    # "word": "aoeu",
+                    "word_id": 2134,
+                    "presentation_count": 234,
+                    "correct_count": 234,
+                    "raw_score": 3.1416,
+                    "last_presentation": "yesterday when i was young"
+                }
+            ]
+        },
+        {
+            "quiz_key": "aoeu",
+            "quiz_id": 234,
+            "wordlist_name": "schindler",
+            "wordlist_id": 234,
+            "scores": [
+                {
+                    "word": "aoeu",
+                    # "word_id": 2134,
+                    "presentation_count": 234,
+                    "correct_count": 234,
+                    "raw_score": 3.1416,
+                    "last_presentation": "yesterday when i was young"
+                }
+            ]
+        },
+        {
+            "quiz_key": "aoeu",
+            "quiz_id": 234,
+            "wordlist_name": "schindler",
+            "wordlist_id": 234,
+            "scores": [
+                {
+                    "word": "aoeu",
+                    "word_id": 2134,
+                    # "presentation_count": 234,
+                    "correct_count": 234,
+                    "raw_score": 3.1416,
+                    "last_presentation": "yesterday when i was young"
+                }
+            ]
+        },
+        {
+            "quiz_key": "aoeu",
+            "quiz_id": 234,
+            "wordlist_name": "schindler",
+            "wordlist_id": 234,
+            "scores": [
+                {
+                    "word": "aoeu",
+                    "word_id": 2134,
+                    "presentation_count": 234,
+                    # "correct_count": 234,
+                    "raw_score": 3.1416,
+                    "last_presentation": "yesterday when i was young"
+                }
+            ]
+        },
+        {
+            "quiz_key": "aoeu",
+            "quiz_id": 234,
+            "wordlist_name": "schindler",
+            "wordlist_id": 234,
+            "scores": [
+                {
+                    "word": "aoeu",
+                    "word_id": 2134,
+                    "presentation_count": 234,
+                    "correct_count": 234,
+                    # "raw_score": 3.1416,
+                    "last_presentation": "yesterday when i was young"
+                }
+            ]
+        },
+        {
+            "quiz_key": "aoeu",
+            "quiz_id": 234,
+            "wordlist_name": "schindler",
+            "wordlist_id": 234,
+            "scores": [
+                {
+                    "word": "aoeu",
+                    "word_id": 2134,
+                    "presentation_count": 234,
+                    "correct_count": 234,
+                    "raw_score": 3.1416,
+                    # "last_presentation": "yesterday when i was young"
+                }
+            ]
+        },
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, self.schema)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
 class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
     schema = js.QUIZ_RESPONSE_SCHEMA
 
