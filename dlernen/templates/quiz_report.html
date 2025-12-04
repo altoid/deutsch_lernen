@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}
+Quiz Report
+{% endblock %}
+
+{% block body %}
+{{ super() }}
+<div class="quiz_report">
+    {% include 'header.html' %}
+    <h1>Quiz Report:  {{ wordlist_name }}</h1>
+    <h2>{{ quiz_key }}</h2>
+    <table class="quiz_report">
+        <tr>
+            <th class="quiz_report">
+                word
+            </th>
+            <th class="quiz_report">
+                correct_count
+            </th>
+            <th class="quiz_report">
+                presentation_count
+            </th>
+            <th class="quiz_report">
+                raw_score
+            </th>
+            <th class="quiz_report">
+                last_presentation
+            </th>
+        </tr>
+        {% for r in scores %}
+        <tr>
+            <td class="quiz_report">{{ r['word'] }}</td>
+            <td class="quiz_report numeric">{{ r['correct_count'] }}</td>
+            <td class="quiz_report numeric">{{ r['presentation_count'] }}</td>
+            <td class="quiz_report numeric">{{ r['raw_score'] }}</td>
+            <td class="quiz_report numeric">{{ r['last_presentation'] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}

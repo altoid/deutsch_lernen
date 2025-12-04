@@ -161,6 +161,37 @@ order by last_presentation
 limit 1
 """
 
+REPORT_SQL = COMMON_SQL + """
+word_scores as
+(
+select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word,
+    qsc.last_presentation,
+    ifnull(qsc.presentation_count, 0) presentation_count,
+    ifnull(qsc.correct_count, 0) correct_count,
+    ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
+from word_attributes_to_test wat
+left join quiz_score qsc
+    on wat.quiz_id = qsc.quiz_id
+    and wat.attribute_id = qsc.attribute_id
+    and wat.word_id = qsc.word_id
+),
+total_presentations as (
+select sum(presentation_count) as npresentations
+from word_scores
+)
+
+select
+    word_scores.word,
+    word_scores.word_id,
+    word_scores.correct_count,
+    word_scores.presentation_count,
+    raw_score * 100 AS raw_score,
+    ifnull((presentation_count / npresentations) * raw_score, 0) as weighted_score,
+    ifnull(last_presentation, '--') last_presentation
+from word_scores, total_presentations
+order by raw_score
+"""
+
 DEFINED_QUERIES = {
     'crappy_score',
     'been_too_long',
@@ -302,3 +333,57 @@ def post_quiz_answer(quiz_key):
         cursor.execute('commit')
 
     return 'OK', 200
+
+
+@bp.route('/report/<string:quiz_key>/<int:wordlist_id>')
+def get_report(quiz_key, wordlist_id):
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        sql = """
+        select quiz_key, id AS quiz_id
+        from quiz
+        where quiz_key = %(quiz_key)s
+        """
+
+        cursor.execute(sql, {'quiz_key': quiz_key})
+        rows = cursor.fetchall()
+        if not rows:
+            return "quiz %s not found" % quiz_key, 404
+
+        quiz_id = rows[0]['quiz_id']
+
+        sql = """
+        select name
+        from wordlist
+        where id = %(wordlist_id)s
+        """
+        cursor.execute(sql, {'wordlist_id': wordlist_id})
+        wordlist_row = cursor.fetchall()
+        if not wordlist_row:
+            return "wordlist %s not found" % wordlist_id, 404
+
+        word_ids = common.get_word_ids_from_wordlists([wordlist_id], cursor)
+
+        word_id_args = ['%s'] * len(word_ids)
+        word_id_args = ', '.join(word_id_args)
+
+        word_id_filter = " and word_id in (%(word_id_args)s) " % {'word_id_args': word_id_args}
+
+        sql = REPORT_SQL % {
+            'quiz_key': quiz_key,
+            'word_id_filter': word_id_filter
+        }
+
+        cursor.execute(sql, word_ids)
+        rows = cursor.fetchall()
+
+        result = {
+            "wordlist_name": wordlist_row[0]['name'],
+            "wordlist_id": wordlist_id,
+            "quiz_key": quiz_key,
+            "quiz_id": quiz_id,
+            "scores": rows
+        }
+
+        jsonschema.validate(result, dlernen_json_schema.QUIZ_REPORT_RESPONSE_SCHEMA)
+
+        return result

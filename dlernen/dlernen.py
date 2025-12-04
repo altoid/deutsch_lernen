@@ -599,3 +599,20 @@ def update_dict():
         target = url_for('dlernen.edit_word_form', word=word)
 
     return redirect(target)
+
+
+@bp.route('/quiz_report/<int:wordlist_id>')
+def quiz_report(wordlist_id):
+    url = url_for('api_quiz_v2.get_report', quiz_key='definitions', wordlist_id=wordlist_id, _external=True)
+    r = requests.get(url)
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+
+    report = r.json()
+    return render_template("quiz_report.html",
+                           quiz_key=report['quiz_key'],
+                           wordlist_name=report['wordlist_name'],
+                           wordlist_id=report['wordlist_id'],
+                           scores=report['scores'])
