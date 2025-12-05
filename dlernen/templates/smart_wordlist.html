@@ -5,55 +5,65 @@ Wordlist:  {{ result.name }}
 {% block body %}
 {{ super() }}
 <div class="wordlist">
-<h1><a href="{{ url_for('dlernen.list_attributes', wordlist_id=result.wordlist_id) }}">
-    {{result.name}} ({{result.wordlist_id}})</a>
-</h1>
-{% if result['source_is_url'] == true %}
-<a href="{{ result.citation }}">{{ result.citation }}</a>
-{% elif result.citation %}
-{{ result.citation }}
-{% endif %}
-<br>
-<table class="tableau">
-    <tr>
-        <td>
-            <h2>Wörter ({{ result['known_words']|length }})</h2>
-            <table>
-                <tr>
-                    {% for column in words %}
-                    <td>
-                        <table>
-                            {% for r in column %}
-                            <tr valign="top">
-                                <td>
-                                    {% if r.article != none %}
-                                    {{ r.article }}
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <a href="{{ url_for('dlernen.lookup_by_get', word=r.word, word_id=r.word_id, return_to_wordlist_id=result.wordlist_id) }}">
-                                        {{ r.word }}
-                                    </a>
-                                </td>
-                                <td>{{ r.definition if r.definition else '(no definition)' }}</td>
-                            </tr>
-                            {% endfor %}
-                        </table>
-                    </td>
-                    {% endfor %}
-                </tr>
-            </table>
-        </td>
-    </tr>
-</table>
-<form action="/update_notes" method="post">
-    <h2>Notes</h2>
-    <input type="submit" value="Update Notes"/>
-    <br>
-    <textarea class="notes" name="notes">{{ result.notes }}</textarea>
-    <br>
-    <input type="hidden" value="{{result.wordlist_id}}" name="wordlist_id"/>
-    <input type="submit" value="Update Notes"/>
-</form>
+    <h1><a href="{{ url_for('dlernen.list_attributes', wordlist_id=result.wordlist_id) }}">
+        {{result.name}} ({{result.wordlist_id}})</a>
+    </h1>
+    <table>
+        {% if result['source_is_url'] == true %}
+        <tr>
+            <td><a href="{{ result.citation }}">{{ result.citation }}</a></td>
+        </tr>
+        {% elif result.citation %}
+        <tr>
+            <td>{{ result.citation }}</td>
+        </tr>
+        {% endif %}
+        <tr>
+            <td>
+                <a href="{{ url_for('dlernen.quiz_report', wordlist_id=result.wordlist_id) }}">quiz report</a>
+            </td>
+        </tr>
+    </table>
+    <table class="tableau">
+        <tr>
+            <td>
+                <h2>Wörter ({{ result['known_words']|length }})</h2>
+                <table>
+                    <tr>
+                        {% for column in words %}
+                        <td>
+                            <table>
+                                {% for r in column %}
+                                <tr valign="top">
+                                    <td>
+                                        {% if r.article != none %}
+                                        {{ r.article }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('dlernen.lookup_by_get', word=r.word, word_id=r.word_id, return_to_wordlist_id=result.wordlist_id) }}">
+                                            {{ r.word }}
+                                        </a>
+                                    </td>
+                                    <td>{{ r.definition if r.definition else '(no definition)' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <form action="/update_notes" method="post">
+        <h2>Notes</h2>
+        <input type="submit" value="Update Notes"/>
+        <br>
+        <textarea class="notes" name="notes">{{ result.notes }}</textarea>
+        <br>
+        <input type="hidden" value="{{result.wordlist_id}}" name="wordlist_id"/>
+        <input type="submit" value="Update Notes"/>
+    </form>
 </div>
 {% endblock %}
