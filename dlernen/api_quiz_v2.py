@@ -140,7 +140,7 @@ select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word, qsc.
     ifnull(qsc.correct_count, 0) correct_count,
     ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
 from word_attributes_to_test wat
-INNER join quiz_score qsc
+LEFT join quiz_score qsc
     on wat.quiz_id = qsc.quiz_id
     and wat.attribute_id = qsc.attribute_id
     and wat.word_id = qsc.word_id
@@ -157,6 +157,7 @@ select
     word_scores.attribute_id
 from word_scores
 where curdate() - interval 30 day > last_presentation
+or last_presentation is null
 order by last_presentation
 limit 1
 """
