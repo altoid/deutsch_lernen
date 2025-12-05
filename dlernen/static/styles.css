@@ -108,6 +108,10 @@ table.quiz_report, th.quiz_report, td.quiz_report {
     padding-right: 10px;
 }
 
+table.quiz_report {
+    min-width: 100%;
+}
+
 .sidebar {
     height: 100%;
     width: var(--sidebar-width);
