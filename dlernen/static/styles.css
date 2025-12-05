@@ -95,7 +95,6 @@ table.quiz_report, th.quiz_report, td.quiz_report {
     border: 1px solid;
     border-collapse: collapse;
     font-family: "courier new";
-    vertical-align: bottom;
 
     /* this will override the min-height set in the .quiz_report style.  without it, the table min-height
     is inhereted from there and will stretch vertically, causing unwanted vertical space in the table cells.
@@ -129,22 +128,30 @@ table.quiz_report {
 }
 
 .sidebar a {
+/* this selector is a descendant combinator.  it means that all of the a's inside a sidebar are going
+to look like this.
+
+ref:  https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Selectors/Descendant_combinator
+*/
     display: block;
     text-decoration: none;
     font-size: large;
     padding: 20px;
 }
 
-a {
-    text-decoration: none
-}
-
 .sidebar a:link, .sidebar a:visited {
+/* another descendant combinator.  two in fact.  we cannot do this:
+
+.sidebar a:link a:visited
+
+because it implies that a:visited is a descendant of a:link which isn't the case.
+*/
     color: var(--sidebar-text-color);
 }
 
 .content a:link, .content a:visited {
     color: var(--link-color);
+    text-decoration:  none;
 }
 
 textarea.notes {
