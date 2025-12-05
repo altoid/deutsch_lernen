@@ -190,7 +190,7 @@ select
     ifnull((presentation_count / npresentations) * raw_score, 0) as weighted_score,
     ifnull(last_presentation, '--') last_presentation
 from word_scores, total_presentations
-order by raw_score
+order by raw_score, presentation_count
 """
 
 DEFINED_QUERIES = {
