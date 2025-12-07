@@ -12,9 +12,7 @@ def chunkify(arr, **kwargs):
         return []
 
     nchunks = kwargs.get('nchunks', 1)
-    if not nchunks:
-        # return the whole array as one chunk
-        return [arr]
+    nchunks = max(nchunks, 1)
 
     # round up array size to nearest multiple of nchunks
     arraysize = ((len(arr) + nchunks - 1) // nchunks) * nchunks
@@ -30,33 +28,6 @@ def chunkify(arr, **kwargs):
     for x in z:
         result.append(arr[x[0]:x[1]])
     return result
-
-
-@bp.route('/api/post_test', methods=['POST'])
-def post_test():
-    """
-    apparently you can't use requests to send true JSON objects in a post request.  i.e. this did not work:
-
-    IDS = [1, 2, 3, 4, 5]
-    DATA = {
-        "key": "value",
-        "arr": IDS,     <== this is valid json but only the first item in the array is sent.
-        "a": "aoeu"
-    }
-
-    but this did:
-
-    IDS = [1, 2, 3, 4, 5]
-    DATA = {
-        "key": "value",
-        "arr": json.dumps(IDS),  <== have to stringify the array before sending it over.
-        "a": "aoeu"
-    }
-    """
-
-    j = request.get_json()
-    pprint(j)
-    return j
 
 
 @bp.route('/')
