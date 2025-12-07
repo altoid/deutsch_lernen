@@ -71,7 +71,7 @@ select
 from word_scores, total_presentations
 where raw_score < 0.95
 or presentation_count <= 5   -- without this, if we get it right the first time we never see it again
-order by raw_score, presentation_count desc
+order by raw_score, presentation_count
 limit 1
 """
 
