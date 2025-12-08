@@ -495,11 +495,9 @@ def delete_wordlists():
 
     if len(payload):
         with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            format_list = ['%s'] * len(payload)
-            format_args = ', '.join(format_list)
-            sql = "delete from wordlist where id in (%s)" % format_args
-            args = [int(x) for x in payload]
-            cursor.execute(sql, args)
+            sql = "delete from wordlist where id = %s"
+            args = [[int(x)] for x in payload]
+            cursor.executemany(sql, args)
             dbh.commit()
 
     return 'OK'
