@@ -485,15 +485,20 @@ def delete_from_wordlist_by_word(wordlist_id, word):
             return "delete list failed", 500
 
 
-@bp.route('/api/wordlists', methods=['DELETE'])
+@bp.route('/api/wordlists/batch_delete', methods=['POST'])
 def delete_wordlists():
-    doomed = request.form.getlist('deletelist')
-    if len(doomed):
+    try:
+        payload = request.get_json()  # comes in as an array of ints, not a dict.
+        jsonschema.validate(payload, dlernen_json_schema.WORDLIST_DELETE_MULTIPLE_PAYLOAD_SCHEMA)
+    except jsonschema.ValidationError as e:
+        return "bad payload: %s" % e.message, 400
+
+    if len(payload):
         with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            format_list = ['%s'] * len(doomed)
+            format_list = ['%s'] * len(payload)
             format_args = ', '.join(format_list)
             sql = "delete from wordlist where id in (%s)" % format_args
-            args = [int(x) for x in doomed]
+            args = [int(x) for x in payload]
             cursor.execute(sql, args)
             dbh.commit()
 

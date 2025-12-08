@@ -7,6 +7,72 @@ import string
 from pprint import pprint
 
 
+class APIWordlistBatchDelete(unittest.TestCase):
+    # need a separate class for this because we don't want setUp/tearDown methods here.
+    app = None
+    app_context = None
+    client = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
+            TESTING=True,
+        )
+
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
+
+    # do nothing, just make sure that setUpClass and tearDownClaass work
+    def test_nothing(self):
+        pass
+
+    def test_batch_delete(self):
+        # create two lists, delete them in one request, make sure they are gone.
+        list_name_1 = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name_1
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 200)
+        obj = json.loads(r.data)
+        wordlist_id_1 = obj['wordlist_id']
+
+        list_name_2 = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name_2
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 200)
+        obj = json.loads(r.data)
+        wordlist_id_2 = obj['wordlist_id']
+
+        delete_these = [wordlist_id_1, wordlist_id_2]
+
+        r = self.client.post(url_for('api_wordlist.delete_wordlists', _external=True), json=delete_these)
+        self.assertEqual(r.status_code, 200)
+
+        # make sure they are gone
+        url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id_1, _external=True)
+        r = self.client.get(url)
+        self.assertEqual(404, r.status_code)
+
+        url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id_2, _external=True)
+        r = self.client.get(url)
+        self.assertEqual(404, r.status_code)
+
+    def test_batch_delete_nothing(self):
+        r = self.client.post(url_for('api_wordlist.delete_wordlists', _external=True), json=[])
+        self.assertEqual(r.status_code, 200)
+
+
 class APIWordlist(unittest.TestCase):
     app = None
     app_context = None

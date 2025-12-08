@@ -1309,6 +1309,35 @@ class Test_WORDLIST_CONTENTS_PAYLOAD_SCHEMA(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
+class Test_WORDLIST_DELETE_MULTIPLE_PAYLOAD_SCHEMA(unittest.TestCase):
+    schema = js.WORDLIST_DELETE_MULTIPLE_PAYLOAD_SCHEMA
+
+    valid_docs = [
+        [1, 2, 3],
+        []
+    ]
+
+    invalid_docs = [
+        {},
+        "bullshit",
+        ["more bullshit"]
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, self.schema)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
 class Test_WORDLIST_METADATA_PAYLOAD_SCHEMA(unittest.TestCase):
     # note:  these tests don't validate sqlcode.  that happens in the API tests.
 
