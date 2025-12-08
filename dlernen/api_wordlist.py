@@ -485,7 +485,7 @@ def delete_from_wordlist_by_word(wordlist_id, word):
             return "delete list failed", 500
 
 
-@bp.route('/api/wordlists/batch_delete', methods=['POST'])
+@bp.route('/api/wordlists/batch_delete', methods=['PUT'])
 def delete_wordlists():
     try:
         payload = request.get_json()  # comes in as an array of ints, not a dict.

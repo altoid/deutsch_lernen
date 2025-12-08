@@ -56,7 +56,7 @@ class APIWordlistBatchDelete(unittest.TestCase):
 
         delete_these = [wordlist_id_1, wordlist_id_2]
 
-        r = self.client.post(url_for('api_wordlist.delete_wordlists', _external=True), json=delete_these)
+        r = self.client.put(url_for('api_wordlist.delete_wordlists', _external=True), json=delete_these)
         self.assertEqual(r.status_code, 200)
 
         # make sure they are gone
@@ -69,7 +69,7 @@ class APIWordlistBatchDelete(unittest.TestCase):
         self.assertEqual(404, r.status_code)
 
     def test_batch_delete_nothing(self):
-        r = self.client.post(url_for('api_wordlist.delete_wordlists', _external=True), json=[])
+        r = self.client.put(url_for('api_wordlist.delete_wordlists', _external=True), json=[])
         self.assertEqual(r.status_code, 200)
 
 
