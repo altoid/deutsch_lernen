@@ -227,11 +227,9 @@ def addlist():
 @bp.route('/deletelist', methods=['POST'])
 def deletelist():
     doomed = request.form.getlist('deletelist')
-    payload = {
-        'deletelist': doomed
-    }
+    doomed = list(map(int, doomed))
 
-    r = requests.delete(url_for('api_wordlist.delete_wordlists', _external=True), data=payload)
+    r = requests.post(url_for('api_wordlist.delete_wordlists', _external=True), json=doomed)
     if r:
         return redirect('/wordlists')
 
