@@ -127,19 +127,30 @@ def wordlists():
 def list_attributes(wordlist_id):
     url = url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
-    if r:
-        result = r.json()
-        if result['sqlcode'] is None:
-            result['sqlcode'] = ''
-        if result['citation'] is None:
-            result['citation'] = ''
-        return render_template('list_attributes.html',
-                               wordlist=result,
-                               return_to_wordlist_id=wordlist_id)
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
 
-    return render_template("error.html",
-                           message=r.text,
-                           status_code=r.status_code)
+    wordlist_metadata = r.json()
+
+    url = url_for('api_wordlist_tag.get_tags', wordlist_id=wordlist_id, _external=True)
+    r = requests.get(url)
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+
+    wordlist_tags = r.json()
+
+    if wordlist_metadata['sqlcode'] is None:
+        wordlist_metadata['sqlcode'] = ''
+    if wordlist_metadata['citation'] is None:
+        wordlist_metadata['citation'] = ''
+    return render_template('list_attributes.html',
+                           wordlist_metadata=wordlist_metadata,
+                           wordlist_tags=wordlist_tags,
+                           return_to_wordlist_id=wordlist_id)
 
 
 @bp.route('/wordlist/<int:wordlist_id>')
@@ -160,7 +171,7 @@ def wordlist(wordlist_id):
             result['citation'] = ''
         flash("invalid sqlcode")
         return render_template('list_attributes.html',
-                               wordlist=result,
+                               wordlist_metadata=result,
                                return_to_wordlist_id=wordlist_id)
 
     if r:
@@ -248,6 +259,7 @@ def edit_list_attributes():
     citation = request.form.get('citation')
     sqlcode = request.form.get('sqlcode')
     wordlist_id = request.form.get('wordlist_id')
+    new_tags = request.form.get('add_tags', '')
 
     if name:
         name = name.strip()
@@ -260,7 +272,7 @@ def edit_list_attributes():
             "wordlist_id": wordlist_id
         }
         return render_template('list_attributes.html',
-                               wordlist=result,
+                               wordlist_metadata=result,
                                return_to_wordlist_id=wordlist_id)
 
     if sqlcode is not None:
@@ -281,9 +293,6 @@ def edit_list_attributes():
 
     url = url_for('api_wordlist.update_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
     r = requests.put(url, json=payload)
-    if r:
-        target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
-        return redirect(target)
 
     if r.status_code == 422:
         # unprocessable content - the sqlcode is not valid.  redirect to the list attributes page to fix it.
@@ -295,12 +304,43 @@ def edit_list_attributes():
         }
         flash("invalid sqlcode")
         return render_template('list_attributes.html',
-                               wordlist=payload,
+                               wordlist_metadata=payload,
                                return_to_wordlist_id=wordlist_id)
 
-    return render_template("error.html",
-                           message=r.text,
-                           status_code=r.status_code)
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+
+    tags = new_tags.split(',')
+    tags = [x.strip() for x in tags]
+    tags = list(filter(lambda x: bool(x), tags))  # filter out empty strings
+
+    r = requests.post(url_for('api_wordlist_tag.add_tags', wordlist_id=wordlist_id, _external=True), json=tags)
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+
+    r = requests.get(url_for('api_wordlist_tag.get_tags', wordlist_id=wordlist_id, _external=True))
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+
+    wordlist_tags = r.json()
+
+    metadata = {
+        'name': name,
+        'citation': '' if citation is None else citation,
+        'sqlcode': '' if sqlcode is None else sqlcode,
+        'wordlist_id': wordlist_id
+    }
+
+    return render_template('list_attributes.html',
+                           wordlist_metadata=metadata,
+                           wordlist_tags=wordlist_tags,
+                           return_to_wordlist_id=wordlist_id)
 
 
 # TODO if this is for a POST request, why does it call requests.put()?
