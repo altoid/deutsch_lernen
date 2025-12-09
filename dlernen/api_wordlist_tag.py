@@ -3,12 +3,8 @@ from flask import Blueprint, request, url_for, current_app
 from pprint import pprint
 from mysql.connector import connect
 from dlernen import dlernen_json_schema as js
-import requests
-import json
 from contextlib import closing
 import jsonschema
-import sys
-import os
 
 # view functions for tags and word/tag linkages in wordlists
 
