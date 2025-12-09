@@ -21,7 +21,7 @@ def add_tags(wordlist_id):
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 
-    new_tags = payload
+    new_tags = list(set(payload))  # ensure no redundant tags
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:

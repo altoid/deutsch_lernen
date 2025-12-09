@@ -288,3 +288,18 @@ class APIWordlistTag(unittest.TestCase):
             r = self.client.put(url_for('api_wordlist_tag.update_tags', wordlist_id=self.wordlist_id, _external=True),
                                 json=update_tags)
             self.assertEqual(r.status_code, 400)
+
+    # redundant tags should be elided.
+    def test_add_duplicate_tags(self):
+        tags = ["eenie"] * 3
+
+        with self.app.test_request_context():
+            r = self.client.post(url_for('api_wordlist_tag.add_tags', wordlist_id=self.wordlist_id, _external=True),
+                                 json=tags)
+            self.assertEqual(r.status_code, 200)
+
+            r = self.client.get(url_for('api_wordlist_tag.get_tags', wordlist_id=self.wordlist_id, _external=True))
+            self.assertEqual(r.status_code, 200)
+            obj = json.loads(r.data)
+
+            self.assertEqual(1, len(obj['tags']))
