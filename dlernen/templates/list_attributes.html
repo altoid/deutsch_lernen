@@ -22,25 +22,40 @@
         <textarea class="sqlcode" name="sqlcode">{{ wordlist_metadata.sqlcode }}</textarea>
         <br>
         {% endif %}
-        <h2>Tags</h2>
-        <table>
-            <tr>
-                <td>Add Tags:</td>
-                <td><input type="text"
-                           placeholder="add tags (comma separated)"
-                           name="add_tags" size="60"></td>
-            </tr>
-            {% for t in wordlist_tags['tags'] %}
-            <tr>
-                <td>
-                    <input type="text"
-                           name="{{ 'tag-' + t['tag_id']|string }}"
-                           value="{{ t['tag'] }}">
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-        <input type="submit" value="Update list details"/>
+        <div class="tag_editor">
+            <h2>Tags</h2>
+            <table>
+                <tr>
+                    <th>Add Tags</th>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="text"
+                               class="add_tag"
+                               placeholder="add tags (comma separated)"
+                               name="add_tags">
+                    </td>
+                </tr>
+            </table>
+            {% if wordlist_tags['tags']|length > 1 %}
+            <table>
+                <tr>
+                    <th>Edit Tags</th>
+                </tr>
+                {% for t in wordlist_tags['tags'] %}
+                <tr>
+                    <td>
+                        <input type="text"
+                               class="edit_tag"
+                               name="{{ 'tag-' + t['tag_id']|string }}"
+                               value="{{ t['tag'] }}">
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% endif %}
+            <input type="submit" value="Update list details"/>
+        </div>
     </form>
 </div>
 {% endblock %}
