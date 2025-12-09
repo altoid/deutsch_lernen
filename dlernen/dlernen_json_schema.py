@@ -187,7 +187,7 @@ WORDLIST_METADATA_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/addwordlist_payload",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Payload for add wordlist",
-    "description": "Payload for add wordlist",
+    "description": "Payload for add/update list",
     "type": "object",
     "required": [
         # haha, none are required.  string values must be at least 1 char if provided.
@@ -208,6 +208,45 @@ WORDLIST_METADATA_PAYLOAD_SCHEMA = {
         "sqlcode": {
             "type": ["string", "null"],
             "pattern": MULTILINE_STRING_PATTERN
+        }
+    }
+}
+
+WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/wordlist_tag_add_delete",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Payload for add/delete tags",
+    "description": """
+    payload for adding/deleting multiple tags for a wordlist.
+    """,
+    "type": "array",
+    "items": {
+        "type": "string",
+        "pattern": WORD_PATTERN
+    }
+}
+
+WORDLIST_TAG_UPDATE_PAYLOAD_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/wordlist_tag_add_delete",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Payload for updating tags for a wordlist",
+    "description": """
+    payload for batch updating tags for a wordlist.
+    """,
+    "type": "array",
+    "items": {
+        "type": "object",
+        "required": [
+            "tag_id"
+        ],
+        "properties": {
+            "tag_id": {
+                "type": "integer"
+            },
+            "tag": {
+                "type": "string",
+                "pattern": WORD_PATTERN
+            }
         }
     }
 }
@@ -623,6 +662,44 @@ WORDLIST_RESPONSE_SCHEMA = {
         }
     }
 }
+
+WORDLIST_TAG_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/wordlist_tag_response",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Response object for get tags",
+    "description": """
+    tag info for a wordlist.
+    """,
+    "type": "object",
+    "required": [
+        "wordlist_id",
+        "tags"
+    ],
+    "properties": {
+        "wordlist_id": {
+            "type": "integer"
+        },
+        "tags": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "tag_id",
+                    "tag"
+                ],
+                "properties": {
+                    "tag_id": {
+                        "type": "integer"
+                    },
+                    "tag": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 WORDLISTS_RESPONSE_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],

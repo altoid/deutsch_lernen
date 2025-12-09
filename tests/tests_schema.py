@@ -1489,3 +1489,158 @@ class Test_WORDLIST_METADATA_RESPONSE_SCHEMA(unittest.TestCase):
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
+class Test_WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA(unittest.TestCase):
+    schema = js.WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA
+
+    valid_docs = [
+        ["bingo", "bango", "bongo", "irving"],
+        []
+    ]
+
+    invalid_docs = [
+        ["no spaces allowed"],
+        [1, 2, 3]
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, self.schema)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
+class Test_WORDLIST_TAG_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
+    schema = js.WORDLIST_TAG_UPDATE_PAYLOAD_SCHEMA
+
+    valid_docs = [
+        [
+            {
+                "tag_id": 234,
+                "tag": "aoeu"
+            },
+        ],
+        [
+            {
+                "tag_id": 234,
+            }
+        ],
+        [],
+    ]
+
+    invalid_docs = [
+        [
+            {
+                "tag_id": 234,
+                "tag": "no spaces allowed"
+            },
+        ],
+        [
+            {
+                # "tag_id": 234,
+                "tag": "oaeuaoeu"
+            },
+        ],
+        [
+            {}
+        ]
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, self.schema)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
+class Test_WORDLIST_TAG_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = js.WORDLIST_TAG_RESPONSE_SCHEMA
+
+    valid_docs = [
+        {
+            "wordlist_id": 234,
+            "tags": [
+                {
+                    "tag_id": 234,
+                    "tag": "yerIt"
+                }
+            ]
+        },
+        {
+            "wordlist_id": 234,
+            "tags": [
+            ]
+        },
+    ]
+
+    invalid_docs = [
+        {
+            # "wordlist_id": 234,
+            "tags": [
+                {
+                    "tag_id": 234,
+                    "tag": "yerIt"
+                }
+            ]
+        },
+        {
+            "wordlist_id": 234,
+            # "tags": [
+            #     {
+            #         "tag_id": 234,
+            #         "tag": "yerIt"
+            #     }
+            # ]
+        },
+        {
+            "wordlist_id": 234,
+            "tags": [
+                {
+                    # "tag_id": 234,
+                    "tag": "yerIt"
+                }
+            ]
+        },
+        {
+            "wordlist_id": 234,
+            "tags": [
+                {
+                    "tag_id": 234,
+                    # "tag": "yerIt"
+                }
+            ]
+        },
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, self.schema)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
