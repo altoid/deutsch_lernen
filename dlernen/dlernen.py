@@ -312,6 +312,40 @@ def edit_list_attributes():
                                message=r.text,
                                status_code=r.status_code)
 
+    # #################### everything south of here deals with updating the tags
+
+    # it may happen that the same tag is given for add and update.  i.e. we update a tag
+    # to the same name as one we are adding.  the update wins and the one being added should be ignored.
+    # which means we process the updates first and then the adds.
+
+    # the field names of the tag edit fields are 'tag-<tag_id>'.  do this to get the tag ids
+    # and the values passed in to the form.
+    r = requests.get(url_for('api_wordlist_tag.get_tags', wordlist_id=wordlist_id, _external=True))
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+
+    wordlist_tags = r.json()
+    update_payload = []
+    for t in wordlist_tags['tags']:
+        field_name = "tag-%s" % t['tag_id']
+        new_value = request.form.get(field_name, '').strip()
+        d = {
+            "tag_id": t['tag_id']
+        }
+        if new_value:
+            d['tag'] = new_value
+        update_payload.append(d)
+
+    if update_payload:
+        r = requests.put(url_for('api_wordlist_tag.update_tags', wordlist_id=wordlist_id, _external=True),
+                         json=update_payload)
+        if not r:
+            return render_template("error.html",
+                                   message=r.text,
+                                   status_code=r.status_code)
+
     tags = new_tags.split(',')
     tags = [x.strip() for x in tags]
     tags = list(filter(lambda x: bool(x), tags))  # filter out empty strings
@@ -322,6 +356,14 @@ def edit_list_attributes():
                                message=r.text,
                                status_code=r.status_code)
 
+    metadata = {
+        'name': name,
+        'citation': '' if citation is None else citation,
+        'sqlcode': '' if sqlcode is None else sqlcode,
+        'wordlist_id': wordlist_id
+    }
+
+    # refresh the tag info for display
     r = requests.get(url_for('api_wordlist_tag.get_tags', wordlist_id=wordlist_id, _external=True))
     if not r:
         return render_template("error.html",
@@ -329,13 +371,6 @@ def edit_list_attributes():
                                status_code=r.status_code)
 
     wordlist_tags = r.json()
-
-    metadata = {
-        'name': name,
-        'citation': '' if citation is None else citation,
-        'sqlcode': '' if sqlcode is None else sqlcode,
-        'wordlist_id': wordlist_id
-    }
 
     return render_template('list_attributes.html',
                            wordlist_metadata=metadata,
