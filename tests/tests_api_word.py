@@ -770,7 +770,8 @@ class APIWordUpdate(unittest.TestCase):
     def test_nothing(self):
         pass
 
-    # this bit me in the aß.  changing ss to ß did not work.
+    # this bit me in the aß.  a spell change of 'schoss' to 'schoß' was seen as no change and was not being updated
+    # in the word table.
     def test_double_s_to_estzet(self):
         new_word = self.verb + "ss"
 

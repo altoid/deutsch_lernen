@@ -304,6 +304,7 @@ class APIWordlistTag(unittest.TestCase):
 
             self.assertEqual(1, len(obj['tags']))
 
+
 # TODO - link/unlink tests to add:
 #   tag a word, make sure the tag appears when we get the wordlist
 #   (create a list with > 1 word to verify ONLY our word got tagged)
@@ -313,3 +314,121 @@ class APIWordlistTag(unittest.TestCase):
 #   tag multiple words, untag one, make sure the other is tagged.
 #   untag with empty payload - should untag every word that was tagged.
 #   ensure that the tags are intact in the tag table
+
+
+class APIWordlistTagLink(unittest.TestCase):
+    app = None
+    app_context = None
+    client = None
+    keyword_mappings = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
+            TESTING=True,
+        )
+
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
+
+        with cls.app.test_request_context():
+            r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
+            cls.keyword_mappings = json.loads(r.data)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
+
+    # the setup for this class creates multiple lists, words, and tags to exercise the tag/untag features.
+    def setUp(self):
+        self.list_name_1 = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=10)))
+        self.list_name_2 = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=10)))
+        self.word_1 = ''.join(random.choices(string.ascii_lowercase, k=10))
+        self.word_2 = ''.join(random.choices(string.ascii_lowercase, k=10))
+        self.word_3 = ''.join(random.choices(string.ascii_lowercase, k=10))
+        self.tag_1_1 = ''.join(random.choices(string.ascii_lowercase, k=10))
+        self.tag_1_2 = ''.join(random.choices(string.ascii_lowercase, k=10))
+        self.tag_2_1 = ''.join(random.choices(string.ascii_lowercase, k=10))
+        self.tag_2_2 = ''.join(random.choices(string.ascii_lowercase, k=10))
+
+        # in fair verona, where we lay our scene:
+        #
+        # list_1:           list_2:
+        #       word_1          word_2
+        #       tag_1_1         tag_2_1
+        #       tag_1_2         tag_2_2
+        #
+        # word_3 is not in either list.
+
+        with self.app.test_request_context():
+            # lists
+
+            r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True),
+                                 json={"name": self.list_name_1})
+            obj = json.loads(r.data)
+            self.wordlist_id_1 = obj['wordlist_id']
+
+            r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True),
+                                 json={"name": self.list_name_2})
+            obj = json.loads(r.data)
+            self.wordlist_id_2 = obj['wordlist_id']
+
+            # words
+
+            r = self.client.post(url_for('api_word.add_word', _external=True),
+                                 json={
+                                     "word": self.word_1,
+                                     "pos_id": self.keyword_mappings['pos_names_to_ids']['verb'],
+                                 })
+            obj = json.loads(r.data)
+            self.word_id_1 = obj['word_id']
+
+            r = self.client.post(url_for('api_word.add_word', _external=True),
+                                 json={
+                                     "word": self.word_2,
+                                     "pos_id": self.keyword_mappings['pos_names_to_ids']['verb'],
+                                 })
+            obj = json.loads(r.data)
+            self.word_id_2 = obj['word_id']
+
+            r = self.client.post(url_for('api_word.add_word', _external=True),
+                                 json={
+                                     "word": self.word_3,
+                                     "pos_id": self.keyword_mappings['pos_names_to_ids']['verb'],
+                                 })
+            obj = json.loads(r.data)
+            self.word_id_3 = obj['word_id']
+
+            # tags
+
+            r = self.client.post(url_for('api_wordlist_tag.add_tags', wordlist_id=self.wordlist_id_1, _external=True),
+                                 json=['tag_1_1', 'tag_1_2'])
+            r = self.client.post(url_for('api_wordlist_tag.add_tags', wordlist_id=self.wordlist_id_2, _external=True),
+                                 json=['tag_2_1', 'tag_2_2'])
+
+            r = self.client.get(url_for('api_wordlist_tag.get_tags', wordlist_id=self.wordlist_id_1, _external=True))
+            self.assertEqual(r.status_code, 200)
+            obj = json.loads(r.data)
+            self.list_1_tags = {t['tag']: t['wordlist_tag_id'] for t in obj['tags']}
+
+            r = self.client.get(url_for('api_wordlist_tag.get_tags', wordlist_id=self.wordlist_id_2, _external=True))
+            self.assertEqual(r.status_code, 200)
+            obj = json.loads(r.data)
+            self.list_2_tags = {t['tag']: t['wordlist_tag_id'] for t in obj['tags']}
+
+    def tearDown(self):
+        with self.app.test_request_context():
+            self.client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=self.wordlist_id_1, _external=True))
+            self.client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=self.wordlist_id_2, _external=True))
+
+            self.client.delete(url_for('api_word.delete_word', word_id=self.word_id_1, _external=True))
+            self.client.delete(url_for('api_word.delete_word', word_id=self.word_id_2, _external=True))
+            self.client.delete(url_for('api_word.delete_word', word_id=self.word_id_3, _external=True))
+
+            # no need to delete the tag info; it's removed when we delete the lists.
+
+    # do nothing, just make sure that setUp and tearDown work
+    def test_nothing(self):
+        pass
