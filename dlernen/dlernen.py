@@ -339,9 +339,14 @@ def edit_list_attributes():
             r = requests.put(url_for('api_wordlist_tag.update_tags', wordlist_id=wordlist_id, _external=True),
                              json=current_tags)
             if not r:
-                return render_template("error.html",
-                                       message=r.text,
-                                       status_code=r.status_code)
+                # re-render the template to fix the error.
+
+                flash(r.text)
+                return render_template('list_attributes.html',
+                                       wordlist_metadata=metadata,
+                                       add_tags=new_tags,
+                                       wordlist_tags=current_tags,
+                                       return_to_wordlist_id=wordlist_id)
 
         tags = new_tags.split(',')
         tags = [x.strip() for x in tags]
@@ -349,9 +354,24 @@ def edit_list_attributes():
 
         r = requests.post(url_for('api_wordlist_tag.add_tags', wordlist_id=wordlist_id, _external=True), json=tags)
         if not r:
-            return render_template("error.html",
-                                   message=r.text,
-                                   status_code=r.status_code)
+            # re-render the template to fix the error.
+
+            # we just completed updating existing tags; get updated tag info so we can render it for display.
+            r2 = requests.get(url_for('api_wordlist_tag.get_tags', wordlist_id=wordlist_id, _external=True))
+            if not r2:
+                # another error?  shit, what a mess.
+                return render_template("error.html",
+                                       message=r.text,
+                                       status_code=r.status_code)
+
+            tag_response = r2.json()
+
+            flash(r.text)
+            return render_template('list_attributes.html',
+                                   wordlist_metadata=metadata,
+                                   add_tags=new_tags,
+                                   wordlist_tags=tag_response['tags'],
+                                   return_to_wordlist_id=wordlist_id)
 
         # get updated tag info so we can render it for display.
         r = requests.get(url_for('api_wordlist_tag.get_tags', wordlist_id=wordlist_id, _external=True))
