@@ -303,3 +303,13 @@ class APIWordlistTag(unittest.TestCase):
             obj = json.loads(r.data)
 
             self.assertEqual(1, len(obj['tags']))
+
+# TODO - link/unlink tests to add:
+#   tag a word, make sure the tag appears when we get the wordlist
+#   (create a list with > 1 word to verify ONLY our word got tagged)
+#   tag with empty payload - should succeed
+#   tag with bogus tag id
+#   tag with bogus tag id
+#   tag multiple words, untag one, make sure the other is tagged.
+#   untag with empty payload - should untag every word that was tagged.
+#   ensure that the tags are intact in the tag table

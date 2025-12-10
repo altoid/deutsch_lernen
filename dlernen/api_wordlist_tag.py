@@ -5,6 +5,7 @@ from mysql.connector import connect
 from dlernen import dlernen_json_schema as js
 from contextlib import closing
 import jsonschema
+import requests
 
 # view functions for tags and word/tag linkages in wordlists
 
@@ -275,12 +276,56 @@ def tag_words(wordlist_id):
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 
+    if not payload:
+        return "OK", 200
+
+    # checks:
+    #
+    # - the wordlist must exist.
+    # - the word_id has to be in the wordlist.
+    # - the tag ids have to be valid for the wordlist.
+
+    r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True))
+    if not r:
+        return r.text, r.status_code
+
+    wordlist = r.json()
+    member_word_ids = {x['word_id'] for x in wordlist['known_words']}
+    payload_word_ids = {x['word_id'] for x in payload}
+    payload_tag_ids = {x['wordlist_tag_id'] for x in payload}
+
+    invalid_word_ids = payload_word_ids - member_word_ids
+    if invalid_word_ids:
+        return "words are not in list", 400
+
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
+
+            # make sure tag ids are valid for this wordlist
+            sql = """
+            select id as wordlist_tag_id
+            from wordlist_tag
+            where wordlist_id = %s
+            """
+            cursor.execute(sql, (wordlist_id,))
+            rows = cursor.fetchall()
+            member_tag_ids = {x['wordlist_tag_id'] for x in rows}
+
+            invalid_tag_ids = payload_tag_ids - member_tag_ids
+            if invalid_tag_ids:
+                cursor.execute('rollback')
+                return "tags are not in list", 400
+
+            # checks complete, let's do this.
+            sql = """
+            insert ignore into word_tag_link (wordlist_tag_id, word_id)
+            values (%(wordlist_tag_id)s, %(word_id)s)
+            """
+            cursor.executemany(sql, payload)
             cursor.execute('commit')
 
-            return "unimplemented", 501
+            return "OK", 200
         except mysql.connector.errors.ProgrammingError as e:
             return str(e), 500
         except Exception as e:
@@ -296,12 +341,63 @@ def untag_words(wordlist_id):
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 
+    # checks:
+    #
+    # - the wordlist must exist.
+    # - the word_id has to be in the wordlist.
+    # - the tag ids have to be valid for the wordlist.
+
+    r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True))
+    if not r:
+        return r.text, r.status_code
+
+    wordlist = r.json()
+    member_word_ids = {x['word_id'] for x in wordlist['known_words']}
+    payload_word_ids = {x['word_id'] for x in payload}
+    payload_tag_ids = {x['wordlist_tag_id'] for x in payload}
+
+    invalid_word_ids = payload_word_ids - member_word_ids
+    if invalid_word_ids:
+        return "words are not in list", 400
+
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
+
+            if payload:
+                # make sure tag ids are valid for this wordlist
+                sql = """
+                select id as wordlist_tag_id
+                from wordlist_tag
+                where wordlist_id = %s
+                """
+                cursor.execute(sql, (wordlist_id,))
+                rows = cursor.fetchall()
+                member_tag_ids = {x['wordlist_tag_id'] for x in rows}
+
+                invalid_tag_ids = payload_tag_ids - member_tag_ids
+                if invalid_tag_ids:
+                    cursor.execute('rollback')
+                    return "tags are not in list", 400
+
+                # checks complete, let's do this.
+                sql = """
+                delete from word_tag_link
+                where wordlist_tag_id = %(wordlist_tag_id)s
+                and word_id = %(word_id)s
+                """
+                cursor.executemany(sql, payload)
+            else:
+                # no payload?  untag ALL words for this wordlist.
+                sql = """
+                delete from word_tag_link
+                where word_id = %s
+                """
+                cursor.executemany(sql, payload_word_ids)
+
             cursor.execute('commit')
 
-            return "unimplemented", 501
+            return "OK", 200
         except mysql.connector.errors.ProgrammingError as e:
             return str(e), 500
         except Exception as e:
