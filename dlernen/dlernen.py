@@ -273,13 +273,11 @@ def edit_list_attributes():
     tag_field_keys = list(filter(lambda x: x.startswith('tag-'), request.form.keys()))
     for k in tag_field_keys:
         _, id = k.split('-')
-        d = {'tag_id': int(id)}
+        d = {'wordlist_tag_id': int(id)}
         tag = request.form.get(k, '').strip()
         if tag:
             d['tag'] = tag
         current_tags.append(d)
-
-    pprint(current_tags)
 
     metadata = {
         "name": name,

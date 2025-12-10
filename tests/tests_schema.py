@@ -1525,13 +1525,13 @@ class Test_WORDLIST_TAG_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
     valid_docs = [
         [
             {
-                "tag_id": 234,
+                "wordlist_tag_id": 234,
                 "tag": "aoeu"
             },
         ],
         [
             {
-                "tag_id": 234,
+                "wordlist_tag_id": 234,
             }
         ],
         [],
@@ -1540,13 +1540,13 @@ class Test_WORDLIST_TAG_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
     invalid_docs = [
         [
             {
-                "tag_id": 234,
+                "wordlist_tag_id": 234,
                 "tag": "no spaces allowed"
             },
         ],
         [
             {
-                # "tag_id": 234,
+                # "wordlist_tag_id": 234,
                 "tag": "oaeuaoeu"
             },
         ],
@@ -1578,7 +1578,7 @@ class Test_WORDLIST_TAG_RESPONSE_SCHEMA(unittest.TestCase):
             "wordlist_id": 234,
             "tags": [
                 {
-                    "tag_id": 234,
+                    "wordlist_tag_id": 234,
                     "tag": "yerIt"
                 }
             ]
@@ -1595,7 +1595,7 @@ class Test_WORDLIST_TAG_RESPONSE_SCHEMA(unittest.TestCase):
             # "wordlist_id": 234,
             "tags": [
                 {
-                    "tag_id": 234,
+                    "wordlist_tag_id": 234,
                     "tag": "yerIt"
                 }
             ]
@@ -1604,7 +1604,7 @@ class Test_WORDLIST_TAG_RESPONSE_SCHEMA(unittest.TestCase):
             "wordlist_id": 234,
             # "tags": [
             #     {
-            #         "tag_id": 234,
+            #         "wordlist_tag_id": 234,
             #         "tag": "yerIt"
             #     }
             # ]
@@ -1613,7 +1613,7 @@ class Test_WORDLIST_TAG_RESPONSE_SCHEMA(unittest.TestCase):
             "wordlist_id": 234,
             "tags": [
                 {
-                    # "tag_id": 234,
+                    # "wordlist_tag_id": 234,
                     "tag": "yerIt"
                 }
             ]
@@ -1622,11 +1622,55 @@ class Test_WORDLIST_TAG_RESPONSE_SCHEMA(unittest.TestCase):
             "wordlist_id": 234,
             "tags": [
                 {
-                    "tag_id": 234,
+                    "wordlist_tag_id": 234,
                     # "tag": "yerIt"
                 }
             ]
         },
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, self.schema)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
+class Test_WORDLIST_TAG_WORD_PAYLOAD_SCHEMA(unittest.TestCase):
+    schema = js.WORDLIST_TAG_WORD_PAYLOAD_SCHEMA
+
+    valid_docs = [
+        [
+            {
+                "word_id": 234,
+                "wordlist_tag_id": 123,
+            }
+        ],
+        [
+        ]
+    ]
+
+    invalid_docs = [
+        [
+            {
+                # "word_id": 234,
+                "wordlist_tag_id": 123,
+            }
+        ],
+        [
+            {
+                "word_id": 234,
+                # "wordlist_tag_id": 123,
+            }
+        ],
     ]
 
     def test_valid_docs(self):

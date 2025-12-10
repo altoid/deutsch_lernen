@@ -93,8 +93,8 @@ class APIWordlistTag(unittest.TestCase):
             # update the first one and delete the second.
             old_tag = update_args[0]['tag']
             new_tag = old_tag + "_fish_heads"
-            updating_tag_id = update_args[0]['tag_id']
-            deleting_tag_id = update_args[1]['tag_id']
+            updating_tag_id = update_args[0]['wordlist_tag_id']
+            deleting_tag_id = update_args[1]['wordlist_tag_id']
             update_args[0]['tag'] = new_tag
             del update_args[1]['tag']
 
@@ -107,12 +107,12 @@ class APIWordlistTag(unittest.TestCase):
             obj = json.loads(r.data)
 
             updated_tags = obj['tags']
-            deleted_tag = list(filter(lambda x: x['tag_id'] == deleting_tag_id, updated_tags))
+            deleted_tag = list(filter(lambda x: x['wordlist_tag_id'] == deleting_tag_id, updated_tags))
 
             self.assertEqual(len(tags) - 1, len(updated_tags))
             self.assertEqual(0, len(deleted_tag))
 
-            updated_tag = list(filter(lambda x: x['tag_id'] == updating_tag_id, updated_tags))[0]
+            updated_tag = list(filter(lambda x: x['wordlist_tag_id'] == updating_tag_id, updated_tags))[0]
             self.assertEqual(new_tag, updated_tag['tag'])
 
     def test_delete_nothing(self):
@@ -201,7 +201,7 @@ class APIWordlistTag(unittest.TestCase):
             self.assertEqual(self.wordlist_id, obj['wordlist_id'])
             self.assertEqual(len(tags), len(obj['tags']))
 
-            tag_ids_1 = {x['tag_id'] for x in obj['tags']}
+            tag_ids_1 = {x['wordlist_tag_id'] for x in obj['tags']}
 
             r = self.client.post(url_for('api_wordlist_tag.add_tags', wordlist_id=self.wordlist_id, _external=True),
                                  json=tags)
@@ -215,7 +215,7 @@ class APIWordlistTag(unittest.TestCase):
             self.assertEqual(self.wordlist_id, obj['wordlist_id'])
             self.assertEqual(len(tags), len(obj['tags']))
 
-            tag_ids_2 = {x['tag_id'] for x in obj['tags']}
+            tag_ids_2 = {x['wordlist_tag_id'] for x in obj['tags']}
 
             self.assertEqual(tag_ids_1, tag_ids_2)
 
@@ -262,8 +262,8 @@ class APIWordlistTag(unittest.TestCase):
             obj = json.loads(r.data)
 
             # find the tag with the biggest id.  add 1 to the id and attempt to update.  should give 400.
-            update_tags = sorted(obj['tags'], key=lambda x: x['tag_id'], reverse=True)
-            update_tags[0]['tag_id'] += 1
+            update_tags = sorted(obj['tags'], key=lambda x: x['wordlist_tag_id'], reverse=True)
+            update_tags[0]['wordlist_tag_id'] += 1
 
             r = self.client.put(url_for('api_wordlist_tag.update_tags', wordlist_id=self.wordlist_id, _external=True),
                                 json=update_tags)

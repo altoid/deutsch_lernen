@@ -75,7 +75,7 @@ def get_tags(wordlist_id):
             rows = cursor.fetchall()
             if rows:
                 sql = """
-                select id as tag_id, tag
+                select id as wordlist_tag_id, tag
                 from wordlist_tag
                 where wordlist_id = %s
                 order by tag
@@ -134,17 +134,17 @@ def update_tags(wordlist_id):
                 return "list %s not found" % wordlist_id, 404
 
             # get all the tag ids.  from the request...
-            given_tag_ids = {x['tag_id'] for x in payload}
+            given_tag_ids = {x['wordlist_tag_id'] for x in payload}
 
             # and from the database
             sql = """
-            select id as tag_id
+            select id as wordlist_tag_id
             from wordlist_tag
             where wordlist_id = %s
             """
             cursor.execute(sql, (wordlist_id,))
             rows = cursor.fetchall()
-            current_tag_ids = {x['tag_id'] for x in rows}
+            current_tag_ids = {x['wordlist_tag_id'] for x in rows}
 
             # if the request contains any tag ids not from this wordlist, request is no good.
             invalid_tag_ids = given_tag_ids - current_tag_ids
@@ -154,7 +154,7 @@ def update_tags(wordlist_id):
                 return message, 400
 
             # no dup ids allowed in request.
-            given_tag_ids_list = [x['tag_id'] for x in payload]
+            given_tag_ids_list = [x['wordlist_tag_id'] for x in payload]
 
             if len(given_tag_ids) != len(given_tag_ids_list):
                 return "can't update tag multiple times in one request", 400
@@ -173,11 +173,11 @@ def update_tags(wordlist_id):
             if deletes:
                 delete_sql = """
                 delete from wordlist_tag
-                where id = %(tag_id)s
+                where id = %(wordlist_tag_id)s
                 """
                 args = [
                     {
-                        "tag_id": x['tag_id']
+                        "wordlist_tag_id": x['wordlist_tag_id']
                     } for x in deletes
                 ]
                 cursor.executemany(delete_sql, args)
@@ -186,12 +186,12 @@ def update_tags(wordlist_id):
                 update_sql = """
                 update wordlist_tag
                 set tag = %(newtag)s
-                where id = %(tag_id)s and wordlist_id = %(wordlist_id)s
+                where id = %(wordlist_tag_id)s and wordlist_id = %(wordlist_id)s
                 """
                 args = [
                     {
                         "newtag": x['tag'],
-                        "tag_id": x['tag_id'],
+                        "wordlist_tag_id": x['wordlist_tag_id'],
                         "wordlist_id": wordlist_id
                     }
                     for x in updates
@@ -269,10 +269,40 @@ def delete_tags(wordlist_id):
 
 @bp.route('/api/wordlist/<int:wordlist_id>/tag_words', methods=['PUT'])
 def tag_words(wordlist_id):
-    return "unimplemented", 501
+    try:
+        payload = request.get_json()
+        jsonschema.validate(payload, js.WORDLIST_TAG_WORD_PAYLOAD_SCHEMA)
+    except jsonschema.ValidationError as e:
+        return "bad payload: %s" % e.message, 400
+
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        try:
+            cursor.execute('start transaction')
+            cursor.execute('commit')
+
+            return "unimplemented", 501
+        except mysql.connector.errors.ProgrammingError as e:
+            return str(e), 500
+        except Exception as e:
+            return str(e), 500
 
 
 @bp.route('/api/wordlist/<int:wordlist_id>/untag_words', methods=['PUT'])
 def untag_words(wordlist_id):
     # note:  empty payload means delete all links for this wordlist!
-    return "unimplemented", 501
+    try:
+        payload = request.get_json()
+        jsonschema.validate(payload, js.WORDLIST_TAG_WORD_PAYLOAD_SCHEMA)
+    except jsonschema.ValidationError as e:
+        return "bad payload: %s" % e.message, 400
+
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        try:
+            cursor.execute('start transaction')
+            cursor.execute('commit')
+
+            return "unimplemented", 501
+        except mysql.connector.errors.ProgrammingError as e:
+            return str(e), 500
+        except Exception as e:
+            return str(e), 500
