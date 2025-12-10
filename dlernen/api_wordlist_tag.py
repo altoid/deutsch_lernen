@@ -78,6 +78,7 @@ def get_tags(wordlist_id):
                 select id as tag_id, tag
                 from wordlist_tag
                 where wordlist_id = %s
+                order by tag
                 """
 
                 cursor.execute(sql, (wordlist_id,))

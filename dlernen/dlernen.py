@@ -141,7 +141,7 @@ def list_attributes(wordlist_id):
                                message=r.text,
                                status_code=r.status_code)
 
-    wordlist_tags = r.json()
+    wordlist_tags_response = r.json()
 
     if wordlist_metadata['sqlcode'] is None:
         wordlist_metadata['sqlcode'] = ''
@@ -149,7 +149,7 @@ def list_attributes(wordlist_id):
         wordlist_metadata['citation'] = ''
     return render_template('list_attributes.html',
                            wordlist_metadata=wordlist_metadata,
-                           wordlist_tags=wordlist_tags,
+                           wordlist_tags=wordlist_tags_response['tags'],
                            return_to_wordlist_id=wordlist_id)
 
 
@@ -163,15 +163,20 @@ def wordlist(wordlist_id):
 
     if r.status_code == 422:
         # unprocessable content - the sqlcode is not valid.  redirect to the list attributes page to fix it.
-        r = requests.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True))
-        result = r.json()
-        if result['sqlcode'] is None:
-            result['sqlcode'] = ''
-        if result['citation'] is None:
-            result['citation'] = ''
+        r2 = requests.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True))
+        metadata = r2.json()
+        if metadata['sqlcode'] is None:
+            metadata['sqlcode'] = ''
+        if metadata['citation'] is None:
+            metadata['citation'] = ''
+
+        r2 = requests.get(url_for('api_wordlist_tag.get_tags', wordlist_id=wordlist_id, _external=True))
+        tag_response = r2.json()
+
         flash("invalid sqlcode")
         return render_template('list_attributes.html',
-                               wordlist_metadata=result,
+                               wordlist_metadata=metadata,
+                               wordlist_tags=tag_response['tags'],
                                return_to_wordlist_id=wordlist_id)
 
     if r:
@@ -255,35 +260,50 @@ def edit_list_attributes():
     # whatever bullshit was entered into the form (the list_attributes template).  so we have to
     # fiddle with the values before stuffing them into the payload, which IS validated.
 
-    name = request.form.get('name')
-    citation = request.form.get('citation')
-    sqlcode = request.form.get('sqlcode')
+    name = request.form.get('name', '')
+    citation = request.form.get('citation', '')
+    sqlcode = request.form.get('sqlcode', '')
     wordlist_id = request.form.get('wordlist_id')
+    list_type = request.form.get('list_type')
     new_tags = request.form.get('add_tags', '')
 
-    if name:
-        name = name.strip()
+    # get the tags currently defined for this wordlist, as entered into the form, structured to be used as
+    # a payload for an update request.
+    current_tags = []
+    tag_field_keys = list(filter(lambda x: x.startswith('tag-'), request.form.keys()))
+    for k in tag_field_keys:
+        _, id = k.split('-')
+        d = {'tag_id': int(id)}
+        tag = request.form.get(k, '').strip()
+        if tag:
+            d['tag'] = tag
+        current_tags.append(d)
 
+    pprint(current_tags)
+
+    metadata = {
+        "name": name,
+        "sqlcode": sqlcode,
+        "citation": citation,
+        "wordlist_id": wordlist_id,
+        "list_type": list_type,
+    }
+
+    name = name.strip()
     if not name:
         flash("Die Liste muss einen Namen haben")
-        result = {
-            "sqlcode": '' if sqlcode is None else sqlcode,
-            "citation": '' if citation is None else citation,
-            "wordlist_id": wordlist_id
-        }
         return render_template('list_attributes.html',
-                               wordlist_metadata=result,
+                               wordlist_metadata=metadata,
+                               wordlist_tags=current_tags,
                                return_to_wordlist_id=wordlist_id)
 
-    if sqlcode is not None:
-        x = sqlcode.strip()
-        if not x:
-            sqlcode = None
+    x = sqlcode.strip()
+    if not x:
+        sqlcode = None
 
-    if citation is not None:
-        x = citation.strip()
-        if not x:
-            citation = None
+    x = citation.strip()
+    if not x:
+        citation = None
 
     payload = {
         'name': name,
@@ -296,15 +316,10 @@ def edit_list_attributes():
 
     if r.status_code == 422:
         # unprocessable content - the sqlcode is not valid.  redirect to the list attributes page to fix it.
-        payload = {
-            'name': name,
-            'citation': '' if citation is None else citation,
-            'sqlcode': sqlcode,
-            'wordlist_id': wordlist_id
-        }
         flash("invalid sqlcode")
         return render_template('list_attributes.html',
-                               wordlist_metadata=payload,
+                               wordlist_metadata=metadata,
+                               wordlist_tags=current_tags,
                                return_to_wordlist_id=wordlist_id)
 
     if not r:
@@ -318,59 +333,35 @@ def edit_list_attributes():
     # to the same name as one we are adding.  the update wins and the one being added should be ignored.
     # which means we process the updates first and then the adds.
 
-    # the field names of the tag edit fields are 'tag-<tag_id>'.  do this to get the tag ids
-    # and the values passed in to the form.
-    r = requests.get(url_for('api_wordlist_tag.get_tags', wordlist_id=wordlist_id, _external=True))
-    if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+    wordlist_tags = []
+    if list_type != 'smart':
+        if current_tags:
+            r = requests.put(url_for('api_wordlist_tag.update_tags', wordlist_id=wordlist_id, _external=True),
+                             json=current_tags)
+            if not r:
+                return render_template("error.html",
+                                       message=r.text,
+                                       status_code=r.status_code)
 
-    wordlist_tags = r.json()
-    update_payload = []
-    for t in wordlist_tags['tags']:
-        field_name = "tag-%s" % t['tag_id']
-        new_value = request.form.get(field_name, '').strip()
-        d = {
-            "tag_id": t['tag_id']
-        }
-        if new_value:
-            d['tag'] = new_value
-        update_payload.append(d)
+        tags = new_tags.split(',')
+        tags = [x.strip() for x in tags]
+        tags = list(filter(lambda x: bool(x), tags))  # filter out empty strings
 
-    if update_payload:
-        r = requests.put(url_for('api_wordlist_tag.update_tags', wordlist_id=wordlist_id, _external=True),
-                         json=update_payload)
+        r = requests.post(url_for('api_wordlist_tag.add_tags', wordlist_id=wordlist_id, _external=True), json=tags)
         if not r:
             return render_template("error.html",
                                    message=r.text,
                                    status_code=r.status_code)
 
-    tags = new_tags.split(',')
-    tags = [x.strip() for x in tags]
-    tags = list(filter(lambda x: bool(x), tags))  # filter out empty strings
+        # get updated tag info so we can render it for display.
+        r = requests.get(url_for('api_wordlist_tag.get_tags', wordlist_id=wordlist_id, _external=True))
+        if not r:
+            return render_template("error.html",
+                                   message=r.text,
+                                   status_code=r.status_code)
 
-    r = requests.post(url_for('api_wordlist_tag.add_tags', wordlist_id=wordlist_id, _external=True), json=tags)
-    if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
-
-    metadata = {
-        'name': name,
-        'citation': '' if citation is None else citation,
-        'sqlcode': '' if sqlcode is None else sqlcode,
-        'wordlist_id': wordlist_id
-    }
-
-    # refresh the tag info for display
-    r = requests.get(url_for('api_wordlist_tag.get_tags', wordlist_id=wordlist_id, _external=True))
-    if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
-
-    wordlist_tags = r.json()
+        tag_response = r.json()
+        wordlist_tags = tag_response['tags']
 
     return render_template('list_attributes.html',
                            wordlist_metadata=metadata,
