@@ -358,22 +358,27 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
          'known_words': [{'article': None,
                           'definition': "it's an adjective",
                           'word': 'anohteduntaheoud',
+                          'tags': [],
                           'word_id': 9185},
                          {'article': None,
                           'definition': "no it's a floor cleaner",
                           'word': 'anohteduntaheoud',
+                          'tags': ['abcd'],
                           'word_id': 9186},
                          {'article': None,
                           'definition': "now it's a noun",
                           'word': 'Anohteduntaheoud',
+                          'tags': [],
                           'word_id': 9187},
                          {'article': None,
                           'definition': None,  # null is OK
                           'word': 'anohteduntaheoud',
+                          'tags': [],
                           'word_id': 9188},
                          {'article': None,
                           'definition': "look it's a verb",
                           'word': 'anohteduntaheoud',
+                          'tags': ['fish', 'heads'],
                           'word_id': 9189}],
          'list_type': 'standard',
          'name': 'aaa fake list 1',
@@ -390,12 +395,14 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
                 {
                     "word": "aoeuaeou",
                     "word_id": 123,
+                    "tags": ["aoeu"],
                     "definition": "hell if i know"
                 },
                 {
                     "word": "Iethdsenihtd",
                     "word_id": 465,
                     "article": "das",
+                    "tags": ["aoeu", "oeui"],
                     "definition": "an odd noun"
                 }
             ],
@@ -429,20 +436,6 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
     ]
 
     invalid_docs = [
-        {
-            "name": "missing word id",
-            "wordlist_id": 1234,
-            "list_type": "standard",
-            "known_words": [
-                {
-                    "word": "missing_word_id"
-                }
-            ],
-            "citation": "where i got this",
-            "source_is_url": False,
-            "unknown_words": [],
-            "notes": "lots of stuff"
-        },
         {
             "name": "bullshit list type",
             "wordlist_id": 1234,
@@ -522,6 +515,54 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
             "source_is_url": False,
             "unknown_words": [],
             # "notes": "lots of stuff"
+        },
+        {
+            "name": "messin with words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [
+                {
+                    # "word": "werrd",
+                    "word_id": 1234,
+                    "tags": ["egad"],
+                }
+            ],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "messin with words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [
+                {
+                    "word": "werrd",
+                    # "word_id": 1234,
+                    "tags": ["egad"],
+                }
+            ],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "messin with words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [
+                {
+                    "word": "werrd",
+                    "word_id": 1234,
+                    # "tags": ["egad"],
+                }
+            ],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
         },
         {
             # empty doc not allowed
@@ -1686,5 +1727,3 @@ class Test_WORDLIST_TAG_WORD_PAYLOAD_SCHEMA(unittest.TestCase):
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
-
-

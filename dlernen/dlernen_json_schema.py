@@ -661,7 +661,11 @@ WORDLIST_RESPONSE_SCHEMA = {
             "type": "array",
             "items": {
                 "type": "object",
-                "required": ["word", "word_id"],
+                "required": [
+                    "word",
+                    "word_id",
+                    "tags"
+                ],
                 "properties": {
                     "word": {
                         "type": "string"
@@ -675,6 +679,12 @@ WORDLIST_RESPONSE_SCHEMA = {
                     },
                     "definition": {
                         "type": ["string", "null"]
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 }
             }
