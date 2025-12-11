@@ -77,19 +77,6 @@ td {
     min-height: 100vh;
 }
 
-.tag_editor th {
-    text-align: left;
-    padding-top: 20px;
-}
-
-input[type="text"].add_tags {
-    width: 400px
-}
-
-input[type="text"].edit_tag {
-    width: 100px
-}
-
 .quiz_report {
     background-color: var(--background-color);
     padding: 10px;
