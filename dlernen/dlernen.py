@@ -302,6 +302,11 @@ def edit_list_attributes():
                            return_to_wordlist_id=wordlist_id)
 
 
+@bp.route('/edit_list_contents', methods=['POST'])
+def edit_list_contents():
+    pass
+
+
 # TODO if this is for a POST request, why does it call requests.put()?
 @bp.route('/add_to_list', methods=['POST'])
 def add_to_list():
@@ -357,17 +362,7 @@ def update_notes():
 @bp.route('/delete_from_list', methods=['POST'])
 def delete_from_list():
     wordlist_id = request.form['wordlist_id']
-    known_deleting = request.form.getlist('known_wordlist')
     unknown_deleting = request.form.getlist('unknown_wordlist')
-
-    for word_id in known_deleting:
-        url = url_for('api_wordlist.delete_from_wordlist_by_id', wordlist_id=wordlist_id, word_id=word_id,
-                      _external=True)
-        r = requests.delete(url)
-        if not r:
-            return render_template("error.html",
-                                   message=r.text,
-                                   status_code=r.status_code)
 
     for word in unknown_deleting:
         url = url_for('api_wordlist.delete_from_wordlist_by_word', wordlist_id=wordlist_id, word=word,
