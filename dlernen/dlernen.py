@@ -134,22 +134,12 @@ def list_attributes(wordlist_id):
 
     wordlist_metadata = r.json()
 
-    url = url_for('api_wordlist_tag.get_tags', wordlist_id=wordlist_id, _external=True)
-    r = requests.get(url)
-    if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
-
-    wordlist_tags_response = r.json()
-
     if wordlist_metadata['sqlcode'] is None:
         wordlist_metadata['sqlcode'] = ''
     if wordlist_metadata['citation'] is None:
         wordlist_metadata['citation'] = ''
     return render_template('list_attributes.html',
                            wordlist_metadata=wordlist_metadata,
-                           wordlist_tags=wordlist_tags_response['tags'],
                            return_to_wordlist_id=wordlist_id)
 
 
@@ -170,13 +160,9 @@ def wordlist(wordlist_id):
         if metadata['citation'] is None:
             metadata['citation'] = ''
 
-        r2 = requests.get(url_for('api_wordlist_tag.get_tags', wordlist_id=wordlist_id, _external=True))
-        tag_response = r2.json()
-
         flash("invalid sqlcode")
         return render_template('list_attributes.html',
                                wordlist_metadata=metadata,
-                               wordlist_tags=tag_response['tags'],
                                return_to_wordlist_id=wordlist_id)
 
     if r:
@@ -265,20 +251,8 @@ def edit_list_attributes():
     sqlcode = request.form.get('sqlcode', '')
     wordlist_id = request.form.get('wordlist_id')
     list_type = request.form.get('list_type')
-    new_tags = request.form.get('add_tags', '')
 
-    # get the tags currently defined for this wordlist, as entered into the form, structured to be used as
-    # a payload for an update request.
-    current_tags = []
-    tag_field_keys = list(filter(lambda x: x.startswith('tag-'), request.form.keys()))
-    for k in tag_field_keys:
-        _, id = k.split('-')
-        d = {'wordlist_tag_id': int(id)}
-        tag = request.form.get(k, '').strip()
-        if tag:
-            d['tag'] = tag
-        current_tags.append(d)
-
+    # snapshot the list metadata as intered into the form in case we need to render it again later.
     metadata = {
         "name": name,
         "sqlcode": sqlcode,
@@ -292,7 +266,6 @@ def edit_list_attributes():
         flash("Die Liste muss einen Namen haben")
         return render_template('list_attributes.html',
                                wordlist_metadata=metadata,
-                               wordlist_tags=current_tags,
                                return_to_wordlist_id=wordlist_id)
 
     x = sqlcode.strip()
@@ -317,7 +290,6 @@ def edit_list_attributes():
         flash("invalid sqlcode")
         return render_template('list_attributes.html',
                                wordlist_metadata=metadata,
-                               wordlist_tags=current_tags,
                                return_to_wordlist_id=wordlist_id)
 
     if not r:
@@ -325,65 +297,8 @@ def edit_list_attributes():
                                message=r.text,
                                status_code=r.status_code)
 
-    # #################### everything south of here deals with updating the tags
-
-    # it may happen that the same tag is given for add and update.  i.e. we update a tag
-    # to the same name as one we are adding.  the update wins and the one being added should be ignored.
-    # which means we process the updates first and then the adds.
-
-    wordlist_tags = []
-    if list_type != 'smart':
-        if current_tags:
-            r = requests.put(url_for('api_wordlist_tag.update_tags', wordlist_id=wordlist_id, _external=True),
-                             json=current_tags)
-            if not r:
-                # re-render the template to fix the error.
-
-                flash(r.text)
-                return render_template('list_attributes.html',
-                                       wordlist_metadata=metadata,
-                                       add_tags=new_tags,
-                                       wordlist_tags=current_tags,
-                                       return_to_wordlist_id=wordlist_id)
-
-        tags = new_tags.split(',')
-        tags = [x.strip() for x in tags]
-        tags = list(filter(lambda x: bool(x), tags))  # filter out empty strings
-
-        r = requests.post(url_for('api_wordlist_tag.add_tags', wordlist_id=wordlist_id, _external=True), json=tags)
-        if not r:
-            # re-render the template to fix the error.
-
-            # we just completed updating existing tags; get updated tag info so we can render it for display.
-            r2 = requests.get(url_for('api_wordlist_tag.get_tags', wordlist_id=wordlist_id, _external=True))
-            if not r2:
-                # another error?  shit, what a mess.
-                return render_template("error.html",
-                                       message=r.text,
-                                       status_code=r.status_code)
-
-            tag_response = r2.json()
-
-            flash(r.text)
-            return render_template('list_attributes.html',
-                                   wordlist_metadata=metadata,
-                                   add_tags=new_tags,
-                                   wordlist_tags=tag_response['tags'],
-                                   return_to_wordlist_id=wordlist_id)
-
-        # get updated tag info so we can render it for display.
-        r = requests.get(url_for('api_wordlist_tag.get_tags', wordlist_id=wordlist_id, _external=True))
-        if not r:
-            return render_template("error.html",
-                                   message=r.text,
-                                   status_code=r.status_code)
-
-        tag_response = r.json()
-        wordlist_tags = tag_response['tags']
-
     return render_template('list_attributes.html',
                            wordlist_metadata=metadata,
-                           wordlist_tags=wordlist_tags,
                            return_to_wordlist_id=wordlist_id)
 
 

@@ -42,43 +42,6 @@
         <textarea class="sqlcode" name="sqlcode">{{ wordlist_metadata.sqlcode }}</textarea>
         <br>
         {% endif %}
-        {% if wordlist_metadata.list_type == 'standard' or wordlist_metadata.list_type == 'empty' %}
-        <div class="tag_editor">
-            <h2>Tags</h2>
-            <table>
-                <tr>
-                    <th>Add Tags</th>
-                </tr>
-                <tr>
-                    <td>
-                        <input type="text"
-                               class="add_tags"
-                               value="{{ add_tags }}"
-                               placeholder="add tags (comma separated)"
-                               name="add_tags">
-                    </td>
-                </tr>
-            </table>
-            {% if wordlist_tags|length > 1 %}
-            <table>
-                <tr>
-                    <th>Edit Tags</th>
-                </tr>
-                {% for t in wordlist_tags %}
-                <tr>
-                    <td>
-                        <input type="text"
-                               class="edit_tag"
-                               name="{{ 'tag-' + t['wordlist_tag_id']|string }}"
-                               value="{{ t['tag'] }}">
-                    </td>
-                </tr>
-                {% endfor %}
-            </table>
-            {% endif %}
-            <input type="submit" value="Update list details"/>
-        </div>
-        {% endif %}
     </form>
 </div>
 {% endblock %}

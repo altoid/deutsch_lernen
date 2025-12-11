@@ -315,6 +315,8 @@ def __get_wordlist(wordlist_id):
 
         known_words = cursor.fetchall()
         result['known_words'] = known_words
+        for w in result['known_words']:
+            w['tags'] = []
 
         unknown_words_sql = """
         select

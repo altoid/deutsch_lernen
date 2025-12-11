@@ -226,56 +226,6 @@ WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA = {
     }
 }
 
-WORDLIST_TAG_UPDATE_PAYLOAD_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/wordlist_tag_add_delete",
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Payload for updating tags for a wordlist",
-    "description": """
-    payload for batch updating tags for a wordlist.
-    """,
-    "type": "array",
-    "items": {
-        "type": "object",
-        "required": [
-            "wordlist_tag_id"
-        ],
-        "properties": {
-            "wordlist_tag_id": {
-                "type": "integer"
-            },
-            "tag": {
-                "type": "string",
-                "pattern": WORD_PATTERN
-            }
-        }
-    }
-}
-
-WORDLIST_TAG_WORD_PAYLOAD_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/wordlist_tag_word",
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Payload for adding/removing tags on a word",
-    "description": """
-    payload for batch adding/removing tags on a word.
-    """,
-    "type": "array",
-    "items": {
-        "type": "object",
-        "required": [
-            "wordlist_tag_id",
-            "word_id",
-        ],
-        "properties": {
-            "wordlist_tag_id": {
-                "type": "integer"
-            },
-            "word_id": {
-                "type": "integer"
-            }
-        }
-    }
-}
-
 ##########################################################
 #
 #                   Responses
@@ -697,44 +647,6 @@ WORDLIST_RESPONSE_SCHEMA = {
         }
     }
 }
-
-WORDLIST_TAG_RESPONSE_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/wordlist_tag_response",
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Response object for get tags",
-    "description": """
-    tag info for a wordlist.
-    """,
-    "type": "object",
-    "required": [
-        "wordlist_id",
-        "tags"
-    ],
-    "properties": {
-        "wordlist_id": {
-            "type": "integer"
-        },
-        "tags": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "required": [
-                    "wordlist_tag_id",
-                    "tag"
-                ],
-                "properties": {
-                    "wordlist_tag_id": {
-                        "type": "integer"
-                    },
-                    "tag": {
-                        "type": "string"
-                    }
-                }
-            }
-        }
-    }
-}
-
 
 WORDLISTS_RESPONSE_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
