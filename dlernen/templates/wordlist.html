@@ -36,42 +36,42 @@ Wordlist:  {{ result.name }}
             </td>
         </tr>
     </table>
-    <form action="/delete_from_list" method="post">
-        <input type="hidden" value="{{result.wordlist_id}}" name="wordlist_id"/>
-        <table>
-            <tr>
-                <td>
-                    <h2>Bekannte Worte ({{ result['known_words']|length }})</h2>
-                    <table class="tableau">
-                        <tr>
-                            {% for column in known_words %}
-                            <td>
-                                <table>
-                                    {% for r in column %}
-                                    <tr>
-                                        <td><input type="checkbox" name="known_wordlist" value="{{ r.word_id }}"></td>
-                                        <td>
-                                            {% if r.article != none %}
-                                            {{ r.article }}
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <a href="{{ url_for('dlernen.lookup_by_get', word_id=r.word_id, return_to_wordlist_id=result.wordlist_id) }}">
-                                                {{ r.word }}
-                                            </a>
-                                        </td>
-                                        <td>{{ r.definition if r.definition else '(no definition)' }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </table>
-                            </td>
-                            {% endfor %}
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-            <tr>
-                <td>
+    <table>
+        <tr>
+            <td>
+                <h2>Bekannte Worte ({{ result['known_words']|length }})</h2>
+                <table class="tableau">
+                    <tr>
+                        {% for column in known_words %}
+                        <td>
+                            <table>
+                                {% for r in column %}
+                                <tr>
+                                    <td>
+                                        {% if r.article != none %}
+                                        {{ r.article }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('dlernen.lookup_by_get', word_id=r.word_id, return_to_wordlist_id=result.wordlist_id) }}">
+                                            {{ r.word }}
+                                        </a>
+                                    </td>
+                                    <td>{{ r.definition if r.definition else '(no definition)' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        {% if result['unknown_words']|length > 0 %}
+        <tr>
+            <td>
+                <form action="/delete_from_list" method="post">
+                    <input type="hidden" value="{{result.wordlist_id}}" name="wordlist_id"/>
                     <h2>Unbekannte Worte ({{ result['unknown_words']|length }})</h2>
                     <table class="tableau">
                         <tr>
@@ -92,16 +92,17 @@ Wordlist:  {{ result.name }}
                             </td>
                             {% endfor %}
                         </tr>
+                        <tr>
+                            <td>
+                                <input type="submit" value="Delete Selected Words"/>
+                            </td>
+                        </tr>
                     </table>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <input type="submit" value="Delete Selected Words"/>
-                </td>
-            </tr>
-        </table>
-    </form>
+                </form>
+            </td>
+        </tr>
+        {% endif %}
+    </table>
     <form action="/update_notes" method="post">
         <h2>Noten</h2>
         <input type="submit" value="Update Notes"/>
