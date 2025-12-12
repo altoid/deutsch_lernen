@@ -287,11 +287,13 @@ def __get_wordlist(wordlist_id):
 
         result = dict(wl_row)
         result['source_is_url'] = citation.startswith('http') if citation else False
-
+        tagged_word_ids = {}
         if sqlcode:
             known_words_sql = SQL_FOR_WORDLIST_FROM_SQLCODE % sqlcode
 
             cursor.execute(known_words_sql)
+            known_words = cursor.fetchall()
+            result['known_words'] = known_words
 
         else:
             known_words_sql = """
@@ -312,11 +314,26 @@ def __get_wordlist(wordlist_id):
             """
 
             cursor.execute(known_words_sql, (wordlist_id,))
+            known_words = cursor.fetchall()
+            result['known_words'] = known_words
 
-        known_words = cursor.fetchall()
-        result['known_words'] = known_words
+            # get the tags for the words.
+            tag_sql = """
+            select word_id, tag
+            from tag
+            where wordlist_id = %s
+            """
+            cursor.execute(tag_sql, (wordlist_id,))
+            tag_rows = cursor.fetchall()
+            tagged_word_ids = {x['word_id']: [] for x in tag_rows}
+            for t in tag_rows:
+                tagged_word_ids[t['word_id']].append(t['tag'])
+
         for w in result['known_words']:
-            w['tags'] = []
+            if w['word_id'] in tagged_word_ids:
+                w['tags'] = tagged_word_ids[w['word_id']]
+            else:
+                w['tags'] = []
 
         unknown_words_sql = """
         select
@@ -438,6 +455,9 @@ def delete_wordlist(wordlist_id):
 @bp.route('/api/wordlist/<int:wordlist_id>/<int:word_id>', methods=['DELETE'])
 def delete_from_wordlist_by_id(wordlist_id, word_id):
     # removes from known words only
+    # TODO - if the word_id is not in the wordlist, no harm done.  but to be thorough, we should
+    #   check for this and return a 404.
+
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')

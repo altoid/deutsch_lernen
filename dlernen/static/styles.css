@@ -77,6 +77,12 @@ td {
     min-height: 100vh;
 }
 
+.list_editor {
+    background-color: var(--background-color);
+    padding: 10px;
+    min-height: 100vh;
+}
+
 .quiz_report {
     background-color: var(--background-color);
     padding: 10px;

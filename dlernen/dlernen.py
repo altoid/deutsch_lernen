@@ -131,10 +131,25 @@ def list_attributes(wordlist_id):
         return render_template("error.html",
                                message=r.text,
                                status_code=r.status_code)
+    wordlist_metadata = {k: '' if v is None else v for k, v in r.json().items()}
 
-    wordlist_metadata = {k: '' if v is None else v for k, v in r.json()}
     return render_template('list_attributes.html',
                            wordlist_metadata=wordlist_metadata,
+                           return_to_wordlist_id=wordlist_id)
+
+
+@bp.route('/list_editor/<int:wordlist_id>')
+def list_editor(wordlist_id):
+    url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
+    r = requests.get(url)
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+    wordlist_result = r.json()
+
+    return render_template('list_editor.html',
+                           wordlist_contents=wordlist_result,
                            return_to_wordlist_id=wordlist_id)
 
 
@@ -149,7 +164,7 @@ def wordlist(wordlist_id):
     if r.status_code == 422:
         # unprocessable content - the sqlcode is not valid.  redirect to the list attributes page to fix it.
         r2 = requests.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True))
-        metadata = {k: '' if v is None else v for k, v in r2.json()}
+        metadata = {k: '' if v is None else v for k, v in r2.json().items()}
 
         flash("invalid sqlcode")
         return render_template('list_attributes.html',
@@ -295,7 +310,79 @@ def edit_list_attributes():
 
 @bp.route('/edit_list_contents', methods=['POST'])
 def edit_list_contents():
-    pass
+    pprint(request.form)
+    wordlist_id = request.form.get('wordlist_id')
+    button = request.form.get('submit')
+
+    if button.startswith("Delete"):
+        # the checkboxes are called 'removing'
+        removing = request.form.getlist('removing')
+        for word_id in removing:
+            url = url_for('api_wordlist.delete_from_wordlist_by_id',
+                          wordlist_id=wordlist_id,
+                          word_id=word_id,
+                          _external=True)
+            r = requests.delete(url)
+            if not r:
+                return render_template("error.html",
+                                       message=r.text,
+                                       status_code=r.status_code)
+
+    elif button.startswith("Update"):
+        # the text fields are all named 'tag-<word_id>'
+        # the checkboxes for tags are all named 'untag-<word_id>-<tag>'
+
+        # get the keys for the text fields.
+        tag_textfield_keys = list(filter(lambda x: x.startswith('tag-'), request.form.keys()))
+        for k in tag_textfield_keys:
+            new_tags = request.form.get(k, '').strip().split()
+            if not new_tags:
+                continue
+            _, word_id = k.split('-')
+            word_id = int(word_id)
+            url = url_for('api_wordlist_tag.add_tags',
+                          wordlist_id=wordlist_id,
+                          word_id=word_id,
+                          _external=True)
+            r = requests.post(url, json=new_tags)
+            if not r:
+                return render_template("error.html",
+                                       message=r.text,
+                                       status_code=r.status_code)
+
+        # get the keys for the checkboxes
+        untag_keys = list(filter(lambda x: x.startswith('untag-'), request.form.keys()))
+        word_ids_to_tags = {}
+        for k in untag_keys:
+            _, word_id, tag = k.split('-')
+            if word_id not in word_ids_to_tags:
+                word_ids_to_tags[word_id] = []
+            word_ids_to_tags[word_id].append(tag)
+        pprint(word_ids_to_tags)
+        for word_id, tags in word_ids_to_tags.items():
+            url = url_for('api_wordlist_tag.delete_tags',
+                          wordlist_id=wordlist_id,
+                          word_id=word_id,
+                          tag=tags,
+                          _external=True)
+            r = requests.delete(url)
+            if not r:
+                return render_template("error.html",
+                                       message=r.text,
+                                       status_code=r.status_code)
+
+    # fetch the wordlist so that its current state can be rendered
+    get_wordlist_url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
+    r = requests.get(get_wordlist_url)
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+    wordlist_contents = r.json()
+
+    return render_template('list_editor.html',
+                           wordlist_contents=wordlist_contents,
+                           return_to_wordlist_id=wordlist_id)
 
 
 # TODO if this is for a POST request, why does it call requests.put()?

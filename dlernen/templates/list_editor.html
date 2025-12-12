@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block body %}
+{{ super() }}
+
+<div class="list_editor">
+    {% include 'header.html' %}
+
+    {% if wordlist_contents.list_type == 'standard' %}
+    <form action="/edit_list_contents" method="post">
+        <input type="hidden" value="{{ wordlist_contents.wordlist_id }}" name="wordlist_id"/>
+        <table>
+            <tr>
+                <th></th>
+                <th colspan="2">Word</th>
+                <th>Tags</th>
+                <th>Add Tags</th>
+            </tr>
+            {% for w in wordlist_contents['known_words'] %}
+            <tr>
+                <td>
+                    <input type="checkbox" name="removing" value="{{ w['word_id'] }}">
+                </td>
+                <td>{{ w['article'] if w['article'] else '' }}</td>
+                <td>{{ w['word'] }}</td>
+                <td>
+                    {% for t in w['tags'] %}
+                    <input type="checkbox"
+                           name="untag-{{ w['word_id'] }}-{{ t }}"
+                           id="untag-{{ w['word_id'] }}-{{ t }}"
+                           value="{{ t }}">
+                    {{ t }}
+                    {% endfor %}
+                </td>
+                <td>
+                    <input type="text"
+                           name="tag-{{ w['word_id'] }}"
+                           placeholder="space-separated list of tags"/>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        {# the first submit button listed in the form is the default action.  we want  that to be update. #}
+        <input type="submit" name="submit" value="Update Tag Info"/>
+        <input type="submit" name="submit" value="Delete Selected Words"/>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
+

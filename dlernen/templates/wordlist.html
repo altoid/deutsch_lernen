@@ -32,6 +32,11 @@ Wordlist:  {{ result.name }}
         </tr>
         <tr>
             <td>
+                <a href="{{ url_for('dlernen.list_editor', wordlist_id=result.wordlist_id) }}">content editor</a>
+            </td>
+        </tr>
+        <tr>
+            <td>
                 <a href="{{ url_for('dlernen.quiz_report', wordlist_id=result.wordlist_id) }}">quiz report</a>
             </td>
         </tr>
