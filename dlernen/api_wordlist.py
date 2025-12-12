@@ -511,7 +511,7 @@ def delete_from_wordlist_by_word(wordlist_id, word):
 def delete_wordlists():
     try:
         payload = request.get_json()  # comes in as an array of ints, not a dict.
-        jsonschema.validate(payload, dlernen_json_schema.WORDLIST_DELETE_MULTIPLE_PAYLOAD_SCHEMA)
+        jsonschema.validate(payload, dlernen_json_schema.WORDLISTS_DELETE_PAYLOAD_SCHEMA)
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 

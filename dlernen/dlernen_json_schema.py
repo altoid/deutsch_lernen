@@ -161,11 +161,11 @@ WORDLIST_CONTENTS_PAYLOAD_SCHEMA = {
     }
 }
 
-WORDLIST_DELETE_MULTIPLE_PAYLOAD_SCHEMA = {
+WORDLISTS_DELETE_PAYLOAD_SCHEMA = {
     # can be used for add or update of a list.
     "$id": "https://deutsch-lernen.doug/schemas/addwordlist_payload",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "WORDLIST_DELETE_MULTIPLE_PAYLOAD_SCHEMA",
+    "title": "WORDLISTS_DELETE_PAYLOAD_SCHEMA",
     "description": "Payload for deleting multiple wordlists",
     "type": "array",
     "items": {

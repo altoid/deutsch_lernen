@@ -1350,8 +1350,8 @@ class Test_WORDLIST_CONTENTS_PAYLOAD_SCHEMA(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
-class Test_WORDLIST_DELETE_MULTIPLE_PAYLOAD_SCHEMA(unittest.TestCase):
-    schema = js.WORDLIST_DELETE_MULTIPLE_PAYLOAD_SCHEMA
+class Test_WORDLISTS_DELETE_PAYLOAD_SCHEMA(unittest.TestCase):
+    schema = js.WORDLISTS_DELETE_PAYLOAD_SCHEMA
 
     valid_docs = [
         [1, 2, 3],
