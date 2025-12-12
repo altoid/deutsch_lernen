@@ -5,7 +5,9 @@
 
 <div class="list_editor">
     {% include 'header.html' %}
-
+    <h1>
+        {{ wordlist_contents.name }}
+    </h1>
     {% if wordlist_contents.list_type == 'standard' %}
     <form action="/edit_list_contents" method="post">
         <input type="hidden" value="{{ wordlist_contents.wordlist_id }}" name="wordlist_id"/>
