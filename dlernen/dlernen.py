@@ -132,12 +132,7 @@ def list_attributes(wordlist_id):
                                message=r.text,
                                status_code=r.status_code)
 
-    wordlist_metadata = r.json()
-
-    if wordlist_metadata['sqlcode'] is None:
-        wordlist_metadata['sqlcode'] = ''
-    if wordlist_metadata['citation'] is None:
-        wordlist_metadata['citation'] = ''
+    wordlist_metadata = {k: '' if v is None else v for k, v in r.json()}
     return render_template('list_attributes.html',
                            wordlist_metadata=wordlist_metadata,
                            return_to_wordlist_id=wordlist_id)
@@ -154,11 +149,7 @@ def wordlist(wordlist_id):
     if r.status_code == 422:
         # unprocessable content - the sqlcode is not valid.  redirect to the list attributes page to fix it.
         r2 = requests.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True))
-        metadata = r2.json()
-        if metadata['sqlcode'] is None:
-            metadata['sqlcode'] = ''
-        if metadata['citation'] is None:
-            metadata['citation'] = ''
+        metadata = {k: '' if v is None else v for k, v in r2.json()}
 
         flash("invalid sqlcode")
         return render_template('list_attributes.html',
