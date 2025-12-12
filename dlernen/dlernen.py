@@ -310,7 +310,6 @@ def edit_list_attributes():
 
 @bp.route('/edit_list_contents', methods=['POST'])
 def edit_list_contents():
-    pprint(request.form)
     wordlist_id = request.form.get('wordlist_id')
     button = request.form.get('submit')
 
