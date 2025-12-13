@@ -656,5 +656,30 @@ def study_guide(wordlist_id):
                                status_code=r.status_code)
 
     wordlist = r.json()
+
+    # go through the wordlist and organize everything by tag.  invert the mapping of words to
+    # tags that appears in the wordlist.
+
+    tags_to_words = {}
+    untagged_words = []
+    for word in wordlist['known_words']:
+        if not word['tags']:
+            untagged_words.append(word)
+            continue
+
+        for t in word['tags']:
+            if t not in tags_to_words:
+                tags_to_words[t] = []
+            tags_to_words[t].append(word)
+
+    # sort everything
+    untagged_words = sorted(untagged_words, key=lambda x: x['word'].casefold())
+    tags = sorted(tags_to_words.keys())
+    for t in tags:
+        tags_to_words[t] = sorted(tags_to_words[t], key=lambda x: x['word'].casefold())
+
     return render_template("study_guide.html",
+                           tags=tags,
+                           untagged_words=untagged_words,
+                           tags_to_words=tags_to_words,
                            wordlist=wordlist)

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-Quiz Report
+Study Guide:  {{ wordlist.name }}
 {% endblock %}
 
 {% block body %}
@@ -9,6 +9,43 @@ Quiz Report
 <div class="study_guide">
     {% include 'header.html' %}
     <h1>{{ wordlist.name }} ({{ wordlist.wordlist_id }})</h1>
-    demnächst verfügbar
+    <table>
+        <tr>
+            <th>
+                Tag
+            </th>
+            <th>
+                Words
+            </th>
+        </tr>
+        <tr>
+            <td>(no tag)</td>
+            <td>
+                <table>
+                    {% for w in untagged_words %}
+                    <tr>
+                        <td>{{ w['article'] }}</td>
+                        <td>{{ w['word'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </td>
+        </tr>
+        {% for t in tags %}
+        <tr>
+            <td>{{ t }}</td>
+            <td>
+                <table>
+                    {% for w in tags_to_words[t] %}
+                    <tr>
+                        <td>{{ w['article'] }}</td>
+                        <td>{{ w['word'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
 </div>
 {% endblock %}
