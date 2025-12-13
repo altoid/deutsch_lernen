@@ -36,9 +36,7 @@ Wordlist:  {{ result.name }}
                                 {% for r in column %}
                                 <tr valign="top">
                                     <td>
-                                        {% if r.article != none %}
                                         {{ r.article }}
-                                        {% endif %}
                                     </td>
                                     <td>
                                         <a href="{{ url_for('dlernen.lookup_by_get', word=r.word, word_id=r.word_id, return_to_wordlist_id=result.wordlist_id) }}">

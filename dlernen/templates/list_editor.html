@@ -23,7 +23,7 @@
                 <td>
                     <input type="checkbox" name="removing" value="{{ w['word_id'] }}">
                 </td>
-                <td>{{ w['article'] if w['article'] else '' }}</td>
+                <td>{{ w['article'] }}</td>
                 <td>{{ w['word'] }}</td>
                 <td>
                     {% for t in w['tags'] %}

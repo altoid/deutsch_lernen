@@ -383,7 +383,6 @@ def edit_list_contents():
                            return_to_wordlist_id=wordlist_id)
 
 
-# TODO if this is for a POST request, why does it call requests.put()?
 @bp.route('/add_to_list', methods=['POST'])
 def add_to_list():
     # the get_word function will check that the word is not garbage, no need to do it here.

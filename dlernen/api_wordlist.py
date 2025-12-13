@@ -20,7 +20,7 @@ SQL_FOR_WORDLIST_FROM_SQLCODE = """
           m.word word,
           matching.word_id,
           m.attrvalue definition,
-          m2.attrvalue article  -- possibly null
+          ifnull(m2.attrvalue, '') article
     from  matching
     left  join mashup_v m
     on    matching.word_id = m.word_id
@@ -301,7 +301,7 @@ def __get_wordlist(wordlist_id):
                 m.word,
                 m.word_id,
                 m.attrvalue definition,
-                m2.attrvalue article  -- possibly null
+                ifnull(m2.attrvalue, '') article
             from wordlist_known_word ww
             left join mashup_v m
             on   ww.word_id = m.word_id
