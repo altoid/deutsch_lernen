@@ -223,9 +223,11 @@ class APIWordlist(unittest.TestCase):
 
             self.assertTrue(len(obj['unknown_words']) > 0)
             word = obj['unknown_words'][0]
-            url = url_for('api_wordlist.delete_from_wordlist_by_word', wordlist_id=self.wordlist_id,
-                          word=word, _external=True)
-            r = self.client.delete(url)
+            url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id, _external=True)
+            r = self.client.post(url, json={
+                "unknown_words": [word]
+            })
+
             self.assertEqual(r.status_code, 200)
 
             r = self.client.get(self.wordlist_get_url)
@@ -273,9 +275,11 @@ class APIWordlist(unittest.TestCase):
 
             self.assertTrue(len(obj['known_words']) > 0)
             word_id = obj['known_words'][0]['word_id']
-            url = url_for('api_wordlist.delete_from_wordlist_by_id', wordlist_id=self.wordlist_id,
-                          word_id=word_id, _external=True)
-            r = self.client.delete(url)
+            payload = {
+                "word_ids": [word_id]
+            }
+            url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id, _external=True)
+            r = self.client.post(url, json=payload)
             self.assertEqual(r.status_code, 200)
 
             r = self.client.get(self.wordlist_get_url)
@@ -472,17 +476,15 @@ class APIWordlist(unittest.TestCase):
             self.assertEqual(1, len(obj['unknown_words']))
             self.assertEqual(1, len(obj['known_words']))
 
-            # remove the words one by one
+            # remove the words
             word = obj['unknown_words'][0]
-            url = url_for('api_wordlist.delete_from_wordlist_by_word', wordlist_id=self.wordlist_id,
-                          word=word, _external=True)
-            r = self.client.delete(url)
-            self.assertEqual(r.status_code, 200)
-
             word_id = obj['known_words'][0]['word_id']
-            url = url_for('api_wordlist.delete_from_wordlist_by_id', wordlist_id=self.wordlist_id,
-                          word_id=word_id, _external=True)
-            r = self.client.delete(url)
+            payload = {
+                "word_ids": [word_id],
+                "unknown_words": [word]
+            }
+            url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id, _external=True)
+            r = self.client.post(url, json=payload)
             self.assertEqual(r.status_code, 200)
 
             r = self.client.get(self.wordlist_get_url)
@@ -505,12 +507,16 @@ class APIWordlist(unittest.TestCase):
 
             self.assertEqual('smart', obj['list_type'])
 
-            url = url_for('api_wordlist.delete_from_wordlist_by_id', wordlist_id=self.wordlist_id,
-                          word_id=666, _external=True)
-            r = self.client.delete(url)
+            url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id, _external=True)
+
+            r = self.client.post(url, json={
+                "word_ids": [66666],
+            })
+
             self.assertNotEqual(200, r.status_code)
 
-            url = url_for('api_wordlist.delete_from_wordlist_by_word', wordlist_id=self.wordlist_id,
-                          word='teuhdunaoethu', _external=True)
-            r = self.client.delete(url)
+            r = self.client.post(url, json={
+                "unknown_words": [66666],
+            })
+
             self.assertNotEqual(200, r.status_code)

@@ -315,17 +315,16 @@ def edit_list_contents():
 
     if button.startswith("Delete"):
         # the checkboxes are called 'removing'
-        removing = request.form.getlist('removing')
-        for word_id in removing:
-            url = url_for('api_wordlist.delete_from_wordlist_by_id',
-                          wordlist_id=wordlist_id,
-                          word_id=word_id,
-                          _external=True)
-            r = requests.delete(url)
-            if not r:
-                return render_template("error.html",
-                                       message=r.text,
-                                       status_code=r.status_code)
+
+        url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=wordlist_id, _external=True)
+        word_ids = list(map(int, request.form.getlist('removing')))
+        r = requests.post(url, json={
+            "word_ids": word_ids
+        })
+        if not r:
+            return render_template("error.html",
+                                   message=r.text,
+                                   status_code=r.status_code)
 
     elif button.startswith("Update"):
         # the text fields are all named 'tag-<word_id>'
@@ -439,18 +438,15 @@ def update_notes():
 @bp.route('/delete_from_list', methods=['POST'])
 def delete_from_list():
     wordlist_id = request.form['wordlist_id']
-    unknown_deleting = request.form.getlist('unknown_wordlist')
 
-    for word in unknown_deleting:
-        url = url_for('api_wordlist.delete_from_wordlist_by_word', wordlist_id=wordlist_id, word=word,
-                      _external=True)
-        r = requests.delete(url)
-        if not r:
-            return render_template("error.html",
-                                   message=r.text,
-                                   status_code=r.status_code)
-
-    # TODO - change API to allow batch delete.  we could do this with a single request
+    url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=wordlist_id, _external=True)
+    r = requests.post(url, json={
+        "unknown_words": request.form.getlist('unknown_wordlist')
+    })
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
 
     target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
     return redirect(target)

@@ -161,6 +161,33 @@ WORDLIST_CONTENTS_PAYLOAD_SCHEMA = {
     }
 }
 
+WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA = {
+    # for batch deleting words from a wordlist.
+    "$id": "https://deutsch-lernen.doug/schemas/delete_words_payload",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA",
+    "description": "Payload for batch removing words from a wordlist",
+    "type": "object",
+    "required": [
+        # none are required
+    ],
+    "properties": {
+        "unknows_words": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "pattern": WORD_PATTERN
+            }
+        },
+        "word_ids": {
+            "type": "array",
+            "items": {
+                "type": "integer",
+            }
+        },
+    }
+}
+
 WORDLISTS_DELETE_PAYLOAD_SCHEMA = {
     # can be used for add or update of a list.
     "$id": "https://deutsch-lernen.doug/schemas/addwordlist_payload",

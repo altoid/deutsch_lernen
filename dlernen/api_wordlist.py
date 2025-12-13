@@ -452,12 +452,15 @@ def delete_wordlist(wordlist_id):
             return "delete list failed", 500
 
 
-@bp.route('/api/wordlist/<int:wordlist_id>/<int:word_id>', methods=['DELETE'])
-def delete_from_wordlist_by_id(wordlist_id, word_id):
-    # removes from known words only
-    # TODO - if the word_id is not in the wordlist, no harm done.  but to be thorough, we should
-    #   check for this and return a 404.
+@bp.route('/api/wordlist/<int:wordlist_id>/batch_delete', methods=['POST'])
+def delete_from_wordlist(wordlist_id):
+    try:
+        payload = request.get_json()  # comes in as an array of ints, not a dict.
+        jsonschema.validate(payload, dlernen_json_schema.WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA)
+    except jsonschema.ValidationError as e:
+        return "bad payload: %s" % e.message, 400
 
+    # batch delete from wordlist; can remove both known and unknown words.
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
@@ -467,8 +470,41 @@ def delete_from_wordlist_by_id(wordlist_id, word_id):
             if row and row['sqlcode']:
                 cursor.execute('rollback')
                 return "can't delete words from smart list", 400
-            sql = "delete from wordlist_known_word where wordlist_id = %s and word_id = %s"
-            cursor.execute(sql, (wordlist_id, word_id))
+
+            word_ids = payload.get('word_ids', [])
+            unknown_words = payload.get('unknown_words', [])
+
+            if unknown_words:
+                sql = """
+                delete from wordlist_unknown_word 
+                where wordlist_id = %(wordlist_id)s and word = %(word)s
+                """
+                args = [
+                    {
+                        "wordlist_id": wordlist_id,
+                        "word": word
+                    }
+                    for word in unknown_words
+                ]
+                cursor.executemany(sql, args)
+
+            # TODO - if a word_id is not in the wordlist, no harm done.  but to be thorough, we should
+            #   check for this and return a 404.
+
+            if word_ids:
+                sql = """
+                delete from wordlist_known_word 
+                where wordlist_id = %(wordlist_id)s and word_id = %(word_id)s
+                """
+                args = [
+                    {
+                        "wordlist_id": wordlist_id,
+                        "word_id": word_id
+                    }
+                    for word_id in word_ids
+                ]
+                cursor.executemany(sql, args)
+
             cursor.execute('commit')
             return "OK"
         except Exception as e:
@@ -477,34 +513,7 @@ def delete_from_wordlist_by_id(wordlist_id, word_id):
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             print(exc_type, fname, exc_tb.tb_lineno)
             cursor.execute('rollback')
-            return "delete list failed", 500
-
-
-@bp.route('/api/wordlist/<int:wordlist_id>/<string:word>', methods=['DELETE'])
-def delete_from_wordlist_by_word(wordlist_id, word):
-    # removes from unknown words only
-    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        try:
-            word = word.strip()
-            if word:
-                cursor.execute('start transaction')
-                sql = "select sqlcode from wordlist where id = %s"
-                cursor.execute(sql, (wordlist_id,))
-                row = cursor.fetchone()
-                if row and row['sqlcode']:
-                    cursor.execute('rollback')
-                    return "can't delete words from smart list", 400
-                sql = "delete from wordlist_unknown_word where wordlist_id = %s and word = %s"
-                cursor.execute(sql, (wordlist_id, word))
-                cursor.execute('commit')
-            return "OK"
-        except Exception as e:
-            pprint(e)
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
-            cursor.execute('rollback')
-            return "delete list failed", 500
+            return str(e), 500
 
 
 @bp.route('/api/wordlists/batch_delete', methods=['PUT'])
