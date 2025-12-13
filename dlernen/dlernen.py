@@ -645,3 +645,16 @@ def quiz_report(wordlist_id):
                            wordlist_name=report['wordlist_name'],
                            wordlist_id=report['wordlist_id'],
                            scores=report['scores'])
+
+
+@bp.route('/study_guide/<int:wordlist_id>')
+def study_guide(wordlist_id):
+    r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True))
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+
+    wordlist = r.json()
+    return render_template("study_guide.html",
+                           wordlist=wordlist)

@@ -69,6 +69,12 @@ td {
     min-height: 100vh;
 }
 
+.study_guide {
+    background-color: var(--background-color);
+    padding: 10px;
+    min-height: 100vh;
+}
+
 .tooltip {
   position: relative;
   display: inline-block;
