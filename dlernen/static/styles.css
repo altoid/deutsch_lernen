@@ -69,16 +69,10 @@ td {
     min-height: 100vh;
 }
 
-.study_guide {
-    background-color: var(--background-color);
-    padding: 10px;
-    min-height: 100vh;
-}
-
 .tooltip {
   position: relative;
   display: inline-block;
-  /*border-bottom: 1px dotted black;*/
+  border-bottom: 1px dotted black;
   cursor: pointer;
 }
 
@@ -117,6 +111,18 @@ td {
     background-color: var(--background-color);
     padding: 10px;
     min-height: 100vh;
+}
+
+.study_guide {
+    background-color: var(--background-color);
+    padding: 10px;
+    min-height: 100vh;
+}
+
+table.study_guide, td.study_guide {
+    border: 1px solid;
+    border-collapse: collapse;
+    min-height: 1px;
 }
 
 .quiz_report {

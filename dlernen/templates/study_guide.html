@@ -9,7 +9,7 @@ Study Guide:  {{ wordlist.name }}
 <div class="study_guide">
     {% include 'header.html' %}
     <h1>{{ wordlist.name }} ({{ wordlist.wordlist_id }})</h1>
-    <table>
+    <table class="study_guide">
         <tr>
             <th>
                 Tag
@@ -19,13 +19,20 @@ Study Guide:  {{ wordlist.name }}
             </th>
         </tr>
         <tr>
-            <td>(no tag)</td>
-            <td>
+            <td class="study_guide">(no tag)</td>
+            <td class="study_guide">
                 <table>
                     {% for w in untagged_words %}
                     <tr>
                         <td>{{ w['article'] }}</td>
-                        <td>{{ w['word'] }}</td>
+                        <td>
+                            <div class="tooltip">
+                                {{ w['word'] }}
+                                <span class="tooltiptext">
+                                    {{ w['definition'] if w['definition'] else '(no definition)' }}
+                                </span>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </table>
@@ -33,13 +40,20 @@ Study Guide:  {{ wordlist.name }}
         </tr>
         {% for t in tags %}
         <tr>
-            <td>{{ t }}</td>
-            <td>
+            <td class="study_guide">{{ t }}</td>
+            <td class="study_guide">
                 <table>
                     {% for w in tags_to_words[t] %}
                     <tr>
                         <td>{{ w['article'] }}</td>
-                        <td>{{ w['word'] }}</td>
+                        <td>
+                            <div class="tooltip">
+                                {{ w['word'] }}
+                                <span class="tooltiptext">
+                                    {{ w['definition'] if w['definition'] else '(no definition)' }}
+                                </span>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </table>
