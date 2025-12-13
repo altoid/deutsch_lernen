@@ -20,6 +20,7 @@ Wordlist:  {{ result.name }}
             <td>{{ result.citation }}</td>
         </tr>
         {% endif %}
+        {% if result['list_type'] == 'empty' or result['list_type'] == 'standard' %}
         <tr>
             <td>
                 <form action="/add_to_list" method="post">
@@ -35,6 +36,7 @@ Wordlist:  {{ result.name }}
                 <a href="{{ url_for('dlernen.list_editor', wordlist_id=result.wordlist_id) }}">content editor</a>
             </td>
         </tr>
+        {% endif %}
         <tr>
             <td>
                 <a href="{{ url_for('dlernen.quiz_report', wordlist_id=result.wordlist_id) }}">quiz report</a>

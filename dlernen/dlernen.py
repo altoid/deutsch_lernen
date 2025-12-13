@@ -177,12 +177,6 @@ def wordlist(wordlist_id):
             # otherwise the word 'None' is rendered in the form
             result['notes'] = ''
 
-        if result['list_type'] == 'smart':
-            words = chunkify(result['known_words'], nchunks=nchunks)
-            return render_template('smart_wordlist.html',
-                                   result=result,
-                                   words=words)
-
         known_words = chunkify(result['known_words'], nchunks=nchunks)
         unknown_words = chunkify(result['unknown_words'], nchunks=nchunks)
 
