@@ -39,14 +39,9 @@ Wordlist:  {{ result.name }}
                                         {{ r.article }}
                                     </td>
                                     <td>
-                                        <div class="tooltip">
-                                            <a href="{{ url_for('dlernen.lookup_by_get', word=r.word, word_id=r.word_id, return_to_wordlist_id=result.wordlist_id) }}">
-                                                {{ r.word }}
-                                            </a>
-                                            <span class="tooltiptext">
-                                                {{ r.definition if r.definition else '(no definition)' }}
-                                            </span>
-                                        </div>
+                                        <a href="{{ url_for('dlernen.lookup_by_get', word=r.word, word_id=r.word_id, return_to_wordlist_id=result.wordlist_id) }}">
+                                            {{ r.word }}
+                                        </a>
                                     </td>
                                     <td>{{ r.definition if r.definition else '(no definition)' }}</td>
                                 </tr>
