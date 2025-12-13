@@ -8,7 +8,21 @@ Quiz Report
 {{ super() }}
 <div class="quiz_report">
     {% include 'header.html' %}
-    <h1>Quiz Report:  {{ wordlist_name }} ({{ wordlist_id }})</h1>
+    <h1>Quiz Report: {{ wordlist_name }} ({{ wordlist_id }})</h1>
+    <table>
+        <tr>
+            <td>
+                <a href="{{ url_for('dlernen.wordlist', wordlist_id=wordlist_id) }}">
+                    zur Liste zurückkehren</a>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <a href="{{ url_for('dlernen.study_guide', wordlist_id=wordlist_id) }}">
+                    study guide</a>
+            </td>
+        </tr>
+    </table>
     <h2>{{ quiz_key }}</h2>
     <table class="quiz_report">
         <tr>

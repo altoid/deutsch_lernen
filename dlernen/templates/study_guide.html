@@ -9,6 +9,19 @@ Study Guide:  {{ wordlist.name }}
 <div class="study_guide">
     {% include 'header.html' %}
     <h1>{{ wordlist.name }} ({{ wordlist.wordlist_id }})</h1>
+    <table>
+        <tr>
+            <td>
+                <a href="{{ url_for('dlernen.wordlist', wordlist_id=wordlist.wordlist_id) }}">
+                    zur Liste zurückkehren</a>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <a href="{{ url_for('dlernen.list_editor', wordlist_id=wordlist.wordlist_id) }}">list editor</a>
+            </td>
+        </tr>
+    </table>
     <table class="study_guide">
         <tr>
             <th>
