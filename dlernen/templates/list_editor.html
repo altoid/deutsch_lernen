@@ -10,7 +10,7 @@ Manage List:  {{ wordlist_contents.name }}
 <div class="list_editor">
     {% include 'header.html' %}
     <h1>
-        {{ wordlist_contents.name }}
+        {{ wordlist_contents.name }} ({{ wordlist_contents.wordlist_id }})
     </h1>
     <table>
         <tr>
@@ -22,7 +22,7 @@ Manage List:  {{ wordlist_contents.name }}
         <tr>
             <td>
                 <a href="{{ url_for('dlernen.study_guide', wordlist_id=wordlist_contents.wordlist_id) }}">
-                    study guide</a>
+                    Studienanleitung</a>
             </td>
         </tr>
     </table>

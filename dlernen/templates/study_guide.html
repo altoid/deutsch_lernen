@@ -18,7 +18,12 @@ Study Guide:  {{ wordlist.name }}
         </tr>
         <tr>
             <td>
-                <a href="{{ url_for('dlernen.list_editor', wordlist_id=wordlist.wordlist_id) }}">list editor</a>
+                <a href="{{ url_for('dlernen.list_editor', wordlist_id=wordlist.wordlist_id) }}">Editor</a>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <a href="{{ url_for('dlernen.quiz_report', wordlist_id=wordlist.wordlist_id) }}">Zeugnis</a>
             </td>
         </tr>
     </table>
@@ -31,6 +36,7 @@ Study Guide:  {{ wordlist.name }}
                 Words
             </th>
         </tr>
+        {% if untagged_words|length %}
         <tr>
             <td class="study_guide">(no tag)</td>
             <td class="study_guide">
@@ -51,6 +57,7 @@ Study Guide:  {{ wordlist.name }}
                 </table>
             </td>
         </tr>
+        {% endif %}
         {% for t in tags %}
         <tr>
             <td class="study_guide">{{ t }}</td>
