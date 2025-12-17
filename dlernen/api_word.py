@@ -257,7 +257,7 @@ def add_word():
 
             cursor.execute('commit')
 
-            return get_word_by_id(word_id)  # this is already validated and jsonified
+            return get_word_by_id(word_id), 201  # this is already validated and jsonified
 
         except Exception as e:
             pprint(e)

@@ -59,7 +59,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
             ]
         }
         r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
         word_id = obj['word_id']
 
@@ -95,7 +95,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         }
 
         r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
         self.assertEqual(word_capitalized, obj['word'])
 
@@ -119,7 +119,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         }
 
         r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
         plural = list(filter(lambda x: x['attrkey'] == attrkey, obj['attributes']))[0]
         self.assertEqual(word_capitalized, plural['attrvalue'])
@@ -145,7 +145,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         }
 
         r = self.client.post(url_for('api_word.add_word', _external=True), json=payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
 
         plural_attr = list(filter(lambda x: x['attrkey'] == attrkey, obj['attributes']))[0]
@@ -183,7 +183,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
             ]
         }
         r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
         word_id = obj['word_id']
 
@@ -203,7 +203,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
             "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
         }
         r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
         word_id = obj['word_id']
 
@@ -224,7 +224,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
             "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
         }
         r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
 
         update_payload = {
@@ -324,12 +324,12 @@ class APITestsWordEndToEnd(unittest.TestCase):
             ]
         }
         r = self.client.post(url_for('api_word.add_word', _external=True), json=payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
         word_id_1 = obj['word_id']
 
         r = self.client.post(url_for('api_word.add_word', _external=True), json=payload)
-        self.assertNotEqual(r.status_code, 200)
+        self.assertNotEqual(r.status_code, 201)
 
         # get word by name
         r = self.client.get(url_for('api_word.get_word', word=word, _external=True))
@@ -361,7 +361,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
             ]
         }
         r = self.client.post(url_for('api_word.add_word', _external=True), json=payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
         word_id_1 = obj['word_id']
 
@@ -377,7 +377,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         }
 
         r = self.client.post(url_for('api_word.add_word', _external=True), json=payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.status_code, 201)
 
         obj = json.loads(r.data)
         word_id_2 = obj['word_id']
@@ -448,7 +448,7 @@ class APITestsWordPOST(unittest.TestCase):
             ]
         }
         r = self.client.post(url_for('api_word.add_word', _external=True), json=payload)
-        self.assertNotEqual(r.status_code, 200)
+        self.assertNotEqual(r.status_code, 201)
 
     # pos not in payload
     def test_pos_not_in_payload(self):
@@ -470,13 +470,13 @@ class APITestsWordPOST(unittest.TestCase):
             ]
         }
         r = self.client.post(url_for('api_word.add_word', _external=True), json=payload)
-        self.assertNotEqual(r.status_code, 200)
+        self.assertNotEqual(r.status_code, 201)
 
     # payload not json
     def test_payload_not_json(self):
         payload = "this is some bullshit right here"
         r = self.client.post(url_for('api_word.add_word', _external=True), json=payload)
-        self.assertNotEqual(r.status_code, 200)
+        self.assertNotEqual(r.status_code, 201)
 
     # attr ids are bullshit
     def test_bullshit_attribute_ids(self):
@@ -495,7 +495,7 @@ class APITestsWordPOST(unittest.TestCase):
             ]
         }
         r = self.client.post(url_for('api_word.add_word', _external=True), json=payload)
-        self.assertNotEqual(r.status_code, 200)
+        self.assertNotEqual(r.status_code, 201)
 
     # part of speech is bullshit
     def test_bullshit_pos(self):
@@ -518,7 +518,7 @@ class APITestsWordPOST(unittest.TestCase):
             ]
         }
         r = self.client.post(url_for('api_word.add_word', _external=True), json=payload)
-        self.assertNotEqual(r.status_code, 200)
+        self.assertNotEqual(r.status_code, 201)
 
 
 class APITestsWordPUT(unittest.TestCase):
