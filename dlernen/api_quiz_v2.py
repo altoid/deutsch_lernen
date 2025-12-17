@@ -48,7 +48,7 @@ select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word,
     ifnull(qsc.correct_count, 0) correct_count,
     ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
 from word_attributes_to_test wat
-left join quiz_score qsc
+left join quiz_score_v qsc
     on wat.quiz_id = qsc.quiz_id
     and wat.attribute_id = qsc.attribute_id
     and wat.word_id = qsc.word_id
@@ -83,7 +83,7 @@ select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word,
     ifnull(qsc.correct_count, 0) correct_count,
     ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
 from word_attributes_to_test wat
-left join quiz_score qsc
+left join quiz_score_v qsc
     on wat.quiz_id = qsc.quiz_id
     and wat.attribute_id = qsc.attribute_id
     and wat.word_id = qsc.word_id
@@ -112,7 +112,7 @@ select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word,
     ifnull(qsc.correct_count, 0) correct_count,
     ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
 from word_attributes_to_test wat
-left join quiz_score qsc
+left join quiz_score_v qsc
     on wat.quiz_id = qsc.quiz_id
     and wat.attribute_id = qsc.attribute_id
     and wat.word_id = qsc.word_id
@@ -140,7 +140,7 @@ select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word, qsc.
     ifnull(qsc.correct_count, 0) correct_count,
     ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
 from word_attributes_to_test wat
-LEFT join quiz_score qsc
+LEFT join quiz_score_v qsc
     on wat.quiz_id = qsc.quiz_id
     and wat.attribute_id = qsc.attribute_id
     and wat.word_id = qsc.word_id
@@ -171,7 +171,7 @@ select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word,
     ifnull(qsc.correct_count, 0) correct_count,
     ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
 from word_attributes_to_test wat
-left join quiz_score qsc
+left join quiz_score_v qsc
     on wat.quiz_id = qsc.quiz_id
     and wat.attribute_id = qsc.attribute_id
     and wat.word_id = qsc.word_id
@@ -309,8 +309,8 @@ def get_word_to_test(quiz_key):
         return {}
 
 
-@bp.route('/<string:quiz_key>', methods=['POST'])
-def post_quiz_answer(quiz_key):
+@bp.route('/answer', methods=['POST'])
+def post_quiz_answer():
     try:
         payload = request.get_json()
         jsonschema.validate(payload, dlernen_json_schema.QUIZ_ANSWER_PAYLOAD_SCHEMA)
@@ -321,13 +321,10 @@ def post_quiz_answer(quiz_key):
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         cursor.execute('start transaction')
         update = """
-            insert into quiz_score
-            (quiz_id, word_id, attribute_id, presentation_count, correct_count)
+            insert into quiz_score_event
+            (quiz_id, word_id, attribute_id, correct)
             VALUES
-            (%(quiz_id)s, %(word_id)s, %(attribute_id)s, %(presentation_count)s, %(correct_count)s)
-            on duplicate key update
-            presentation_count = values(presentation_count),
-            correct_count = values(correct_count)
+            (%(quiz_id)s, %(word_id)s, %(attribute_id)s, %(correct)s)
             """
 
         cursor.execute(update, payload)

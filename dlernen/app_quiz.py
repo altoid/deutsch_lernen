@@ -14,7 +14,7 @@ QUIZ_KEY = 'definitions'
 @click.option('--wordlist_ids', '-l', multiple=True)
 @click.option('--queries', '-q', multiple=True)
 def quiz_words(wordlist_ids, queries):
-    # pick a definition and select the right german word for it.  as decoys,use words within a short levenshtein
+    # pick a definition and select the right german word for it.  as decoys, use words within a short levenshtein
     # distance away from the real answer.
 
     # get all the words
@@ -72,11 +72,11 @@ def quiz_words(wordlist_ids, queries):
             except ValueError:
                 pass
 
-        attr_to_test['presentation_count'] += 1
         if candidates[answer] == attr_to_test['word']:
-            attr_to_test['correct_count'] += 1
+            attr_to_test['correct'] = True
             print("richtig")
         else:
+            attr_to_test['correct'] = False
             print("falsch")
 
         r = requests.post(url_for('api_quiz_v2.post_quiz_answer',
@@ -136,18 +136,13 @@ def quiz_definitions(wordlist_ids, queries):
         payload = {
             "quiz_id": attr_to_test['quiz_id'],
             "word_id": attr_to_test['word_id'],
-            "attribute_id": attr_to_test['attribute_id'],
-            "presentation_count": attr_to_test['presentation_count'],
-            "correct_count": attr_to_test['correct_count']
+            "attribute_id": attr_to_test['attribute_id']
         }
 
         while len(answer) == 0:
             answer = input(prompt).strip().lower()
 
-        if answer.startswith('y'):
-            payload['correct_count'] += 1
-
-        payload['presentation_count'] += 1
+        payload['correct'] = answer.startswith('y')
 
         r = requests.post(url_for('api_quiz_v2.post_quiz_answer',
                                   quiz_key=QUIZ_KEY,

@@ -624,9 +624,14 @@ class Test_QUIZ_ANSWER_PAYLOAD_SCHEMA(unittest.TestCase):
             'quiz_id': 123,
             'word_id': 123,
             'attribute_id': 123,
-            'presentation_count': 123,
-            'correct_count': 123,
-        }
+            'correct': True
+        },
+        {
+            'quiz_id': 123,
+            'word_id': 123,
+            'attribute_id': 123,
+            'correct': False
+        },
     ]
 
     invalid_docs = [
@@ -634,36 +639,31 @@ class Test_QUIZ_ANSWER_PAYLOAD_SCHEMA(unittest.TestCase):
             # 'quiz_id': 123,
             'word_id': 123,
             'attribute_id': 123,
-            'presentation_count': 123,
-            'correct_count': 123,
+            'correctt': True,
         },
         {
             'quiz_id': 123,
             # 'word_id': 123,
             'attribute_id': 123,
-            'presentation_count': 123,
-            'correct_count': 123,
+            'correct': True,
         },
         {
             'quiz_id': 123,
             'word_id': 123,
             # 'attribute_id': 123,
-            'presentation_count': 123,
-            'correct_count': 123,
+            'correct': True,
         },
         {
             'quiz_id': 123,
             'word_id': 123,
             'attribute_id': 123,
-            # 'presentation_count': 123,
-            'correct_count': 123,
+            # 'correct': True,
         },
         {
             'quiz_id': 123,
             'word_id': 123,
             'attribute_id': 123,
-            'presentation_count': 123,
-            # 'correct_count': 123,
+            'correct': 0,  # wrong type
         },
     ]
 

@@ -404,8 +404,7 @@ QUIZ_ANSWER_PAYLOAD_SCHEMA = {
         "quiz_id",
         "word_id",
         "attribute_id",
-        "presentation_count",
-        "correct_count",
+        "correct"
     ],
     "properties": {
         "quiz_id": {
@@ -416,18 +415,13 @@ QUIZ_ANSWER_PAYLOAD_SCHEMA = {
             "type": "integer",
             "minimum": 1
         },
-        "correct_count": {
-            "type": "integer",
-            "minimum": 0
-        },
-        "presentation_count": {
-            "type": "integer",
-            "minimum": 0
+        "correct": {
+            "type": "boolean"
         },
         "attribute_id": {
             "type": "integer",
             "minimum": 1
-        },
+        }
     }
 }
 
