@@ -21,7 +21,7 @@ Wordlist:  {{ result.name }}
         {% if result['list_type'] == 'empty' or result['list_type'] == 'standard' %}
         <tr>
             <td>
-                <form action="/add_to_list" method="post">
+                <form action="{{ url_for('dlernen.add_to_list') }}" method="post">
                     Word:
                     <input type="text" name="word"/>
                     <input type="hidden" value="{{result.wordlist_id}}" name="wordlist_id"/>
@@ -67,7 +67,7 @@ Wordlist:  {{ result.name }}
                                         {{ r.article }}
                                     </td>
                                     <td>
-                                        <a href="{{ url_for('dlernen.lookup_by_get', word_id=r.word_id, return_to_wordlist_id=result.wordlist_id) }}">
+                                        <a href="{{ url_for('dlernen.get_word_by_id', word_id=r.word_id, return_to_wordlist_id=result.wordlist_id) }}">
                                             {{ r.word }}
                                         </a>
                                     </td>
@@ -84,7 +84,7 @@ Wordlist:  {{ result.name }}
         {% if result['unknown_words']|length > 0 %}
         <tr>
             <td>
-                <form action="/delete_from_list" method="post">
+                <form action="{{ url_for('dlernen.delete_from_list') }}" method="post">
                     <input type="hidden" value="{{result.wordlist_id}}" name="wordlist_id"/>
                     <h2>Unbekannte Worte ({{ result['unknown_words']|length }})</h2>
                     <table class="tableau">
@@ -117,7 +117,7 @@ Wordlist:  {{ result.name }}
         </tr>
         {% endif %}
     </table>
-    <form action="/update_notes" method="post">
+    <form action="{{ url_for('dlernen.update_notes') }}" method="post">
         <h2>Noten</h2>
         <input type="submit" value="Update Notes"/>
         <br>

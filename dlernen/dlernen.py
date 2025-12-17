@@ -4,7 +4,7 @@ import requests
 import json
 from dlernen import dlernen_json_schema as js
 
-bp = Blueprint('dlernen', __name__)
+bp = Blueprint('dlernen', __name__, url_prefix='/dlernen')
 
 
 def chunkify(arr, **kwargs):
@@ -36,7 +36,7 @@ def home():
 
 
 @bp.route('/lookup/<int:word_id>', methods=['GET'])
-def lookup_by_get(word_id):
+def get_word_by_id(word_id):
     # for when a word appears as a hyperlink in a page.
     return_to_wordlist_id = request.args.get('return_to_wordlist_id')
 
@@ -123,7 +123,7 @@ def wordlists():
                            status_code=r.status_code)
 
 
-@bp.route('/list_attributes/<int:wordlist_id>')
+@bp.route('/edit_list_attributes/<int:wordlist_id>')
 def list_attributes(wordlist_id):
     url = url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
@@ -138,7 +138,7 @@ def list_attributes(wordlist_id):
                            return_to_wordlist_id=wordlist_id)
 
 
-@bp.route('/list_editor/<int:wordlist_id>')
+@bp.route('/edit_list/<int:wordlist_id>')
 def list_editor(wordlist_id):
     url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
@@ -445,7 +445,7 @@ def delete_from_list():
     return redirect(target)
 
 
-@bp.route('/word/<string:word>')
+@bp.route('/edit_word/<string:word>')
 def edit_word_form(word):
     wordlist_id = request.args.get('wordlist_id')
 

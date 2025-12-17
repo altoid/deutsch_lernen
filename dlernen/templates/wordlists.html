@@ -9,7 +9,7 @@ Manage Word Lists
 <div class="wordlists">
     {% include 'header.html' %}
     <h1>Create a List</h1>
-    <form action="/addlist" method="post">
+    <form action="{{ url_for('dlernen.addlist') }}" method="post">
         <table>
             <tr>
                 <td>List Name:</td>
@@ -23,7 +23,7 @@ Manage Word Lists
         <input type="submit" value="Add List"/>
     </form>
     <h1>Word Lists</h1>
-    <form action="/deletelist" method="post">
+    <form action="{{ url_for('dlernen.deletelist') }}" method="post">
         <input type="submit" value="Delete Selected Lists"/>
         <table>
             {% for r in rows %}

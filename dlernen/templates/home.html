@@ -12,7 +12,7 @@ flashed messages usually won't appear here because this page is typically not lo
 {{ super() }}
 <div class="home">
     {% include 'header.html' %}
-    <form action="/lookup" method="post">
+    <form action="{{ url_for('dlernen.lookup_by_post') }}" method="post">
         <table>
             <tr>
                 <td>Look up word:</td>

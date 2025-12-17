@@ -33,7 +33,7 @@ Manage List:  {{ wordlist_contents.name }}
     </table>
 
     {% if wordlist_contents.list_type == 'standard' %}
-    <form action="/edit_list_contents" method="post">
+    <form action="{{ url_for('dlernen.edit_list_contents') }}" method="post">
         <input type="hidden" value="{{ wordlist_contents.wordlist_id }}" name="wordlist_id"/>
         <table>
             <tr>
