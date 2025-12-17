@@ -25,6 +25,11 @@ Manage List:  {{ wordlist_contents.name }}
                     Studienanleitung</a>
             </td>
         </tr>
+        <tr>
+            <td>
+                <a href="{{ url_for('dlernen.quiz_report', wordlist_id=wordlist_contents.wordlist_id) }}">Zeugnis</a>
+            </td>
+        </tr>
     </table>
 
     {% if wordlist_contents.list_type == 'standard' %}
