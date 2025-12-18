@@ -487,28 +487,39 @@ def edit_word_form(word):
             field_values_before[field_name] = field_value
         form_data[p['pos_name']] = sorted(form_data[p['pos_name']], key=lambda x: x['sort_order'])
 
-    # # get tags for any words that have them.  join them as a single space-separated string.
-    # if wordlist_id:
-    #     for p in pos_structure:
-    #         field_name_parts = ['tag', str(p['pos_id'])]  # convert pos id to str to join won't choke
-    #         tags = ''
-    #         if p['word_id']:
-    #             field_name_parts.append(str(p['word_id']))
-    #             url = url_for('api_wordlist_tag.get_tags',
-    #                           wordlist_id=wordlist_id,
-    #                           word_id=p['word_id'],
-    #                           _external=True)
-    #             r = requests.get(url)
-    #             if not r:
-    #                 return render_template("error.html",
-    #                                        message=r.text,
-    #                                        status_code=r.status_code)
-    #             tags_result = r.json()
-    #             tags = ' '.join(tags_result['tags'])
-    #         field_name = '-'.join(field_name_parts)
-    #         field_values_before[field_name] = tags
-    #
-    # pprint(field_values_before)
+    # get tags for any words that have them.  join them as a single space-separated string.
+    if wordlist_id:
+        for p in pos_structure:
+            field_name_parts = ['tag', str(p['pos_id'])]  # convert pos id to str to join won't choke
+            tags = ''
+            if p['word_id']:
+                field_name_parts.append(str(p['word_id']))
+                url = url_for('api_wordlist_tag.get_tags',
+                              wordlist_id=wordlist_id,
+                              word_id=p['word_id'],
+                              _external=True)
+                r = requests.get(url)
+                if not r:
+                    return render_template("error.html",
+                                           message=r.text,
+                                           status_code=r.status_code)
+                tags_result = r.json()
+                tags = ' '.join(tags_result['tags'])
+            field_name = '-'.join(field_name_parts)
+            field_values_before[field_name] = tags
+
+            # tags aren't attributes, so they don't have a sort order per POS.  fake one by finding the max
+            # sort order for this POS and adding 1 to it.
+            d = {
+                'field_name': field_name,
+                'field_value': tags,
+                'label': 'tags',
+                'sort_order': max([x['sort_order'] for x in p['attributes']]) + 1
+            }
+            form_data[p['pos_name']].append(d)
+
+    pprint(field_values_before)
+    pprint(form_data)
 
     if r:
         return render_template('edit_word.html',
