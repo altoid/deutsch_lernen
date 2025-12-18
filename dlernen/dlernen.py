@@ -445,7 +445,7 @@ def delete_from_list():
     return redirect(target)
 
 
-@bp.route('/word_editor/<string:word>')
+@bp.route('/word_editor/<string:word>', methods=['GET'])
 def edit_word_form(word):
     wordlist_id = request.args.get('wordlist_id')
 
@@ -461,7 +461,8 @@ def edit_word_form(word):
     # construct the field names for all the attributes.  field name formats are described in edit_word.html.
     form_data = {p['pos_name']: [] for p in pos_structure}
 
-    # field_values_before is a mapping of field names to field values.  when the form is submitted,
+    # field_values_before is a mapping of field names to field values, and contains the values of the
+    # attributes as retrieved from the database - before they are changed.  when the form is submitted,
     # we will get another such mapping, with whatever changes were made.  we implement the dictionary
     # update by diffing these and making the appropriate changes to the database.
 
@@ -486,11 +487,33 @@ def edit_word_form(word):
             field_values_before[field_name] = field_value
         form_data[p['pos_name']] = sorted(form_data[p['pos_name']], key=lambda x: x['sort_order'])
 
+    # # get tags for any words that have them.  join them as a single space-separated string.
+    # if wordlist_id:
+    #     for p in pos_structure:
+    #         field_name_parts = ['tag', str(p['pos_id'])]  # convert pos id to str to join won't choke
+    #         tags = ''
+    #         if p['word_id']:
+    #             field_name_parts.append(str(p['word_id']))
+    #             url = url_for('api_wordlist_tag.get_tags',
+    #                           wordlist_id=wordlist_id,
+    #                           word_id=p['word_id'],
+    #                           _external=True)
+    #             r = requests.get(url)
+    #             if not r:
+    #                 return render_template("error.html",
+    #                                        message=r.text,
+    #                                        status_code=r.status_code)
+    #             tags_result = r.json()
+    #             tags = ' '.join(tags_result['tags'])
+    #         field_name = '-'.join(field_name_parts)
+    #         field_values_before[field_name] = tags
+    #
+    # pprint(field_values_before)
+
     if r:
         return render_template('edit_word.html',
                                word=word,
                                wordlist_id=wordlist_id,
-                               return_to_wordlist_id=wordlist_id,
                                form_data=form_data,
                                field_values_before=json.dumps(field_values_before))
 
@@ -515,6 +538,7 @@ def update_dict():
     # make a dict mapping these tuples to payload objects.  also track whether
     # (word, pos_id) is associated with a word id.  if not, then we are adding.
 
+    # maps (word, pos_id) 2ples to WORD_UPDATE_PAYLOAD_SCHEMA docs.
     word_payloads = {}
     word_pos_to_word_id = {}
 
@@ -527,7 +551,7 @@ def update_dict():
         ids = k.split('-')
         pos_id = int(ids[0])
         attribute_id = int(ids[1])
-        word_id = str(ids[2]) if len(ids) > 2 else None
+        word_id = int(ids[2]) if len(ids) > 2 else None
 
         t = (word, pos_id)
         if t not in word_payloads:
@@ -535,7 +559,7 @@ def update_dict():
 
         payload = word_payloads[t]
         if word_id:
-            word_pos_to_word_id[t] = int(word_id)
+            word_pos_to_word_id[t] = word_id
 
         if value_before_stripped and not value_after_stripped:
             # we are deleting the attribute value.
@@ -550,8 +574,6 @@ def update_dict():
                 payload[js.ATTRIBUTES] = []
             payload[js.ATTRIBUTES].append({'attrvalue': value_after_unstripped,
                                            'attribute_id': attribute_id})
-            # if word_id:
-            #     word_pos_to_word_id[t] = word_id
         elif value_after_stripped != value_before_stripped:
             # we are changing an existing value.
             # we will have a word_id
@@ -592,6 +614,7 @@ def update_dict():
     # get rid of empty payloads
     word_payloads = {key: value for key, value in word_payloads.items() if value}
 
+    # update/add the word and the attribute values
     refresh_needed = False
     for k, payload in word_payloads.items():
         if k in word_pos_to_word_id:
