@@ -522,6 +522,59 @@ def edit_word_form(word):
                            status_code=r.status_code)
 
 
+def handle_attr_field(field_name, field_values_before, field_values_after, word, word_payloads, word_pos_to_word_id):
+    # helper function for update_dict(), created by the magic extract-method feature.
+
+    ids = field_name.split('-')
+    pos_id = int(ids[0])
+    attribute_id = int(ids[1])
+    word_id = int(ids[2]) if len(ids) > 2 else None
+
+    t = (word, pos_id)
+    if t not in word_payloads:
+        word_payloads[t] = {}
+    payload = word_payloads[t]
+    if word_id:
+        word_pos_to_word_id[t] = word_id
+
+    value_before_unstripped = field_values_before[field_name]
+    value_after_unstripped = field_values_after[field_name]
+    value_before_stripped = value_before_unstripped.strip()
+    value_after_stripped = value_after_unstripped.strip()
+
+    if value_before_stripped and not value_after_stripped:
+        # we are deleting the attribute value.
+        # we will have a word_id in this case
+        if js.ATTRIBUTES not in payload:
+            payload[js.ATTRIBUTES] = []
+        payload[js.ATTRIBUTES].append({'attribute_id': attribute_id})
+
+    elif value_after_stripped and not value_before_stripped:
+        # we are adding a new attribute value.
+        # we *might* have a word_id
+        if js.ATTRIBUTES not in payload:
+            payload[js.ATTRIBUTES] = []
+        payload[js.ATTRIBUTES].append({'attrvalue': value_after_unstripped,
+                                       'attribute_id': attribute_id})
+
+    elif value_after_stripped != value_before_stripped:
+        # we are changing an existing value.
+        # we will have a word_id
+        if js.ATTRIBUTES not in payload:
+            payload[js.ATTRIBUTES] = []
+        payload[js.ATTRIBUTES].append({'attribute_id': attribute_id,
+                                       'attrvalue': value_after_unstripped})
+        
+    else:
+        # stripped values are unchanged, but it may happen that the unstripped values are different
+        # because we added/removed leading/trailing whitespace and did nothing else.
+        if value_after_stripped and (value_before_unstripped != value_after_unstripped):
+            if js.ATTRIBUTES not in payload:
+                payload[js.ATTRIBUTES] = []
+            payload[js.ATTRIBUTES].append({'attribute_id': attribute_id,
+                                           'attrvalue': value_after_unstripped})
+
+
 @bp.route('/word_editor', methods=['POST'])
 def update_dict():
     word = request.form.get('word', '').strip()
@@ -542,53 +595,8 @@ def update_dict():
     word_payloads = {}
     word_pos_to_word_id = {}
 
-    for k in field_values_before.keys():
-        value_before_unstripped = field_values_before[k]
-        value_after_unstripped = field_values_after[k]
-        value_before_stripped = value_before_unstripped.strip()
-        value_after_stripped = value_after_unstripped.strip()
-
-        ids = k.split('-')
-        pos_id = int(ids[0])
-        attribute_id = int(ids[1])
-        word_id = int(ids[2]) if len(ids) > 2 else None
-
-        t = (word, pos_id)
-        if t not in word_payloads:
-            word_payloads[t] = {}
-
-        payload = word_payloads[t]
-        if word_id:
-            word_pos_to_word_id[t] = word_id
-
-        if value_before_stripped and not value_after_stripped:
-            # we are deleting the attribute value.
-            # we will have a word_id in this case
-            if js.ATTRIBUTES not in payload:
-                payload[js.ATTRIBUTES] = []
-            payload[js.ATTRIBUTES].append({'attribute_id': attribute_id})
-        elif value_after_stripped and not value_before_stripped:
-            # we are adding a new attribute value.
-            # we *might* have a word_id
-            if js.ATTRIBUTES not in payload:
-                payload[js.ATTRIBUTES] = []
-            payload[js.ATTRIBUTES].append({'attrvalue': value_after_unstripped,
-                                           'attribute_id': attribute_id})
-        elif value_after_stripped != value_before_stripped:
-            # we are changing an existing value.
-            # we will have a word_id
-            if js.ATTRIBUTES not in payload:
-                payload[js.ATTRIBUTES] = []
-            payload[js.ATTRIBUTES].append({'attribute_id': attribute_id,
-                                           'attrvalue': value_after_unstripped})
-        else:
-            # stripped values are unchanged, but it may happen that the unstripped values are different
-            # because we added/removed leading/trailing whitespace and did nothing else.
-            if value_after_stripped and (value_before_unstripped != value_after_unstripped):
-                if js.ATTRIBUTES not in payload:
-                    payload[js.ATTRIBUTES] = []
-                payload[js.ATTRIBUTES].append({'attribute_id': attribute_id,
-                                               'attrvalue': value_after_unstripped})
+    for field_name in field_values_before.keys():
+        handle_attr_field(field_name, field_values_before, field_values_after, word, word_payloads, word_pos_to_word_id)
 
     # did we change the spelling of the word?  if so add new spelling to all the payloads
     # for which word ids exist.
