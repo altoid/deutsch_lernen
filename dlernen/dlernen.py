@@ -470,7 +470,7 @@ def edit_word_form(word):
 
     for p in pos_structure:
         for a in p['attributes']:
-            t = [p['pos_id'], a['attribute_id']]
+            t = ['attr', p['pos_id'], a['attribute_id']]
             if p['word_id']:
                 t.append(p['word_id'])
 
@@ -522,13 +522,9 @@ def edit_word_form(word):
                            status_code=r.status_code)
 
 
-def diff_attr_values(field_name, value_before, value_after, word, word_payloads, word_pos_to_word_id):
+def diff_attr_values(pos_id, attribute_id, word_id,
+                     value_before, value_after, word, word_payloads, word_pos_to_word_id):
     # helper function for update_dict(), created by the magic extract-method feature.
-
-    ids = field_name.split('-')
-    pos_id = int(ids[0])
-    attribute_id = int(ids[1])
-    word_id = int(ids[2]) if len(ids) > 2 else None
 
     t = (word, pos_id)
     if t not in word_payloads:
@@ -594,9 +590,14 @@ def update_dict():
     word_pos_to_word_id = {}
 
     for field_name in field_values_before.keys():
-        diff_attr_values(field_name,
-                         field_values_before[field_name],
-                         field_values_after[field_name], word, word_payloads, word_pos_to_word_id)
+        parts = field_name.split('-')
+        if parts[0] == 'attr':
+            pos_id = int(parts[1])
+            attribute_id = int(parts[2])
+            word_id = int(parts[3]) if len(parts) > 3 else None
+            diff_attr_values(pos_id, attribute_id, word_id,
+                             field_values_before[field_name],
+                             field_values_after[field_name], word, word_payloads, word_pos_to_word_id)
 
     # did we change the spelling of the word?  if so add new spelling to all the payloads
     # for which word ids exist.

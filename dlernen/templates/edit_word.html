@@ -8,11 +8,17 @@ of speech.
 
 the names of the fields are one of these formats:
 
-pos_id-attribute_id                       - when there is no word id
-pos_id-attribute_id-word_id               - when there is a word id
+"attr"-pos_id-attribute_id                       - when there is no word id
+"attr"-pos_id-attribute_id-word_id               - when there is a word id
 
 this form will let us modify an existing word, or add a new word, or both.  we can even add multiple
 words (word+pos pairs) with their attributes in one go.
+
+for the tags fields, the names are:
+
+"tag"-pos_id                       - when there is no word id
+"tag"-pos_id-word_id               - when there is a word id
+
 #}
 
 {% block body %}
@@ -68,6 +74,18 @@ words (word+pos pairs) with their attributes in one go.
                 </td>
             </tr>
             {% endfor %}
+            {#
+            {% if wordlist_id %}
+            <tr>
+                <td class="wordedit">
+                    <input type="text"
+                           class="wordedit"
+                           placeholder="tags"
+                           name="tags">
+                </td>
+            </tr>
+            {% endif %}
+            #}
             {% endfor %}
         </table>
         <br>
