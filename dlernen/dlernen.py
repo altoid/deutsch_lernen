@@ -522,7 +522,7 @@ def edit_word_form(word):
                            status_code=r.status_code)
 
 
-def handle_attr_field(field_name, field_values_before, field_values_after, word, word_payloads, word_pos_to_word_id):
+def diff_attr_values(field_name, value_before, value_after, word, word_payloads, word_pos_to_word_id):
     # helper function for update_dict(), created by the magic extract-method feature.
 
     ids = field_name.split('-')
@@ -537,10 +537,8 @@ def handle_attr_field(field_name, field_values_before, field_values_after, word,
     if word_id:
         word_pos_to_word_id[t] = word_id
 
-    value_before_unstripped = field_values_before[field_name]
-    value_after_unstripped = field_values_after[field_name]
-    value_before_stripped = value_before_unstripped.strip()
-    value_after_stripped = value_after_unstripped.strip()
+    value_before_stripped = value_before.strip()
+    value_after_stripped = value_after.strip()
 
     if value_before_stripped and not value_after_stripped:
         # we are deleting the attribute value.
@@ -554,7 +552,7 @@ def handle_attr_field(field_name, field_values_before, field_values_after, word,
         # we *might* have a word_id
         if js.ATTRIBUTES not in payload:
             payload[js.ATTRIBUTES] = []
-        payload[js.ATTRIBUTES].append({'attrvalue': value_after_unstripped,
+        payload[js.ATTRIBUTES].append({'attrvalue': value_after,
                                        'attribute_id': attribute_id})
 
     elif value_after_stripped != value_before_stripped:
@@ -563,16 +561,16 @@ def handle_attr_field(field_name, field_values_before, field_values_after, word,
         if js.ATTRIBUTES not in payload:
             payload[js.ATTRIBUTES] = []
         payload[js.ATTRIBUTES].append({'attribute_id': attribute_id,
-                                       'attrvalue': value_after_unstripped})
-        
+                                       'attrvalue': value_after})
+
     else:
         # stripped values are unchanged, but it may happen that the unstripped values are different
         # because we added/removed leading/trailing whitespace and did nothing else.
-        if value_after_stripped and (value_before_unstripped != value_after_unstripped):
+        if value_after_stripped and (value_before != value_after):
             if js.ATTRIBUTES not in payload:
                 payload[js.ATTRIBUTES] = []
             payload[js.ATTRIBUTES].append({'attribute_id': attribute_id,
-                                           'attrvalue': value_after_unstripped})
+                                           'attrvalue': value_after})
 
 
 @bp.route('/word_editor', methods=['POST'])
@@ -596,7 +594,9 @@ def update_dict():
     word_pos_to_word_id = {}
 
     for field_name in field_values_before.keys():
-        handle_attr_field(field_name, field_values_before, field_values_after, word, word_payloads, word_pos_to_word_id)
+        diff_attr_values(field_name,
+                         field_values_before[field_name],
+                         field_values_after[field_name], word, word_payloads, word_pos_to_word_id)
 
     # did we change the spelling of the word?  if so add new spelling to all the payloads
     # for which word ids exist.
