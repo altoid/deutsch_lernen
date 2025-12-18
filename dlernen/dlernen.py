@@ -123,7 +123,7 @@ def wordlists():
                            status_code=r.status_code)
 
 
-@bp.route('/edit_list_attributes/<int:wordlist_id>')
+@bp.route('/list_attributes/<int:wordlist_id>')
 def list_attributes(wordlist_id):
     url = url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
@@ -138,7 +138,7 @@ def list_attributes(wordlist_id):
                            return_to_wordlist_id=wordlist_id)
 
 
-@bp.route('/edit_list/<int:wordlist_id>')
+@bp.route('/list_editor/<int:wordlist_id>')
 def list_editor(wordlist_id):
     url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
@@ -240,7 +240,7 @@ def deletelist():
                            status_code=r.status_code)
 
 
-@bp.route('/edit_list_attributes', methods=['POST'])
+@bp.route('/list_attributes', methods=['POST'])
 def edit_list_attributes():
     # note that the values in the form have not been subject to json schema validation.  these are just
     # whatever bullshit was entered into the form (the list_attributes template).  so we have to
@@ -302,7 +302,7 @@ def edit_list_attributes():
                            return_to_wordlist_id=wordlist_id)
 
 
-@bp.route('/edit_list_contents', methods=['POST'])
+@bp.route('/list_editor', methods=['POST'])
 def edit_list_contents():
     wordlist_id = request.form.get('wordlist_id')
     button = request.form.get('submit')
@@ -445,7 +445,7 @@ def delete_from_list():
     return redirect(target)
 
 
-@bp.route('/edit_word/<string:word>')
+@bp.route('/word_editor/<string:word>')
 def edit_word_form(word):
     wordlist_id = request.args.get('wordlist_id')
 
@@ -458,7 +458,7 @@ def edit_word_form(word):
 
     pos_structure = r.json()
 
-    # construct the field names for all the attributes.  field name formats are described in addword.html.
+    # construct the field names for all the attributes.  field name formats are described in edit_word.html.
     form_data = {p['pos_name']: [] for p in pos_structure}
 
     # field_values_before is a mapping of field names to field values.  when the form is submitted,
@@ -487,7 +487,7 @@ def edit_word_form(word):
         form_data[p['pos_name']] = sorted(form_data[p['pos_name']], key=lambda x: x['sort_order'])
 
     if r:
-        return render_template('addword.html',
+        return render_template('edit_word.html',
                                word=word,
                                wordlist_id=wordlist_id,
                                return_to_wordlist_id=wordlist_id,
@@ -499,7 +499,7 @@ def edit_word_form(word):
                            status_code=r.status_code)
 
 
-@bp.route('/update_dict', methods=['POST'])
+@bp.route('/word_editor', methods=['POST'])
 def update_dict():
     word = request.form.get('word', '').strip()
     word_before = request.form.get('word_before')
