@@ -1132,6 +1132,64 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
+class Test_WORD_TAG_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = js.WORD_TAG_RESPONSE_SCHEMA
+
+    valid_docs = [
+        {
+            "wordlist_id": 1234,
+            "word_id": 234,
+            "tags": [
+                "one", "two", "aoeu"
+            ]
+        },
+        {
+            "wordlist_id": 1234,
+            "word_id": 234,
+            "tags": [
+            ]
+        },
+    ]
+
+    invalid_docs = [
+        {
+            # "wordlist_id": 1234,
+            "word_id": 234,
+            "tags": [
+                "one", "two", "aoeu"
+            ]
+        },
+        {
+            "wordlist_id": 1234,
+            # "word_id": 234,
+            "tags": [
+                "one", "two", "aoeu"
+            ]
+        },
+        {
+            "wordlist_id": 1234,
+            "word_id": 234,
+            # "tags": [
+            #     "one", "two", "aoeu"
+            # ]
+        },
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, self.schema)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
 class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
     schema = js.WORD_UPDATE_PAYLOAD_SCHEMA
 

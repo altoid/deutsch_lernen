@@ -539,6 +539,34 @@ QUIZ_RESPONSE_SCHEMA = {
     }
 }
 
+WORD_TAG_RESPONSE_SCHEMA = {
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Wordlist",
+    "description": """
+    list of tags for a wordlist_id/word_id
+    """,
+    "type": "object",
+    "required": [
+        "word_id",
+        "wordlist_id",
+        "tags"
+    ],
+    "properties": {
+        "wordlist_id": {
+            "type": "integer",
+        },
+        "word_id": {
+            "type": "integer",
+        },
+        "tags": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    }
+}
+
 WORDLIST_METADATA_RESPONSE_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
