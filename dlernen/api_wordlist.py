@@ -492,6 +492,8 @@ def delete_from_wordlist(wordlist_id):
             #   check for this and return a 404.
 
             if word_ids:
+                # note:  any tags that exist for this word in this wordlist will be automatically removed.
+                # the foreign keys in the tag table point to wordlist_known_word, so no code need for this.
                 sql = """
                 delete from wordlist_known_word 
                 where wordlist_id = %(wordlist_id)s and word_id = %(word_id)s
