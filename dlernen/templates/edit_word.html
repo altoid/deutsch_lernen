@@ -69,11 +69,19 @@ for the tags fields, the names are:
             {% for field in form_data[pos_name] %}
             <tr>
                 <td class="wordedit">
+                    {% if field.disabled %}
+                    <input type="text"
+                           class="wordedit"
+                           placeholder="{{ field.label }}"
+                           name="{{ field.field_name }}"
+                           value="{{ field.field_value }}" disabled>
+                    {% else %}
                     <input type="text"
                            class="wordedit"
                            placeholder="{{ field.label }}"
                            name="{{ field.field_name }}"
                            value="{{ field.field_value }}">
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}

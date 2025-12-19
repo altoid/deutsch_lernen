@@ -457,7 +457,6 @@ def edit_word_form(word):
     # otherwise this form lets us add tags to new parts of speech that we are adding to the dictionary, or
     # modify tags for parts of speech that are already in the dictionary.
 
-    print("####################### edit_word_form")
     wordlist_id = request.args.get('wordlist_id')
 
     url = url_for('api_pos.get_pos_for_word', word=word, _external=True)
@@ -468,7 +467,6 @@ def edit_word_form(word):
                                status_code=r.status_code)
 
     pos_structure = r.json()
-    pprint(pos_structure)
     form_data = {p['pos_name']: [] for p in pos_structure}
 
     # field_values_before is a mapping of field names to field values, and contains the values of the
@@ -491,7 +489,8 @@ def edit_word_form(word):
                 'field_name': field_name,
                 'field_value': field_value,
                 'label': a['attrkey'],
-                'sort_order': a['sort_order']
+                'sort_order': a['sort_order'],
+                'disabled': False
             }
             form_data[p['pos_name']].append(d)
             field_values_before[field_name] = field_value
@@ -500,6 +499,7 @@ def edit_word_form(word):
     # get tags for any words that have them.  join them as a single space-separated string.
     if wordlist_id:
         for p in pos_structure:
+            field_disabled = False
             if p['word_id']:
                 url = url_for('api_wordlist_tag.get_tags',
                               wordlist_id=wordlist_id,
@@ -508,15 +508,15 @@ def edit_word_form(word):
                 r = requests.get(url)
                 if r.status_code == 400:
                     # p['word_id'] is not in the word list.  no big deal.
-                    continue
-
-                if not r:
+                    field_disabled = True
+                    tags = ''
+                elif not r:
                     return render_template("error.html",
                                            message="2: %s" % r.text,
                                            status_code=r.status_code)
-
-                tags_result = r.json()
-                tags = ' '.join(tags_result['tags'])
+                else:
+                    tags_result = r.json()
+                    tags = ' '.join(tags_result['tags'])
                 field_name_parts = ['tag', str(p['pos_id']), str(p['word_id'])]  # convert to str to join won't choke
             else:
                 tags = ''
@@ -531,12 +531,10 @@ def edit_word_form(word):
                 'field_name': field_name,
                 'field_value': tags,
                 'label': 'tags',
-                'sort_order': max([x['sort_order'] for x in p['attributes']]) + 1
+                'sort_order': max([x['sort_order'] for x in p['attributes']]) + 1,
+                'disabled': field_disabled
             }
             form_data[p['pos_name']].append(d)
-
-    pprint(field_values_before)
-    pprint(form_data)
 
     if r:
         return render_template('edit_word.html',
@@ -603,7 +601,7 @@ def update_dict():
     word_before = request.form.get('word_before')
     wordlist_id = request.form.get('wordlist_id')
     field_values_before = json.loads(request.form.get('field_values_before'))
-    field_values_after = {k: request.form.get(k) for k in field_values_before.keys()}
+    field_values_after = {k: request.form.get(k, '') for k in field_values_before.keys()}
 
     # go through all the attribute values and diff before/after.  we will construct add/update
     # payloads and send them off to the API.  we will have to construct one request per
