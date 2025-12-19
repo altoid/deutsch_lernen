@@ -1,53 +1,53 @@
 {% extends "base.html" %}
 {% block title %}
-Wordlist:  {{ result.name }}
+Wordlist:  {{ wordlist.name }}
 {% endblock %}
 {% block body %}
 {{ super() }}
 <div class="wordlist">
     <h1>
-        {{result.name}} ({{result.wordlist_id}})
+        {{wordlist.name}} ({{wordlist.wordlist_id}})
     </h1>
     <table>
-        {% if result['source_is_url'] == true %}
+        {% if wordlist['source_is_url'] == true %}
         <tr>
-            <td><a href="{{ result.citation }}">{{ result.citation }}</a></td>
+            <td><a href="{{ wordlist.citation }}">{{ wordlist.citation }}</a></td>
         </tr>
-        {% elif result.citation %}
+        {% elif wordlist.citation %}
         <tr>
-            <td>{{ result.citation }}</td>
+            <td>{{ wordlist.citation }}</td>
         </tr>
         {% endif %}
-        {% if result['list_type'] == 'empty' or result['list_type'] == 'standard' %}
+        {% if wordlist['list_type'] == 'empty' or wordlist['list_type'] == 'standard' %}
         <tr>
             <td>
                 <form action="{{ url_for('dlernen.add_to_list') }}" method="post">
                     Word:
                     <input type="text" name="word"/>
-                    <input type="hidden" value="{{result.wordlist_id}}" name="wordlist_id"/>
+                    <input type="hidden" value="{{wordlist.wordlist_id}}" name="wordlist_id"/>
                     <input type="submit" value="Add Word"/>
                 </form>
             </td>
         </tr>
         <tr>
             <td>
-                <a href="{{ url_for('dlernen.list_editor', wordlist_id=result.wordlist_id) }}">Editor</a>
+                <a href="{{ url_for('dlernen.list_editor', wordlist_id=wordlist.wordlist_id) }}">Editor</a>
             </td>
         </tr>
         {% endif %}
         <tr>
             <td>
-                <a href="{{ url_for('dlernen.quiz_report', wordlist_id=result.wordlist_id) }}">Zeugnis</a>
+                <a href="{{ url_for('dlernen.quiz_report', wordlist_id=wordlist.wordlist_id) }}">Zeugnis</a>
             </td>
         </tr>
         <tr>
             <td>
-                <a href="{{ url_for('dlernen.study_guide', wordlist_id=result.wordlist_id) }}">Studienanleitung</a>
+                <a href="{{ url_for('dlernen.study_guide', wordlist_id=wordlist.wordlist_id) }}">Studienanleitung</a>
             </td>
         </tr>
         <tr>
             <td>
-                <a href="{{ url_for('dlernen.list_attributes', wordlist_id=result.wordlist_id) }}">
+                <a href="{{ url_for('dlernen.list_attributes', wordlist_id=wordlist.wordlist_id) }}">
                     Metadaten der Liste</a>
             </td>
         </tr>
@@ -55,7 +55,7 @@ Wordlist:  {{ result.name }}
     <table>
         <tr>
             <td>
-                <h2>Bekannte Worte ({{ result['known_words']|length }})</h2>
+                <h2>Bekannte Worte ({{ wordlist['known_words']|length }})</h2>
                 <table class="tableau">
                     <tr>
                         {% for column in known_words %}
@@ -67,7 +67,7 @@ Wordlist:  {{ result.name }}
                                         {{ r.article }}
                                     </td>
                                     <td>
-                                        <a href="{{ url_for('dlernen.get_word_by_id', word_id=r.word_id, return_to_wordlist_id=result.wordlist_id) }}">
+                                        <a href="{{ url_for('dlernen.get_word_by_id', word_id=r.word_id, wordlist_id=wordlist.wordlist_id) }}">
                                             {{ r.word }}
                                         </a>
                                     </td>
@@ -81,12 +81,12 @@ Wordlist:  {{ result.name }}
                 </table>
             </td>
         </tr>
-        {% if result['unknown_words']|length > 0 %}
+        {% if wordlist['unknown_words']|length > 0 %}
         <tr>
             <td>
                 <form action="{{ url_for('dlernen.delete_from_list') }}" method="post">
-                    <input type="hidden" value="{{result.wordlist_id}}" name="wordlist_id"/>
-                    <h2>Unbekannte Worte ({{ result['unknown_words']|length }})</h2>
+                    <input type="hidden" value="{{wordlist.wordlist_id}}" name="wordlist_id"/>
+                    <h2>Unbekannte Worte ({{ wordlist['unknown_words']|length }})</h2>
                     <table class="tableau">
                         <tr>
                             {% for column in unknown_words %}
@@ -96,7 +96,7 @@ Wordlist:  {{ result.name }}
                                     <tr>
                                         <td><input type="checkbox" name="unknown_wordlist" value="{{ r }}"></td>
                                         <td>
-                                            <a href="{{ url_for('dlernen.edit_word_form', wordlist_id=result.wordlist_id, word=r) }}">
+                                            <a href="{{ url_for('dlernen.edit_word_form', wordlist_id=wordlist.wordlist_id, word=r) }}">
                                                 {{ r }}
                                             </a>
                                         </td>
@@ -121,9 +121,9 @@ Wordlist:  {{ result.name }}
         <h2>Noten</h2>
         <input type="submit" value="Update Notes"/>
         <br>
-        <textarea class="notes" name="notes">{{ result.notes }}</textarea>
+        <textarea class="notes" name="notes">{{ wordlist.notes }}</textarea>
         <br>
-        <input type="hidden" value="{{result.wordlist_id}}" name="wordlist_id"/>
+        <input type="hidden" value="{{wordlist.wordlist_id}}" name="wordlist_id"/>
         <input type="submit" value="Update Notes"/>
     </form>
 </div>

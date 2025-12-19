@@ -244,7 +244,8 @@ WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Payload for add/delete tags",
     "description": """
-    payload for adding/deleting multiple tags for a wordlist.
+    payload for adding/deleting multiple tags for a word in a wordlist.  word_id and
+    wordlist_id must be in the url; they aren't here.
     """,
     "type": "array",
     "items": {

@@ -31,7 +31,7 @@ Lookup {{ word }}
     <h1>
         {% if return_to_wordlist_id != none %}
         <a name="{{ tuple[0]['word'] }}"
-           href="{{ url_for('dlernen.edit_word_form', word=tuple[0]['word'], wordlist_id=return_to_wordlist_id) }}">
+           href="{{ url_for('dlernen.edit_word_form', word=tuple[0]['word'], wordlist_id=wordlist_id) }}">
             {{ tuple[0]['word'] }}
         </a>
         {% else %}

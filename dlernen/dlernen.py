@@ -38,7 +38,7 @@ def home():
 @bp.route('/lookup/<int:word_id>', methods=['GET'])
 def get_word_by_id(word_id):
     # for when a word appears as a hyperlink in a page.
-    return_to_wordlist_id = request.args.get('return_to_wordlist_id')
+    wordlist_id = request.args.get('wordlist_id')
 
     r = requests.get(url_for('api_word.get_word_by_id', word_id=word_id, _external=True))
     if not r:
@@ -60,7 +60,7 @@ def get_word_by_id(word_id):
 
     return render_template('lookup.html',
                            word=result["word"],
-                           return_to_wordlist_id=return_to_wordlist_id,
+                           wordlist_id=wordlist_id,
                            template_args=template_args)
 
 
@@ -172,16 +172,16 @@ def wordlist(wordlist_id):
                                return_to_wordlist_id=wordlist_id)
 
     if r:
-        result = r.json()
-        if result['notes'] is None:
+        wordlist = r.json()
+        if wordlist['notes'] is None:
             # otherwise the word 'None' is rendered in the form
-            result['notes'] = ''
+            wordlist['notes'] = ''
 
-        known_words = chunkify(result['known_words'], nchunks=nchunks)
-        unknown_words = chunkify(result['unknown_words'], nchunks=nchunks)
+        known_words = chunkify(wordlist['known_words'], nchunks=nchunks)
+        unknown_words = chunkify(wordlist['unknown_words'], nchunks=nchunks)
 
         return render_template('wordlist.html',
-                               result=result,
+                               wordlist=wordlist,
                                known_words=known_words,
                                unknown_words=unknown_words)
 
@@ -447,13 +447,21 @@ def delete_from_list():
 
 @bp.route('/word_editor/<string:word>', methods=['GET'])
 def edit_word_form(word):
+    # construct the editing form for this word, with all attributes for all parts of speech.  a tags fields
+    # will appear if:
+    #
+    # - a wordlist_id is present
+    # - the part of speech is in the wordlist.
+    #
+    # this form will only let you modify tags for words that are in the wordlist.
+
     wordlist_id = request.args.get('wordlist_id')
 
     url = url_for('api_pos.get_pos_for_word', word=word, _external=True)
     r = requests.get(url)
     if not r:
         return render_template("error.html",
-                               message=r.text,
+                               message="1: %s" % r.text,
                                status_code=r.status_code)
 
     pos_structure = r.json()
@@ -490,21 +498,27 @@ def edit_word_form(word):
     # get tags for any words that have them.  join them as a single space-separated string.
     if wordlist_id:
         for p in pos_structure:
-            field_name_parts = ['tag', str(p['pos_id'])]  # convert pos id to str to join won't choke
-            tags = ''
-            if p['word_id']:
-                field_name_parts.append(str(p['word_id']))
-                url = url_for('api_wordlist_tag.get_tags',
-                              wordlist_id=wordlist_id,
-                              word_id=p['word_id'],
-                              _external=True)
-                r = requests.get(url)
-                if not r:
-                    return render_template("error.html",
-                                           message=r.text,
-                                           status_code=r.status_code)
-                tags_result = r.json()
-                tags = ' '.join(tags_result['tags'])
+            if not p['word_id']:
+                continue
+
+            url = url_for('api_wordlist_tag.get_tags',
+                          wordlist_id=wordlist_id,
+                          word_id=p['word_id'],
+                          _external=True)
+            r = requests.get(url)
+            if r.status_code == 400:
+                # p['word_id'] is not in the word list.  no big deal.
+                continue
+
+            if not r:
+                return render_template("error.html",
+                                       message="2: %s" % r.text,
+                                       status_code=r.status_code)
+
+            tags_result = r.json()
+            tags = ' '.join(tags_result['tags'])
+            field_name_parts = ['tag', str(p['pos_id']), str(p['word_id'])]  # convert to str to join won't choke
+
             field_name = '-'.join(field_name_parts)
             field_values_before[field_name] = tags
 
@@ -518,9 +532,6 @@ def edit_word_form(word):
             }
             form_data[p['pos_name']].append(d)
 
-    pprint(field_values_before)
-    pprint(form_data)
-
     if r:
         return render_template('edit_word.html',
                                word=word,
@@ -529,7 +540,7 @@ def edit_word_form(word):
                                field_values_before=json.dumps(field_values_before))
 
     return render_template("error.html",
-                           message=r.text,
+                           message="3: %s" % r.text,
                            status_code=r.status_code)
 
 
@@ -598,7 +609,22 @@ def update_dict():
 
     # maps (word, pos_id) 2ples to WORD_UPDATE_PAYLOAD_SCHEMA docs.
     word_payloads = {}
+
+    # maps (word, pos_id) 2ples to word_id (if there is one for this word/pos_id)
     word_pos_to_word_id = {}
+
+    # this will contain the set of tags based on the tag string (what was entered in the field) for the POS.
+    # we will put a (wordlist_id, word_id) -> tags mapping here if:
+    #
+    # - a wordlist_id is present
+    # - the tag string has been changed.
+    #
+    # so, word_id_to_tags_adding and word_id_to_tags_deleting will only contain a mapping when the tags for a word
+    # have changed.
+    # note that when we are adding a new word, we have to give attribute values for the word in order for it to
+    # be added to the database.  we can't supply just tags for a word.
+    word_id_to_tags_adding = {}
+    word_id_to_tags_deleting = {}
 
     for field_name in field_values_before.keys():
         parts = field_name.split('-')
@@ -609,6 +635,21 @@ def update_dict():
             diff_attr_values(pos_id, attribute_id, word_id,
                              field_values_before[field_name],
                              field_values_after[field_name], word, word_payloads, word_pos_to_word_id)
+        elif wordlist_id and parts[0] == 'tag':
+            tag_str_before = field_values_before[field_name]
+            tags_before = set(tag_str_before.split())
+            tag_str_after = field_values_after[field_name]
+            tags_after = set(tag_str_after.split())
+
+            # the edit_word_form method guarantees that if the form has a field for tags, then the POS has a
+            # word id and that word_id is in the wordlist.
+
+            # pos_id = int(parts[1])
+            word_id = int(parts[2]) if len(parts) > 2 else None
+            if tags_after != tags_before:
+                t = (wordlist_id, word_id)
+                word_id_to_tags_deleting[t] = tags_before
+                word_id_to_tags_adding[t] = tags_after
 
     # did we change the spelling of the word?  if so add new spelling to all the payloads
     # for which word ids exist.
@@ -633,9 +674,9 @@ def update_dict():
 
     # get rid of empty payloads
     word_payloads = {key: value for key, value in word_payloads.items() if value}
-
     # update/add the word and the attribute values
     refresh_needed = False
+
     for k, payload in word_payloads.items():
         if k in word_pos_to_word_id:
             # we are updating
@@ -645,13 +686,40 @@ def update_dict():
             if not r:
                 flash("could not update word %s [%s]:  %s" % (word, r.status_code, r.text))
         else:
-            # we are adding a new word
+            # we are adding a new word.
             url = url_for('api_word.add_word', _external=True)
             r = requests.post(url, json=payload)
             if r:
                 refresh_needed = True
             else:
                 flash("could not insert word %s [%s]:  %s" % (word, r.status_code, r.text))
+
+    # update any tag lists we may have changed.  just drop the ones that are there and add back the ones we got
+    # from the form.
+    for k, tag_set in word_id_to_tags_deleting.items():
+        wordlist_id, word_id = k
+        url = url_for('api_wordlist_tag.delete_tags',
+                      word_id=word_id,
+                      wordlist_id=wordlist_id,
+                      tag=list(tag_set),
+                      _external=True)
+        r = requests.delete(url)
+        if not r:
+            return render_template("error.html",
+                                   message="delete tags failed (word_id %s):  %s" % (word_id, r.text),
+                                   status_code=r.status_code)
+
+    for k, tag_set in word_id_to_tags_adding.items():
+        wordlist_id, word_id = k
+        url = url_for('api_wordlist_tag.add_tags',
+                      word_id=word_id,
+                      wordlist_id=wordlist_id,
+                      _external=True)
+        r = requests.post(url, json=list(tag_set))
+        if not r:
+            return render_template("error.html",
+                                   message="add tags failed (word_id %s):  %s" % (word_id, r.text),
+                                   status_code=r.status_code)
 
     if refresh_needed:
         refresh_payload = {
