@@ -350,7 +350,7 @@ def edit_list_contents():
             if word_id not in word_ids_to_tags:
                 word_ids_to_tags[word_id] = []
             word_ids_to_tags[word_id].append(tag)
-        pprint(word_ids_to_tags)
+
         for word_id, tags in word_ids_to_tags.items():
             url = url_for('api_wordlist_tag.delete_tags',
                           wordlist_id=wordlist_id,
