@@ -20,7 +20,7 @@
 #}
 <div class="listattributes">
     {% include 'header.html' %}
-    <form action="{{ url_for('dlernen.edit_list_contents') }}" method="post">
+    <form action="{{ url_for('dlernen.edit_list_attributes') }}" method="post">
         <input type="hidden" value="{{ wordlist_metadata.wordlist_id }}" name="wordlist_id"/>
         <input type="hidden" value="{{ wordlist_metadata.list_type }}" name="list_type"/>
         <table>
