@@ -113,6 +113,10 @@ td {
     min-height: 100vh;
 }
 
+input[type="text"].list_editor_text {
+    width: 200px
+}
+
 .study_guide {
     background-color: var(--background-color);
     padding: 10px;
