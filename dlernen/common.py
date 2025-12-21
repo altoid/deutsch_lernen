@@ -32,14 +32,14 @@ def get_word_ids_from_wordlists(wordlist_ids, cursor):
     and sqlcode is not NULL
     """
 
-    cursor.execute(sql, (*wordlist_ids,))
+    cursor.execute(sql, wordlist_ids)
     rows = cursor.fetchall()
 
     smartlist_clauses = list(map(lambda x: x['sqlcode'], rows))
 
     sql = ') UNION ('.join(sql_for_standard_lists + smartlist_clauses)
     sql = '( %s )' % sql
-    print(sql)
+
     cursor.execute(sql, (*wordlist_ids,))
 
     rows = cursor.fetchall()
