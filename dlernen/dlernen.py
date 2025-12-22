@@ -68,7 +68,6 @@ def get_word_by_id(word_id):
 def lookup_by_post():
     # for looking up a word entered into a form.
     word = request.form.get('lookup')
-    return_to_wordlist_id = request.form.get('return_to_wordlist_id')
     results = []
     r = requests.get(url_for('api_word.get_word', word=word, partial=True, _external=True))
     if r.status_code == 404:
@@ -79,18 +78,6 @@ def lookup_by_post():
         return render_template("error.html",
                                message=r.text,
                                status_code=r.status_code)
-
-    # # if nothing found, redo the query as a partial match.
-    # if not results:
-    #     r = requests.get(url_for('api_word.get_word', word=word, partial=True, _external=True))
-    #     if r.status_code == 404:
-    #         pass
-    #     elif r.status_code == 200:
-    #         results = r.json()
-    #     else:
-    #         return render_template("error.html",
-    #                                message=r.text,
-    #                                status_code=r.status_code)
 
     results = sorted(results, key=lambda x: str.lower(x['word']))
     template_args = []
@@ -106,7 +93,6 @@ def lookup_by_post():
 
     return render_template('lookup.html',
                            word=word,
-                           return_to_wordlist_id=return_to_wordlist_id,
                            template_args=template_args)
 
 
@@ -134,8 +120,7 @@ def list_attributes(wordlist_id):
     wordlist_metadata = {k: '' if v is None else v for k, v in r.json().items()}
 
     return render_template('list_attributes.html',
-                           wordlist_metadata=wordlist_metadata,
-                           return_to_wordlist_id=wordlist_id)
+                           wordlist_metadata=wordlist_metadata)
 
 
 @bp.route('/list_editor/<int:wordlist_id>')
@@ -149,8 +134,7 @@ def list_editor(wordlist_id):
     wordlist_result = r.json()
 
     return render_template('list_editor.html',
-                           wordlist_contents=wordlist_result,
-                           return_to_wordlist_id=wordlist_id)
+                           wordlist_contents=wordlist_result)
 
 
 @bp.route('/wordlist/<int:wordlist_id>')
@@ -168,8 +152,7 @@ def wordlist(wordlist_id):
 
         flash("invalid sqlcode")
         return render_template('list_attributes.html',
-                               wordlist_metadata=metadata,
-                               return_to_wordlist_id=wordlist_id)
+                               wordlist_metadata=metadata)
 
     if r:
         wordlist = r.json()
@@ -233,7 +216,7 @@ def deletelist():
 
     r = requests.put(url_for('api_wordlist.delete_wordlists', _external=True), json=doomed)
     if r:
-        return redirect('/wordlists')
+        return redirect('dlernen.wordlists')
 
     return render_template("error.html",
                            message=r.text,
@@ -252,7 +235,7 @@ def edit_list_attributes():
     wordlist_id = request.form.get('wordlist_id')
     list_type = request.form.get('list_type')
 
-    # snapshot the list metadata as intered into the form in case we need to render it again later.
+    # snapshot the list metadata as entered into the form in case we need to render it again later.
     metadata = {
         "name": name,
         "sqlcode": sqlcode,
@@ -265,8 +248,7 @@ def edit_list_attributes():
     if not name:
         flash("Die Liste muss einen Namen haben")
         return render_template('list_attributes.html',
-                               wordlist_metadata=metadata,
-                               return_to_wordlist_id=wordlist_id)
+                               wordlist_metadata=metadata)
 
     x = sqlcode.strip()
     if not x:
@@ -289,17 +271,14 @@ def edit_list_attributes():
         # unprocessable content - the sqlcode is not valid.  redirect to the list attributes page to fix it.
         flash("invalid sqlcode")
         return render_template('list_attributes.html',
-                               wordlist_metadata=metadata,
-                               return_to_wordlist_id=wordlist_id)
+                               wordlist_metadata=metadata)
 
     if not r:
         return render_template("error.html",
                                message=r.text,
                                status_code=r.status_code)
 
-    return render_template('list_attributes.html',
-                           wordlist_metadata=metadata,
-                           return_to_wordlist_id=wordlist_id)
+    return redirect(url_for('dlernen.wordlist', wordlist_id=wordlist_id))
 
 
 @bp.route('/list_editor', methods=['POST'])
@@ -373,8 +352,7 @@ def edit_list_contents():
     wordlist_contents = r.json()
 
     return render_template('list_editor.html',
-                           wordlist_contents=wordlist_contents,
-                           return_to_wordlist_id=wordlist_id)
+                           wordlist_contents=wordlist_contents)
 
 
 @bp.route('/add_to_list', methods=['POST'])
