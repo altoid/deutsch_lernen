@@ -148,7 +148,7 @@ def create_wordlist_metadata():
 
             # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
 
-            return result
+            return result, 201
 
         except mysql.connector.errors.ProgrammingError as f:
             # if validation of sqlcode that is read from the database fails,

@@ -39,7 +39,7 @@ class APIWordListMetadataCreate(unittest.TestCase):
             }
     
             r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
-            self.assertEqual(r.status_code, 200)
+            self.assertEqual(r.status_code, 201)
             obj = json.loads(r.data)
             wordlist_id = obj['wordlist_id']
     
@@ -73,7 +73,7 @@ class APIWordListMetadataCreate(unittest.TestCase):
             }
     
             r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
-            self.assertEqual(r.status_code, 200)
+            self.assertEqual(r.status_code, 201)
             obj = json.loads(r.data)
             wordlist_id = obj['wordlist_id']
     
@@ -244,7 +244,7 @@ class APIWordListMetadataUpdate(unittest.TestCase):
         }
 
         r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=payload)
-        self.assertNotEqual(r.status_code, 200)
+        self.assertNotEqual(r.status_code, 201)
 
     # update all the fields and set citation and sqlcode to nontrivial values, then set citation and sqlcode back to
     # None.

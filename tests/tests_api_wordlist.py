@@ -40,7 +40,7 @@ class APIWordlistBatchDelete(unittest.TestCase):
         }
 
         r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
         wordlist_id_1 = obj['wordlist_id']
 
@@ -50,7 +50,7 @@ class APIWordlistBatchDelete(unittest.TestCase):
         }
 
         r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
         wordlist_id_2 = obj['wordlist_id']
 
