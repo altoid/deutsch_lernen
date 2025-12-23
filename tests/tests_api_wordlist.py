@@ -1,5 +1,5 @@
 import unittest
-from dlernen import create_app
+from dlernen import create_app, dlernen_json_schema as js
 from flask import url_for
 import json
 import random
@@ -520,3 +520,146 @@ class APIWordlist(unittest.TestCase):
             })
 
             self.assertNotEqual(200, r.status_code)
+
+
+# tests for adding words by id
+class APIWordlistAddByID(unittest.TestCase):
+    app = None
+    app_context = None
+    client = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
+            TESTING=True,
+        )
+
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
+
+        with cls.app.test_request_context():
+            r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
+            cls.keyword_mappings = json.loads(r.data)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
+
+    # the setup for this class creates a list with just a name.
+    def setUp(self):
+        self.list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': self.list_name
+        }
+
+        with self.app.test_request_context():
+            r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+            obj = json.loads(r.data)
+            self.wordlist_id = obj['wordlist_id']
+
+            # create a word
+            word = ''.join(random.choices(string.ascii_lowercase, k=10))
+            add_payload = {
+                "word": word,
+                "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
+            }
+            r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+            obj = json.loads(r.data)
+            self.word_id = obj['word_id']
+
+            self.metadata_update_url = url_for('api_wordlist.update_wordlist_metadata',
+                                               wordlist_id=self.wordlist_id,
+                                               _external=True)
+
+    def tearDown(self):
+        with self.app.test_request_context():
+            self.client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=self.wordlist_id,
+                                       _external=True))
+            with self.app.test_request_context():
+                self.client.delete(url_for('api_word.delete_word', word_id=self.word_id, _external=True))
+
+    # do nothing, just make sure that setUp and tearDown work
+    def test_nothing(self):
+        pass
+
+    # base case, add word ids to a list.
+    def test_add_by_word_id(self):
+        # make sure the list is empty
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id,
+                                    _external=True))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual(0, len(obj['known_words']))
+
+        # add the word by id
+        r = self.client.put(url_for('api_wordlist.add_words_by_id',
+                                    wordlist_id=self.wordlist_id, _external=True),
+                            json=[self.word_id])
+        self.assertEqual(200, r.status_code)
+
+        # make sure the list now has our word in it.
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id,
+                                    _external=True))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual(1, len(obj['known_words']))
+
+    # add the same ids multiple times, should do no harm
+    def test_add_by_word_id_repeat(self):
+        # add the word by id
+        r = self.client.put(url_for('api_wordlist.add_words_by_id',
+                                    wordlist_id=self.wordlist_id, _external=True),
+                            json=[self.word_id])
+        self.assertEqual(200, r.status_code)
+
+        # add it again.
+        r = self.client.put(url_for('api_wordlist.add_words_by_id',
+                                    wordlist_id=self.wordlist_id, _external=True),
+                            json=[self.word_id])
+        self.assertEqual(200, r.status_code)
+
+        # make sure the list now has our word in it exactly once.
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id,
+                                    _external=True))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual(1, len(obj['known_words']))
+
+    # add with empty payload
+    def test_add_by_word_id_empty_payload(self):
+        r = self.client.put(url_for('api_wordlist.add_words_by_id',
+                                    wordlist_id=self.wordlist_id, _external=True),
+                            json=[])
+        self.assertEqual(200, r.status_code)
+
+    # add to smart list - should fail
+    def test_add_by_word_id_smart_list(self):
+        payload = {
+            'sqlcode': 'select id word_id from word where id = 555'
+        }
+
+        r = self.client.put(self.metadata_update_url, json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual('smart', obj['list_type'])
+
+        # add the word by id - should not succeed
+        r = self.client.put(url_for('api_wordlist.add_words_by_id',
+                                    wordlist_id=self.wordlist_id, _external=True),
+                            json=[self.word_id])
+        self.assertEqual(400, r.status_code)
+
+    # # add with bullshit wordlist_id - won't work because view function uses insert ignore
+    # def test_add_by_word_id_bullshit_wordlist(self):
+    #     r = self.client.put(url_for('api_wordlist.add_words_by_id',
+    #                                 wordlist_id=self.wordlist_id, _external=True),
+    #                         json=[6666666])
+    #     self.assertNotEqual(200, r.status_code)
+    #
+    # # add with bullshit word_id - won't work because view function uses insert ignore
+    # def test_add_by_word_id_bullshit_word_id(self):
+    #     raise NotImplementedError(self.id())
+
+

@@ -378,6 +378,45 @@ def get_wordlist(wordlist_id):
         return str(f), 500
 
 
+@bp.route('/api/wordlist/<int:wordlist_id>/wordids', methods=['PUT'])
+def add_words_by_id(wordlist_id):
+    try:
+        word_ids = request.get_json()
+        jsonschema.validate(word_ids, dlernen_json_schema.WORDLIST_WORDIDS_PAYLOAD_SCHEMA)
+    except jsonschema.ValidationError as e:
+        return "bad payload: %s" % e.message, 400
+
+    if not word_ids:
+        return "OK", 200
+
+    wordlist = __get_wordlist(wordlist_id)
+    if wordlist['list_type'] == 'smart':
+        return "can't add words to smart list", 400
+
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        try:
+            cursor.execute('start transaction')
+
+            wkw_tuples = [(wordlist_id, word_id) for word_id in word_ids]
+            if wkw_tuples:
+                ins_sql = """
+                insert ignore into wordlist_known_word (wordlist_id, word_id)
+                values (%s, %s)
+                """
+                cursor.executemany(ins_sql, wkw_tuples)
+
+            cursor.execute('commit')
+
+            return "OK", 200
+        except Exception as e:
+            pprint(e)
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            print(exc_type, fname, exc_tb.tb_lineno)
+            cursor.execute('rollback')
+            return "update list failed", 500
+
+
 @bp.route('/api/wordlist/<int:wordlist_id>/contents', methods=['PUT'])
 def update_wordlist_contents(wordlist_id):
     try:
