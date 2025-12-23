@@ -27,18 +27,22 @@ def is_irregular_verb(word):
     if not word_id:
         return None
 
-    sps = list(filter(lambda x: x['attrkey'] == 'second_person_singular', verb_part['attributes']))[0]['attrvalue']
-    if not sps:
+    second_person_singular = list(filter(lambda x: x['attrkey'] == 'second_person_singular', verb_part['attributes']))[0]['attrvalue']
+    if not second_person_singular:
         return None
 
-    tps = list(filter(lambda x: x['attrkey'] == 'third_person_singular', verb_part['attributes']))[0]['attrvalue']
-    if not tps:
+    third_person_singular = list(filter(lambda x: x['attrkey'] == 'third_person_singular', verb_part['attributes']))[0]['attrvalue']
+    if not third_person_singular:
+        return None
+
+    third_person_past = list(filter(lambda x: x['attrkey'] == 'third_person_past', verb_part['attributes']))[0]['attrvalue']
+    if not third_person_past:
         return None
 
     # if there is a separable prefix, toss it.
-    sps_parts = sps.split()
-    if len(sps_parts) > 1:
-        prefix = sps_parts[1]
+    second_person_singular_parts = second_person_singular.split()
+    if len(second_person_singular_parts) > 1:
+        prefix = second_person_singular_parts[1]
         stem = word[len(prefix):]
     else:
         stem = word
@@ -51,14 +55,19 @@ def is_irregular_verb(word):
     if stem.endswith('e'):
         stem = stem[:-1]
 
-    # compare verb stem with sps
-    l = min(len(stem), len(sps_parts[0]))
-    if stem[:l] != sps_parts[0][:l]:
+    # compare verb stem with second_person_singular
+    l = min(len(stem), len(second_person_singular_parts[0]))
+    if stem[:l] != second_person_singular_parts[0][:l]:
         return True
 
-    tps_parts = tps.split()
-    l = min(len(stem), len(tps_parts[0]))
-    if stem[:l] != tps_parts[0][:l]:
+    third_person_singular_parts = third_person_singular.split()
+    l = min(len(stem), len(third_person_singular_parts[0]))
+    if stem[:l] != third_person_singular_parts[0][:l]:
+        return True
+
+    third_person_past_parts = third_person_past.split()
+    l = min(len(stem), len(third_person_past_parts[0]))
+    if stem[:l] != third_person_past_parts[0][:l]:
         return True
 
     return False
