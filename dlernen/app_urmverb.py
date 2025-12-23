@@ -84,8 +84,35 @@ def is_irregular_verb(word):
     return False
 
 
-@bp.cli.command('test_irr_verb')
-def test_irr_verb():
+@bp.cli.command('update_irregular_verb_wordlist')
+def update_irregular_verb_wordlist():
     # get all the verbs and spit out the ones that are irregular
-    pass
+
+    url = url_for('api_word.get_words_in_wordlists', wordlist_id=[], _external=True)
+
+    r = requests.get(url)
+    if not r:
+        return r.text, r.status_code
+
+    result = r.json()
+
+    irregular_verbs = []
+    result = list(filter(lambda x: x['pos_name'].casefold() == 'verb', result))
+    for w in result:
+        if is_irregular_verb(w['word']):
+            irregular_verbs.append(w['word'])
+
+    irregular_verbs = sorted(irregular_verbs)
+
+    # stuff them all into the irregular verbs wordlist (id 32)
+    payload = {
+        'words': irregular_verbs
+    }
+
+    r = requests.put(url_for('api_wordlist.update_wordlist_contents', wordlist_id=32), json=payload)
+    if not r:
+        print(r.text)
+        return r.text, r.status_code
+
+
 
