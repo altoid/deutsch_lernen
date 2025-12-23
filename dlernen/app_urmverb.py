@@ -97,22 +97,31 @@ def update_irregular_verb_wordlist():
     result = r.json()
 
     irregular_verbs = []
-    result = list(filter(lambda x: x['pos_name'].casefold() == 'verb', result))
-    for w in result:
+    all_verbs = list(filter(lambda x: x['pos_name'].casefold() == 'verb', result))
+    all_verb_word_ids = [x['word_id'] for x in all_verbs]
+    for w in all_verbs:
         if is_irregular_verb(w['word']):
-            irregular_verbs.append(w['word'])
+            irregular_verbs.append(w['word_id'])
 
-    irregular_verbs = sorted(irregular_verbs)
-
-    # stuff them all into the irregular verbs wordlist (id 32)
+    # delete all the known words from the wordlist first.  this is overkill, since we are deleting the ids for
+    # every verb.
     payload = {
-        'words': irregular_verbs
+        "word_ids": all_verb_word_ids
     }
 
-    r = requests.put(url_for('api_wordlist.update_wordlist_contents', wordlist_id=32), json=payload)
+    # stuff them all into the irregular verbs wordlist (id 32)
+    wordlist_id = 32
+    url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=wordlist_id, _external=True)
+    r = requests.post(url, json=payload)
+    if not r:
+        message = "could not flush word list:  %s" % r.text
+        print(message)
+        return message, r.status_code
+
+    r = requests.put(url_for('api_wordlist.add_words_by_id', wordlist_id=wordlist_id, _external=True),
+                     json=irregular_verbs)
     if not r:
         print(r.text)
         return r.text, r.status_code
 
-
-
+    # TODO - need to refresh, so that unknown words that are defined will disappear from the unknown list.
