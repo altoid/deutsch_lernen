@@ -172,7 +172,7 @@ WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA = {
         # none are required
     ],
     "properties": {
-        "unknows_words": {
+        "unknown_words": {
             "type": "array",
             "items": {
                 "type": "string",
