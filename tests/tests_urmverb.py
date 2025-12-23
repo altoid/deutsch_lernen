@@ -40,7 +40,7 @@ class TestURMVerb(unittest.TestCase):
         'bersten',
         'beschreiben',
         'betrügen',
-        'bewegen',
+        # 'bewegen',
         'biegen',
         'bieten',
         'binden',
@@ -61,6 +61,7 @@ class TestURMVerb(unittest.TestCase):
         'empfangen',
         'empfehlen',
         'empfinden',
+        'entsprechen',
         'erschrecken',
         'erwerben',
         'erwägen',
@@ -94,7 +95,7 @@ class TestURMVerb(unittest.TestCase):
         'gären',
         'haben',
         'halten',
-        'hauen',
+        # 'hauen',
         'heben',
         'heißen',
         'helfen',
@@ -115,7 +116,7 @@ class TestURMVerb(unittest.TestCase):
         'messen',
         'nehmen',
         'pfeifen',
-        'pflegen',
+        # 'pflegen',
         'pflügen',
         'quellen',
         'raten',
@@ -171,7 +172,7 @@ class TestURMVerb(unittest.TestCase):
         'tragen',
         'treffen',
         'treiben',
-        'triefen',
+        # 'triefen',
         'trinken',
         'tun',
         'unterstreichen',
@@ -228,19 +229,27 @@ class TestURMVerb(unittest.TestCase):
         with self.app.test_request_context():
             self.assertTrue(app_urmverb.is_irregular_verb('bringen'))
 
+    @unittest.skip
     def test_bewegen(self):
+        # depends on how we conjugate - reverso has two conjugations
         with self.app.test_request_context():
             self.assertTrue(app_urmverb.is_irregular_verb('bewegen'))
 
+    @unittest.skip
     def test_hauen(self):
+        # depends on how we conjugate - reverso has two conjugations
         with self.app.test_request_context():
             self.assertTrue(app_urmverb.is_irregular_verb('hauen'))
 
+    @unittest.skip
     def test_pflegen(self):
+        # depends on how we conjugate - reverso has two conjugations
         with self.app.test_request_context():
             self.assertTrue(app_urmverb.is_irregular_verb('pflegen'))
 
+    @unittest.skip
     def test_triefen(self):
+        # reverso shows this as a regular verb
         with self.app.test_request_context():
             self.assertTrue(app_urmverb.is_irregular_verb('triefen'))
 

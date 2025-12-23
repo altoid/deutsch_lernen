@@ -2,7 +2,6 @@ from flask import Blueprint, url_for
 from pprint import pprint
 import requests
 import click
-import random
 
 bp = Blueprint('app_urmverb', __name__)
 
@@ -27,15 +26,18 @@ def is_irregular_verb(word):
     if not word_id:
         return None
 
-    second_person_singular = list(filter(lambda x: x['attrkey'] == 'second_person_singular', verb_part['attributes']))[0]['attrvalue']
+    second_person_singular = list(filter(lambda x: x['attrkey'] == 'second_person_singular',
+                                         verb_part['attributes']))[0]['attrvalue']
     if not second_person_singular:
         return None
 
-    third_person_singular = list(filter(lambda x: x['attrkey'] == 'third_person_singular', verb_part['attributes']))[0]['attrvalue']
+    third_person_singular = list(filter(lambda x: x['attrkey'] == 'third_person_singular',
+                                        verb_part['attributes']))[0]['attrvalue']
     if not third_person_singular:
         return None
 
-    third_person_past = list(filter(lambda x: x['attrkey'] == 'third_person_past', verb_part['attributes']))[0]['attrvalue']
+    third_person_past = list(filter(lambda x: x['attrkey'] == 'third_person_past',
+                                    verb_part['attributes']))[0]['attrvalue']
     if not third_person_past:
         return None
 
@@ -47,10 +49,19 @@ def is_irregular_verb(word):
     else:
         stem = word
 
+    # a very few verbs are irregular not because of stem vowel changes, but because
+    # the third-person-singular does not end with a 't'.  they are:  the modal auxiliaries, werden, and wissen.
+    # these all have stem vowel changes too.  EXCEPT for sollen.  this is the only verb where there is no
+    # stem vowel change but also no 't' in the third person singular.  so, hard code it.
+
+    if word == 'sollen':
+        return True
+
     # get the verb stem
     if not stem.endswith('n'):
         raise Exception("what the hell kind of verb doesn't end with n: [%s]" % word)
 
+    # if the verb ends with -en, get rid of this last 'e' too
     stem = stem[:-1]
     if stem.endswith('e'):
         stem = stem[:-1]
@@ -75,6 +86,6 @@ def is_irregular_verb(word):
 
 @bp.cli.command('test_irr_verb')
 def test_irr_verb():
-    word = 'sehen'
-    print(word, is_irregular_verb(word))
+    # get all the verbs and spit out the ones that are irregular
+    pass
 
