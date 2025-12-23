@@ -209,6 +209,7 @@ class TestURMVerb(unittest.TestCase):
     ]
     regular_verbs = [
         'abstellen',
+        'entdecken'
     ]
 
     not_verbs = [
@@ -220,6 +221,10 @@ class TestURMVerb(unittest.TestCase):
         'verbnosps',  # fake word created for this test.
         'verbnotps',  # ditto
     ]
+
+    def test_entdecken(self):
+        with self.app.test_request_context():
+            self.assertFalse(app_urmverb.is_irregular_verb('entdecken'))
 
     def test_sollen(self):
         with self.app.test_request_context():
