@@ -661,12 +661,14 @@ def refresh_wordlists():
             cursor.execute('start transaction')
 
             sql = """
-            select id as word_id
-            from word
-            where word = %(word)s
+            select distinct word_id 
+            from mashup_v 
+            where word = %(word)s and pos_name = 'verb'
             """
             cursor.execute(sql, {'word': payload['word']})
             word_ids = cursor.fetchall()
+            if not word_ids:
+                return "verb %s not found" % payload['word'], 404
 
             sql = """
             select wordlist_id
