@@ -30,7 +30,7 @@ Lookup {{ word }}
     {% for tuple in template_args %}
     <h1>
         <a name="{{ tuple[0]['word'] }}"
-           href="{{ url_for('dlernen.edit_word_form', word=tuple[0]['word']) }}">
+           href="{{ url_for('dlernen.edit_word_form', wordlist_id=wordlist_id, word=tuple[0]['word']) }}">
             {{ tuple[0]['word'] }}
         </a>
     </h1>
