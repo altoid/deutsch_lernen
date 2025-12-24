@@ -60,7 +60,9 @@ def patch_words(wordlist_ids, attributes):
         "attributes": []
     }
 
+    counter = 0
     for p in words_to_patch:
+        counter += 1
         attrs_to_patch = list(filter(lambda x: x['attrkey'] in attrkeys_to_patch and x['attrvalue'] is None,
                                      p['attributes']))
 
@@ -70,7 +72,7 @@ def patch_words(wordlist_ids, attributes):
 
         payload['attributes'].clear()
 
-        print("============================= %s" % p['word'])
+        print("[%s] ============================= %s" % (counter, p['word']))
         for i in ordering:
             k = sort_order_to_attrkey[i]
             v = keys_to_values[k]
