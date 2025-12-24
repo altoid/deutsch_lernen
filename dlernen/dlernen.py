@@ -216,7 +216,7 @@ def deletelist():
 
     r = requests.put(url_for('api_wordlist.delete_wordlists', _external=True), json=doomed)
     if r:
-        return redirect('dlernen.wordlists')
+        return redirect(url_for('dlernen.wordlists'))
 
     return render_template("error.html",
                            message=r.text,
