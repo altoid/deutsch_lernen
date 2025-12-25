@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}
+Edit {{ word }}
+{% endblock %}
+
+{#
+this form is used to add or edit words.
+
+the form shows the word and provides fill-in fields for the attributes for every part
+of speech.
+
+the names of the fields are one of these formats:
+
+"attr"-pos_id-attribute_id                       - when there is no word id
+"attr"-pos_id-attribute_id-word_id               - when there is a word id
+
+this form will let us modify an existing word, or add a new word, or both.  we can even add multiple
+words (word+pos pairs) with their attributes in one go.
+
+for the tags fields, the names are:
+
+"tag"-pos_id                - when there is no word id
+"tag"-pos_id-word_id        - when there is a word id
+
+#}
+
+{% block body %}
+{{ super() }}
+<div class="addword">
+    {% include 'header.html' %}
+    {% if word %}
+    <h1>{{ word }}</h1>
+    {% else %}
+    <h1>New Word</h1>
+    {% endif %}
+    <form action="{{ url_for('dlernen.update_dict') }}" method="post">
+        <input type="hidden" name="field_values_before" value="{{ field_values_before }}">
+        {% if wordlist_id %}
+        <input type="hidden" name="wordlist_id" value="{{wordlist_id}}">
+        {% endif %}
+
+        <table class="wordedit">
+            <tr>
+                <th class="wordedit">
+                    Wort - Die Rechtschreibung kann hier korrigiert werden
+                </th>
+            </tr>
+            <tr>
+                <td class="wordedit">
+                    {% if word %}
+                    <input type="text"
+                           class="wordedit"
+                           name="word"
+                           value="{{word}}">
+                    <input type="hidden" name="word_before" value="{{ word }}">
+                    {% else %}
+                    <input type="text"
+                           class="wordedit"
+                           name="word">
+                    {% endif %}
+                </td>
+            </tr>
+            {% for pos_name in form_data.keys() %}
+            <tr>
+                <th class="wordedit">
+                    {{ pos_name }}
+                </th>
+            </tr>
+            {% for field in form_data[pos_name] %}
+            <tr>
+                <td class="wordedit">
+                    {% if field.disabled %}
+                    <input type="text"
+                           class="wordedit"
+                           placeholder="{{ field.label }}"
+                           name="{{ field.field_name }}"
+                           value="{{ field.field_value }}" disabled>
+                    {% else %}
+                    <input type="text"
+                           class="wordedit"
+                           placeholder="{{ field.label }}"
+                           name="{{ field.field_name }}"
+                           value="{{ field.field_value }}">
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            {% endfor %}
+        </table>
+        <br>
+        <input type="submit" value="Submit"/>
+    </form>
+</div>
+{% endblock %}

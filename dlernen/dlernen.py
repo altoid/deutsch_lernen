@@ -426,7 +426,7 @@ def delete_from_list():
 @bp.route('/word_editor/<string:word>', methods=['GET'])
 def edit_word_form(word):
     # construct the editing form for this word, with all attributes for all parts of speech.
-    # field name formats are described in edit_word.html.  a tags field
+    # field name formats are described in word_editor.html.  a tags field
     # will NOT appear for the part of speech if:
     #
     # - no wordlist_id is present OR
@@ -515,7 +515,7 @@ def edit_word_form(word):
             form_data[p['pos_name']].append(d)
 
     if r:
-        return render_template('edit_word.html',
+        return render_template('word_editor.html',
                                word=word,
                                wordlist_id=wordlist_id,
                                form_data=form_data,
