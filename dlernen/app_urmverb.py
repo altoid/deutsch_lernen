@@ -123,26 +123,3 @@ def update_irregular_verb_wordlist():
     if not r:
         print(r.text)
         return r.text, r.status_code
-
-    # need to refresh, so that unknown words that are defined will disappear from the unknown list.
-
-    r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True))
-    if not r:
-        print(r.text)
-        return r.text, r.status_code
-    wordlist = r.json()
-
-    for unknown_word in wordlist['unknown_words']:
-        r = requests.put(url_for('api_wordlist.refresh_wordlists', _external=True),
-                         json={
-                             "word": unknown_word
-                         })
-        if r.status_code == 404:
-            # word is still unknown.  keep going.
-            continue
-
-        if not r:
-            message = "could not refresh word:  %s (%s, %s)" % (unknown_word, r.text, r.status_code)
-            print(message)
-            return message, r.status_code
-
