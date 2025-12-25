@@ -91,12 +91,19 @@ def quiz_words(wordlist_ids, queries):
 @bp.cli.command('quiz_definitions')
 @click.option('--wordlist_ids', '-l', multiple=True)
 @click.option('--queries', '-q', multiple=True)
-def quiz_definitions(wordlist_ids, queries):
+@click.option('--tags', '-t', multiple=True)
+def quiz_definitions(wordlist_ids, queries, tags):
     # to run this, use the command:
     #   python -m flask --app run app_quiz_definitions quiz_definitions [-l id -l id -l id ...]
     #
     # it has to be invoked from the dlernen directory.
     # need -l for each list id because click sucks but we can't use argparse.
+
+    tags = set(tags)
+    if tags and wordlist_ids:
+        if len(wordlist_ids) > 1:
+            print("only one list permitted if filtering by tags")
+            return "OK", 200
 
     counter = 0
     while True:
@@ -114,6 +121,18 @@ def quiz_definitions(wordlist_ids, queries):
         if not attr_to_test:
             print("es gibt keine Welten mehr zu erobern")
             break
+
+        if tags and wordlist_ids:
+            url = url_for('api_wordlist_tag.get_tags',
+                          wordlist_id=wordlist_ids[0], word_id=attr_to_test['word_id'], _external=True)
+            r = requests.get(url)
+            if not r:
+                message = "get_tags failed:  [%s, %s]" % (r.text, r.status_code)
+                return message, r.status_code
+            obj = r.json()
+            word_tags = set(obj['tags'])
+            if not (tags & word_tags):
+                continue
 
         counter += 1
         print("[%s]" % counter, end=' ')
