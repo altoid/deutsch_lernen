@@ -361,7 +361,6 @@ def add_to_list():
     word = request.form['word'].strip()
     wordlist_id = request.form['wordlist_id']
 
-    # TODO - for now, we can only add a word to a wordlist, not a word_id.
     url = url_for('api_word.get_word', word=word, _external=True)
     r = requests.get(url)
     payload = None
