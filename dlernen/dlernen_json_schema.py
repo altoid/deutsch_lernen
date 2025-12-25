@@ -38,23 +38,6 @@ NULL_SCHEMA = {
 #
 ##########################################################
 
-REFRESH_WORDLISTS_PAYLOAD_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/refresh_wordlists",
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Payload refreshing wordlists",
-    "description": "Used for implementing POST to /api/wordlists",
-    "type": "object",
-    "required": [
-        "word",
-    ],
-    "properties": {
-        "word": {
-            "type": "string",
-            "pattern": WORD_PATTERN
-        },
-    }
-}
-
 WORD_ADD_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/updateword_payload",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],

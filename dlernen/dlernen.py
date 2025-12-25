@@ -629,7 +629,6 @@ def update_dict():
     # get rid of empty payloads
     word_payloads = {key: value for key, value in word_payloads.items() if value}
     # update/add the word and the attribute values
-    refresh_needed = False
 
     for k, payload in word_payloads.items():
         if k in word_pos_to_word_id:
@@ -643,21 +642,8 @@ def update_dict():
             # we are adding a new word.
             url = url_for('api_word.add_word', _external=True)
             r = requests.post(url, json=payload)
-            if r:
-                refresh_needed = True
-            else:
+            if not r:
                 flash("could not insert word %s [%s]:  %s" % (word, r.status_code, r.text))
-
-    if refresh_needed:
-        refresh_payload = {
-            'word': word,
-        }
-        url = url_for('api_wordlist.refresh_wordlists', _external=True)
-        r = requests.put(url, json=refresh_payload)
-        if not r:
-            return render_template("error.html",
-                                   message="failed to refresh word lists:  %s" % r.text,
-                                   status_code=r.status_code)
 
     # now we deal with the tags.  at this point every POS in the edit form has a word_id.  get the POS info for
     # this word to get those word ids.  not all of them will be in the wordlist.

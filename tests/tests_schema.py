@@ -31,43 +31,6 @@ class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
-class Test_REFRESH_WORDLISTS_PAYLOAD_SCHEMA(unittest.TestCase):
-    schema = js.REFRESH_WORDLISTS_PAYLOAD_SCHEMA
-
-    valid_docs = [
-        {
-            "word": "oaeuhntoaeu"
-        }
-    ]
-
-    invalid_docs = [
-        {},
-        {
-            "word": None
-        },
-        {
-            "word": ""
-        },
-        {
-            "word": " "
-        }
-    ]
-
-    def test_valid_docs(self):
-        for jdoc in self.valid_docs:
-            with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
-
-    def test_invalid_docs(self):
-        for jdoc in self.invalid_docs:
-            with self.subTest(jdoc=jdoc):
-                with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
-
-    def test_check_schema(self):
-        jsonschema.Draft202012Validator.check_schema(self.schema)
-
-
 class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
     schema = js.POS_STRUCTURE_RESPONSE_SCHEMA
 

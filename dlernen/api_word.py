@@ -170,9 +170,9 @@ def save_attributes(word_id, attributes_adding, attributes_deleting, cursor):
 
 @bp.route('/api/word', methods=['POST'])
 def add_word():
-    """
-    add a word to the dictionary.
-    """
+    # add a single word to the dictionary.  the word's part-of-speech must be specified.  if successful, this
+    # operation creates a single word id.
+
     try:
         payload = request.get_json()
         jsonschema.validate(payload, js.WORD_ADD_PAYLOAD_SCHEMA)
@@ -254,6 +254,32 @@ def add_word():
             word_id = result['word_id']
 
             save_attributes(word_id, attributes_adding, None, cursor)
+
+            # adding a new word should refresh all wordlists where the word is previously unknown.
+
+            sql = """
+            select wordlist_id
+            from wordlist_unknown_word
+            where word = %(word)s
+            """
+            cursor.execute(sql, {'word': word})
+            wordlist_ids = cursor.fetchall()
+
+            insert_args = [(r['wordlist_id'], word_id) for r in wordlist_ids]
+            if insert_args:
+                sql = """
+                insert ignore
+                into wordlist_known_word (wordlist_id, word_id)
+                values (%s, %s)
+                """
+
+                cursor.executemany(sql, insert_args)
+
+            sql = """
+            delete from wordlist_unknown_word
+            where word = %(word)s
+            """
+            cursor.execute(sql, {'word': payload['word']})
 
             cursor.execute('commit')
 
