@@ -41,6 +41,7 @@ Manage List:  {{ wordlist_contents.name }}
                 <th colspan="2">Word</th>
                 <th>Tags</th>
                 <th>Add Tags</th>
+                <th>Word ID</th>
             </tr>
             {% for w in wordlist_contents['known_words'] %}
             <tr>
@@ -64,6 +65,7 @@ Manage List:  {{ wordlist_contents.name }}
                            name="tag-{{ w['word_id'] }}"
                            placeholder="space-separated list of tags"/>
                 </td>
+                <td class="numeric">{{ w['word_id'] }}</td>
             </tr>
             {% endfor %}
         </table>
