@@ -106,6 +106,8 @@ def quiz_definitions(wordlist_ids, queries, tags):
             return "OK", 200
 
     counter = 0
+    tags_for_word_id = {}
+
     while True:
         url = url_for('api_quiz_v2.get_word_to_test',
                       wordlist_id=wordlist_ids,
@@ -123,14 +125,16 @@ def quiz_definitions(wordlist_ids, queries, tags):
             break
 
         if tags and wordlist_ids:
-            url = url_for('api_wordlist_tag.get_tags',
-                          wordlist_id=wordlist_ids[0], word_id=attr_to_test['word_id'], _external=True)
-            r = requests.get(url)
-            if not r:
-                message = "get_tags failed:  [%s, %s]" % (r.text, r.status_code)
-                return message, r.status_code
-            obj = r.json()
-            word_tags = set(obj['tags'])
+            if attr_to_test['word_id'] not in tags_for_word_id:
+                url = url_for('api_wordlist_tag.get_tags',
+                              wordlist_id=wordlist_ids[0], word_id=attr_to_test['word_id'], _external=True)
+                r = requests.get(url)
+                if not r:
+                    message = "get_tags failed:  [%s, %s]" % (r.text, r.status_code)
+                    return message, r.status_code
+                obj = r.json()
+                tags_for_word_id[attr_to_test['word_id']] = set(obj['tags'])
+            word_tags = tags_for_word_id[attr_to_test['word_id']]
             if not (tags & word_tags):
                 continue
 
