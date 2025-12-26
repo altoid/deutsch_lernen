@@ -201,6 +201,126 @@ DEFINED_QUERIES = {
 }
 
 
+def run_quiz_queries(cursor, queries, quiz_key, word_id_filter, word_ids):
+    words_chosen = []
+
+    if 'crappy_score' in queries:
+        sql = CRAPPY_SCORE_SQL % {
+            'quiz_key': quiz_key,
+            'word_id_filter': word_id_filter
+        }
+
+        cursor.execute(sql, word_ids)
+        rows = cursor.fetchall()
+        if rows:
+            words_chosen.append(rows[0])
+
+    if 'rare' in queries:
+        sql = RARE_SQL % {
+            'quiz_key': quiz_key,
+            'word_id_filter': word_id_filter
+        }
+
+        cursor.execute(sql, word_ids)
+        rows = cursor.fetchall()
+        if rows:
+            words_chosen.append(rows[0])
+
+    if 'been_too_long' in queries:
+        sql = BEEN_TOO_LONG_SQL % {
+            'quiz_key': quiz_key,
+            'word_id_filter': word_id_filter
+        }
+
+        cursor.execute(sql, word_ids)
+        rows = cursor.fetchall()
+        if rows:
+            words_chosen.append(rows[0])
+
+    if 'random' in queries:
+        sql = RANDOM_SQL % {
+            'quiz_key': quiz_key,
+            'word_id_filter': word_id_filter
+        }
+
+        cursor.execute(sql, word_ids)
+        rows = cursor.fetchall()
+        if rows:
+            words_chosen.append(rows[0])
+
+    return words_chosen
+
+
+@bp.route('/<string:quiz_key>/<int:wordlist_id>')
+def get_word_to_test_single_wordlist(quiz_key, wordlist_id):
+    tags = request.args.getlist('tag')
+
+    # possible values for query are:
+    #
+    # - crappy_score
+    # - been_too_long
+    # - rare (5 or fewer presentations)
+    # - random
+    #
+    queries = request.args.getlist('query')
+    if not queries:
+        queries = DEFINED_QUERIES
+
+    undefined_queries = {x for x in queries} - DEFINED_QUERIES
+    if undefined_queries:
+        return "unknown queries: %s" % ', '.join(undefined_queries), 400
+
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        sql = """
+        select quiz_key
+        from quiz
+        where quiz_key = %(quiz_key)s
+        """
+
+        cursor.execute(sql, {'quiz_key': quiz_key})
+        rows = cursor.fetchall()
+        if not rows:
+            return "quiz %s not found" % quiz_key, 404
+
+        r = requests.get(url_for('api_wordlist.get_wordlist',
+                                 wordlist_id=wordlist_id,
+                                 tag=tags,
+                                 _external=True))
+        if not r:
+            return r.text, r.status_code
+
+        wordlist = r.json()
+        word_ids = [x['word_id'] for x in wordlist['known_words']]
+
+        if word_ids:
+            word_id_args = ['%s'] * len(word_ids)
+            word_id_args = ', '.join(word_id_args)
+
+            word_id_filter = " and word_id in (%(word_id_args)s) " % {'word_id_args': word_id_args}
+
+            words_chosen = run_quiz_queries(cursor, queries, quiz_key, word_id_filter, word_ids)
+
+            if words_chosen:
+                winner = random.choice(words_chosen)
+                # if this is a noun, add its article to the response.
+                url = url_for('api_word.get_word_by_id', word_id=winner['word_id'], _external=True)
+
+                r = requests.get(url)
+                if not r:
+                    return r.text, r.status_code
+
+                word_info = r.json()
+                if word_info['pos_name'].casefold() == 'noun':
+                    article = list(filter(lambda x: x['attrkey'] == 'article', word_info['attributes']))
+                    winner['article'] = article[0]['attrvalue']
+
+                jsonschema.validate(winner, dlernen_json_schema.QUIZ_RESPONSE_SCHEMA)
+
+                return winner
+
+        return {}
+
+
 @bp.route('/<string:quiz_key>')
 def get_word_to_test(quiz_key):
     wordlist_ids = request.args.getlist('wordlist_id')
@@ -242,51 +362,7 @@ def get_word_to_test(quiz_key):
 
             word_id_filter = " and word_id in (%(word_id_args)s) " % {'word_id_args': word_id_args}
 
-        words_chosen = []
-
-        if 'crappy_score' in queries:
-            sql = CRAPPY_SCORE_SQL % {
-                'quiz_key': quiz_key,
-                'word_id_filter': word_id_filter
-            }
-
-            cursor.execute(sql, word_ids)
-            rows = cursor.fetchall()
-            if rows:
-                words_chosen.append(rows[0])
-
-        if 'rare' in queries:
-            sql = RARE_SQL % {
-                'quiz_key': quiz_key,
-                'word_id_filter': word_id_filter
-            }
-
-            cursor.execute(sql, word_ids)
-            rows = cursor.fetchall()
-            if rows:
-                words_chosen.append(rows[0])
-
-        if 'been_too_long' in queries:
-            sql = BEEN_TOO_LONG_SQL % {
-                'quiz_key': quiz_key,
-                'word_id_filter': word_id_filter
-            }
-
-            cursor.execute(sql, word_ids)
-            rows = cursor.fetchall()
-            if rows:
-                words_chosen.append(rows[0])
-
-        if 'random' in queries:
-            sql = RANDOM_SQL % {
-                'quiz_key': quiz_key,
-                'word_id_filter': word_id_filter
-            }
-
-            cursor.execute(sql, word_ids)
-            rows = cursor.fetchall()
-            if rows:
-                words_chosen.append(rows[0])
+        words_chosen = run_quiz_queries(cursor, queries, quiz_key, word_id_filter, word_ids)
 
         if words_chosen:
             winner = random.choice(words_chosen)

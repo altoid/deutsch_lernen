@@ -99,21 +99,29 @@ def quiz_definitions(wordlist_ids, queries, tags):
     # it has to be invoked from the dlernen directory.
     # need -l for each list id because click sucks but we can't use argparse.
 
-    tags = set(tags)
+    tags = list(set(tags))
     if tags and wordlist_ids:
         if len(wordlist_ids) > 1:
             print("only one list permitted if filtering by tags")
             return "OK", 200
 
     counter = 0
-    tags_for_word_id = {}
 
-    while True:
+    if len(wordlist_ids) > 1:
         url = url_for('api_quiz_v2.get_word_to_test',
                       wordlist_id=wordlist_ids,
                       quiz_key=QUIZ_KEY,
                       query=queries,
                       _external=True)
+    else:
+        url = url_for('api_quiz_v2.get_word_to_test_single_wordlist',
+                      wordlist_id=wordlist_ids[0],
+                      tag=tags,
+                      quiz_key=QUIZ_KEY,
+                      query=queries,
+                      _external=True)
+
+    while True:
         r = requests.get(url)
         if not r:
             return r.text, r.status_code
@@ -123,20 +131,6 @@ def quiz_definitions(wordlist_ids, queries, tags):
         if not attr_to_test:
             print("es gibt keine Welten mehr zu erobern")
             break
-
-        if tags and wordlist_ids:
-            if attr_to_test['word_id'] not in tags_for_word_id:
-                url = url_for('api_wordlist_tag.get_tags',
-                              wordlist_id=wordlist_ids[0], word_id=attr_to_test['word_id'], _external=True)
-                r = requests.get(url)
-                if not r:
-                    message = "get_tags failed:  [%s, %s]" % (r.text, r.status_code)
-                    return message, r.status_code
-                obj = r.json()
-                tags_for_word_id[attr_to_test['word_id']] = set(obj['tags'])
-            word_tags = tags_for_word_id[attr_to_test['word_id']]
-            if not (tags & word_tags):
-                continue
 
         counter += 1
         print("[%s]" % counter, end=' ')
