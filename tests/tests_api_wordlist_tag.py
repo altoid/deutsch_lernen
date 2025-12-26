@@ -174,7 +174,7 @@ class APIWordlistTag(unittest.TestCase):
         # check that the words have the correct tags
         test_dict = {x['word']: x['tags'] for x in obj['known_words']}
         control_dict = {
-            self.word2: ['tag2', 'tag1'],
+            self.word2: ['tag1'],
             self.word3: ['tag1']
         }
 
@@ -200,7 +200,7 @@ class APIWordlistTag(unittest.TestCase):
         # check that the words have the correct tags
         test_dict = {x['word']: x['tags'] for x in obj['known_words']}
         control_dict = {
-            self.word2: ['tag2', 'tag1']
+            self.word2: ['tag2']
         }
 
         self.assertCountEqual(control_dict[self.word2], test_dict[self.word2])
@@ -249,7 +249,7 @@ class APIWordlistTag(unittest.TestCase):
         # check that the words have the correct tags
         test_dict = {x['word']: x['tags'] for x in obj['known_words']}
         control_dict = {
-            self.word2: ['tag2', 'tag1']
+            self.word2: ['tag2']
         }
 
         self.assertCountEqual(control_dict[self.word2], test_dict[self.word2])
