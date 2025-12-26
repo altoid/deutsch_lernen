@@ -7,6 +7,14 @@ import string
 from pprint import pprint
 
 
+def cleanupWordID(client, word_id):
+    client.delete(url_for('api_word.delete_word', word_id=word_id, _external=True))
+
+
+def cleanupWordlistID(client, wordlist_id):
+    client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id, _external=True))
+
+
 class APIWordlistBatchDelete(unittest.TestCase):
     # need a separate class for this because we don't want setUp/tearDown methods here.
     app = None
@@ -687,12 +695,6 @@ class APIWordlistFilterByTags(unittest.TestCase):
     def tearDownClass(cls):
         cls.app_context.pop()
 
-    def cleanupWordID(self, word_id):
-        self.client.delete(url_for('api_word.delete_word', word_id=word_id, _external=True))
-
-    def cleanupWordlistID(self, wordlist_id):
-        self.client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id, _external=True))
-
     # the setup for this class creates a list with just a name.
     def setUp(self):
         self.list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
@@ -703,7 +705,7 @@ class APIWordlistFilterByTags(unittest.TestCase):
         r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
         obj = json.loads(r.data)
         self.wordlist_id = obj['wordlist_id']
-        self.addCleanup(self.cleanupWordlistID, self.wordlist_id)
+        self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
 
         # create three words, add them to the list, and tag them as follows:
         #
@@ -742,9 +744,9 @@ class APIWordlistFilterByTags(unittest.TestCase):
         obj = json.loads(r.data)
         self.word3_id = obj['word_id']
 
-        self.addCleanup(self.cleanupWordID, self.word1_id)
-        self.addCleanup(self.cleanupWordID, self.word2_id)
-        self.addCleanup(self.cleanupWordID, self.word3_id)
+        self.addCleanup(cleanupWordID, self.client, self.word1_id)
+        self.addCleanup(cleanupWordID, self.client, self.word2_id)
+        self.addCleanup(cleanupWordID, self.client, self.word3_id)
 
         r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
                                     wordlist_id=self.wordlist_id, _external=True),
