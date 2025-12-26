@@ -325,10 +325,12 @@ def __get_wordlist(wordlist_id, tags=None):
                 
                 inner join tag on ww.wordlist_id = tag.wordlist_id and ww.word_id = tag.word_id
                 
-                where ww.wordlist_id = %s
-                and tag.tag in (""" + tag_args + """)
+                where ww.wordlist_id = %%s
+                and tag.tag in (%(tag_args)s)
                 order by m.word
-                """
+                """ % {
+                    "tag_args": tag_args
+                }
                 cursor.execute(known_words_sql, (wordlist_id, *tags))
                 known_words = cursor.fetchall()
             else:
