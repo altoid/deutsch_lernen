@@ -305,33 +305,60 @@ def __get_wordlist(wordlist_id, tags=None):
             ]
 
         else:
-            known_words_sql = """
-            select
-                m.word,
-                m.word_id,
-                m.attrvalue definition,
-                ifnull(m2.attrvalue, '') article,
-                ifnull(tag.tag, '') tag
-            from wordlist_known_word ww
-            
-            left join mashup_v m
-            on   ww.word_id = m.word_id
-            and  m.attrkey = 'definition'
-            
-            left join mashup_v m2
-            on   ww.word_id = m2.word_id
-            and  m2.attrkey = 'article'
+            if tags:
+                tags = set(tags)  # remove any dups
+                tag_args = ', '.join(["%s"] * len(tags))
+                known_words_sql = """
+                select
+                    m.word,
+                    m.word_id,
+                    m.attrvalue definition,
+                    ifnull(m2.attrvalue, '') article,
+                    tag.tag
+                from wordlist_known_word ww
+                left join mashup_v m
+                on   ww.word_id = m.word_id
+                and  m.attrkey = 'definition'
+                left join mashup_v m2
+                on   ww.word_id = m2.word_id
+                and  m2.attrkey = 'article'
+                
+                inner join tag on ww.wordlist_id = tag.wordlist_id and ww.word_id = tag.word_id
+                
+                where ww.wordlist_id = %s
+                and tag.tag in (""" + tag_args + """)
+                order by m.word
+                """
+                cursor.execute(known_words_sql, (wordlist_id, *tags))
+                known_words = cursor.fetchall()
+            else:
+                known_words_sql = """
+                select
+                    m.word,
+                    m.word_id,
+                    m.attrvalue definition,
+                    ifnull(m2.attrvalue, '') article,
+                    ifnull(tag.tag, '') tag
+                from wordlist_known_word ww
+                
+                left join mashup_v m
+                on   ww.word_id = m.word_id
+                and  m.attrkey = 'definition'
+                
+                left join mashup_v m2
+                on   ww.word_id = m2.word_id
+                and  m2.attrkey = 'article'
+    
+                left join tag 
+                on ww.wordlist_id = tag.wordlist_id 
+                and ww.word_id = tag.word_id
+    
+                where ww.wordlist_id = %s
+                order by m.word
+                """
 
-            left join tag 
-            on ww.wordlist_id = tag.wordlist_id 
-            and ww.word_id = tag.word_id
-
-            where ww.wordlist_id = %s
-            order by m.word
-            """
-
-            cursor.execute(known_words_sql, (wordlist_id,))
-            known_words = cursor.fetchall()
+                cursor.execute(known_words_sql, (wordlist_id,))
+                known_words = cursor.fetchall()
 
             word_data = {(r['word'], r['word_id']): {
                 'article': r['article'],
