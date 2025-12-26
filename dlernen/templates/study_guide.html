@@ -36,28 +36,6 @@ Study Guide:  {{ wordlist.name }}
                 Words
             </th>
         </tr>
-        {% if untagged_words|length %}
-        <tr>
-            <td class="study_guide">(no tag)</td>
-            <td class="study_guide">
-                <table>
-                    {% for w in untagged_words %}
-                    <tr>
-                        <td>{{ w['article'] }}</td>
-                        <td>
-                            <div class="tooltip">
-                                {{ w['word'] }}
-                                <span class="tooltiptext">
-                                    {{ w['definition'] if w['definition'] else '(no definition)' }}
-                                </span>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </table>
-            </td>
-        </tr>
-        {% endif %}
         {% for t in tags %}
         <tr>
             <td class="study_guide">{{ t }}</td>
@@ -80,6 +58,28 @@ Study Guide:  {{ wordlist.name }}
             </td>
         </tr>
         {% endfor %}
+        {% if untagged_words|length %}
+        <tr>
+            <td class="study_guide">(no tag)</td>
+            <td class="study_guide">
+                <table>
+                    {% for w in untagged_words %}
+                    <tr>
+                        <td>{{ w['article'] }}</td>
+                        <td>
+                            <div class="tooltip">
+                                {{ w['word'] }}
+                                <span class="tooltiptext">
+                                    {{ w['definition'] if w['definition'] else '(no definition)' }}
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </td>
+        </tr>
+        {% endif %}
     </table>
 </div>
 {% endblock %}
