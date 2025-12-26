@@ -263,7 +263,7 @@ def add_words_to_list(cursor, wordlist_id, words):
         cursor.executemany(ins_sql, wuw_tuples)
 
 
-def __get_wordlist(wordlist_id):
+def __get_wordlist(wordlist_id, tags=None):
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
         select
@@ -287,13 +287,22 @@ def __get_wordlist(wordlist_id):
 
         result = dict(wl_row)
         result['source_is_url'] = citation.startswith('http') if citation else False
-        tagged_word_ids = {}
+
         if sqlcode:
             known_words_sql = SQL_FOR_WORDLIST_FROM_SQLCODE % sqlcode
 
             cursor.execute(known_words_sql)
-            known_words = cursor.fetchall()
-            result['known_words'] = known_words
+            rows = cursor.fetchall()
+            result['known_words'] = [
+                {
+                    'article': r['article'],
+                    'definition': r['definition'],
+                    'word': r['word'],
+                    'word_id': r['word_id'],
+                    'tags': []
+                }
+                for r in rows
+            ]
 
         else:
             known_words_sql = """
@@ -301,39 +310,42 @@ def __get_wordlist(wordlist_id):
                 m.word,
                 m.word_id,
                 m.attrvalue definition,
-                ifnull(m2.attrvalue, '') article
+                ifnull(m2.attrvalue, '') article,
+                ifnull(tag.tag, '') tag
             from wordlist_known_word ww
+            
             left join mashup_v m
             on   ww.word_id = m.word_id
             and  m.attrkey = 'definition'
+            
             left join mashup_v m2
             on   ww.word_id = m2.word_id
             and  m2.attrkey = 'article'
+
+            left join tag 
+            on ww.wordlist_id = tag.wordlist_id 
+            and ww.word_id = tag.word_id
+
             where ww.wordlist_id = %s
             order by m.word
             """
 
             cursor.execute(known_words_sql, (wordlist_id,))
             known_words = cursor.fetchall()
-            result['known_words'] = known_words
 
-            # get the tags for the words.
-            tag_sql = """
-            select word_id, tag
-            from tag
-            where wordlist_id = %s
-            """
-            cursor.execute(tag_sql, (wordlist_id,))
-            tag_rows = cursor.fetchall()
-            tagged_word_ids = {x['word_id']: [] for x in tag_rows}
-            for t in tag_rows:
-                tagged_word_ids[t['word_id']].append(t['tag'])
+            word_data = {(r['word'], r['word_id']): {
+                'article': r['article'],
+                'definition': r['definition'],
+                'word': r['word'],
+                'word_id': r['word_id'],
+                'tags': []
+            }
+                for r in known_words}
+            for r in known_words:
+                if r['tag']:
+                    word_data[(r['word'], r['word_id'])]['tags'].append(r['tag'])
 
-        for w in result['known_words']:
-            if w['word_id'] in tagged_word_ids:
-                w['tags'] = tagged_word_ids[w['word_id']]
-            else:
-                w['tags'] = []
+            result['known_words'] = list(word_data.values())
 
         unknown_words_sql = """
         select
@@ -364,7 +376,8 @@ def __get_wordlist(wordlist_id):
 @bp.route('/api/wordlist/<int:wordlist_id>')
 def get_wordlist(wordlist_id):
     try:
-        result = __get_wordlist(wordlist_id)
+        tags = request.args.getlist('tag')
+        result = __get_wordlist(wordlist_id, tags)
         if result:
             return result
 

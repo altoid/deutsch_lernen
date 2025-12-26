@@ -130,22 +130,137 @@ class APIWordlistTag(unittest.TestCase):
     # 5. GET /api/wordlist/<int:wordlist_id>?tag=tag2&tag=tag2  # i.e. duplicate tag
     # 6. GET /api/wordlist/<int:wordlist_id>?tag=bullshit       # should return nothing
 
+    # 1. GET /api/wordlist/<int:wordlist_id>
     def test1(self):
         r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id, _external=True))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
+        self.assertEqual(3, len(obj['known_words']))
+
+        # check that the word ids in the result are what we think they are
+        control_word_ids = [self.word1_id, self.word2_id, self.word3_id]
+        test_word_ids = [x['word_id'] for x in obj['known_words']]
+        self.assertCountEqual(control_word_ids, test_word_ids)
+
+        # check that the words have the correct tags
+        test_dict = {x['word']: x['tags'] for x in obj['known_words']}
+        control_dict = {
+            self.word1: [],
+            self.word2: ['tag2', 'tag1'],
+            self.word3: ['tag1']
+        }
+
+        self.assertCountEqual(control_dict[self.word1], test_dict[self.word1])
+        self.assertCountEqual(control_dict[self.word2], test_dict[self.word2])
+        self.assertCountEqual(control_dict[self.word3], test_dict[self.word3])
+
+    # 2. GET /api/wordlist/<int:wordlist_id>?tag=tag1
     def test2(self):
-        raise NotImplementedError()
+        r = self.client.get(url_for('api_wordlist.get_wordlist',
+                                    wordlist_id=self.wordlist_id,
+                                    tag=['tag1'],
+                                    _external=True))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
 
+        self.assertEqual(2, len(obj['known_words']))
+
+        # check that the word ids in the result are what we think they are
+        control_word_ids = [self.word2_id, self.word3_id]
+        test_word_ids = [x['word_id'] for x in obj['known_words']]
+        self.assertCountEqual(control_word_ids, test_word_ids)
+
+        # check that the words have the correct tags
+        test_dict = {x['word']: x['tags'] for x in obj['known_words']}
+        control_dict = {
+            self.word2: ['tag2', 'tag1'],
+            self.word3: ['tag1']
+        }
+
+        self.assertCountEqual(control_dict[self.word2], test_dict[self.word2])
+        self.assertCountEqual(control_dict[self.word3], test_dict[self.word3])
+
+    # 3. GET /api/wordlist/<int:wordlist_id>?tag=tag2
     def test3(self):
-        raise NotImplementedError()
+        r = self.client.get(url_for('api_wordlist.get_wordlist',
+                                    wordlist_id=self.wordlist_id,
+                                    tag=['tag2'],
+                                    _external=True))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
 
+        self.assertEqual(1, len(obj['known_words']))
+
+        # check that the word ids in the result are what we think they are
+        control_word_ids = [self.word2_id]
+        test_word_ids = [x['word_id'] for x in obj['known_words']]
+        self.assertCountEqual(control_word_ids, test_word_ids)
+
+        # check that the words have the correct tags
+        test_dict = {x['word']: x['tags'] for x in obj['known_words']}
+        control_dict = {
+            self.word2: ['tag2', 'tag1']
+        }
+
+        self.assertCountEqual(control_dict[self.word2], test_dict[self.word2])
+
+    # 4. GET /api/wordlist/<int:wordlist_id>?tag=tag1&tag=tag2
     def test4(self):
-        raise NotImplementedError()
+        r = self.client.get(url_for('api_wordlist.get_wordlist',
+                                    wordlist_id=self.wordlist_id,
+                                    tag=['tag1', 'tag2'],
+                                    _external=True))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
 
+        self.assertEqual(2, len(obj['known_words']))
+
+        # check that the word ids in the result are what we think they are
+        control_word_ids = [self.word3_id, self.word2_id]
+        test_word_ids = [x['word_id'] for x in obj['known_words']]
+        self.assertCountEqual(control_word_ids, test_word_ids)
+
+        # check that the words have the correct tags
+        test_dict = {x['word']: x['tags'] for x in obj['known_words']}
+        control_dict = {
+            self.word2: ['tag2', 'tag1'],
+            self.word3: ['tag1']
+        }
+
+        self.assertCountEqual(control_dict[self.word2], test_dict[self.word2])
+
+    # 5. GET /api/wordlist/<int:wordlist_id>?tag=tag2&tag=tag2  # i.e. duplicate tag
     def test5(self):
-        raise NotImplementedError()
+        r = self.client.get(url_for('api_wordlist.get_wordlist',
+                                    wordlist_id=self.wordlist_id,
+                                    tag=['tag2', 'tag2'],
+                                    _external=True))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
 
+        self.assertEqual(1, len(obj['known_words']))
+
+        # check that the word ids in the result are what we think they are
+        control_word_ids = [self.word2_id]
+        test_word_ids = [x['word_id'] for x in obj['known_words']]
+        self.assertCountEqual(control_word_ids, test_word_ids)
+
+        # check that the words have the correct tags
+        test_dict = {x['word']: x['tags'] for x in obj['known_words']}
+        control_dict = {
+            self.word2: ['tag2', 'tag1']
+        }
+
+        self.assertCountEqual(control_dict[self.word2], test_dict[self.word2])
+
+    # 6. GET /api/wordlist/<int:wordlist_id>?tag=bullshit       # should return nothing
     def test6(self):
-        raise NotImplementedError()
+        r = self.client.get(url_for('api_wordlist.get_wordlist',
+                                    wordlist_id=self.wordlist_id,
+                                    tag=['bullshit'],
+                                    _external=True))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        self.assertEqual(0, len(obj['known_words']))
