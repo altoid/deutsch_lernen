@@ -87,6 +87,7 @@ def is_irregular_verb(word):
 @bp.cli.command('update_irregular_verb_wordlist')
 def update_irregular_verb_wordlist():
     # get all the verbs and spit out the ones that are irregular
+    wordlist_id = 32
 
     url = url_for('api_word.get_words_in_wordlists', wordlist_id=[], _external=True)
 
@@ -103,6 +104,16 @@ def update_irregular_verb_wordlist():
         if is_irregular_verb(w['word']):
             irregular_verbs.append(w['word_id'])
 
+    # dropping all the words will blow away the tags.  so before we drop all the words, get the current state of the
+    # wordlist so we can save the tags.
+
+    r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True))
+    if not r:
+        message = "get_wordlist failed:  %s [%s]" % (r.text, r.status_code)
+        return message, r.status_code
+    wordlist_before = r.json()
+    current_tags = {x['word_id']: x['tags'] for x in wordlist_before['known_words']}
+
     # delete all the known words from the wordlist first.  this is overkill, since we are deleting the ids for
     # every verb.
     payload = {
@@ -110,11 +121,10 @@ def update_irregular_verb_wordlist():
     }
 
     # stuff them all into the irregular verbs wordlist (id 32)
-    wordlist_id = 32
     url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=wordlist_id, _external=True)
     r = requests.post(url, json=payload)
     if not r:
-        message = "could not flush word list:  %s" % r.text
+        message = "could not flush word list:  %s [%s]" % (r.text, r.status_code)
         print(message)
         return message, r.status_code
 
@@ -123,3 +133,17 @@ def update_irregular_verb_wordlist():
     if not r:
         print(r.text)
         return r.text, r.status_code
+
+    # put the tags back
+    for word_id in irregular_verbs:
+        tags = current_tags[word_id]
+        if not tags:
+            continue
+
+        url = url_for('api_wordlist_tag.add_tags', wordlist_id=wordlist_id, word_id=word_id, _external=True)
+        r = requests.post(url, json=tags)
+        if not r:
+            message = "could not add tags:  %s [%s]" % (r.text, r.status_code)
+            print(message)
+
+
