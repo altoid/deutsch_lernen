@@ -513,16 +513,11 @@ def edit_word_form(word):
             }
             form_data[p['pos_name']].append(d)
 
-    if r:
-        return render_template('word_editor.html',
-                               word=word,
-                               wordlist_id=wordlist_id,
-                               form_data=form_data,
-                               field_values_before=json.dumps(field_values_before))
-
-    return render_template("error.html",
-                           message="3: %s" % r.text,
-                           status_code=r.status_code)
+    return render_template('word_editor.html',
+                           word=word,
+                           wordlist_id=wordlist_id,
+                           form_data=form_data,
+                           field_values_before=json.dumps(field_values_before))
 
 
 def diff_attr_values(pos_id, attribute_id, word_id,
