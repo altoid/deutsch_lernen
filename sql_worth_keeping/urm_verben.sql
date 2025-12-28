@@ -1,16 +1,36 @@
 use deutsch;
 
--- this will select all the verbs that do NOT have a separable prefix
-
-with parts as
+WITH without_prefix AS
 (
-select
+SELECT
     m1.word,
     case
-        when regexp_like(m1.word, 'en$') = 1 then substring(m1.word, 1, char_length(m1.word) - 2)
-        else substring(m1.word, 1, char_length(m1.word) - 1)
-    end as stem,
-    m1.attrvalue sps, m2.attrvalue tps, m3.attrvalue tpp,
+        when m1.attrvalue regexp '\\.*[[:blank:]]\\.*' = 1
+            then substring_index(m1.attrvalue, ' ', -1)
+        else null
+    end prefix,
+
+    case
+        when m1.attrvalue regexp '\\.*[[:blank:]]\\.*' = 1
+            then substring(m1.word, char_length(substring_index(m1.attrvalue, ' ', -1)) + 1)
+        else m1.word
+    end word_no_prefix,
+
+    case
+        when m1.attrvalue regexp '\\.*[[:blank:]]\\.*' = 1 then substring_index(m1.attrvalue, ' ', 1)
+        else m1.attrvalue
+    end as sps_no_prefix,
+
+    case
+        when m2.attrvalue regexp '\\.*[[:blank:]]\\.*' = 1 then substring_index(m2.attrvalue, ' ', 1)
+        else m2.attrvalue
+    end as tps_no_prefix,
+
+    case
+        when m3.attrvalue regexp '\\.*[[:blank:]]\\.*' = 1 then substring_index(m3.attrvalue, ' ', 1)
+        else m3.attrvalue
+    end as tpp_no_prefix,
+
     m1.word_id
 
 from mashup_v m1
@@ -21,31 +41,45 @@ where m1.attrkey = 'second_person_singular'
 and m2.attrkey = 'third_person_singular'
 and m3.attrkey = 'third_person_past'
 
--- eliminate verbs that have a separable prefix.
-and m1.attrvalue regexp '\\.*[[:blank:]]\\.*' = 0
+),
+stem as (
+    select
+        ifnull(prefix, '') prefix,
+        word_no_prefix as word,
+        case
+            when REGEXP_LIKE(word_no_prefix, 'en$') = 1 then substring(word_no_prefix, 1, char_length(word_no_prefix) - 2)
+            else substring(word_no_prefix, 1, char_length(word_no_prefix) - 1)
+        end as stem,
+        sps_no_prefix as sps,
+        tps_no_prefix as tps,
+        tpp_no_prefix as tpp,
+        word_id
+    from without_prefix
 ),
 identify_irregular as
 (
-select
+SELECT
     word_id,
     word,
     stem,
     sps,
     tps,
     tpp,
-    case
-        when substring(stem, 1, least(char_length(stem), char_length(sps))) <> substring(sps, 1, least(char_length(stem), char_length(sps))) then 1
-        when substring(stem, 1, least(char_length(stem), char_length(tps))) <> substring(tps, 1, least(char_length(stem), char_length(tps))) then 1
-        when substring(stem, 1, least(char_length(stem), char_length(tpp))) <> substring(tpp, 1, least(char_length(stem), char_length(tpp))) then 1
-        else 0
-    end irregular
+    CASE
+        WHEN substring(stem, 1, LEAST(char_length(stem), char_length(sps))) <> substring(sps, 1, LEAST(char_length(stem), char_length(sps))) THEN 1
+        WHEN substring(stem, 1, LEAST(char_length(stem), char_length(tps))) <> substring(tps, 1, LEAST(char_length(stem), char_length(tps))) THEN 1
+        WHEN substring(stem, 1, LEAST(char_length(stem), char_length(tpp))) <> substring(tpp, 1, LEAST(char_length(stem), char_length(tpp))) THEN 1
+        ELSE 0
+    END irregular
 
-from parts
-where sps is not null
-and tps is not null
-and tpp is not null
+FROM stem
+WHERE sps IS NOT NULL
+AND tps IS NOT NULL
+AND tpp IS NOT NULL
 )
-select word_id
-from identify_irregular
-where irregular = 1
+SELECT *
+FROM identify_irregular
+
+ORDER BY rand()
+limit 33
 ;
