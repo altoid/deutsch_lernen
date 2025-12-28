@@ -53,34 +53,6 @@ Wordlist:  {{ wordlist.name }}
         </tr>
     </table>
     <table>
-        <tr>
-            <td>
-                <h2>Bekannte Worte ({{ wordlist['known_words']|length }})</h2>
-                <table class="tableau">
-                    <tr>
-                        {% for column in known_words %}
-                        <td>
-                            <table>
-                                {% for r in column %}
-                                <tr>
-                                    <td>
-                                        {{ r.article }}
-                                    </td>
-                                    <td>
-                                        <a href="{{ url_for('dlernen.get_word_by_id', word_id=r.word_id, wordlist_id=wordlist.wordlist_id) }}">
-                                            {{ r.word }}
-                                        </a>
-                                    </td>
-                                    <td>{{ r.definition if r.definition else '(no definition)' }}</td>
-                                </tr>
-                                {% endfor %}
-                            </table>
-                        </td>
-                        {% endfor %}
-                    </tr>
-                </table>
-            </td>
-        </tr>
         {% if wordlist['unknown_words']|length > 0 %}
         <tr>
             <td>
@@ -116,6 +88,34 @@ Wordlist:  {{ wordlist.name }}
             </td>
         </tr>
         {% endif %}
+        <tr>
+            <td>
+                <h2>Bekannte Worte ({{ wordlist['known_words']|length }})</h2>
+                <table class="tableau">
+                    <tr>
+                        {% for column in known_words %}
+                        <td>
+                            <table>
+                                {% for r in column %}
+                                <tr>
+                                    <td>
+                                        {{ r.article }}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('dlernen.get_word_by_id', word_id=r.word_id, wordlist_id=wordlist.wordlist_id) }}">
+                                            {{ r.word }}
+                                        </a>
+                                    </td>
+                                    <td>{{ r.definition if r.definition else '(no definition)' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                </table>
+            </td>
+        </tr>
     </table>
     <form action="{{ url_for('dlernen.update_notes') }}" method="post">
         <h2>Noten</h2>
