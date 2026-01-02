@@ -434,6 +434,8 @@ def edit_word_form(word):
     # otherwise this form lets us add tags to new parts of speech that we are adding to the dictionary, or
     # modify tags for parts of speech that are already in the dictionary.
 
+    # FIXME - tags field should be disabled for smart lists
+
     wordlist_id = request.args.get('wordlist_id')
 
     url = url_for('api_pos.get_pos_for_word', word=word, _external=True)
