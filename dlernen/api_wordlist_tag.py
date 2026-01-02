@@ -164,7 +164,7 @@ def delete_tags(wordlist_id, word_id):
 
     metadata = r.json()
     if metadata['list_type'] == 'smart':
-        message = "cannot add tags to words in a smart list:  %s" % wordlist_id
+        message = "cannot remove tags from words in a smart list:  %s" % wordlist_id
         return message, 400
 
     # returns a message and a status code, no object.
