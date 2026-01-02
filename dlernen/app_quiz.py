@@ -140,28 +140,49 @@ def quiz_definitions(wordlist_ids, queries, tags):
             print(attr_to_test['article'], end=' ')
 
         print(attr_to_test['word'])
-        prompt = "hit return for answer, q to quit, h for hint:  --> "
-        answer = input(prompt).strip().lower()
+        while True:
+            prompt = "hit return for answer, q to quit, h for hint:  --> "
+            answer = input(prompt).strip().lower()
+
+            if answer.startswith('q'):
+                break
+
+            if not answer:
+                break
+
+            if answer.startswith('h'):
+                # show wordlists this word is in.
+                r = requests.get(url_for('api_wordlist.get_wordlists_by_word_id',
+                                         word_id=attr_to_test['word_id'],
+                                         _external=True))
+                if not r:
+                    message = "could not get wordlists for word id %s:  [%s, %s]" % (attr_to_test['word_id'], r.text,
+                                                                                     r.status_code)
+                    print(message)
+                    return message, r.status_code
+
+                obj = r.json()
+                for n in obj:
+                    r = requests.get(url_for('api_wordlist_tag.get_tags',
+                                             wordlist_id=n['wordlist_id'],
+                                             word_id=attr_to_test['word_id'],
+                                             _external=True))
+                    if not r:
+                        message = "could not get tags for word id %s:  [%s, %s]" % (
+                            attr_to_test['word_id'], r.text,
+                            r.status_code)
+                        print(message)
+                        return message, r.status_code
+
+                    tags_response = r.json()
+                    tags = ', '.join(tags_response['tags'])
+                    if tags:
+                        print("%s [%s:  %s]" % (n['name'], n['wordlist_id'], tags))
+                    else:
+                        print("%s [%s]" % (n['name'], n['wordlist_id']))
 
         if answer.startswith('q'):
             break
-
-        if answer.startswith('h'):
-            # show wordlists this word is in.
-            r = requests.get(url_for('api_wordlist.get_wordlists_by_word_id',
-                                     word_id=attr_to_test['word_id'],
-                                     _external=True))
-            if not r:
-                message = "could not get wordlists for word id %s:  [%s, %s]" % (attr_to_test['word_id'], r.text,
-                                                                                 r.status_code)
-                print(message)
-                return message, r.status_code
-
-            obj = r.json()
-            for n in obj:
-                print("[%s] %s" % (n['wordlist_id'], n['name']))
-
-            _ = input('--- waiting ---> ')
 
         print(attr_to_test['attrvalue'])
 
