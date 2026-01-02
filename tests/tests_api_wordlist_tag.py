@@ -15,11 +15,6 @@ def cleanupWordlistID(client, wordlist_id):
     client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id, _external=True))
 
 
-# TODO - more test cases needed:
-#   tag operations smart lists:
-#       adding/deleting not allowed -> 400
-#       for gets, membership check should succeed.  if successful, get should succeed but return no tags.
-#       get should succeed but return no tags
 class APIWordlistTagSmartList(unittest.TestCase):
     app = None
     app_context = None
@@ -96,7 +91,37 @@ class APIWordlistTagSmartList(unittest.TestCase):
         self.assertEqual(1, len(obj['known_words']))
         self.assertEqual(self.word1_id, obj['known_words'][0]['word_id'])
 
+    def test_addTags(self):
+        r = self.client.post(url_for('api_wordlist_tag.add_tags',
+                                     wordlist_id=self.wordlist_id,
+                                     word_id=self.word1_id,
+                                     _external=True),
+                             json=['tag1', 'tag2'])
+        self.assertNotEqual(200, r.status_code)
 
+    def test_deleteTags(self):
+        r = self.client.delete(url_for('api_wordlist_tag.delete_tags',
+                                       wordlist_id=self.wordlist_id,
+                                       word_id=self.word1_id,
+                                       _external=True),
+                               json=['tag1', 'tag2'])
+        self.assertNotEqual(200, r.status_code)
+
+    def test_get_nonmember(self):
+        r = self.client.get(url_for('api_wordlist_tag.get_tags',
+                                    wordlist_id=self.wordlist_id,
+                                    word_id=self.word2_id,
+                                    _external=True))
+        self.assertEqual(404, r.status_code)
+
+    def test_get_member(self):
+        r = self.client.get(url_for('api_wordlist_tag.get_tags',
+                                    wordlist_id=self.wordlist_id,
+                                    word_id=self.word1_id,
+                                    _external=True))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual(0, len(obj['tags']))
 
 class APIWordlistTag(unittest.TestCase):
     app = None

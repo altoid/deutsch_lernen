@@ -3,43 +3,46 @@ from flask import Blueprint, request, url_for, current_app
 from pprint import pprint
 from mysql.connector import connect
 from dlernen import dlernen_json_schema as js
+from dlernen import common
 from contextlib import closing
 import jsonschema
+import requests
 
 # view functions for tags and word/tag linkages in wordlists
-# FIXME currently no unit tests for these
 
 bp = Blueprint('api_wordlist_tag', __name__)
 
 
 @bp.route('/api/wordlist/tags/<int:wordlist_id>/<int:word_id>', methods=['GET'])
 def get_tags(wordlist_id, word_id):
+    # perform the following checks:
+    #
+    # - wordlist exists
+    # - wordlist is not a smart list
+    # - if not a smartlist, word is present in the list.
+    #
+
+    url = url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
+    r = requests.get(url)
+    if not r:
+        return r.text, r.status_code
+
+    metadata = r.json()
+
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
-            # the wordlist_id must exist
-            sql = """
-            select id
-            from wordlist
-            where id = %s
-            """
-            cursor.execute(sql, (wordlist_id,))
-            rows = cursor.fetchall()
-            if not rows:
-                return "list %s not found" % wordlist_id, 404
-
-            # the word_id must be present in this list
-            sql = """
-            select wordlist_id, word_id
-            from wordlist_known_word
-            where wordlist_id=%(wordlist_id)s and word_id=%(word_id)s
-            """
-            cursor.execute(sql, {
+            result = {
                 "wordlist_id": wordlist_id,
-                "word_id": word_id
-            })
-            rows = cursor.fetchall()
-            if not rows:
-                return "word %s not in list %s" % (word_id, wordlist_id), 400
+                "word_id": word_id,
+                "tags": []
+            }
+
+            members = set(common.get_word_ids_from_wordlists([wordlist_id], cursor))
+            if word_id not in members:
+                return "word %s not in list %s" % (word_id, wordlist_id), 404
+
+            if metadata['list_type'] == 'smart':
+                return result
 
             # checks complete, let's do this.
             sql = """
@@ -53,12 +56,7 @@ def get_tags(wordlist_id, word_id):
             })
             rows = cursor.fetchall()
 
-            result = {
-                "wordlist_id": wordlist_id,
-                "word_id": word_id,
-                "tags": [x['tag'] for x in rows]
-            }
-
+            result['tags'] = [x['tag'] for x in rows]
             jsonschema.validate(result, js.WORD_TAG_RESPONSE_SCHEMA)
 
             return result, 200
@@ -73,7 +71,18 @@ def get_tags(wordlist_id, word_id):
 
 @bp.route('/api/wordlist/tags/<int:wordlist_id>/<int:word_id>', methods=['POST'])
 def add_tags(wordlist_id, word_id):
-    # returns a message and a status code, no object.
+    # returns a message and a status code, no object
+
+    # operation is not allowed on smart lists.
+    url = url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
+    r = requests.get(url)
+    if not r:
+        return r.text, r.status_code
+
+    metadata = r.json()
+    if metadata['list_type'] == 'smart':
+        message = "cannot add tags to words in a smart list:  %s" % wordlist_id
+        return message, 400
 
     try:
         payload = request.get_json()
@@ -147,6 +156,17 @@ def add_tags(wordlist_id, word_id):
 
 @bp.route('/api/wordlist/tags/<int:wordlist_id>/<int:word_id>', methods=['DELETE'])
 def delete_tags(wordlist_id, word_id):
+    # operation is not allowed on smart lists.
+    url = url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
+    r = requests.get(url)
+    if not r:
+        return r.text, r.status_code
+
+    metadata = r.json()
+    if metadata['list_type'] == 'smart':
+        message = "cannot add tags to words in a smart list:  %s" % wordlist_id
+        return message, 400
+
     # returns a message and a status code, no object.
     doomed_tags = request.args.getlist('tag')
 
