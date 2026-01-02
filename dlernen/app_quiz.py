@@ -41,7 +41,8 @@ def quiz_words(wordlist_ids, queries):
             print("es gibt keine Welten mehr zu erobern")
 
         # edit_distance is case sensitive
-        distances = [(edit_distance(w['word'], attr_to_test['word'], transpositions=True), w['word']) for w in dictionary]
+        distances = [(edit_distance(w['word'], attr_to_test['word'], transpositions=True), w['word']) for w in
+                     dictionary]
 
         distances = sorted(distances, key=lambda x: (x[0], x[1]))
         candidates = [x[1] for x in distances[1:4]]  # distances[0] will be the word itself
@@ -139,11 +140,28 @@ def quiz_definitions(wordlist_ids, queries, tags):
             print(attr_to_test['article'], end=' ')
 
         print(attr_to_test['word'])
-        prompt = "hit return for answer, q to quit:  --> "
+        prompt = "hit return for answer, q to quit, h for hint:  --> "
         answer = input(prompt).strip().lower()
 
         if answer.startswith('q'):
             break
+
+        if answer.startswith('h'):
+            # show wordlists this word is in.
+            r = requests.get(url_for('api_wordlist.get_wordlists_by_word_id',
+                                     word_id=attr_to_test['word_id'],
+                                     _external=True))
+            if not r:
+                message = "could not get wordlists for word id %s:  [%s, %s]" % (attr_to_test['word_id'], r.text,
+                                                                                 r.status_code)
+                print(message)
+                return message, r.status_code
+
+            obj = r.json()
+            for n in obj:
+                print("[%s] %s" % (n['wordlist_id'], n['name']))
+
+            _ = input('--- waiting ---> ')
 
         print(attr_to_test['attrvalue'])
 
