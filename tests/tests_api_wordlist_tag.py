@@ -15,6 +15,89 @@ def cleanupWordlistID(client, wordlist_id):
     client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id, _external=True))
 
 
+# TODO - more test cases needed:
+#   tag operations smart lists:
+#       adding/deleting not allowed -> 400
+#       for gets, membership check should succeed.  if successful, get should succeed but return no tags.
+#       get should succeed but return no tags
+class APIWordlistTagSmartList(unittest.TestCase):
+    app = None
+    app_context = None
+    client = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
+            TESTING=True,
+        )
+
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
+
+        with cls.app.test_request_context():
+            r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
+            cls.keyword_mappings = json.loads(r.data)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
+
+    def setUp(self):
+        # create two dictionary entries
+        self.word1 = "word1_" + ''.join(random.choices(string.ascii_lowercase, k=10))
+        self.word2 = "word2_" + ''.join(random.choices(string.ascii_lowercase, k=10))
+
+        add_payload = {
+            "word": self.word1,
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
+        }
+        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        self.word1_id = obj['word_id']
+
+        add_payload = {
+            "word": self.word2,
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
+        }
+        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        self.word2_id = obj['word_id']
+
+        self.addCleanup(cleanupWordID, self.client, self.word1_id)
+        self.addCleanup(cleanupWordID, self.client, self.word2_id)
+
+        # create a smart list.  the SQL will be set up so that word1 is in the list but word2 is not.
+        sql = "select id word_id from word where word = '%s'" % self.word1
+
+        self.list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': self.list_name,
+            'sqlcode': sql
+        }
+
+        url = url_for('api_wordlist.create_wordlist_metadata', _external=True)
+
+        r = self.client.post(url, json=add_payload)
+        obj = json.loads(r.data)
+        self.wordlist_id = obj['wordlist_id']
+        self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
+
+    # do nothing, just make sure that setUp and tearDown work
+    def test_nothing(self):
+        r = self.client.get(url_for('api_wordlist.get_wordlist',
+                                    wordlist_id=self.wordlist_id,
+                                    _external=True))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual(1, len(obj['known_words']))
+        self.assertEqual(self.word1_id, obj['known_words'][0]['word_id'])
+
+
+
 class APIWordlistTag(unittest.TestCase):
     app = None
     app_context = None
