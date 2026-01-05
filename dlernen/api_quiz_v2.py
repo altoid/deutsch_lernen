@@ -46,7 +46,7 @@ inner join words_to_test on qa.attribute_id = words_to_test.attribute_id
 CRAPPY_SCORE_SQL = COMMON_SQL + """
 word_scores as
 (
-select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word,
+select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word, wat.attrkey,
     ifnull(qsc.presentation_count, 0) presentation_count,
     ifnull(qsc.correct_count, 0) correct_count,
     ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
@@ -67,10 +67,8 @@ select
     word_scores.word_id,
     word_scores.quiz_id,
     word_scores.attrvalue,
-    word_scores.correct_count,
-    word_scores.presentation_count,
-    word_scores.attribute_id,
-    ifnull((presentation_count / npresentations) * raw_score, 0) as weighted_score
+    word_scores.attrkey,
+    word_scores.attribute_id
 from word_scores, total_presentations
 where raw_score < 0.8
 or presentation_count <= 5   -- without this, if we get it right the first time we never see it again
@@ -81,7 +79,7 @@ limit 1
 RARE_SQL = COMMON_SQL + """
 word_scores as
 (
-select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word,
+select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word, wat.attrkey,
     ifnull(qsc.presentation_count, 0) presentation_count,
     ifnull(qsc.correct_count, 0) correct_count,
     ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
@@ -98,8 +96,7 @@ select
     word_scores.word_id,
     word_scores.quiz_id,
     word_scores.attrvalue,
-    word_scores.correct_count,
-    word_scores.presentation_count,
+    word_scores.attrkey,
     word_scores.attribute_id
 from word_scores
 where presentation_count <= 5
@@ -110,7 +107,7 @@ limit 1
 RANDOM_SQL = COMMON_SQL + """
 word_scores as
 (
-select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word,
+select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word, wat.attrkey,
     ifnull(qsc.presentation_count, 0) presentation_count,
     ifnull(qsc.correct_count, 0) correct_count,
     ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
@@ -127,8 +124,7 @@ select
     word_scores.word_id,
     word_scores.quiz_id,
     word_scores.attrvalue,
-    word_scores.correct_count,
-    word_scores.presentation_count,
+    word_scores.attrkey,
     word_scores.attribute_id
 from word_scores
 order by rand()
@@ -138,7 +134,8 @@ limit 1
 BEEN_TOO_LONG_SQL = COMMON_SQL + """
 word_scores as
 (
-select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word, qsc.last_presentation,
+select 
+    wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word, qsc.last_presentation, wat.attrkey,
     ifnull(qsc.presentation_count, 0) presentation_count,
     ifnull(qsc.correct_count, 0) correct_count,
     ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
@@ -155,8 +152,7 @@ select
     word_scores.word_id,
     word_scores.quiz_id,
     word_scores.attrvalue,
-    word_scores.correct_count,
-    word_scores.presentation_count,
+    word_scores.attrkey,
     word_scores.attribute_id
 from word_scores
 where curdate() - interval 30 day > last_presentation

@@ -504,6 +504,7 @@ QUIZ_RESPONSE_SCHEMA = {
         "quiz_id",
         "word_id",
         "attribute_id",
+        "attrkey",
         "word",
         "attrvalue"
     ],
@@ -521,6 +522,9 @@ QUIZ_RESPONSE_SCHEMA = {
             "minimum": 1
         },
         "word": {
+            "type": "string"
+        },
+        "attrkey": {
             "type": "string"
         },
         "attrvalue": {

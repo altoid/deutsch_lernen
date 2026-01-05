@@ -907,6 +907,7 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             'word': 'Tarnung',
             'attrvalue': 'die',
             'attribute_id': 1,
+            'attrkey': 'whateverrr'
         }
     ]
 
@@ -917,6 +918,7 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             'word': 'Tarnung',
             'attrvalue': 'die',
             'attribute_id': 1,
+            'attrkey': 'whateverrr'
         },
         {
             'quiz_id': 3,
@@ -924,6 +926,7 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             'word': 'Tarnung',
             'attrvalue': 'die',
             'attribute_id': 1,
+            'attrkey': 'whateverrr'
         },
         {
             'quiz_id': 3,
@@ -931,6 +934,7 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             # 'word': 'Tarnung',
             'attrvalue': 'die',
             'attribute_id': 1,
+            'attrkey': 'whateverrr'
         },
         {
             'quiz_id': 3,
@@ -938,6 +942,7 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             'word': 'Tarnung',
             # 'attrvalue': 'die',
             'attribute_id': 1,
+            'attrkey': 'whateverrr'
         },
         {
             'quiz_id': 3,
@@ -945,6 +950,15 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             'word': 'Tarnung',
             'attrvalue': 'die',
             # 'attribute_id': 1,
+            'attrkey': 'whateverrr'
+        },
+        {
+            'quiz_id': 3,
+            'word_id': 868,
+            'word': 'Tarnung',
+            'attrvalue': 'die',
+            'attribute_id': 1,
+            # 'attrkey': 'whateverrr'
         },
     ]
 
