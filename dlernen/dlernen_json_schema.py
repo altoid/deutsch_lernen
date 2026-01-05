@@ -455,6 +455,7 @@ QUIZ_REPORT_RESPONSE_SCHEMA = {
                 "type": "object",
                 "required": [
                     "word",
+                    "attrkey",
                     "word_id",
                     "presentation_count",
                     "correct_count",
@@ -463,6 +464,9 @@ QUIZ_REPORT_RESPONSE_SCHEMA = {
                 ],
                 "properties": {
                     "word": {
+                        "type": "string",
+                    },
+                    "attrkey": {
                         "type": "string",
                     },
                     "word_id": {

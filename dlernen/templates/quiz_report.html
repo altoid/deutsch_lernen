@@ -30,6 +30,9 @@ Quiz Report
                 word
             </th>
             <th class="quiz_report">
+                attrkey
+            </th>
+            <th class="quiz_report">
                 correct_count
             </th>
             <th class="quiz_report">
@@ -45,6 +48,7 @@ Quiz Report
         {% for r in scores %}
         <tr>
             <td class="quiz_report">{{ r['word'] }}</td>
+            <td class="quiz_report">{{ r['attrkey'] }}</td>
             <td class="quiz_report numeric">{{ r['correct_count'] }}</td>
             <td class="quiz_report numeric">{{ r['presentation_count'] }}</td>
             <td class="quiz_report numeric">{{ r['raw_score'] }}</td>

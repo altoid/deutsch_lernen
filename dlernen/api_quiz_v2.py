@@ -29,12 +29,15 @@ inner join quiz_structure qs on quiz.id = qs.quiz_id
 where quiz_key = '%(quiz_key)s'
 ),
 words_to_test as (
-select word, word_id, attrvalue, attribute_id from mashup_v
+select word, word_id, attrkey, attrvalue, attribute_id from mashup_v
 where attrvalue is not null
 %(word_id_filter)s
 ),
 word_attributes_to_test as (
-select qa.quiz_id, qa.attribute_id, words_to_test.word_id, words_to_test.attrvalue, words_to_test.word
+select 
+    qa.quiz_id, qa.attribute_id, words_to_test.word_id, 
+    words_to_test.attrkey, words_to_test.attrvalue, 
+    words_to_test.word
 from attrs_for_quiz qa
 inner join words_to_test on qa.attribute_id = words_to_test.attribute_id
 ),
@@ -165,7 +168,8 @@ limit 1
 REPORT_SQL = COMMON_SQL + """
 word_scores as
 (
-select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word,
+select 
+    wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.attrkey, wat.word,
     qsc.last_presentation,
     ifnull(qsc.presentation_count, 0) presentation_count,
     ifnull(qsc.correct_count, 0) correct_count,
@@ -183,6 +187,7 @@ from word_scores
 
 select
     word_scores.word,
+    word_scores.attrkey,
     word_scores.word_id,
     word_scores.correct_count,
     word_scores.presentation_count,
