@@ -657,6 +657,7 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA(unittest.TestCase):
             "scores": [
                 {
                     "word": "aoeu",
+                    "attrkey": "skeleton",
                     "word_id": 2134,
                     "presentation_count": 234,
                     "correct_count": 234,
@@ -683,6 +684,7 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA(unittest.TestCase):
             "scores": [
                 {
                     "word": "aoeu",
+                    "attrkey": "skeleton",
                     "word_id": 2134,
                     "presentation_count": 234,
                     "correct_count": 234,
@@ -699,6 +701,7 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA(unittest.TestCase):
             "scores": [
                 {
                     "word": "aoeu",
+                    "attrkey": "skeleton",
                     "word_id": 2134,
                     "presentation_count": 234,
                     "correct_count": 234,
@@ -715,6 +718,7 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA(unittest.TestCase):
             "scores": [
                 {
                     "word": "aoeu",
+                    "attrkey": "skeleton",
                     "word_id": 2134,
                     "presentation_count": 234,
                     "correct_count": 234,
@@ -731,6 +735,7 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA(unittest.TestCase):
             "scores": [
                 {
                     "word": "aoeu",
+                    "attrkey": "skeleton",
                     "word_id": 2134,
                     "presentation_count": 234,
                     "correct_count": 234,
@@ -747,6 +752,7 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA(unittest.TestCase):
             # "scores": [
             #     {
             #         "word": "aoeu",
+            #         "attrkey": "skeleton",
             #         "word_id": 2134,
             #         "presentation_count": 234,
             #         "correct_count": 234,
@@ -763,6 +769,7 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA(unittest.TestCase):
             "scores": [
                 {
                     # "word": "aoeu",
+                    "attrkey": "skeleton",
                     "word_id": 2134,
                     "presentation_count": 234,
                     "correct_count": 234,
@@ -779,6 +786,24 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA(unittest.TestCase):
             "scores": [
                 {
                     "word": "aoeu",
+                    # "attrkey": "skeleton",
+                    "word_id": 2134,
+                    "presentation_count": 234,
+                    "correct_count": 234,
+                    "raw_score": 3.1416,
+                    "last_presentation": "yesterday when i was young"
+                }
+            ]
+        },
+        {
+            "quiz_key": "aoeu",
+            "quiz_id": 234,
+            "wordlist_name": "schindler",
+            "wordlist_id": 234,
+            "scores": [
+                {
+                    "word": "aoeu",
+                    "attrkey": "skeleton",
                     # "word_id": 2134,
                     "presentation_count": 234,
                     "correct_count": 234,
@@ -795,6 +820,7 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA(unittest.TestCase):
             "scores": [
                 {
                     "word": "aoeu",
+                    "attrkey": "skeleton",
                     "word_id": 2134,
                     # "presentation_count": 234,
                     "correct_count": 234,
@@ -811,6 +837,7 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA(unittest.TestCase):
             "scores": [
                 {
                     "word": "aoeu",
+                    "attrkey": "skeleton",
                     "word_id": 2134,
                     "presentation_count": 234,
                     # "correct_count": 234,
@@ -827,6 +854,7 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA(unittest.TestCase):
             "scores": [
                 {
                     "word": "aoeu",
+                    "attrkey": "skeleton",
                     "word_id": 2134,
                     "presentation_count": 234,
                     "correct_count": 234,
@@ -843,6 +871,7 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA(unittest.TestCase):
             "scores": [
                 {
                     "word": "aoeu",
+                    "attrkey": "skeleton",
                     "word_id": 2134,
                     "presentation_count": 234,
                     "correct_count": 234,
@@ -878,8 +907,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             'word': 'Tarnung',
             'attrvalue': 'die',
             'attribute_id': 1,
-            'correct_count': 0,
-            'presentation_count': 0,
         }
     ]
 
@@ -890,8 +917,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             'word': 'Tarnung',
             'attrvalue': 'die',
             'attribute_id': 1,
-            'correct_count': 0,
-            'presentation_count': 0,
         },
         {
             'quiz_id': 3,
@@ -899,8 +924,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             'word': 'Tarnung',
             'attrvalue': 'die',
             'attribute_id': 1,
-            'correct_count': 0,
-            'presentation_count': 0,
         },
         {
             'quiz_id': 3,
@@ -908,8 +931,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             # 'word': 'Tarnung',
             'attrvalue': 'die',
             'attribute_id': 1,
-            'correct_count': 0,
-            'presentation_count': 0,
         },
         {
             'quiz_id': 3,
@@ -917,8 +938,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             'word': 'Tarnung',
             # 'attrvalue': 'die',
             'attribute_id': 1,
-            'correct_count': 0,
-            'presentation_count': 0,
         },
         {
             'quiz_id': 3,
@@ -926,26 +945,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             'word': 'Tarnung',
             'attrvalue': 'die',
             # 'attribute_id': 1,
-            'correct_count': 0,
-            'presentation_count': 0,
-        },
-        {
-            'quiz_id': 3,
-            'word_id': 868,
-            'word': 'Tarnung',
-            'attrvalue': 'die',
-            'attribute_id': 1,
-            # 'correct_count': 0,
-            'presentation_count': 0,
-        },
-        {
-            'quiz_id': 3,
-            'word_id': 868,
-            'word': 'Tarnung',
-            'attrvalue': 'die',
-            'attribute_id': 1,
-            'correct_count': 0,
-            # 'presentation_count': 0,
         },
     ]
 

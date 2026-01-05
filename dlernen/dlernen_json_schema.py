@@ -504,8 +504,6 @@ QUIZ_RESPONSE_SCHEMA = {
         "quiz_id",
         "word_id",
         "attribute_id",
-        "presentation_count",
-        "correct_count",
         "word",
         "attrvalue"
     ],
@@ -521,14 +519,6 @@ QUIZ_RESPONSE_SCHEMA = {
         "attribute_id": {
             "type": "integer",
             "minimum": 1
-        },
-        "correct_count": {
-            "type": "integer",
-            "minimum": 0
-        },
-        "presentation_count": {
-            "type": "integer",
-            "minimum": 0
         },
         "word": {
             "type": "string"
