@@ -27,7 +27,9 @@ Manage List:  {{ wordlist_contents.name }}
         </tr>
         <tr>
             <td>
-                <a href="{{ url_for('dlernen.quiz_report', wordlist_id=wordlist_contents.wordlist_id) }}">Zeugnis</a>
+                <a href="{{ url_for('dlernen.quiz_report',
+                                    quiz_key='definitions',
+                                    wordlist_id=wordlist_contents.wordlist_id) }}">Zeugnis:  Definitionen</a>
             </td>
         </tr>
     </table>

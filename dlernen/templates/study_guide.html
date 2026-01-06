@@ -23,7 +23,9 @@ Study Guide:  {{ wordlist.name }}
         </tr>
         <tr>
             <td>
-                <a href="{{ url_for('dlernen.quiz_report', wordlist_id=wordlist.wordlist_id) }}">Zeugnis</a>
+                <a href="{{ url_for('dlernen.quiz_report',
+                                    quiz_key='definitions',
+                                    wordlist_id=wordlist.wordlist_id) }}">Zeugnis:  Definitionen</a>
             </td>
         </tr>
     </table>

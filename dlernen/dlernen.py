@@ -722,9 +722,8 @@ def update_dict():
     return redirect(target)
 
 
-@bp.route('/quiz_report/<int:wordlist_id>')
-def quiz_report(wordlist_id):
-    quiz_key = 'definitions'
+@bp.route('/quiz_report/<string:quiz_key>/<int:wordlist_id>')
+def quiz_report(quiz_key, wordlist_id):
     url = url_for('api_quiz_v2.get_report', quiz_key=quiz_key, wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
     if not r:
