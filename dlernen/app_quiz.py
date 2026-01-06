@@ -89,11 +89,12 @@ def quiz_words(wordlist_ids, queries):
             return r.text, r.status_code
 
 
-@bp.cli.command('quiz_definitions')
+@bp.cli.command('quiz')
+@click.argument('quiz_key')
 @click.option('--wordlist_ids', '-l', multiple=True)
 @click.option('--queries', '-q', multiple=True)
 @click.option('--tags', '-t', multiple=True)
-def quiz_definitions(wordlist_ids, queries, tags):
+def quiz(quiz_key, wordlist_ids, queries, tags):
     # to run this, use the command:
     #   python -m flask --app run app_quiz_definitions quiz_definitions [-l id -l id -l id ...]
     #
@@ -111,14 +112,14 @@ def quiz_definitions(wordlist_ids, queries, tags):
     if len(wordlist_ids) > 1:
         url = url_for('api_quiz_v2.get_word_to_test',
                       wordlist_id=wordlist_ids,
-                      quiz_key=QUIZ_KEY,
+                      quiz_key=quiz_key,
                       query=queries,
                       _external=True)
     else:
         url = url_for('api_quiz_v2.get_word_to_test_single_wordlist',
                       wordlist_id=wordlist_ids[0],
                       tag=tags,
-                      quiz_key=QUIZ_KEY,
+                      quiz_key=quiz_key,
                       query=queries,
                       _external=True)
 
@@ -134,77 +135,41 @@ def quiz_definitions(wordlist_ids, queries, tags):
             break
 
         counter += 1
-        print("[%s]" % counter, end=' ')
-
         if 'article' in attr_to_test:
-            print(attr_to_test['article'], end=' ')
+            word = "%s %s" % (attr_to_test['article'], attr_to_test['word'])
+        else:
+            word = "%s" % (attr_to_test['word'])
 
-        print(attr_to_test['word'])
-        while True:
-            prompt = "hit return for answer, q to quit, h for hint:  --> "
-            answer = input(prompt).strip().lower()
+        print("############ %s ###########" % word)
+        prompt = "[%s] ===== %s ====> " % (counter, attr_to_test['attrkey'])
 
-            if answer.startswith('q'):
-                break
+        answer = input(prompt).strip().casefold()
+        while not answer:
+            answer = input(prompt).strip().casefold()
 
-            if not answer:
-                break
-
-            if answer.startswith('h'):
-                # show wordlists this word is in.
-                r = requests.get(url_for('api_wordlist.get_wordlists_by_word_id',
-                                         word_id=attr_to_test['word_id'],
-                                         _external=True))
-                if not r:
-                    message = "could not get wordlists for word id %s:  [%s, %s]" % (attr_to_test['word_id'], r.text,
-                                                                                     r.status_code)
-                    print(message)
-                    return message, r.status_code
-
-                obj = r.json()
-                for n in obj:
-                    r = requests.get(url_for('api_wordlist_tag.get_tags',
-                                             wordlist_id=n['wordlist_id'],
-                                             word_id=attr_to_test['word_id'],
-                                             _external=True))
-                    if not r:
-                        message = "could not get tags for word id %s:  [%s, %s]" % (
-                            attr_to_test['word_id'], r.text,
-                            r.status_code)
-                        print(message)
-                        return message, r.status_code
-
-                    tags_response = r.json()
-                    tags = ', '.join(tags_response['tags'])
-                    if tags:
-                        print("%s [%s:  %s]" % (n['name'], n['wordlist_id'], tags))
-                    else:
-                        print("%s [%s]" % (n['name'], n['wordlist_id']))
-
-        if answer.startswith('q'):
+        if answer == 'q':
             break
 
-        print(attr_to_test['attrvalue'])
+        correct = answer == attr_to_test['attrvalue'].casefold()
 
-        prompt = "correct? --> "
-        answer = input(prompt).strip().lower()
+        if correct:
+            print("####### richtig")
+        else:
+            print("=======> falsch: %s" % attr_to_test['attrvalue'])
 
         payload = {
             "quiz_id": attr_to_test['quiz_id'],
             "word_id": attr_to_test['word_id'],
-            "attribute_id": attr_to_test['attribute_id']
+            "attribute_id": attr_to_test['attribute_id'],
+            "correct": correct,
         }
 
-        while len(answer) == 0:
-            answer = input(prompt).strip().lower()
-
-        payload['correct'] = answer.startswith('y')
-
         r = requests.post(url_for('api_quiz_v2.post_quiz_answer',
-                                  quiz_key=QUIZ_KEY,
+                                  quiz_key=quiz_key,
                                   _external=True), json=payload)
 
         if not r:
-            return r.text, r.status_code
+            message = "could not post quiz answer:  %s [%s]" % (r.text, r.status_code)
+            return message, r.status_code
 
     print('bis bald')
