@@ -153,71 +153,28 @@ order by raw_score, presentation_count
 """
 
 DEFINED_QUERIES = {
-    'crappy_score',
-    'been_too_long',
-    'rare',
-    'random',
-    'imperfect'
+    'crappy_score': CRAPPY_SCORE_SQL,
+    'been_too_long': BEEN_TOO_LONG_SQL,
+    'rare': RARE_SQL,
+    'random': RANDOM_SQL,
+    'imperfect': IMPERFECT_SCORE_SQL,
 }
 
 
 def run_quiz_queries(cursor, queries, quiz_key, word_id_filter, word_ids):
     words_chosen = []
 
-    if 'crappy_score' in queries:
-        sql = CRAPPY_SCORE_SQL % {
-            'quiz_key': quiz_key,
-            'word_id_filter': word_id_filter
-        }
+    for q in queries:
+        if q in DEFINED_QUERIES:
+            sql = DEFINED_QUERIES[q] % {
+                'quiz_key': quiz_key,
+                'word_id_filter': word_id_filter
+            }
 
-        cursor.execute(sql, word_ids)
-        rows = cursor.fetchall()
-        if rows:
-            words_chosen.append(rows[0])
-
-    if 'rare' in queries:
-        sql = RARE_SQL % {
-            'quiz_key': quiz_key,
-            'word_id_filter': word_id_filter
-        }
-
-        cursor.execute(sql, word_ids)
-        rows = cursor.fetchall()
-        if rows:
-            words_chosen.append(rows[0])
-
-    if 'been_too_long' in queries:
-        sql = BEEN_TOO_LONG_SQL % {
-            'quiz_key': quiz_key,
-            'word_id_filter': word_id_filter
-        }
-
-        cursor.execute(sql, word_ids)
-        rows = cursor.fetchall()
-        if rows:
-            words_chosen.append(rows[0])
-
-    if 'random' in queries:
-        sql = RANDOM_SQL % {
-            'quiz_key': quiz_key,
-            'word_id_filter': word_id_filter
-        }
-
-        cursor.execute(sql, word_ids)
-        rows = cursor.fetchall()
-        if rows:
-            words_chosen.append(rows[0])
-
-    if 'imperfect' in queries:
-        sql = IMPERFECT_SCORE_SQL % {
-            'quiz_key': quiz_key,
-            'word_id_filter': word_id_filter
-        }
-
-        cursor.execute(sql, word_ids)
-        rows = cursor.fetchall()
-        if rows:
-            words_chosen.append(rows[0])
+            cursor.execute(sql, word_ids)
+            rows = cursor.fetchall()
+            if rows:
+                words_chosen.append(rows[0])
 
     return words_chosen
 
@@ -235,9 +192,9 @@ def get_word_to_test_single_wordlist(quiz_key, wordlist_id):
     #
     queries = request.args.getlist('query')
     if not queries:
-        queries = DEFINED_QUERIES
+        queries = list(DEFINED_QUERIES.keys())
 
-    undefined_queries = {x for x in queries} - DEFINED_QUERIES
+    undefined_queries = {x for x in queries} - set(DEFINED_QUERIES.keys())
     if undefined_queries:
         return "unknown queries: %s" % ', '.join(undefined_queries), 400
 
@@ -305,9 +262,9 @@ def get_word_to_test(quiz_key):
     #
     queries = request.args.getlist('query')
     if not queries:
-        queries = DEFINED_QUERIES
+        queries = list(DEFINED_QUERIES.keys())
 
-    undefined_queries = {x for x in queries} - DEFINED_QUERIES
+    undefined_queries = {x for x in queries} - set(DEFINED_QUERIES.keys())
     if undefined_queries:
         return "unknown queries: %s" % ', '.join(undefined_queries), 400
 
