@@ -23,30 +23,29 @@ bp = Blueprint('api_quiz_v2', __name__, url_prefix='/api/v2/quiz')
 COMMON_SQL = """
 with
 attrs_for_quiz as (
-select qs.quiz_id, qs.attribute_id
-from quiz
-inner join quiz_structure qs on quiz.id = qs.quiz_id
-where quiz_key = '%(quiz_key)s'
+    select qs.quiz_id, qs.attribute_id
+    from quiz
+    inner join quiz_structure qs on quiz.id = qs.quiz_id
+    where quiz_key = '%(quiz_key)s'
 ),
 words_to_test as (
-select word, word_id, attrkey, attrvalue, attribute_id from mashup_v
-where attrvalue is not null
-%(word_id_filter)s
+    select word, word_id, attrkey, attrvalue, attribute_id 
+    from mashup_v
+    where attrvalue is not null
+    %(word_id_filter)s
 ),
 word_attributes_to_test as (
-select 
-    qa.quiz_id, qa.attribute_id, words_to_test.word_id, 
-    words_to_test.attrkey, words_to_test.attrvalue, 
-    words_to_test.word
-from attrs_for_quiz qa
-inner join words_to_test on qa.attribute_id = words_to_test.attribute_id
+    select 
+        qa.quiz_id, qa.attribute_id, words_to_test.word_id, 
+        words_to_test.attrkey, words_to_test.attrvalue, 
+        words_to_test.word
+    from attrs_for_quiz qa
+    inner join words_to_test on qa.attribute_id = words_to_test.attribute_id
 ),
-"""
-
-CRAPPY_SCORE_SQL = COMMON_SQL + """
 word_scores as
 (
 select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word, wat.attrkey,
+    qsc.last_presentation,
     ifnull(qsc.presentation_count, 0) presentation_count,
     ifnull(qsc.correct_count, 0) correct_count,
     ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
@@ -57,10 +56,12 @@ left join quiz_score_v qsc
     and wat.word_id = qsc.word_id
 ),
 total_presentations as (
-select sum(presentation_count) as npresentations
-from word_scores
+    select sum(presentation_count) as npresentations
+    from word_scores
 )
+"""
 
+CRAPPY_SCORE_SQL = COMMON_SQL + """
 select 
     'crappy_score' query_name, 
     word_scores.word,
@@ -76,20 +77,23 @@ order by raw_score, presentation_count
 limit 1
 """
 
-RARE_SQL = COMMON_SQL + """
-word_scores as
-(
-select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word, wat.attrkey,
-    ifnull(qsc.presentation_count, 0) presentation_count,
-    ifnull(qsc.correct_count, 0) correct_count,
-    ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
-from word_attributes_to_test wat
-left join quiz_score_v qsc
-    on wat.quiz_id = qsc.quiz_id
-    and wat.attribute_id = qsc.attribute_id
-    and wat.word_id = qsc.word_id
-)
+# quiz all the words where raw score < 100%
+IMPERFECT_SCORE_SQL = COMMON_SQL + """
+select 
+    'imperfect' query_name, 
+    word_scores.word,
+    word_scores.word_id,
+    word_scores.quiz_id,
+    word_scores.attrvalue,
+    word_scores.attrkey,
+    word_scores.attribute_id
+from word_scores, total_presentations
+where raw_score < 1.00
+order by raw_score, presentation_count
+limit 1
+"""
 
+RARE_SQL = COMMON_SQL + """
 select 
     'rare' query_name, 
     word_scores.word,
@@ -105,19 +109,6 @@ limit 1
 """
 
 RANDOM_SQL = COMMON_SQL + """
-word_scores as
-(
-select wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word, wat.attrkey,
-    ifnull(qsc.presentation_count, 0) presentation_count,
-    ifnull(qsc.correct_count, 0) correct_count,
-    ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
-from word_attributes_to_test wat
-left join quiz_score_v qsc
-    on wat.quiz_id = qsc.quiz_id
-    and wat.attribute_id = qsc.attribute_id
-    and wat.word_id = qsc.word_id
-)
-
 select 
     'random' query_name, 
     word_scores.word,
@@ -132,20 +123,6 @@ limit 1
 """
 
 BEEN_TOO_LONG_SQL = COMMON_SQL + """
-word_scores as
-(
-select 
-    wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.word, qsc.last_presentation, wat.attrkey,
-    ifnull(qsc.presentation_count, 0) presentation_count,
-    ifnull(qsc.correct_count, 0) correct_count,
-    ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
-from word_attributes_to_test wat
-LEFT join quiz_score_v qsc
-    on wat.quiz_id = qsc.quiz_id
-    and wat.attribute_id = qsc.attribute_id
-    and wat.word_id = qsc.word_id
-)
-
 select 
     'been_too_long' query_name, 
     word_scores.word,
@@ -162,25 +139,6 @@ limit 1
 """
 
 REPORT_SQL = COMMON_SQL + """
-word_scores as
-(
-select 
-    wat.quiz_id, wat.attribute_id, wat.word_id, wat.attrvalue, wat.attrkey, wat.word,
-    qsc.last_presentation,
-    ifnull(qsc.presentation_count, 0) presentation_count,
-    ifnull(qsc.correct_count, 0) correct_count,
-    ifnull(qsc.correct_count / qsc.presentation_count, 0) raw_score
-from word_attributes_to_test wat
-left join quiz_score_v qsc
-    on wat.quiz_id = qsc.quiz_id
-    and wat.attribute_id = qsc.attribute_id
-    and wat.word_id = qsc.word_id
-),
-total_presentations as (
-select sum(presentation_count) as npresentations
-from word_scores
-)
-
 select
     word_scores.word,
     word_scores.attrkey,
@@ -198,7 +156,8 @@ DEFINED_QUERIES = {
     'crappy_score',
     'been_too_long',
     'rare',
-    'random'
+    'random',
+    'imperfect'
 }
 
 
@@ -240,6 +199,17 @@ def run_quiz_queries(cursor, queries, quiz_key, word_id_filter, word_ids):
 
     if 'random' in queries:
         sql = RANDOM_SQL % {
+            'quiz_key': quiz_key,
+            'word_id_filter': word_id_filter
+        }
+
+        cursor.execute(sql, word_ids)
+        rows = cursor.fetchall()
+        if rows:
+            words_chosen.append(rows[0])
+
+    if 'imperfect' in queries:
+        sql = IMPERFECT_SCORE_SQL % {
             'quiz_key': quiz_key,
             'word_id_filter': word_id_filter
         }
