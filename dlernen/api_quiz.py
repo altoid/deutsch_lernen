@@ -77,6 +77,22 @@ order by raw_score, presentation_count
 limit 1
 """
 
+# get the word we have seen least recently.
+# this is the only one of the quiz queries that is guaranteed to get every word, if we run it enough times.
+OLDEST_FIRST_SQL = COMMON_SQL + """
+select 
+    'oldest_first' query_name, 
+    word_scores.word,
+    word_scores.word_id,
+    word_scores.quiz_id,
+    word_scores.attrvalue,
+    word_scores.attrkey,
+    word_scores.attribute_id
+from word_scores, total_presentations
+order by last_presentation
+limit 1
+"""
+
 # quiz all the words where raw score < 100%
 IMPERFECT_SCORE_SQL = COMMON_SQL + """
 select 
@@ -158,6 +174,7 @@ DEFINED_QUERIES = {
     'rare': RARE_SQL,
     'random': RANDOM_SQL,
     'imperfect': IMPERFECT_SCORE_SQL,
+    'oldest_first': OLDEST_FIRST_SQL,
 }
 
 
