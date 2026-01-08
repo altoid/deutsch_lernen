@@ -88,7 +88,7 @@ select
     word_scores.attrvalue,
     word_scores.attrkey,
     word_scores.attribute_id
-from word_scores, total_presentations
+from word_scores
 order by last_presentation
 limit 1
 """
@@ -103,9 +103,9 @@ select
     word_scores.attrvalue,
     word_scores.attrkey,
     word_scores.attribute_id
-from word_scores, total_presentations
+from word_scores
 where raw_score < 1.00
-order by raw_score, presentation_count
+order by rand()
 limit 1
 """
 
