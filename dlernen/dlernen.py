@@ -724,7 +724,7 @@ def update_dict():
 
 @bp.route('/quiz_report/<string:quiz_key>/<int:wordlist_id>')
 def quiz_report(quiz_key, wordlist_id):
-    url = url_for('api_quiz_v2.get_report', quiz_key=quiz_key, wordlist_id=wordlist_id, _external=True)
+    url = url_for('api_quiz.get_report', quiz_key=quiz_key, wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
     if not r:
         return render_template("error.html",

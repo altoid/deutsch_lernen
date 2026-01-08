@@ -26,7 +26,7 @@ def quiz_words(wordlist_ids, queries):
     dictionary = r.json()
 
     while True:
-        quiz_url = url_for('api_quiz_v2.get_word_to_test',
+        quiz_url = url_for('api_quiz.get_word_to_test',
                            wordlist_id=wordlist_ids,
                            quiz_key=QUIZ_KEY,
                            query=queries,
@@ -80,7 +80,7 @@ def quiz_words(wordlist_ids, queries):
             attr_to_test['correct'] = False
             print("falsch")
 
-        r = requests.post(url_for('api_quiz_v2.post_quiz_answer',
+        r = requests.post(url_for('api_quiz.post_quiz_answer',
                                   quiz_key=QUIZ_KEY,
                                   _external=True), json=attr_to_test)
 
@@ -109,13 +109,13 @@ def quiz_definitions(wordlist_ids, queries, tags):
     counter = 0
 
     if len(wordlist_ids) > 1:
-        url = url_for('api_quiz_v2.get_word_to_test',
+        url = url_for('api_quiz.get_word_to_test',
                       wordlist_id=wordlist_ids,
                       quiz_key=QUIZ_KEY,
                       query=queries,
                       _external=True)
     else:
-        url = url_for('api_quiz_v2.get_word_to_test_single_wordlist',
+        url = url_for('api_quiz.get_word_to_test_single_wordlist',
                       wordlist_id=wordlist_ids[0],
                       tag=tags,
                       quiz_key=QUIZ_KEY,
@@ -200,7 +200,7 @@ def quiz_definitions(wordlist_ids, queries, tags):
 
         payload['correct'] = answer.startswith('y')
 
-        r = requests.post(url_for('api_quiz_v2.post_quiz_answer',
+        r = requests.post(url_for('api_quiz.post_quiz_answer',
                                   quiz_key=QUIZ_KEY,
                                   _external=True), json=payload)
 
@@ -231,13 +231,13 @@ def quiz(quiz_key, wordlist_ids, queries, tags):
     counter = 0
 
     if len(wordlist_ids) > 1:
-        url = url_for('api_quiz_v2.get_word_to_test',
+        url = url_for('api_quiz.get_word_to_test',
                       wordlist_id=wordlist_ids,
                       quiz_key=quiz_key,
                       query=queries,
                       _external=True)
     else:
-        url = url_for('api_quiz_v2.get_word_to_test_single_wordlist',
+        url = url_for('api_quiz.get_word_to_test_single_wordlist',
                       wordlist_id=wordlist_ids[0],
                       tag=tags,
                       quiz_key=quiz_key,
@@ -285,7 +285,7 @@ def quiz(quiz_key, wordlist_ids, queries, tags):
             "correct": correct,
         }
 
-        r = requests.post(url_for('api_quiz_v2.post_quiz_answer',
+        r = requests.post(url_for('api_quiz.post_quiz_answer',
                                   quiz_key=quiz_key,
                                   _external=True), json=payload)
 

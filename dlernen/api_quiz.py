@@ -9,7 +9,7 @@ from pprint import pprint
 
 # /api/quiz and quiz_metadata endpoints are here.
 
-bp = Blueprint('api_quiz_v2', __name__, url_prefix='/api/v2/quiz')
+bp = Blueprint('api_quiz', __name__, url_prefix='/api/quiz')
 
 # among the candidate words, give me the one with the crappiest score.  we use a weighted score
 # based on the number of times the word has been presented.  a word with 1/1 correct is
