@@ -1,4 +1,5 @@
 TODO - really need a better way to deal with reflexive verbs
+    separate part of speech
 
 TODO - import word lists
     CSV:  word, pos, definition
@@ -12,12 +13,12 @@ FIXME - bug:
     look up a word, doesn't matter if it's real
     there is no return-to-list link in the resultant lookup page
 
-TODO - programmatically determine whether a verb is irregular.
-
 TODO - Nouns should be three separate parts of speech, one for each gender
+    would have to update wordlists and quiz data.
 
-TODO - convert quiz apps into a blueprint
-    quiz_definitions
+TODO - add-word field in the tag editor page.  redirect to word edit page if the word doesn't exist.
+    revise tag editor to show tooltip on mouse-over, giving POS and definition
+    (schnelles Hinzufügen)
 
 TODO - autosave word list notes.
     https://www.google.com/search?q=html+textarea+auto+save&newwindow=1&sca_esv=d160e5e212cd680a&ei=6TYeafOSLJvE0PEPiJingAU&ved=0ahUKEwizq5_LlP-QAxUbIjQIHQjMCVAQ4dUDCBE&uact=5&oq=html+textarea+auto+save&gs_lp=Egxnd3Mtd2l6LXNlcnAiF2h0bWwgdGV4dGFyZWEgYXV0byBzYXZlMgUQIRigATIFECEYoAEyBRAhGKABMgUQIRigATIFECEYoAEyBRAhGJ8FMgUQIRifBUiyZlCcHFj2YXABeAGQAQCYAaACoAH7E6oBBzEyLjEwLjG4AQPIAQD4AQGYAhigAvwUwgIKEAAYsAMY1gQYR8ICERAuGIAEGLEDGNEDGIMBGMcBwgIOEAAYgAQYsQMYgwEYigXCAgoQABiABBhDGIoFwgIIEAAYgAQYsQPCAg4QLhiABBixAxjRAxjHAcICCxAAGIAEGLEDGIMBwgIQEAAYgAQYsQMYQxiDARiKBcICERAAGIAEGLEDGIMBGIoFGI0GwgINEAAYgAQYsQMYQxiKBcICBRAAGIAEwgIGEAAYFhgewgIIEAAYFhgKGB7CAgUQABjvBcICCBAAGIAEGKIEwgIIEAAYogQYiQXCAgUQIRirApgDAIgGAZAGCJIHBzEyLjExLjGgB76CAbIHBzExLjExLjG4B_UUwgcIMC4xLjIyLjHIB2E&sclient=gws-wiz-serp
@@ -26,7 +27,6 @@ TODO - look for opportunities to use dictionary and set comprehensions.
 
 TODO - create word lists from api calls since wordlists from sql don't give us enough.  examples:
     words in 5 or more lists
-    irregular verbs - maintaining this manually isn't enough
 
 FIXME - place names should be properly capitalized.  sometimes they have an article.
 
@@ -34,16 +34,40 @@ TODO - parse definitions, and for each word in the definition that is in the dic
     lookup page.  this may cause hyperlinks to appear in english definitions, but too bad.  to do this, tokenize
     the definition including spaces, look up each token in the dictionary.
 
-TODO - quiz report for a word list, showing word, times presented, # correct, last presentation
-    in a table where each column is sortable.  sortable columns require javascript
-
 TODO - show me the words in a word list that were new.  i.e. words added after the word list was created.
     show in italics, bold, etc.
 
 TODO - for parts of speech and their attributes add a display name column distinct from the key.  quiz table
     already does this.
 
+TODO - dump out a smart wordlist as an ordinary word list.  this would effectively be a snapshot of the smart list.
+
+FIXME - make sure http DELETE is not used for batch delete.
+
+FIXME - when PUT or POST methods create something, send back a 201 not a 200.
+
+TODO - TestCase.addCleanup exists, use it!
+
+FIXME - in the lookup results page, add a word-entry text field.  it may be that an exact match of our input
+    string is wanted but not present.
+
 ------
+to show all routes in the app:
+
+(venv) MacBookPro:dlernen dougtomm$ FLASK_APP=run python -m flask routes --help
+Usage: python -m flask routes [OPTIONS]
+
+  Show all registered routes with endpoints and methods.
+
+Options:
+  -s, --sort [endpoint|methods|rule|match]
+                                  Method to sort routes by. "match" is the
+                                  order that Flask will match routes when
+                                  dispatching a request.
+  --all-methods                   Show HEAD and OPTIONS methods.
+  --help                          Show this message and exit.
+
+--------
 to do local development install:
 
 (venv) MacBookPro:deutsch_lernen dougtomm$ pwd
