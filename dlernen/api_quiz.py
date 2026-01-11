@@ -105,7 +105,7 @@ select
     word_scores.attribute_id
 from word_scores
 where raw_score < 1.00
-order by rand()
+order by last_presentation
 limit 1
 """
 
