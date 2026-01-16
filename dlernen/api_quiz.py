@@ -270,13 +270,7 @@ def get_word_to_test_single_wordlist(quiz_key, wordlist_id):
 def get_word_to_test(quiz_key):
     wordlist_ids = request.args.getlist('wordlist_id')
 
-    # possible values for query are:
-    #
-    # - crappy_score
-    # - been_too_long
-    # - rare (5 or fewer presentations)
-    # - random
-    #
+    # possible values for query are keys in DEFINED_QUERIES above
     queries = request.args.getlist('query')
     if not queries:
         queries = list(DEFINED_QUERIES.keys())
