@@ -7,11 +7,11 @@ import random
 bp = Blueprint('app_quiz_defs', __name__)
 
 QUIZ_KEY = 'definitions'
-WORDLISTS = []
+WORDLISTS = {}  # maps wordlist_ids to names
 QUERIES = []
 TAGS = []
 COUNTER = 0
-WORDS_MISSED = {}
+WORDS_MISSED = {}  # maps word_ids to QUIZ_RESPONSE_SCHEMA objects
 
 
 def unimplemented():
@@ -54,6 +54,8 @@ Hauptmenü:
 
 def select_lists():
     global WORDLISTS
+    global TAGS
+
     wordlist_ids = []
     selection = {}  # list ids to names
 
@@ -61,13 +63,14 @@ def select_lists():
 Enter list ids, c to clear, s to show selection, d when done""")
 
     while True:
-        prompt = '---> '
+        prompt = '[select lists] ---> '
         answer = input(prompt).strip().lower()
         if not answer:
             continue
 
         if answer == 'c':
             WORDLISTS.clear()
+            TAGS.clear()
             print("selection cleared")
             continue
 
@@ -80,19 +83,47 @@ Enter list ids, c to clear, s to show selection, d when done""")
             continue
 
         if answer == 'd':
-            WORDLISTS = list(selection.keys())
             break
 
         try:
             wordlist_ids += list(map(int, answer.split()))
-            print("list_ids", end=' ')
-            pprint(wordlist_ids)
         except ValueError as e:
             print("bad dog")
             continue
 
+        unknown_wordlist_ids = set()
+        for id in wordlist_ids:
+            r = requests.get(url_for('api_wordlist.get_wordlist_metadata',
+                                     wordlist_id=id,
+                                     _external=True))
+            if r.status_code == 404:
+                unknown_wordlist_ids.add(id)
+                continue
+
+            if not r:
+                print(r.text, r.status_code)
+                continue
+
+            obj = r.json()
+
+            WORDLISTS[id] = obj['name']
+
+        print("list_ids:  ", end=' ')
+        pprint(set(WORDLISTS.keys()))
+
+        if unknown_wordlist_ids:
+            print("unknown wordlist_ids:  ", end=' ')
+            pprint(set(unknown_wordlist_ids))
+
+        # TODO - don't forget about the tags
+
 
 def status():
+    global WORDLISTS
+    global TAGS
+    global COUNTER
+    global WORDS_MISSED
+
     print("""
 ****************************************
 *
@@ -105,7 +136,8 @@ def status():
     print("""
 Lists:""")
     if WORDLISTS:
-        print("<< show word lists here >>")
+        for k, v in WORDLISTS.items():
+            print("[%s] - %s" % (k, v))
     else:
         print("** entire dictionary")
 
@@ -126,6 +158,10 @@ Words missed this session:  %s""" % len(WORDS_MISSED))
 def select_queries():
     unimplemented()
 
+
+def quiz_definitions():
+    unimplemented()
+    
 
 CALLBACKS = {
     'l': {
