@@ -3,12 +3,13 @@ from pprint import pprint
 import requests
 import click
 import random
+import api_quiz
 
 bp = Blueprint('app_quiz_defs', __name__)
 
 QUIZ_KEY = 'definitions'
 WORDLISTS = {}  # maps wordlist_ids to names
-QUERIES = []
+QUERIES = {'oldest_first'}
 TAGS = []
 COUNTER = 0
 WORDS_MISSED = {}  # maps word_ids to QUIZ_RESPONSE_SCHEMA objects
@@ -34,7 +35,7 @@ Hauptmenü:
 """)
 
     for c in options_in_display_order:
-        print("    %s --> %s" % (c, CALLBACKS[c]['tagline']))
+        print("    %-10s --> %s" % (c, CALLBACKS[c]['tagline']))
     print()
 
     while True:
@@ -52,20 +53,46 @@ Hauptmenü:
     return CALLBACKS[answer]['callback']
 
 
+def reset():
+    global WORDLISTS
+    global QUERIES
+    global TAGS
+    global COUNTER
+    global WORDS_MISSED
+
+    WORDLISTS.clear()
+    QUERIES = {'oldest_first'}
+    TAGS.clear()
+    COUNTER = 0
+    WORDS_MISSED.clear()
+
+
 def select_lists():
     global WORDLISTS
     global TAGS
 
+    # changing the list selection will blow away saved state!
+    reset()
+
     wordlist_ids = []
-    selection = {}  # list ids to names
 
-    print("""
-Enter list ids, c to clear, s to show selection, d when done""")
+    menu = """
+c - clear selection
+s - show selection
+m - show menu
+r - return to main menu
+or enter list of wordlist_ids, space separated
+"""
 
+    print(menu)
     while True:
         prompt = '[select lists] ---> '
         answer = input(prompt).strip().lower()
         if not answer:
+            continue
+
+        if answer == 'm':
+            print(menu)
             continue
 
         if answer == 'c':
@@ -75,14 +102,14 @@ Enter list ids, c to clear, s to show selection, d when done""")
             continue
 
         if answer == 's':
-            if not selection:
+            if not WORDLISTS:
                 print("no lists selected, defaults to whole dictionary")
             else:
-                for k, v in selection.items():
+                for k, v in WORDLISTS.items():
                     print("[%s] - %s" % (k, v))
             continue
 
-        if answer == 'd':
+        if answer == 'r':
             break
 
         try:
@@ -123,6 +150,7 @@ def status():
     global TAGS
     global COUNTER
     global WORDS_MISSED
+    global QUERIES
 
     print("""
 ****************************************
@@ -149,6 +177,11 @@ Tags:""")
         print("** no tags")
 
     print("""
+Queries:""")
+    for q in QUERIES:
+        print(q)
+
+    print("""
 Words tested this session:  %s""" % COUNTER)
 
     print("""
@@ -156,12 +189,64 @@ Words missed this session:  %s""" % len(WORDS_MISSED))
 
 
 def select_queries():
-    unimplemented()
+    global QUERIES
+
+    menu = """
+c - clear selection
+s - show selection
+q - show possible queries
+m - show menu
+r - return to main menu
+or enter list of query names, space separated
+"""
+
+    print(menu)
+    print("current queries:  ", end=' ')
+    pprint(QUERIES)
+    possible_queries = set(api_quiz.DEFINED_QUERIES.keys())
+
+    while True:
+        prompt = '[select queries] ---> '
+        answer = input(prompt).strip().casefold()
+        if not answer:
+            continue
+
+        if answer == 'c':
+            QUERIES.clear()
+            print("selection cleared")
+            continue
+
+        if answer == 's':
+            print("selection:  ", end=' ')
+            pprint(QUERIES)
+            continue
+
+        if answer == 'q':
+            print("possible queries:  ", end=' ')
+            pprint(set(api_quiz.DEFINED_QUERIES.keys()))
+            continue
+
+        if answer == 'm':
+            print(menu)
+            continue
+
+        if answer == 'r':
+            break
+
+        given = set(answer.split())
+        unknown = given - possible_queries
+        QUERIES |= given & possible_queries
+
+        print("selection:  ", end=' ')
+        pprint(QUERIES)
+        if unknown:
+            print("unknown queries:  ", end=' ')
+            pprint(unknown)
 
 
 def quiz_definitions():
     unimplemented()
-    
+
 
 CALLBACKS = {
     'l': {
@@ -171,42 +256,47 @@ CALLBACKS = {
     },
     'k': {
         'tagline': 'select queries',
-        'display_order': 1,
+        'display_order': 5,
         'callback': select_queries
     },
-    'g': {
+    'go': {
         'tagline': 'start quiz',
-        'display_order': 2,
+        'display_order': 10,
         'callback': unimplemented
     },
     'f': {
         'tagline': 'show missed words',
-        'display_order': 3,
+        'display_order': 15,
         'callback': unimplemented
     },
     'r': {
         'tagline': 'quiz missed words',
-        'display_order': 4,
+        'display_order': 20,
         'callback': unimplemented
     },
-    'z': {
+    'report': {
         'tagline': 'report',
-        'display_order': 5,
+        'display_order': 25,
         'callback': unimplemented
     },
-    's': {
+    'status': {
         'tagline': 'status',
-        'display_order': 6,
+        'display_order': 30,
         'callback': status
     },
     'h': {
         'tagline': 'this menu',
-        'display_order': 7,
+        'display_order': 35,
         'callback': main_menu
+    },
+    'reset': {
+        'tagline': 'reset',
+        'display_order': 36,
+        'callback': reset
     },
     'q': {
         'tagline': 'quit',
-        'display_order': 8,
+        'display_order': 40,
         'callback': quit_program
     },
 }
