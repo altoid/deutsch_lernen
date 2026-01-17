@@ -10,7 +10,7 @@ bp = Blueprint('app_quiz_defs', __name__)
 QUIZ_KEY = 'definitions'
 WORDLISTS = {}  # maps wordlist_ids to names
 QUERIES = {'oldest_first'}
-TAGS = []
+TAGS = set()
 COUNTER = 0
 WORDS_MISSED = {}  # maps word_ids to QUIZ_RESPONSE_SCHEMA objects
 
@@ -28,7 +28,11 @@ def quit_program():
 
 
 def main_menu():
+    global WORDLISTS
+
     options_in_display_order = sorted(CALLBACKS.keys(), key=lambda x: CALLBACKS[x]['display_order'])
+    if len(WORDLISTS) != 1:
+        options_in_display_order.remove('tags')
 
     print("""
 Hauptmenü:
@@ -172,7 +176,8 @@ Lists:""")
     print("""
 Tags:""")
     if TAGS:
-        print("<< show tags >>")
+        print("current tags:  ", end= ' ')
+        pprint(TAGS)
     else:
         print("** no tags")
 
@@ -186,6 +191,49 @@ Words tested this session:  %s""" % COUNTER)
 
     print("""
 Words missed this session:  %s""" % len(WORDS_MISSED))
+
+
+def select_tags():
+    global TAGS
+
+    menu = """
+c - clear selection
+s - show selection
+m - show menu
+r - return to main menu
+or enter list of tags, space separated
+"""
+
+    print(menu)
+
+    # FIXME - let's hope none of the menu options are tags
+
+    while True:
+        prompt = '[enter tags] ---> '
+        answer = input(prompt).strip().casefold()
+        if not answer:
+            continue
+
+        if answer == 'c':
+            TAGS.clear()
+            continue
+
+        if answer == 's':
+            print("current tags:  ", end=' ')
+            pprint(TAGS)
+            continue
+
+        if answer == 'm':
+            print(menu)
+            continue
+
+        if answer == 'r':
+            break
+
+        tags = set(answer.split())
+        TAGS |= tags
+        print("current tags:  ", end=' ')
+        pprint(TAGS)
 
 
 def select_queries():
@@ -254,6 +302,11 @@ CALLBACKS = {
         'display_order': 0,
         'callback': select_lists
     },
+    'tags': {  # this won't appear in the main menu unless WORDLISTS has exactly 1 id in it.
+        'tagline': 'select tags',
+        'display_order': 0,
+        'callback': select_tags
+    },
     'k': {
         'tagline': 'select queries',
         'display_order': 5,
@@ -280,7 +333,7 @@ CALLBACKS = {
         'callback': unimplemented
     },
     'status': {
-        'tagline': 'status',
+        'tagline': 'show app status',
         'display_order': 30,
         'callback': status
     },
