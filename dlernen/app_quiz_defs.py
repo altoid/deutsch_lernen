@@ -392,13 +392,46 @@ def get_next_word(wordlist_ids, queries):
     yield None
 
 
-def boring_next_word():
+def get_next_word_with_tags(wordlist_id, queries, tags):
+    # wordlist_id is a single id, not a list.
+    # queries is a (possibly empty) list
+
+    global QUIZ_KEY
+
+    url = url_for('api_quiz.get_word_to_test_single_wordlist',
+                  wordlist_id=wordlist_id,
+                  tag=tags,
+                  quiz_key=QUIZ_KEY,
+                  query=queries,
+                  _external=True)
+
+    while True:
+        r = requests.get(url)
+        if not r:
+            print("get_word_to_test failed:  [%s - %s]" % (r.text, r.status_code))
+            break
+
+        attr_to_test = r.json()
+        if not attr_to_test:
+            print("attr_to_test is bupkus")
+            break
+
+        yield attr_to_test
+        continue
+
+    yield None
+
+
+def dummy_get_next_word(wordlist_ids, queries):
     # for testing
+    pprint(wordlist_ids)
+    pprint(queries)
+
     yield None
 
 
 def make_triple(function, *args, **kwargs):
-    return (function, args, kwargs)
+    return function, args, kwargs
 
 
 def get_generating_function():
@@ -413,6 +446,9 @@ def get_generating_function():
     queries = list(QUERIES)
     tags = list(TAGS)
 
+    if len(wordlist_ids) == 1:
+        make_triple(get_next_word_with_tags, wordlist_ids[0], queries, tags)
+
     return make_triple(get_next_word, wordlist_ids, queries)
 
 
@@ -424,9 +460,6 @@ def quiz_definitions():
     global WORDS_MISSED
     global QUIZ_KEY
 
-    wordlist_ids = list(WORDLISTS.keys())
-    queries = list(QUERIES)
-
     # reset counter
     # while generator.next()
     #     bump counter
@@ -436,8 +469,10 @@ def quiz_definitions():
     #     prompt for correct
     #     post result
 
+    function, args, kwargs = get_generating_function()
+
     COUNTER = 0
-    for attr_to_test in get_next_word(wordlist_ids, queries):
+    for attr_to_test in function(*args, **kwargs):
         if not attr_to_test:
             print("es gibt keine Welten mehr zu erobern")
             break
