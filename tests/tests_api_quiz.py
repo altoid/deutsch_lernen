@@ -22,6 +22,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
     app = None
     app_context = None
     client = None
+    QUIZ_KEY = 'present_indicative'
 
     @classmethod
     def setUpClass(cls):
@@ -34,13 +35,65 @@ class APIQuizGetWordToTest(unittest.TestCase):
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
 
+        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
+        cls.keyword_mappings = json.loads(r.data)
+
     @classmethod
     def tearDownClass(cls):
         cls.app_context.pop()
 
     def setUp(self):
-        # create a wordlist with a fake verb
-        pass
+        # create a wordlist with a fake verb, but don't set all of the attributes
+        self.list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': self.list_name
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        obj = json.loads(r.data)
+        self.wordlist_id = obj['wordlist_id']
+        self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
+
+        self.word = ''.join(random.choices(string.ascii_lowercase, k=11))
+        attrkeys = [
+            # some are comment out because we aren't providing values for all of them
+            'first_person_singular',
+            'second_person_singular',
+            # 'third_person_singular',
+            # 'first_person_plural',
+            'second_person_plural',
+            'third_person_plural',
+        ]
+        attributes = [
+            {
+                "attribute_id": self.keyword_mappings['attribute_names_to_ids'][k],
+                "attrvalue": k,
+            }
+            for k in attrkeys
+        ]
+        add_payload = {
+            "word": self.word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['verb'],
+            js.ATTRIBUTES: attributes
+        }
+
+        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        obj = json.loads(r.data)
+        self.word_id = obj['word_id']
+
+        self.addCleanup(cleanupWordID, self.client, self.word_id)
+
+        # add the word to the list
+        payload = {
+            'words': [
+                self.word
+            ]
+        }
+
+        r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
+                                    wordlist_id=self.wordlist_id,
+                                    _external=True),
+                            json=payload)
 
     # do nothing, just make sure that setUp and tearDown work
     def test_nothing(self):
@@ -48,27 +101,84 @@ class APIQuizGetWordToTest(unittest.TestCase):
 
     # see if we fetch the word in the wordlist when using the api correctly
     def test_basic(self):
-        raise NotImplementedError
+        # get_word_to_test returns one attribute value for a word, and unfortunately, when a quiz has multiple
+        # attributes, we don't know which one.
+        url = url_for('api_quiz.get_word_to_test',
+                      quiz_key=self.QUIZ_KEY,
+                      wordlist_id=[self.wordlist_id],
+                      _external=True)
+        r = self.client.get(url)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual(1, len(obj))
 
     # use a valid quiz key but one that won't return anything:  genders for a verb
     def test_nonmatching_quiz_key(self):
-        raise NotImplementedError
+        url = url_for('api_quiz.get_word_to_test',
+                      quiz_key='genders',
+                      wordlist_id=[self.wordlist_id],
+                      _external=True)
+        r = self.client.get(url)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual(0, len(obj))
 
     def test_undefined_quiz_key(self):
-        raise NotImplementedError
+        url = url_for('api_quiz.get_word_to_test',
+                      quiz_key=''.join(random.choices(string.ascii_lowercase, k=11)),
+                      wordlist_id=[self.wordlist_id],
+                      _external=True)
+        r = self.client.get(url)
+        self.assertEqual(404, r.status_code)
 
     # should return something from the complete dictionary
     def test_no_wordlist(self):
-        raise NotImplementedError
+        url = url_for('api_quiz.get_word_to_test',
+                      quiz_key=self.QUIZ_KEY,
+                      wordlist_id=None,
+                      _external=True)
+        r = self.client.get(url)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual(1, len(obj))
 
     def test_undefined_query(self):
-        raise NotImplementedError
+        url = url_for('api_quiz.get_word_to_test',
+                      quiz_key=self.QUIZ_KEY,
+                      query=[''.join(random.choices(string.ascii_lowercase, k=11))],
+                      wordlist_id=[self.wordlist_id],
+                      _external=True)
+        r = self.client.get(url)
+        self.assertEqual(404, r.status_code)
 
     def test_empty_wordlist(self):
-        raise NotImplementedError
+        # create an empty wordlist
+        self.list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': self.list_name
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        obj = json.loads(r.data)
+        wordlist_id = obj['wordlist_id']
+        self.addCleanup(cleanupWordlistID, self.client, wordlist_id)
+
+        url = url_for('api_quiz.get_word_to_test',
+                      quiz_key=self.QUIZ_KEY,
+                      wordlist_id=[wordlist_id],
+                      _external=True)
+        r = self.client.get(url)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual(0, len(obj))
 
     def test_undefined_wordlist(self):
-        raise NotImplementedError
+        url = url_for('api_quiz.get_word_to_test',
+                      quiz_key=self.QUIZ_KEY,
+                      wordlist_id=[111111111],
+                      _external=True)
+        r = self.client.get(url)
+        self.assertEqual(404, r.status_code)
 
 
 class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
@@ -159,17 +269,7 @@ class APIQuizTestGetAllAttrValuesForQuiz(unittest.TestCase):
         cls.app_context.pop()
 
     def setUp(self):
-        # create a wordlist with a fake verb, but don't set all of the attributes
-        self.list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
-        add_payload = {
-            'name': self.list_name
-        }
-
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
-        obj = json.loads(r.data)
-        self.wordlist_id = obj['wordlist_id']
-        self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
-
+        # create a fake verb, but don't set all of the attributes
         self.word = ''.join(random.choices(string.ascii_lowercase, k=11))
         attrkeys = [
             # some are comment out because we aren't providing values for all of them

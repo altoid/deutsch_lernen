@@ -336,6 +336,7 @@ def get_word_to_test(quiz_key):
         return "unknown queries: %s" % ', '.join(undefined_queries), 400
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        # check that quiz_key exists
         sql = """
         select quiz_key
         from quiz
@@ -346,6 +347,23 @@ def get_word_to_test(quiz_key):
         rows = cursor.fetchall()
         if not rows:
             return "quiz %s not found" % quiz_key, 404
+
+        # check that wordlist ids exist.  if any are undefined, reject the whole requests.
+        if wordlist_ids:
+            sql = """
+            select id AS wordlist_id
+            from wordlist
+            where id = %s
+            """
+            args = [(x,) for x in wordlist_ids]
+            cursor.executemany(sql, args)
+            rows = cursor.fetchall()
+            given_wordlist_ids = set(wordlist_ids)
+            found_wordlist_ids = {x['wordlist_id'] for x in rows}
+            unknown_wordlist_ids = given_wordlist_ids - found_wordlist_ids
+            if unknown_wordlist_ids:
+                message = "undefined wordlist ids:  %s" % ', '.join(list(map(str, list(unknown_wordlist_ids))))
+                return message, 404
 
         word_id_filter = ""
         word_ids = []
