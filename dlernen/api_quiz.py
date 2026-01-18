@@ -325,6 +325,7 @@ def get_word_to_test_single_wordlist(quiz_key, wordlist_id):
 @bp.route('/<string:quiz_key>')
 def get_word_to_test(quiz_key):
     wordlist_ids = request.args.getlist('wordlist_id')
+    wordlist_ids = list(map(int, wordlist_ids))
 
     # possible values for query are keys in DEFINED_QUERIES above
     queries = request.args.getlist('query')
@@ -348,16 +349,20 @@ def get_word_to_test(quiz_key):
         if not rows:
             return "quiz %s not found" % quiz_key, 404
 
-        # check that wordlist ids exist.  if any are undefined, reject the whole requests.
+        # check that wordlist ids exist.  if any are undefined, reject the whole request.
         if wordlist_ids:
+            # NB:  executemany won't work with select, only with DML statements.
+
+            arglist = ['%s'] * len(wordlist_ids)
             sql = """
-            select id AS wordlist_id
+            select id as wordlist_id
             from wordlist
-            where id = %s
-            """
-            args = [(x,) for x in wordlist_ids]
-            cursor.executemany(sql, args)
+            where id in (%(arglist)s)
+            """ % {'arglist': ', '.join(arglist)}
+
+            cursor.execute(sql, wordlist_ids)
             rows = cursor.fetchall()
+
             given_wordlist_ids = set(wordlist_ids)
             found_wordlist_ids = {x['wordlist_id'] for x in rows}
             unknown_wordlist_ids = given_wordlist_ids - found_wordlist_ids
