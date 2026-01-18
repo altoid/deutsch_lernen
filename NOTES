@@ -51,6 +51,41 @@ TODO - TestCase.addCleanup exists, use it!
 FIXME - in the lookup results page, add a word-entry text field.  it may be that an exact match of our input
     string is wanted but not present.
 
+TODO - we will need an endpoint in api_quiz:  (word_id, quiz_id, attribute_id) ==> QUIZ_RESPONSE_SCHEMA
+   better:  (word_id, quiz_id) ==> an array of response objects, one for each attribute defined by the quiz.
+   then we pick out the one for the attribute we want.  the endpoint should return an object even if the
+   attribute value is null.
+
+TODO - need unit tests for quizzes to make sure the above doesn't break anything
+   get_word with empty list
+   get_word with no lists
+   get_word with a standard list
+
+
+------
+
+rewrite of quiz_definitions app
+
+show and retest words missed during the session
+switch lists during the session
+
+main menu (Hauptmenü)
+- select lists
+- if single list selected, select tags
+- if any missed words, provide this as a selection option
+- (if lists/tags not selected, quiz the whole dictionary)
+- select queries
+- start quiz
+- show words tested this session, with correct/total/raw score, flag words missed
+- show words missed this session, with definitions
+- status
+-- what lists, tags, queries, correct/total
+
+quiz loop:
+- display word
+- prompt:  return for answer, h for hint, q return to main menu
+
+
 ------
 to show all routes in the app:
 

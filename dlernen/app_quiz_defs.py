@@ -297,12 +297,12 @@ def get_next_word(wordlist_ids, queries):
             print("get_word_to_test failed:  [%s - %s]" % (r.text, r.status_code))
             break
 
-        attr_to_test = r.json()
-        if not attr_to_test:
-            print("attr_to_test is bupkus")
+        attrs_to_test = r.json()
+        if not attrs_to_test:
+            print("attrs_to_test is bupkus")
             break
 
-        yield attr_to_test
+        yield attrs_to_test[0]
         continue
 
     yield None
@@ -327,12 +327,12 @@ def get_next_word_with_tags(wordlist_id, queries, tags):
             print("get_word_to_test failed:  [%s - %s]" % (r.text, r.status_code))
             break
 
-        attr_to_test = r.json()
-        if not attr_to_test:
-            print("attr_to_test is bupkus")
+        attrs_to_test = r.json()
+        if not attrs_to_test:
+            print("attrs_to_test is bupkus")
             break
 
-        yield attr_to_test
+        yield attrs_to_test[0]
         continue
 
     yield None

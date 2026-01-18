@@ -200,13 +200,7 @@ def run_quiz_queries(cursor, queries, quiz_key, word_id_filter, word_ids):
 def get_word_to_test_single_wordlist(quiz_key, wordlist_id):
     tags = request.args.getlist('tag')
 
-    # possible values for query are:
-    #
-    # - crappy_score
-    # - been_too_long
-    # - rare (5 or fewer presentations)
-    # - random
-    #
+    # possible values for query are keys in DEFINED_QUERIES above
     queries = request.args.getlist('query')
     if not queries:
         queries = list(DEFINED_QUERIES.keys())
@@ -259,11 +253,12 @@ def get_word_to_test_single_wordlist(quiz_key, wordlist_id):
                     article = list(filter(lambda x: x['attrkey'] == 'article', word_info['attributes']))
                     winner['article'] = article[0]['attrvalue']
 
-                jsonschema.validate(winner, dlernen_json_schema.QUIZ_RESPONSE_SCHEMA)
+                result = [winner]
+                jsonschema.validate(result, dlernen_json_schema.QUIZ_RESPONSE_SCHEMA)
 
-                return winner
+                return result
 
-        return {}
+        return []
 
 
 @bp.route('/<string:quiz_key>')
@@ -327,11 +322,12 @@ def get_word_to_test(quiz_key):
                 article = list(filter(lambda x: x['attrkey'] == 'article', word_info['attributes']))
                 winner['article'] = article[0]['attrvalue']
 
-            jsonschema.validate(winner, dlernen_json_schema.QUIZ_RESPONSE_SCHEMA)
+            result = [winner]
+            jsonschema.validate(result, dlernen_json_schema.QUIZ_RESPONSE_SCHEMA)
 
-            return winner
+            return result
 
-        return {}
+        return []
 
 
 @bp.route('/answer', methods=['POST'])

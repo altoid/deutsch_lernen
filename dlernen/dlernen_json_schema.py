@@ -498,37 +498,38 @@ QUIZ_RESPONSE_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Quiz Data List",
     "description": "word attribute value to be quizzed",
-    "type": "object",
-
-    "required": [
-        "quiz_id",
-        "word_id",
-        "attribute_id",
-        "attrkey",
-        "word",
-        "attrvalue"
-    ],
-    "properties": {
-        "quiz_id": {
-            "type": "integer",
-            "minimum": 1
-        },
-        "word_id": {
-            "type": "integer",
-            "minimum": 1
-        },
-        "attribute_id": {
-            "type": "integer",
-            "minimum": 1
-        },
-        "word": {
-            "type": "string"
-        },
-        "attrkey": {
-            "type": "string"
-        },
-        "attrvalue": {
-            "type": "string"
+    "type": "array",
+    "items": {
+        "required": [
+            "quiz_id",
+            "word_id",
+            "attribute_id",
+            "attrkey",
+            "word",
+            "attrvalue"
+        ],
+        "properties": {
+            "quiz_id": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "word_id": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "attribute_id": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "word": {
+                "type": "string"
+            },
+            "attrkey": {
+                "type": "string"
+            },
+            "attrvalue": {
+                "type": ["string", "null"]
+            }
         }
     }
 }

@@ -901,65 +901,88 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
     schema = js.QUIZ_RESPONSE_SCHEMA
 
     valid_docs = [
-        {
-            'quiz_id': 3,
-            'word_id': 868,
-            'word': 'Tarnung',
-            'attrvalue': 'die',
-            'attribute_id': 1,
-            'attrkey': 'whateverrr'
-        }
+        [],
+        [
+            {
+                'quiz_id': 3,
+                'word_id': 868,
+                'word': 'Tarnung',
+                'attrvalue': 'die',
+                'attribute_id': 1,
+                'attrkey': 'whateverrr'
+            },
+            {
+                'quiz_id': 3,
+                'word_id': 868,
+                'word': 'Tarnung',
+                'attrvalue': None,
+                'attribute_id': 1,
+                'attrkey': 'null_attr_values_are_legit'
+            },
+        ]
     ]
 
     invalid_docs = [
-        {
-            # 'quiz_id': 3,
-            'word_id': 868,
-            'word': 'Tarnung',
-            'attrvalue': 'die',
-            'attribute_id': 1,
-            'attrkey': 'whateverrr'
-        },
-        {
-            'quiz_id': 3,
-            # 'word_id': 868,
-            'word': 'Tarnung',
-            'attrvalue': 'die',
-            'attribute_id': 1,
-            'attrkey': 'whateverrr'
-        },
-        {
-            'quiz_id': 3,
-            'word_id': 868,
-            # 'word': 'Tarnung',
-            'attrvalue': 'die',
-            'attribute_id': 1,
-            'attrkey': 'whateverrr'
-        },
-        {
-            'quiz_id': 3,
-            'word_id': 868,
-            'word': 'Tarnung',
-            # 'attrvalue': 'die',
-            'attribute_id': 1,
-            'attrkey': 'whateverrr'
-        },
-        {
-            'quiz_id': 3,
-            'word_id': 868,
-            'word': 'Tarnung',
-            'attrvalue': 'die',
-            # 'attribute_id': 1,
-            'attrkey': 'whateverrr'
-        },
-        {
-            'quiz_id': 3,
-            'word_id': 868,
-            'word': 'Tarnung',
-            'attrvalue': 'die',
-            'attribute_id': 1,
-            # 'attrkey': 'whateverrr'
-        },
+        [
+            {
+                # 'quiz_id': 3,
+                'word_id': 868,
+                'word': 'Tarnung',
+                'attrvalue': 'die',
+                'attribute_id': 1,
+                'attrkey': 'whateverrr'
+            }
+        ],
+        [
+            {
+                'quiz_id': 3,
+                # 'word_id': 868,
+                'word': 'Tarnung',
+                'attrvalue': 'die',
+                'attribute_id': 1,
+                'attrkey': 'whateverrr'
+            }
+        ],
+        [
+            {
+                'quiz_id': 3,
+                'word_id': 868,
+                # 'word': 'Tarnung',
+                'attrvalue': 'die',
+                'attribute_id': 1,
+                'attrkey': 'whateverrr'
+            }
+        ],
+        [
+            {
+                'quiz_id': 3,
+                'word_id': 868,
+                'word': 'Tarnung',
+                # 'attrvalue': 'die',
+                'attribute_id': 1,
+                'attrkey': 'whateverrr'
+            }
+        ],
+        [
+            {
+                'quiz_id': 3,
+                'word_id': 868,
+                'word': 'Tarnung',
+                'attrvalue': 'die',
+                # 'attribute_id': 1,
+                'attrkey': 'whateverrr'
+            }
+        ],
+        [
+            {
+                'quiz_id': 3,
+                'word_id': 868,
+                'word': 'Tarnung',
+                'attrvalue': 'die',
+                'attribute_id': 1,
+                # 'attrkey': 'whateverrr'
+            }
+        ],
     ]
 
     def test_valid_docs(self):
@@ -1592,4 +1615,3 @@ class Test_WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA(unittest.TestCase):
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
-
