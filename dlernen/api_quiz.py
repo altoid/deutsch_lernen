@@ -181,18 +181,17 @@ DEFINED_QUERIES = {
 def run_quiz_queries(cursor, queries, quiz_key, word_id_filter, word_ids):
     words_chosen = []
 
-    if word_ids:
-        for q in queries:
-            if q in DEFINED_QUERIES:
-                sql = DEFINED_QUERIES[q] % {
-                    'quiz_key': quiz_key,
-                    'word_id_filter': word_id_filter
-                }
+    for q in queries:
+        if q in DEFINED_QUERIES:
+            sql = DEFINED_QUERIES[q] % {
+                'quiz_key': quiz_key,
+                'word_id_filter': word_id_filter
+            }
 
-                cursor.execute(sql, word_ids)
-                rows = cursor.fetchall()
-                if rows:
-                    words_chosen.append(rows[0])
+            cursor.execute(sql, word_ids)
+            rows = cursor.fetchall()
+            if rows:
+                words_chosen.append(rows[0])
 
     return words_chosen
 
@@ -293,7 +292,7 @@ def get_word_to_test(quiz_key):
             return "quiz %s not found" % quiz_key, 404
 
         word_id_filter = ""
-        word_ids = None
+        word_ids = []
         if wordlist_ids:
             word_ids = common.get_word_ids_from_wordlists(wordlist_ids, cursor)
             if word_ids:
@@ -302,7 +301,16 @@ def get_word_to_test(quiz_key):
                 word_id_filter = " and word_id in (%(word_id_args)s) " % {'word_id_args': word_id_args}
 
         words_chosen = []
-        if word_ids:
+
+        #     wordlist_ids and     word_ids  - we have nonempty wordlists, run the queries
+        #     wordlist_ids and not word_ids  - wordlists are empty, don't run the queries
+        # not wordlist_ids and     word_ids  - won't happen
+        # not wordlist_ids and not word_ids  - whole dictionary, this case is legit
+
+        if wordlist_ids and word_ids:
+            words_chosen = run_quiz_queries(cursor, queries, quiz_key, word_id_filter, word_ids)
+
+        if not wordlist_ids and not word_ids:
             words_chosen = run_quiz_queries(cursor, queries, quiz_key, word_id_filter, word_ids)
 
         if words_chosen:
