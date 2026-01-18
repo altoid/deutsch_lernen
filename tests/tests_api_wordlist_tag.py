@@ -123,6 +123,7 @@ class APIWordlistTagSmartList(unittest.TestCase):
         obj = json.loads(r.data)
         self.assertEqual(0, len(obj['tags']))
 
+
 class APIWordlistTag(unittest.TestCase):
     app = None
     app_context = None

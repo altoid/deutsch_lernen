@@ -250,9 +250,8 @@ def get_all_attr_values_for_quiz(quiz_key, word_id):
 
         cursor.execute(sql, {'word_id': word_id, 'quiz_key': quiz_key})
         rows = cursor.fetchall()
-        if not rows:
-            return "bad request:  quiz_key:  %s, word_id: %s" % (quiz_key, word_id), 400
 
+        # rows may be empty.  that's ok.
         jsonschema.validate(rows, dlernen_json_schema.QUIZ_RESPONSE_SCHEMA)
 
         return rows
