@@ -34,11 +34,10 @@ class APITests(unittest.TestCase):
 
     def test_real_quiz_data(self):
         with self.app.test_request_context():
-            url = url_for('api_quiz_v2.get_word_to_test', quiz_key='plurals', _external=True)
+            url = url_for('api_quiz.get_word_to_test', quiz_key='plurals', _external=True)
             r = self.client.get(url)
             self.assertEqual(200, r.status_code)
             quiz_data = json.loads(r.data)
-            pprint(quiz_data)
 
             jsonschema.validate(quiz_data, dlernen_json_schema.QUIZ_RESPONSE_SCHEMA)
 
