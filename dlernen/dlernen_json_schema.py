@@ -497,7 +497,7 @@ QUIZ_RESPONSE_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/quiz_data",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Quiz Data List",
-    "description": "properties of word to be quizzed",
+    "description": "word attribute value to be quizzed",
     "type": "object",
 
     "required": [
