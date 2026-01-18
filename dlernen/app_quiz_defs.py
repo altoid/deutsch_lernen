@@ -11,8 +11,7 @@ QUIZ_KEY = 'definitions'
 WORDLISTS = {}  # maps wordlist_ids to names
 QUERIES = {'oldest_first'}
 TAGS = set()
-COUNTER = 0
-WORDS_MISSED = {}  # maps word_ids to QUIZ_RESPONSE_SCHEMA objects
+SAVED_PAYLOADS = []   # so we can derive words missed
 
 
 def unimplemented():
@@ -61,14 +60,12 @@ def reset():
     global WORDLISTS
     global QUERIES
     global TAGS
-    global COUNTER
-    global WORDS_MISSED
+    global SAVED_PAYLOADS
 
     WORDLISTS.clear()
     QUERIES = {'oldest_first'}
     TAGS.clear()
-    COUNTER = 0
-    WORDS_MISSED.clear()
+    SAVED_PAYLOADS.clear()
 
 
 def select_lists():
@@ -146,8 +143,7 @@ or enter list of wordlist_ids, space separated
 def status():
     global WORDLISTS
     global TAGS
-    global COUNTER
-    global WORDS_MISSED
+    global SAVED_PAYLOADS
     global QUERIES
 
     print("""
@@ -181,10 +177,9 @@ Queries:""")
         print(q)
 
     print("""
-Words tested this session:  %s""" % COUNTER)
+Words tested this session:  %s""" % len(SAVED_PAYLOADS))
 
-    print("""
-Words missed this session:  %s""" % len(WORDS_MISSED))
+    # TODO - use saved payloads to show missed words
 
 
 def select_tags():
@@ -355,10 +350,7 @@ def make_triple(function, *args, **kwargs):
     return function, args, kwargs
 
 
-def get_generating_function():
-    # returns a triple containing (function, args, kwargs)
-    # depending on how the app state has been set
-
+def quiz_definitions():
     global WORDLISTS
     global QUERIES
     global TAGS
@@ -368,42 +360,35 @@ def get_generating_function():
     tags = list(TAGS)
 
     if len(wordlist_ids) == 1:
-        make_triple(get_next_word_with_tags, wordlist_ids[0], queries, tags)
+        function_and_args = make_triple(get_next_word_with_tags, wordlist_ids[0], queries, tags)
+    else:
+        function_and_args = make_triple(get_next_word, wordlist_ids, queries)
 
-    return make_triple(get_next_word, wordlist_ids, queries)
+    quiz_loop(function_and_args)
 
 
-def quiz_definitions():
-    global WORDLISTS
-    global QUERIES
-    global TAGS
-    global COUNTER
-    global WORDS_MISSED
-    global QUIZ_KEY
+def quiz_loop(generating_function_and_args):
+    global SAVED_PAYLOADS
 
-    # reset counter
     # while generator.next()
-    #     bump counter
     #     show word
     #     prompt loop
     #     show answer
     #     prompt for correct
     #     post result
 
-    function, args, kwargs = get_generating_function()
+    function, args, kwargs = generating_function_and_args
 
-    COUNTER = 0
+    count = len(SAVED_PAYLOADS) + 1
     for attr_to_test in function(*args, **kwargs):
         if not attr_to_test:
             print("es gibt keine Welten mehr zu erobern")
             break
 
-        COUNTER += 1
-
         if 'article' in attr_to_test:
-            print("[%s] %s %s" % (COUNTER, attr_to_test['article'], attr_to_test['word']))
+            print("[%s] %s %s" % (count, attr_to_test['article'], attr_to_test['word']))
         else:
-            print("[%s] %s" % (COUNTER, attr_to_test['word']))
+            print("[%s] %s" % (count, attr_to_test['word']))
 
         while True:
             prompt = "hit return for answer, r to return to main menu, h for hint:  --> "
@@ -475,6 +460,9 @@ def quiz_definitions():
             message = "could not post answer [%s, %s]" % (r.text, r.status_code)
             print(message)
             break
+
+        SAVED_PAYLOADS.append(payload)
+        count = len(SAVED_PAYLOADS) + 1
 
 
 CALLBACKS = {
