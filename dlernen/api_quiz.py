@@ -196,6 +196,68 @@ def run_quiz_queries(cursor, queries, quiz_key, word_id_filter, word_ids):
     return words_chosen
 
 
+@bp.route('/<string:quiz_key>/word/<int:word_id>')
+def get_all_attr_values_for_quiz(quiz_key, word_id):
+    # the route has the useless 'word' component to avoid a collision with the route for
+    # get_word_to_test_single_wordlist.
+
+    # checks:
+    #
+    # - quiz_key exists
+    # - word_id exists
+
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        sql = """
+        select quiz_key
+        from quiz
+        where quiz_key = %(quiz_key)s
+        """
+
+        cursor.execute(sql, {'quiz_key': quiz_key})
+        rows = cursor.fetchall()
+        if not rows:
+            return "quiz %s not found" % quiz_key, 404
+
+        sql = """
+        select id 
+        from word
+        where id = %(word_id)s"""
+
+        cursor.execute(sql, {'word_id': word_id})
+        rows = cursor.fetchall()
+        if not rows:
+            return "word_id %s not found" % word_id, 404
+
+        # checks complete, let's do this
+
+        sql = """
+        select
+            q.id quiz_id,
+            m.attrvalue, 
+            m.word, 
+            m.word_id, 
+            m.attribute_id, 
+            m.attrkey
+        from quiz q
+        inner join quiz_structure qs on q.id = qs.quiz_id
+        inner join attribute a on a.id = qs.attribute_id
+        inner join mashup_v m on qs.attribute_id = m.attribute_id
+
+        where
+        q.quiz_key = %(quiz_key)s
+        and m.word_id = %(word_id)s
+        """
+
+        cursor.execute(sql, {'word_id': word_id, 'quiz_key': quiz_key})
+        rows = cursor.fetchall()
+        if not rows:
+            return "bad request:  quiz_key:  %s, word_id: %s" % (quiz_key, word_id), 400
+
+        jsonschema.validate(rows, dlernen_json_schema.QUIZ_RESPONSE_SCHEMA)
+
+        return rows
+
+
 @bp.route('/<string:quiz_key>/<int:wordlist_id>')
 def get_word_to_test_single_wordlist(quiz_key, wordlist_id):
     tags = request.args.getlist('tag')
