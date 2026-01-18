@@ -292,8 +292,167 @@ or enter list of query names, space separated
             pprint(unknown)
 
 
+def test_word(attr_to_test):
+    # attr_to_test is a QUIZ_RESPONSE_SCHEMA object, with an 'article' if the word is a noun.
+
+    global COUNTER
+
+    if 'article' in attr_to_test:
+        print("[%s] %s %s" % (COUNTER, attr_to_test['article'], attr_to_test['word']))
+    else:
+        print("[%s] %s" % (COUNTER, attr_to_test['word']))
+
+    prompt = "hit return for answer, r for main menu, h for hint:  --> "
+    answer = input(prompt).strip().lower()
+
+    if answer.startswith('h'):
+        # show wordlists this word is in.
+        r = requests.get(url_for('api_wordlist.get_wordlists_by_word_id',
+                                 word_id=attr_to_test['word_id'],
+                                 _external=True))
+        if not r:
+            message = "could not get wordlists for word id %s:  [%s, %s]" % (attr_to_test['word_id'], r.text,
+                                                                             r.status_code)
+            print(message)
+            return
+
+        obj = r.json()
+        for n in obj:
+            r = requests.get(url_for('api_wordlist_tag.get_tags',
+                                     wordlist_id=n['wordlist_id'],
+                                     word_id=attr_to_test['word_id'],
+                                     _external=True))
+            if not r:
+                message = "could not get tags for word id %s:  [%s, %s]" % (
+                    attr_to_test['word_id'], r.text,
+                    r.status_code)
+                print(message)
+                return
+
+            tags_response = r.json()
+            tags = ', '.join(tags_response['tags'])
+            if tags:
+                print("%s [%s:  %s]" % (n['name'], n['wordlist_id'], tags))
+            else:
+                print("%s [%s]" % (n['name'], n['wordlist_id']))
+
+    if answer.startswith('r'):
+        return
+
+    print(attr_to_test['attrvalue'])
+
+    prompt = "correct? --> "
+    answer = input(prompt).strip().lower()
+    while not answer:
+        answer = input(prompt).strip().lower()
+
+    payload = {
+        "quiz_id": attr_to_test['quiz_id'],
+        "word_id": attr_to_test['word_id'],
+        "attribute_id": attr_to_test['attribute_id'],
+        "correct": answer.startswith('y')
+    }
+
+    r = requests.post(url_for('api_quiz.post_quiz_answer',
+                              quiz_key=QUIZ_KEY,
+                              _external=True), json=payload)
+
+    if not r:
+        message = "could not post answer [%s, %s]" % (r.text, r.status_code)
+        print(message)
+        return
+
+    return payload
+
+
+def get_next_word(wordlist_ids, queries):
+    # wordlist_ids and queries are both lists and may be empty
+    global QUIZ_KEY
+
+    url = url_for('api_quiz.get_word_to_test',
+                  wordlist_id=wordlist_ids,
+                  quiz_key=QUIZ_KEY,
+                  query=queries,
+                  _external=True)
+
+    while True:
+        r = requests.get(url)
+        if not r:
+            print("get_word_to_test failed:  [%s - %s]" % (r.text, r.status_code))
+            break
+
+        attr_to_test = r.json()
+        if not attr_to_test:
+            print("attr_to_test is bupkus")
+            break
+
+        yield attr_to_test
+        continue
+
+    yield None
+
+
+def boring_next_word():
+    # for testing
+    yield None
+
+
+def make_triple(function, *args, **kwargs):
+    return (function, args, kwargs)
+
+
+def get_generating_function():
+    # returns a triple containing (function, args, kwargs)
+    # depending on how the app state has been set
+
+    global WORDLISTS
+    global QUERIES
+    global TAGS
+
+    wordlist_ids = list(WORDLISTS.keys())
+    queries = list(QUERIES)
+    tags = list(TAGS)
+
+    return make_triple(get_next_word, wordlist_ids, queries)
+
+
 def quiz_definitions():
-    unimplemented()
+    global WORDLISTS
+    global QUERIES
+    global TAGS
+    global COUNTER
+    global WORDS_MISSED
+    global QUIZ_KEY
+
+    wordlist_ids = list(WORDLISTS.keys())
+    queries = list(QUERIES)
+
+    # reset counter
+    # while generator.next()
+    #     bump counter
+    #     show word
+    #     prompt loop
+    #     show answer
+    #     prompt for correct
+    #     post result
+
+    COUNTER = 0
+    for attr_to_test in get_next_word(wordlist_ids, queries):
+        if not attr_to_test:
+            print("es gibt keine Welten mehr zu erobern")
+            break
+
+        COUNTER += 1
+
+        if 'article' in attr_to_test:
+            print("[%s] %s %s" % (COUNTER, attr_to_test['article'], attr_to_test['word']))
+        else:
+            print("[%s] %s" % (COUNTER, attr_to_test['word']))
+
+        prompt = "----- [hit return for next one, q to stop] -----> "
+        answer = input(prompt).strip().casefold()
+        if answer == 'q':
+            break
 
 
 CALLBACKS = {
@@ -302,9 +461,9 @@ CALLBACKS = {
         'display_order': 0,
         'callback': select_lists
     },
-    'tags': {  # this won't appear in the main menu unless WORDLISTS has exactly 1 id in it.
+    'tags': {  # this won't appear in the main menu unless WORDLISTS has exactly one id in it.
         'tagline': 'select tags',
-        'display_order': 0,
+        'display_order': 2,
         'callback': select_tags
     },
     'k': {
@@ -315,7 +474,7 @@ CALLBACKS = {
     'go': {
         'tagline': 'start quiz',
         'display_order': 10,
-        'callback': unimplemented
+        'callback': quiz_definitions
     },
     'f': {
         'tagline': 'show missed words',
