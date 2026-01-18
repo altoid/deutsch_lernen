@@ -181,17 +181,18 @@ DEFINED_QUERIES = {
 def run_quiz_queries(cursor, queries, quiz_key, word_id_filter, word_ids):
     words_chosen = []
 
-    for q in queries:
-        if q in DEFINED_QUERIES:
-            sql = DEFINED_QUERIES[q] % {
-                'quiz_key': quiz_key,
-                'word_id_filter': word_id_filter
-            }
+    if word_ids:
+        for q in queries:
+            if q in DEFINED_QUERIES:
+                sql = DEFINED_QUERIES[q] % {
+                    'quiz_key': quiz_key,
+                    'word_id_filter': word_id_filter
+                }
 
-            cursor.execute(sql, word_ids)
-            rows = cursor.fetchall()
-            if rows:
-                words_chosen.append(rows[0])
+                cursor.execute(sql, word_ids)
+                rows = cursor.fetchall()
+                if rows:
+                    words_chosen.append(rows[0])
 
     return words_chosen
 
@@ -295,13 +296,14 @@ def get_word_to_test(quiz_key):
         word_ids = None
         if wordlist_ids:
             word_ids = common.get_word_ids_from_wordlists(wordlist_ids, cursor)
+            if word_ids:
+                word_id_args = ['%s'] * len(word_ids)
+                word_id_args = ', '.join(word_id_args)
+                word_id_filter = " and word_id in (%(word_id_args)s) " % {'word_id_args': word_id_args}
 
-            word_id_args = ['%s'] * len(word_ids)
-            word_id_args = ', '.join(word_id_args)
-
-            word_id_filter = " and word_id in (%(word_id_args)s) " % {'word_id_args': word_id_args}
-
-        words_chosen = run_quiz_queries(cursor, queries, quiz_key, word_id_filter, word_ids)
+        words_chosen = []
+        if word_ids:
+            words_chosen = run_quiz_queries(cursor, queries, quiz_key, word_id_filter, word_ids)
 
         if words_chosen:
             winner = random.choice(words_chosen)
