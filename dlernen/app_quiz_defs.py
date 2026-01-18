@@ -75,11 +75,7 @@ def select_lists():
     global WORDLISTS
     global TAGS
 
-    # changing the list selection will blow away saved state!
-    reset()
-
     wordlist_ids = []
-
     menu = """
 c - clear selection
 s - show selection
@@ -145,8 +141,6 @@ or enter list of wordlist_ids, space separated
         if unknown_wordlist_ids:
             print("unknown wordlist_ids:  ", end=' ')
             pprint(set(unknown_wordlist_ids))
-
-        # TODO - don't forget about the tags
 
 
 def status():
