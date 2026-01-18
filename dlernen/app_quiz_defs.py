@@ -3,7 +3,7 @@ from pprint import pprint
 import requests
 import click
 import random
-import api_quiz
+from dlernen import api_quiz
 
 bp = Blueprint('app_quiz_defs', __name__)
 
@@ -11,7 +11,7 @@ QUIZ_KEY = 'definitions'
 WORDLISTS = {}  # maps wordlist_ids to names
 QUERIES = {'oldest_first'}
 TAGS = set()
-SAVED_PAYLOADS = []   # so we can derive words missed
+SAVED_PAYLOADS = []  # so we can derive words missed
 
 
 def unimplemented():
@@ -166,7 +166,7 @@ Lists:""")
     print("""
 Tags:""")
     if TAGS:
-        print("current tags:  ", end= ' ')
+        print("current tags:  ", end=' ')
         pprint(TAGS)
     else:
         print("** no tags")
@@ -367,6 +367,14 @@ def quiz_definitions():
     quiz_loop(function_and_args)
 
 
+def quiz_missed_words():
+    global SAVED_PAYLOADS
+
+    missed_words = list(filter(lambda x: not x['correct'], SAVED_PAYLOADS))
+
+    unimplemented()
+
+
 def quiz_loop(generating_function_and_args):
     global SAVED_PAYLOADS
 
@@ -379,7 +387,7 @@ def quiz_loop(generating_function_and_args):
 
     function, args, kwargs = generating_function_and_args
 
-    count = len(SAVED_PAYLOADS) + 1
+    count = len(SAVED_PAYLOADS) + 1  # add 1 so we don't count up from 0
     for attr_to_test in function(*args, **kwargs):
         if not attr_to_test:
             print("es gibt keine Welten mehr zu erobern")
@@ -442,27 +450,27 @@ def quiz_loop(generating_function_and_args):
         prompt = "correct? --> "
         answer = input(prompt).strip().lower()
 
-        payload = {
-            "quiz_id": attr_to_test['quiz_id'],
-            "word_id": attr_to_test['word_id'],
-            "attribute_id": attr_to_test['attribute_id']
-        }
-
         while len(answer) == 0:
             answer = input(prompt).strip().lower()
 
-        payload['correct'] = answer.startswith('y')
+        payload = {
+            "quiz_id": attr_to_test['quiz_id'],
+            "word_id": attr_to_test['word_id'],
+            "attribute_id": attr_to_test['attribute_id'],
+            'correct': answer.startswith('y')
+        }
 
         r = requests.post(url_for('api_quiz.post_quiz_answer',
                                   quiz_key=QUIZ_KEY,
                                   _external=True), json=payload)
+
         if not r:
             message = "could not post answer [%s, %s]" % (r.text, r.status_code)
             print(message)
             break
 
         SAVED_PAYLOADS.append(payload)
-        count = len(SAVED_PAYLOADS) + 1
+        count += 1
 
 
 CALLBACKS = {
@@ -494,7 +502,7 @@ CALLBACKS = {
     'r': {
         'tagline': 'quiz missed words',
         'display_order': 20,
-        'callback': unimplemented
+        'callback': quiz_missed_words
     },
     'report': {
         'tagline': 'report',
@@ -538,4 +546,3 @@ def quiz_words():
         callback()
 
     callback()
-
