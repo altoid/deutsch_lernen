@@ -2,13 +2,12 @@ import mysql.connector.errors
 from flask import Blueprint, request, url_for, current_app
 from pprint import pprint
 from mysql.connector import connect
-from dlernen import dlernen_json_schema
+from dlernen import dlernen_json_schema, common
+
 import requests
 import json
 from contextlib import closing
 import jsonschema
-import sys
-import os
 
 # view functions for /api/wordlist and /api/wordlists URLs are here.
 
@@ -717,3 +716,24 @@ def get_wordlists_by_word_id(word_id):
             # validation happens in get_wordlists so we don't need to do it here.
 
         return result
+
+
+@bp.route('/api/wordlist/count')
+def count_words():
+    wordlist_ids = request.args.getlist('wordlist_id')
+
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        if wordlist_ids:
+            word_ids = common.get_word_ids_from_wordlists(wordlist_ids, cursor)
+
+            return {'wordcount': len(word_ids)}
+
+        sql = """
+        select count(*) wordcount
+        from word
+        """
+
+        cursor.execute(sql)
+
+        rows = cursor.fetchall()
+        return rows[0]
