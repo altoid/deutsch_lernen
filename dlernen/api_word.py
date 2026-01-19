@@ -286,10 +286,6 @@ def add_word():
             return get_word_by_id(word_id), 201  # this is already validated and jsonified
 
         except Exception as e:
-            pprint(e)
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
             cursor.execute('rollback')
             return "error, transaction rolled back", 500
 
@@ -398,10 +394,6 @@ def update_word(word_id):
             return get_word_by_id(word_id)
 
         except Exception as e:
-            pprint(e)
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
             cursor.execute('rollback')
             return "error, transaction rolled back", 500
 

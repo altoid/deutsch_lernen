@@ -155,10 +155,6 @@ def create_wordlist_metadata():
             # treat it as unprocessable content.
             return str(f), 422
         except Exception as e:
-            pprint(e)
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
             cursor.execute('rollback')
             return "create list failed", 500
 
@@ -218,10 +214,6 @@ def update_wordlist_metadata(wordlist_id):
             # this will happen if validate_sqlcode throws exception
             return str(e), 422
         except Exception as e:
-            pprint(e)
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
             cursor.execute('rollback')
             return "update list failed", 500
 
@@ -451,10 +443,6 @@ def add_words_by_id(wordlist_id):
 
             return "OK", 200
         except Exception as e:
-            pprint(e)
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
             cursor.execute('rollback')
             return "update list failed", 500
 
@@ -510,10 +498,6 @@ def update_wordlist_contents(wordlist_id):
 
             return __get_wordlist(wordlist_id)
         except Exception as e:
-            pprint(e)
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
             cursor.execute('rollback')
             return "update list failed", 500
 
@@ -528,7 +512,6 @@ def delete_wordlist(wordlist_id):
             cursor.execute('commit')
             return "OK"
         except Exception as e:
-            pprint(e)
             cursor.execute('rollback')
             return "delete list failed", 500
 
@@ -591,10 +574,6 @@ def delete_from_wordlist(wordlist_id):
             cursor.execute('commit')
             return "OK"
         except Exception as e:
-            pprint(e)
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            print(exc_type, fname, exc_tb.tb_lineno)
             cursor.execute('rollback')
             return str(e), 500
 
