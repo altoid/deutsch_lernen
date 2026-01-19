@@ -2,7 +2,6 @@ from flask import Blueprint, url_for
 from pprint import pprint
 import requests
 import click
-import random
 from dlernen import api_quiz
 
 bp = Blueprint('app_quiz_defs', __name__)
@@ -112,16 +111,16 @@ or enter list of wordlist_ids, space separated
         try:
             wordlist_ids += list(map(int, answer.split()))
         except ValueError as e:
-            print("bad dog")
+            print("bad dog:  %s" % str(e))
             continue
 
         unknown_wordlist_ids = set()
-        for id in wordlist_ids:
+        for wl_id in wordlist_ids:
             r = requests.get(url_for('api_wordlist.get_wordlist_metadata',
-                                     wordlist_id=id,
+                                     wordlist_id=wl_id,
                                      _external=True))
             if r.status_code == 404:
-                unknown_wordlist_ids.add(id)
+                unknown_wordlist_ids.add(wl_id)
                 continue
 
             if not r:
@@ -130,7 +129,7 @@ or enter list of wordlist_ids, space separated
 
             obj = r.json()
 
-            WORDLISTS[id] = obj['name']
+            WORDLISTS[wl_id] = obj['name']
 
         print("list_ids:  ", end=' ')
         pprint(set(WORDLISTS.keys()))
@@ -179,7 +178,10 @@ Queries:""")
     print("""
 Words tested this session:  %s""" % len(SAVED_PAYLOADS))
 
-    # TODO - use saved payloads to show missed words
+    nmissed = len(list(filter(lambda x: not x['correct'], SAVED_PAYLOADS)))
+
+    print("""
+Words missed this session:  %s""" % nmissed)
 
 
 def select_tags():
@@ -281,6 +283,35 @@ or enter list of query names, space separated
             pprint(unknown)
 
 
+def show_missed_words():
+    global SAVED_PAYLOADS
+
+    missed_words = list(filter(lambda x: not x['correct'], SAVED_PAYLOADS))
+    missed_word_ids = list({x['word_id'] for x in missed_words})
+
+    if not missed_word_ids:
+        print("""
+    ********************************
+    * no words missed this session *
+    ********************************
+    """)
+        return
+
+    r = requests.put(url_for('api_word.get_words', _external=True), json={'word_ids': missed_word_ids})
+    if not r:
+        print("api_word.get_words failed:  [%s - %s]" % (r.text, r.status_code))
+        return
+
+    obj = r.json()
+    print("""
+    *****************************
+    * words missed this session *
+    *****************************
+    """)
+    for w in obj:
+        print("%s (%s)" % (w['word'], w['pos_name']))
+
+
 def get_next_word(wordlist_ids, queries):
     # wordlist_ids and queries are both lists and may be empty
     global QUIZ_KEY
@@ -346,6 +377,17 @@ def dummy_get_next_word(wordlist_ids, queries):
     yield None
 
 
+def get_next_missed_word(missed_word_ids, word_ids_to_attrs):
+    if not missed_word_ids:
+        yield None
+
+    i = 0
+    while True:
+        yield word_ids_to_attrs[missed_word_ids[i]]
+        i += 1
+        i = i % len(missed_word_ids)
+
+
 def make_triple(function, *args, **kwargs):
     return function, args, kwargs
 
@@ -369,10 +411,23 @@ def quiz_definitions():
 
 def quiz_missed_words():
     global SAVED_PAYLOADS
+    global QUIZ_KEY
 
     missed_words = list(filter(lambda x: not x['correct'], SAVED_PAYLOADS))
+    missed_word_ids = list({x['word_id'] for x in missed_words})
+    word_ids_to_attrs = {}
+    for word_id in missed_word_ids:
+        url = url_for('api_quiz.get_all_attr_values_for_quiz',
+                      quiz_key=QUIZ_KEY,
+                      word_id=word_id,
+                      _external=True)
+        r = requests.get(url)
+        obj = r.json()
+        word_ids_to_attrs[word_id] = obj[0]
 
-    unimplemented()
+    function_and_args = make_triple(get_next_missed_word, missed_word_ids, word_ids_to_attrs)
+
+    quiz_loop(function_and_args)
 
 
 def quiz_loop(generating_function_and_args):
@@ -497,7 +552,7 @@ CALLBACKS = {
     'f': {
         'tagline': 'show missed words',
         'display_order': 15,
-        'callback': unimplemented
+        'callback': show_missed_words
     },
     'r': {
         'tagline': 'quiz missed words',
