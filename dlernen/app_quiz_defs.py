@@ -55,6 +55,31 @@ Hauptmenü:
     return CALLBACKS[answer]['callback']
 
 
+def set_wordlists(given_wordlist_ids):
+    # returns a set containing any wordlist_ids that weren't in the database
+
+    global WORDLISTS
+
+    unknown_wordlist_ids = set()
+    for wl_id in given_wordlist_ids:
+        r = requests.get(url_for('api_wordlist.get_wordlist_metadata',
+                                 wordlist_id=wl_id,
+                                 _external=True))
+        if r.status_code == 404:
+            unknown_wordlist_ids.add(wl_id)
+            continue
+
+        if not r:
+            print(r.text, r.status_code)
+            continue
+
+        obj = r.json()
+
+        WORDLISTS[wl_id] = obj['name']
+
+    return unknown_wordlist_ids
+
+
 def reset():
     global WORDLISTS
     global QUERIES
@@ -114,22 +139,7 @@ or enter list of wordlist_ids, space separated
             print("bad dog:  %s" % str(e))
             continue
 
-        unknown_wordlist_ids = set()
-        for wl_id in wordlist_ids:
-            r = requests.get(url_for('api_wordlist.get_wordlist_metadata',
-                                     wordlist_id=wl_id,
-                                     _external=True))
-            if r.status_code == 404:
-                unknown_wordlist_ids.add(wl_id)
-                continue
-
-            if not r:
-                print(r.text, r.status_code)
-                continue
-
-            obj = r.json()
-
-            WORDLISTS[wl_id] = obj['name']
+        unknown_wordlist_ids = set_wordlists(wordlist_ids)
 
         print("list_ids:  ", end=' ')
         pprint(set(WORDLISTS.keys()))
@@ -588,7 +598,16 @@ CALLBACKS = {
 
 
 @bp.cli.command('quiz_defs_2')
-def quiz_words():
+@click.option('--wordlist_ids', '-l', multiple=True)
+@click.option('--queries', '-q', multiple=True)
+@click.option('--tags', '-t', multiple=True)
+def quiz_words(wordlist_ids, queries, tags):
+    unknown_wordlist_ids = set_wordlists(wordlist_ids)
+
+    if unknown_wordlist_ids:
+        print("unknown wordlist_ids:  ", end=' ')
+        pprint(set(unknown_wordlist_ids))
+
     while True:
         callback = main_menu()
 
