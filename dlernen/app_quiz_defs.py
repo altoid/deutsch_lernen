@@ -194,7 +194,7 @@ Queries:""")
         print("""
 Word count:  %s""" % obj['wordcount'])
     else:
-        print("could not retrieve word count:  [%s - %s]" % (r.text. r.status_code))
+        print("could not retrieve word count:  [%s - %s]" % (r.text, r.status_code))
 
     print("""
 Words tested this session:  %s""" % len(SAVED_PAYLOADS))
@@ -586,7 +586,7 @@ CALLBACKS = {
         'callback': unimplemented
     },
     'status': {
-        'tagline': 'show app status',
+        'tagline': 'show session status',
         'display_order': 30,
         'callback': status
     },
