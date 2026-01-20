@@ -720,9 +720,31 @@ def get_wordlists_by_word_id(word_id):
 
 @bp.route('/api/wordlist/count')
 def count_words():
-    wordlist_ids = request.args.getlist('wordlist_id')
+    wordlist_ids = list(set(request.args.getlist('wordlist_id')))
+    tags = list(set(request.args.getlist('tag')))
 
+    # not going to bother checking whether the wordlist_ids or tags exist.  i'm tired.
+    
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        if tags:
+            if not wordlist_ids or len(wordlist_ids) != 1:
+                return "need exactly one wordlist id when searching by tags", 400
+
+            arglist = ['%s'] * len(tags)
+            arglist = ', '.join(arglist)
+            sql = """
+            select count(*) wordcount
+            from tag
+            where wordlist_id = %%s
+            and tag in (%(arglist)s)
+            """ % {'arglist': arglist}
+
+            args = [wordlist_ids[0]] + tags
+            cursor.execute(sql, args)
+
+            rows = cursor.fetchall()
+            return rows[0]
+
         if wordlist_ids:
             word_ids = common.get_word_ids_from_wordlists(wordlist_ids, cursor)
 
