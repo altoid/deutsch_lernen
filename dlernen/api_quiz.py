@@ -138,22 +138,6 @@ order by rand()
 limit 1
 """
 
-BEEN_TOO_LONG_SQL = COMMON_SQL + """
-select 
-    'been_too_long' query_name, 
-    word_scores.word,
-    word_scores.word_id,
-    word_scores.quiz_id,
-    word_scores.attrvalue,
-    word_scores.attrkey,
-    word_scores.attribute_id
-from word_scores
-where curdate() - interval 30 day > last_presentation
-or last_presentation is null
-order by last_presentation
-limit 1
-"""
-
 REPORT_SQL = COMMON_SQL + """
 select
     word_scores.word,
@@ -170,7 +154,6 @@ order by raw_score, presentation_count
 
 DEFINED_QUERIES = {
     'crappy_score': CRAPPY_SCORE_SQL,
-    'been_too_long': BEEN_TOO_LONG_SQL,
     'rare': RARE_SQL,
     'random': RANDOM_SQL,
     'imperfect': IMPERFECT_SCORE_SQL,
