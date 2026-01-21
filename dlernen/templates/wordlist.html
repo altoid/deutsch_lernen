@@ -29,37 +29,7 @@ Wordlist:  {{ wordlist.name }}
                 </form>
             </td>
         </tr>
-        <tr>
-            <td>
-                <a href="{{ url_for('dlernen.list_editor', wordlist_id=wordlist.wordlist_id) }}">Editor</a>
-            </td>
-        </tr>
         {% endif %}
-        <tr>
-            <td>
-                <a href="{{ url_for('dlernen.quiz_report',
-                                    quiz_key='definitions',
-                                    wordlist_id=wordlist.wordlist_id) }}">Zeugnis:  Definitionen</a>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <a href="{{ url_for('dlernen.quiz_report',
-                                    quiz_key='irregular_verbs',
-                                    wordlist_id=wordlist.wordlist_id) }}">Zeugnis:  URM Verben</a>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <a href="{{ url_for('dlernen.study_guide', wordlist_id=wordlist.wordlist_id) }}">Studienanleitung</a>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <a href="{{ url_for('dlernen.list_attributes', wordlist_id=wordlist.wordlist_id) }}">
-                    Metadaten der Liste</a>
-            </td>
-        </tr>
     </table>
     <table>
         {% if wordlist['unknown_words']|length > 0 %}

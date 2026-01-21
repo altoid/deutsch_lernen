@@ -120,7 +120,8 @@ def list_attributes(wordlist_id):
     wordlist_metadata = {k: '' if v is None else v for k, v in r.json().items()}
 
     return render_template('list_attributes.html',
-                           wordlist_metadata=wordlist_metadata)
+                           wordlist_id=wordlist_metadata['wordlist_id'],
+                           wordlist=wordlist_metadata)
 
 
 @bp.route('/list_editor/<int:wordlist_id>')
@@ -134,6 +135,7 @@ def list_editor(wordlist_id):
     wordlist_result = r.json()
 
     return render_template('list_editor.html',
+                           wordlist_id=wordlist_result['wordlist_id'],
                            wordlist_contents=wordlist_result)
 
 
@@ -152,7 +154,8 @@ def wordlist(wordlist_id):
 
         flash("invalid sqlcode")
         return render_template('list_attributes.html',
-                               wordlist_metadata=metadata)
+                               wordlist_id=metadata['wordlist_id'],
+                               wordlist=metadata)
 
     if not r:
         return render_template("error.html",
@@ -169,6 +172,7 @@ def wordlist(wordlist_id):
 
     return render_template('wordlist.html',
                            wordlist=obj,
+                           wordlist_id=obj['wordlist_id'],
                            known_words=known_words,
                            unknown_words=unknown_words)
 
@@ -248,7 +252,8 @@ def edit_list_attributes():
     if not name:
         flash("Die Liste muss einen Namen haben")
         return render_template('list_attributes.html',
-                               wordlist_metadata=metadata)
+                               wordlist_id=metadata['wordlist_id'],
+                               wordlist=metadata)
 
     x = sqlcode.strip()
     if not x:
@@ -271,6 +276,7 @@ def edit_list_attributes():
         # unprocessable content - the sqlcode is not valid.  redirect to the list attributes page to fix it.
         flash("invalid sqlcode")
         return render_template('list_attributes.html',
+                               wordlist_id=metadata['wordlist_id'],
                                wordlist_metadata=metadata)
 
     if not r:
@@ -352,6 +358,7 @@ def edit_list_contents():
     wordlist_contents = r.json()
 
     return render_template('list_editor.html',
+                           wordlist_id=wordlist_contents['wordlist_id'],
                            wordlist_contents=wordlist_contents)
 
 
@@ -772,6 +779,7 @@ def study_guide(wordlist_id):
 
     return render_template("study_guide.html",
                            tags=tags,
+                           wordlist_id=wordlist['wordlist_id'],
                            untagged_words=untagged_words,
                            tags_to_words=tags_to_words,
                            wordlist=wordlist)

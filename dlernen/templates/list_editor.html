@@ -12,28 +12,6 @@ Manage List:  {{ wordlist_contents.name }}
     <h1>
         {{ wordlist_contents.name }} ({{ wordlist_contents.wordlist_id }})
     </h1>
-    <table>
-        <tr>
-            <td>
-                <a href="{{ url_for('dlernen.wordlist', wordlist_id=wordlist_contents.wordlist_id) }}">
-                    zur Liste zurückkehren</a>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <a href="{{ url_for('dlernen.study_guide', wordlist_id=wordlist_contents.wordlist_id) }}">
-                    Studienanleitung</a>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <a href="{{ url_for('dlernen.quiz_report',
-                                    quiz_key='definitions',
-                                    wordlist_id=wordlist_contents.wordlist_id) }}">Zeugnis:  Definitionen</a>
-            </td>
-        </tr>
-    </table>
-
     {% if wordlist_contents.list_type == 'standard' %}
     <form action="{{ url_for('dlernen.edit_list_contents') }}" method="post">
         <input type="hidden" value="{{ wordlist_contents.wordlist_id }}" name="wordlist_id"/>

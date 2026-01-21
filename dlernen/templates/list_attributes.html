@@ -21,22 +21,22 @@
 <div class="listattributes">
     {% include 'header.html' %}
     <form action="{{ url_for('dlernen.edit_list_attributes') }}" method="post">
-        <input type="hidden" value="{{ wordlist_metadata.wordlist_id }}" name="wordlist_id"/>
-        <input type="hidden" value="{{ wordlist_metadata.list_type }}" name="list_type"/>
+        <input type="hidden" value="{{ wordlist.wordlist_id }}" name="wordlist_id"/>
+        <input type="hidden" value="{{ wordlist.list_type }}" name="list_type"/>
         <table>
             <tr>
                 <td>List Name:</td>
-                <td><input type="text" value="{{ wordlist_metadata.name }}" name="name" size="60"></td>
+                <td><input type="text" value="{{ wordlist.name }}" name="name" size="60"></td>
             </tr>
             <tr>
                 <td>Source:</td>
-                <td><input type="text" value="{{ wordlist_metadata.citation }}" name="citation" size="60"></td>
+                <td><input type="text" value="{{ wordlist.citation }}" name="citation" size="60"></td>
             </tr>
         </table>
-        {% if wordlist_metadata.list_type == 'empty' or wordlist_metadata.list_type == 'smart' %}
+        {% if wordlist.list_type == 'empty' or wordlist.list_type == 'smart' %}
         <h2>Code</h2>
         Should be a sql statement that selects a single column called 'word_id.'<br>
-        <textarea class="sqlcode" name="sqlcode">{{ wordlist_metadata.sqlcode }}</textarea>
+        <textarea class="sqlcode" name="sqlcode">{{ wordlist.sqlcode }}</textarea>
         <br>
         {% endif %}
         <input type="submit" value="Update list details"/>
