@@ -187,6 +187,7 @@ Queries:""")
 
     url = url_for('api_wordlist.count_words',
                   wordlist_id=list(WORDLISTS.keys()),
+                  tag=list(TAGS),
                   _external=True)
     r = requests.get(url)
     if r:
@@ -613,11 +614,20 @@ CALLBACKS = {
 @click.option('--queries', '-q', multiple=True)
 @click.option('--tags', '-t', multiple=True)
 def quiz_words(wordlist_ids, queries, tags):
+    global WORDLISTS
+    global TAGS
+
     unknown_wordlist_ids = set_wordlists(wordlist_ids)
 
     if unknown_wordlist_ids:
         print("unknown wordlist_ids:  ", end=' ')
         pprint(set(unknown_wordlist_ids))
+
+    TAGS = set(tags)
+    if TAGS and WORDLISTS:
+        if len(WORDLISTS) > 1:
+            print("only one list permitted if filtering by tags")
+            return
 
     while True:
         callback = main_menu()
