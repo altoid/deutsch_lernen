@@ -542,7 +542,7 @@ WORD_TAG_RESPONSE_SCHEMA = {
     """,
     "type": "object",
     "required": [
-        "word_id",
+        # "word_id",   # not required
         "wordlist_id",
         "tags"
     ],

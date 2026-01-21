@@ -42,6 +42,7 @@ def get_tags(wordlist_id, word_id):
                 return "word %s not in list %s" % (word_id, wordlist_id), 404
 
             if metadata['list_type'] == 'smart':
+                # not considered an error condition.
                 return result
 
             # checks complete, let's do this.
@@ -53,6 +54,59 @@ def get_tags(wordlist_id, word_id):
             cursor.execute(sql, {
                 "wordlist_id": wordlist_id,
                 "word_id": word_id
+            })
+            rows = cursor.fetchall()
+
+            result['tags'] = [x['tag'] for x in rows]
+            jsonschema.validate(result, js.WORD_TAG_RESPONSE_SCHEMA)
+
+            return result, 200
+
+        except mysql.connector.errors.ProgrammingError as e:
+            print(e.msg)
+            return str(e), 500
+        except Exception as e:
+            print(e.__class__)
+            return str(e), 500
+
+
+@bp.route('/api/wordlist/tags/<int:wordlist_id>', methods=['GET'])
+def get_all_tags(wordlist_id):
+    # get all the tags across all the words in the wordlist.
+    # perform the following checks:
+    #
+    # - wordlist exists
+    # - wordlist is not a smart list
+    # - if not a smartlist, word is present in the list.
+    #
+
+    url = url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
+    r = requests.get(url)
+    if not r:
+        return r.text, r.status_code
+
+    metadata = r.json()
+
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        try:
+            result = {
+                "wordlist_id": wordlist_id,
+                "tags": []
+            }
+
+            if metadata['list_type'] == 'smart':
+                # not considered an error condition.
+                return result
+
+            # checks complete, let's do this.
+            sql = """
+            select distinct tag from tag
+            where wordlist_id=%(wordlist_id)s
+            order by tag
+            """
+
+            cursor.execute(sql, {
+                "wordlist_id": wordlist_id
             })
             rows = cursor.fetchall()
 

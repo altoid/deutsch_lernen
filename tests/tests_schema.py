@@ -1144,8 +1144,8 @@ class Test_WORD_TAG_RESPONSE_SCHEMA(unittest.TestCase):
         },
         {
             "wordlist_id": 1234,
-            "word_id": 234,
             "tags": [
+                "word_id", "not", "required"
             ]
         },
     ]
@@ -1154,13 +1154,6 @@ class Test_WORD_TAG_RESPONSE_SCHEMA(unittest.TestCase):
         {
             # "wordlist_id": 1234,
             "word_id": 234,
-            "tags": [
-                "one", "two", "aoeu"
-            ]
-        },
-        {
-            "wordlist_id": 1234,
-            # "word_id": 234,
             "tags": [
                 "one", "two", "aoeu"
             ]
