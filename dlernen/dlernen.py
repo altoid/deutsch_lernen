@@ -1,18 +1,16 @@
-from flask import Blueprint, request, render_template, redirect, url_for, flash, abort, current_app
-from pprint import pprint
+from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app
 import requests
 import json
 from dlernen import dlernen_json_schema as js
+from pprint import pprint
 
 bp = Blueprint('dlernen', __name__, url_prefix='/dlernen')
 
 
-def chunkify(arr, **kwargs):
+def chunkify(arr, nchunks=1):
+    # subdivide the array into <nchunks> subarrays of equal length
     if not arr:
         return []
-
-    nchunks = kwargs.get('nchunks', 1)
-    nchunks = max(nchunks, 1)
 
     # round up array size to nearest multiple of nchunks
     arraysize = ((len(arr) + nchunks - 1) // nchunks) * nchunks
@@ -21,8 +19,10 @@ def chunkify(arr, **kwargs):
     # add one more increment of chunksize so that our zip array includes
     # the last elements
     chunks = [x for x in range(0, arraysize + chunksize, chunksize)]
+    pprint(chunks)
 
     z = list(zip(chunks, chunks[1:]))
+    pprint(z)
 
     result = []
     for x in z:
@@ -154,23 +154,23 @@ def wordlist(wordlist_id):
         return render_template('list_attributes.html',
                                wordlist_metadata=metadata)
 
-    if r:
-        wordlist = r.json()
-        if wordlist['notes'] is None:
-            # otherwise the word 'None' is rendered in the form
-            wordlist['notes'] = ''
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
 
-        known_words = chunkify(wordlist['known_words'], nchunks=nchunks)
-        unknown_words = chunkify(wordlist['unknown_words'], nchunks=nchunks)
+    obj = r.json()
+    if obj['notes'] is None:
+        # otherwise the word 'None' is rendered in the form
+        obj['notes'] = ''
 
-        return render_template('wordlist.html',
-                               wordlist=wordlist,
-                               known_words=known_words,
-                               unknown_words=unknown_words)
+    known_words = chunkify(obj['known_words'], nchunks)
+    unknown_words = chunkify(obj['unknown_words'], nchunks)
 
-    return render_template("error.html",
-                           message=r.text,
-                           status_code=r.status_code)
+    return render_template('wordlist.html',
+                           wordlist=obj,
+                           known_words=known_words,
+                           unknown_words=unknown_words)
 
 
 @bp.route('/addlist', methods=['POST'])
