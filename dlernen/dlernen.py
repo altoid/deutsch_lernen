@@ -39,6 +39,15 @@ def home():
 def get_word_by_id(word_id):
     # for when a word appears as a hyperlink in a page.
     wordlist_id = request.args.get('wordlist_id')
+    wordlist = None
+    if wordlist_id:
+        url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
+        r = requests.get(url)
+        if not r:
+            return render_template("error.html",
+                                   message=r.text,
+                                   status_code=r.status_code)
+        wordlist = r.json()
 
     r = requests.get(url_for('api_word.get_word_by_id', word_id=word_id, _external=True))
     if not r:
@@ -58,9 +67,14 @@ def get_word_by_id(word_id):
 
     template_args = [(result, member_wordlists)]
 
+    if wordlist:
+        return render_template('lookup.html',
+                               word=result["word"],
+                               wordlist=wordlist,
+                               template_args=template_args)
+
     return render_template('lookup.html',
                            word=result["word"],
-                           wordlist_id=wordlist_id,
                            template_args=template_args)
 
 
@@ -120,7 +134,6 @@ def list_attributes(wordlist_id):
     wordlist_metadata = {k: '' if v is None else v for k, v in r.json().items()}
 
     return render_template('list_attributes.html',
-                           wordlist_id=wordlist_metadata['wordlist_id'],
                            wordlist=wordlist_metadata)
 
 
@@ -132,15 +145,14 @@ def list_editor(wordlist_id):
         return render_template("error.html",
                                message=r.text,
                                status_code=r.status_code)
-    wordlist_result = r.json()
+    wordlist = r.json()
 
     return render_template('list_editor.html',
-                           wordlist_id=wordlist_result['wordlist_id'],
-                           wordlist_contents=wordlist_result)
+                           wordlist=wordlist)
 
 
 @bp.route('/wordlist/<int:wordlist_id>')
-def wordlist(wordlist_id):
+def wordlist_page(wordlist_id):
     nchunks = request.args.get('nchunks', current_app.config['NCHUNKS'], type=int)
     r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True))
     if r.status_code == 404:
@@ -172,7 +184,6 @@ def wordlist(wordlist_id):
 
     return render_template('wordlist.html',
                            wordlist=obj,
-                           wordlist_id=obj['wordlist_id'],
                            known_words=known_words,
                            unknown_words=unknown_words)
 
@@ -252,7 +263,6 @@ def edit_list_attributes():
     if not name:
         flash("Die Liste muss einen Namen haben")
         return render_template('list_attributes.html',
-                               wordlist_id=metadata['wordlist_id'],
                                wordlist=metadata)
 
     x = sqlcode.strip()
@@ -276,7 +286,6 @@ def edit_list_attributes():
         # unprocessable content - the sqlcode is not valid.  redirect to the list attributes page to fix it.
         flash("invalid sqlcode")
         return render_template('list_attributes.html',
-                               wordlist_id=metadata['wordlist_id'],
                                wordlist_metadata=metadata)
 
     if not r:
@@ -284,7 +293,7 @@ def edit_list_attributes():
                                message=r.text,
                                status_code=r.status_code)
 
-    return redirect(url_for('dlernen.wordlist', wordlist_id=wordlist_id))
+    return redirect(url_for('dlernen.wordlist_page', wordlist_id=wordlist_id))
 
 
 @bp.route('/list_editor', methods=['POST'])
@@ -382,7 +391,7 @@ def add_to_list():
         flash("""
         could not deal with word "%s" [%s]:  %s
         """ % (word, r.status_code, r.text))
-        target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
+        target = url_for('dlernen.wordlist_page', wordlist_id=wordlist_id)
         return redirect(target)
 
     url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True)
@@ -390,7 +399,7 @@ def add_to_list():
     if not r:
         flash(r.text)
 
-    target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
+    target = url_for('dlernen.wordlist_page', wordlist_id=wordlist_id)
     return redirect(target)
 
 
@@ -404,7 +413,7 @@ def update_notes():
     url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True)
     r = requests.put(url, json=payload)
     if r:
-        target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
+        target = url_for('dlernen.wordlist_page', wordlist_id=wordlist_id)
         return redirect(target)
 
     return render_template("error.html",
@@ -425,7 +434,7 @@ def delete_from_list():
                                message=r.text,
                                status_code=r.status_code)
 
-    target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
+    target = url_for('dlernen.wordlist_page', wordlist_id=wordlist_id)
     return redirect(target)
 
 
@@ -522,9 +531,22 @@ def edit_word_form(word):
             }
             form_data[p['pos_name']].append(d)
 
+        url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
+        r = requests.get(url)
+        if not r:
+            return render_template("error.html",
+                                   message=r.text,
+                                   status_code=r.status_code)
+        wordlist = r.json()
+
+        return render_template('word_editor.html',
+                               word=word,
+                               wordlist=wordlist,
+                               form_data=form_data,
+                               field_values_before=json.dumps(field_values_before))
+
     return render_template('word_editor.html',
                            word=word,
-                           wordlist_id=wordlist_id,
                            form_data=form_data,
                            field_values_before=json.dumps(field_values_before))
 
@@ -721,7 +743,7 @@ def update_dict():
                                        status_code=r.status_code)
 
     if wordlist_id:
-        target = url_for('dlernen.wordlist', wordlist_id=wordlist_id)
+        target = url_for('dlernen.wordlist_page', wordlist_id=wordlist_id)
     else:
         # if we didn't add a word to any list, return to the editing form for this word.
         target = url_for('dlernen.edit_word_form', word=word)
@@ -731,6 +753,14 @@ def update_dict():
 
 @bp.route('/quiz_report/<string:quiz_key>/<int:wordlist_id>')
 def quiz_report(quiz_key, wordlist_id):
+    r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True))
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+
+    wordlist = r.json()
+
     url = url_for('api_quiz.get_report', quiz_key=quiz_key, wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
     if not r:
@@ -741,8 +771,7 @@ def quiz_report(quiz_key, wordlist_id):
     report = r.json()
     return render_template("quiz_report.html",
                            quiz_key=report['quiz_key'],
-                           wordlist_name=report['wordlist_name'],
-                           wordlist_id=report['wordlist_id'],
+                           wordlist=wordlist,
                            scores=report['scores'])
 
 
@@ -779,7 +808,6 @@ def study_guide(wordlist_id):
 
     return render_template("study_guide.html",
                            tags=tags,
-                           wordlist_id=wordlist['wordlist_id'],
                            untagged_words=untagged_words,
                            tags_to_words=tags_to_words,
                            wordlist=wordlist)

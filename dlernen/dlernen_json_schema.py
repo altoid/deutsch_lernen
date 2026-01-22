@@ -425,19 +425,17 @@ QUIZ_REPORT_RESPONSE_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/quiz_data",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Quiz Report",
-    "description": "payload for posting a quiz answer",
+    "description": """
+    data for displaying quiz results for a wordlist.
+    """,
     "type": "object",
     "required": [
-        "wordlist_name",
         "quiz_key",
         "quiz_id",
         "wordlist_id",
         "scores"
     ],
     "properties": {
-        "wordlist_name": {
-            "type": "string"
-        },
         "wordlist_id": {
             "type": "integer",
             "minimum": 1

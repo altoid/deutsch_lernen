@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
 {% block title %}
-Quiz Report:  {{ wordlist_name }}
+Quiz Report:  {{ wordlist.name }}
 {% endblock %}
 
 {% block body %}
 {{ super() }}
 <div class="quiz_report">
     {% include 'header.html' %}
-    <h1>Quiz Report: {{ wordlist_name }} ({{ wordlist_id }})</h1>
+    <h1>Quiz Report: {{ wordlist.name }} ({{ wordlist.wordlist_id }})</h1>
     {{ scores|length }} Wörter
     <h2>{{ quiz_key }}</h2>
     <table class="quiz_report">

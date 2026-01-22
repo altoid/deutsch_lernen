@@ -437,8 +437,9 @@ def get_report(quiz_key, wordlist_id):
 
         quiz_id = rows[0]['quiz_id']
 
+        # check that the wordlist_id is real
         sql = """
-        select name
+        select id
         from wordlist
         where id = %(wordlist_id)s
         """
@@ -463,7 +464,6 @@ def get_report(quiz_key, wordlist_id):
         rows = cursor.fetchall()
 
         result = {
-            "wordlist_name": wordlist_row[0]['name'],
             "wordlist_id": wordlist_id,
             "quiz_key": quiz_key,
             "quiz_id": quiz_id,

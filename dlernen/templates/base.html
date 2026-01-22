@@ -12,13 +12,15 @@
 <body>
 <div class="sidebar">
     <a href="{{ url_for('dlernen.wordlists') }}">Word lists</a>
-    {% if wordlist_id %}
-    <a href="{{ url_for('dlernen.wordlist', wordlist_id=wordlist_id) }}">List</a>
-    <a href="{{ url_for('dlernen.list_editor', wordlist_id=wordlist_id) }}">Editor</a>
-    <a href="{{ url_for('dlernen.list_attributes', wordlist_id=wordlist_id) }}">Metadaten der Liste</a>
-    <a href="{{ url_for('dlernen.quiz_report', quiz_key='definitions', wordlist_id=wordlist_id) }}">
-        Zeugnis:  Definitionen</a>
-    <a href="{{ url_for('dlernen.study_guide', wordlist_id=wordlist_id) }}">Studienanleitung</a>
+    {% if wordlist %}
+    <a href="{{ url_for('dlernen.wordlist_page', wordlist_id=wordlist.wordlist_id) }}">List</a>
+    {% if wordlist.list_type == 'empty' or wordlist.list_type == 'standard' %}
+    <a href="{{ url_for('dlernen.list_editor', wordlist_id=wordlist.wordlist_id) }}">Editor</a>
+    {% endif %}
+    <a href="{{ url_for('dlernen.list_attributes', wordlist_id=wordlist.wordlist_id) }}">Metadaten der Liste</a>
+    <a href="{{ url_for('dlernen.quiz_report', quiz_key='definitions', wordlist_id=wordlist.wordlist_id) }}">
+        Zeugnis: Definitionen</a>
+    <a href="{{ url_for('dlernen.study_guide', wordlist_id=wordlist.wordlist_id) }}">Studienanleitung</a>
     {% endif %}
     Suche nach Wort
     <form action="{{ url_for('dlernen.lookup_by_post') }}" method="post">
@@ -32,9 +34,10 @@
 </body>
 </html>
 
-{#
-
-every page that displays anything about a wordlist must
-be passed a wordlist_id in order to render list-specific menu items.
-
-#}
+{###########################################################################
+ #
+ # every page that displays anything about a wordlist must be passed a wordlist
+ # or wordlist_metadata object in order to
+ # render list-specific menu items.
+ #
+ #}

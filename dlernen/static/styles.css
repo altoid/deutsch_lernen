@@ -188,7 +188,7 @@ ref:  https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Selectors/Desce
     display: block;
     text-decoration: none;
     font-size: large;
-    padding: 20px;
+    padding: 10px 20px;
 }
 
 .sidebar a:link, .sidebar a:visited {

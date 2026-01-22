@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-Manage List:  {{ wordlist_contents.name }}
+Manage List:  {{ wordlist.name }}
 {% endblock %}
 
 {% block body %}
@@ -10,11 +10,11 @@ Manage List:  {{ wordlist_contents.name }}
 <div class="list_editor">
     {% include 'header.html' %}
     <h1>
-        {{ wordlist_contents.name }} ({{ wordlist_contents.wordlist_id }})
+        {{ wordlist.name }} ({{ wordlist.wordlist_id }})
     </h1>
-    {% if wordlist_contents.list_type == 'standard' %}
+    {% if wordlist.list_type == 'standard' %}
     <form action="{{ url_for('dlernen.edit_list_contents') }}" method="post">
-        <input type="hidden" value="{{ wordlist_contents.wordlist_id }}" name="wordlist_id"/>
+        <input type="hidden" value="{{ wordlist.wordlist_id }}" name="wordlist_id"/>
         <table>
             <tr>
                 <th></th>
@@ -23,7 +23,7 @@ Manage List:  {{ wordlist_contents.name }}
                 <th>Add Tags</th>
                 <th>Word ID</th>
             </tr>
-            {% for w in wordlist_contents['known_words'] %}
+            {% for w in wordlist['known_words'] %}
             <tr>
                 <td>
                     <input type="checkbox" name="removing" value="{{ w['word_id'] }}">
