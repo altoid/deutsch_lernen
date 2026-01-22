@@ -19,10 +19,7 @@ def chunkify(arr, nchunks=1):
     # add one more increment of chunksize so that our zip array includes
     # the last elements
     chunks = [x for x in range(0, arraysize + chunksize, chunksize)]
-    pprint(chunks)
-
     z = list(zip(chunks, chunks[1:]))
-    pprint(z)
 
     result = []
     for x in z:
@@ -174,16 +171,16 @@ def wordlist_page(wordlist_id):
                                message=r.text,
                                status_code=r.status_code)
 
-    obj = r.json()
-    if obj['notes'] is None:
+    wordlist = r.json()
+    if wordlist['notes'] is None:
         # otherwise the word 'None' is rendered in the form
-        obj['notes'] = ''
+        wordlist['notes'] = ''
 
-    known_words = chunkify(obj['known_words'], nchunks)
-    unknown_words = chunkify(obj['unknown_words'], nchunks)
+    known_words = chunkify(wordlist['known_words'], nchunks)
+    unknown_words = chunkify(wordlist['unknown_words'], nchunks)
 
     return render_template('wordlist.html',
-                           wordlist=obj,
+                           wordlist=wordlist,
                            known_words=known_words,
                            unknown_words=unknown_words)
 
