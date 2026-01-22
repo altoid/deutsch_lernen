@@ -150,8 +150,12 @@ def list_editor(wordlist_id):
 
 @bp.route('/wordlist/<int:wordlist_id>')
 def wordlist_page(wordlist_id):
-    nchunks = request.args.get('nchunks', current_app.config['NCHUNKS'], type=int)
-    r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True))
+    # FIXME - hack until i make a UI for setting tags
+    tag = request.args.getlist('tag')
+    r = requests.get(url_for('api_wordlist.get_wordlist',
+                             tag=tag,
+                             wordlist_id=wordlist_id,
+                             _external=True))
     if r.status_code == 404:
         flash("wordlist %s not found" % wordlist_id)
         return redirect('/wordlists')
@@ -176,6 +180,7 @@ def wordlist_page(wordlist_id):
         # otherwise the word 'None' is rendered in the form
         wordlist['notes'] = ''
 
+    nchunks = request.args.get('nchunks', current_app.config['NCHUNKS'], type=int)
     known_words = chunkify(wordlist['known_words'], nchunks)
     unknown_words = chunkify(wordlist['unknown_words'], nchunks)
 
@@ -361,11 +366,10 @@ def edit_list_contents():
         return render_template("error.html",
                                message=r.text,
                                status_code=r.status_code)
-    wordlist_contents = r.json()
+    wordlist = r.json()
 
     return render_template('list_editor.html',
-                           wordlist_id=wordlist_contents['wordlist_id'],
-                           wordlist_contents=wordlist_contents)
+                           wordlist=wordlist)
 
 
 @bp.route('/add_to_list', methods=['POST'])
