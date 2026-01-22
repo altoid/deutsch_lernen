@@ -31,13 +31,14 @@ Wordlist:  {{ wordlist.name }}
         </tr>
         {% endif %}
     </table>
+    {% if wordlist.unknown_words|length > 0 %}
+    <h2>Unbekannte Worte ({{ wordlist['unknown_words']|length }})</h2>
     <table>
-        {% if wordlist['unknown_words']|length > 0 %}
+        {########################### unknown words #######################}
         <tr>
             <td>
                 <form action="{{ url_for('dlernen.delete_from_list') }}" method="post">
                     <input type="hidden" value="{{wordlist.wordlist_id}}" name="wordlist_id"/>
-                    <h2>Unbekannte Worte ({{ wordlist['unknown_words']|length }})</h2>
                     <table class="tableau">
                         <tr>
                             {% for column in unknown_words %}
@@ -66,10 +67,14 @@ Wordlist:  {{ wordlist.name }}
                 </form>
             </td>
         </tr>
-        {% endif %}
+    </table>
+    {% endif %}
+
+    <h2>Bekannte Worte ({{ wordlist.known_words|length }})</h2>
+    <table>
+        {########################### known words #######################}
         <tr>
             <td>
-                <h2>Bekannte Worte ({{ wordlist['known_words']|length }})</h2>
                 <table class="tableau">
                     <tr>
                         {% for column in known_words %}
