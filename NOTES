@@ -27,6 +27,7 @@ TODO - look for opportunities to use dictionary and set comprehensions.
 
 TODO - create word lists from api calls since wordlists from sql don't give us enough.  examples:
     words in 5 or more lists
+    most easily done as scripts run by cron
 
 FIXME - place names should be properly capitalized.  sometimes they have an article.
 
@@ -51,16 +52,16 @@ TODO - TestCase.addCleanup exists, use it!
 FIXME - in the lookup results page, add a word-entry text field.  it may be that an exact match of our input
     string is wanted but not present.
 
-TODO - we will need an endpoint in api_quiz:  (word_id, quiz_id, attribute_id) ==> QUIZ_RESPONSE_SCHEMA
-   better:  (word_id, quiz_id) ==> an array of response objects, one for each attribute defined by the quiz.
-   then we pick out the one for the attribute we want.  the endpoint should return an object even if the
-   attribute value is null.
+FIXME - remove attrvalue_id column from mashup_v
 
-TODO - need unit tests for quizzes to make sure the above doesn't break anything
-   get_word with empty list
-   get_word with no lists
-   get_word with a standard list
+TODO - need a way to winnow down the display of large word lists.  ideas:
+    - in the wordlist page, show all the tags for the list with unchecked checkboxes next to each.
+      uncheck a tag to hide words with that tag.
+    - show sublists for each tag
 
+TODO - for quizzes, change the way the 'random' query works.  instead of selecting one item randomly from
+    the database, select them all in a random order and loop through them in that order.  that way we will
+    hit every word exactly once before we repeat any.
 
 ------
 

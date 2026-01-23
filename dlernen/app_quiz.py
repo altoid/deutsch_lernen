@@ -12,7 +12,7 @@ QUIZ_KEY = 'definitions'
 
 @bp.cli.command('quiz_words')
 @click.option('--wordlist_ids', '-l', multiple=True)
-@click.option('--queries', '-q', multiple=True)
+@click.option('--query', '-q', multiple=True)
 def quiz_words(wordlist_ids, queries):
     # pick a definition and select the right german word for it.  as decoys, use words within a short levenshtein
     # distance away from the real answer.
@@ -91,7 +91,7 @@ def quiz_words(wordlist_ids, queries):
 
 @bp.cli.command('quiz_definitions')
 @click.option('--wordlist_ids', '-l', multiple=True)
-@click.option('--queries', '-q', multiple=True)
+@click.option('--query', '-q', multiple=True)
 @click.option('--tags', '-t', multiple=True)
 def quiz_definitions(wordlist_ids, queries, tags):
     # to run this, use the command:
@@ -213,7 +213,7 @@ def quiz_definitions(wordlist_ids, queries, tags):
 @bp.cli.command('quiz')
 @click.argument('quiz_key')
 @click.option('--wordlist_ids', '-l', multiple=True)
-@click.option('--queries', '-q', multiple=True)
+@click.option('--query', '-q', multiple=True)
 @click.option('--tags', '-t', multiple=True)
 def quiz(quiz_key, wordlist_ids, queries, tags):
     # to run this, use the command:

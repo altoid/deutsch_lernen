@@ -8,7 +8,7 @@ bp = Blueprint('app_quiz_defs', __name__)
 
 QUIZ_KEY = 'definitions'
 WORDLISTS = {}  # maps wordlist_ids to names
-QUERIES = {'oldest_first'}
+QUERY = 'oldest_first'
 TAGS = set()
 SAVED_PAYLOADS = []  # so we can derive words missed
 
@@ -82,12 +82,12 @@ def set_wordlists(given_wordlist_ids):
 
 def reset():
     global WORDLISTS
-    global QUERIES
+    global QUERY
     global TAGS
     global SAVED_PAYLOADS
 
     WORDLISTS.clear()
-    QUERIES = {'oldest_first'}
+    QUERY = {'oldest_first'}
     TAGS.clear()
     SAVED_PAYLOADS.clear()
 
@@ -153,7 +153,7 @@ def status():
     global WORDLISTS
     global TAGS
     global SAVED_PAYLOADS
-    global QUERIES
+    global QUERY
 
     print("""
 ****************************************
@@ -181,9 +181,7 @@ Tags:""")
         print("** no tags")
 
     print("""
-Queries:""")
-    for q in QUERIES:
-        print(q)
+Query:  %s""" % QUERY)
 
     url = url_for('api_wordlist.count_words',
                   wordlist_id=list(WORDLISTS.keys()),
@@ -249,8 +247,8 @@ or enter list of tags, space separated
         pprint(TAGS)
 
 
-def select_queries():
-    global QUERIES
+def select_query():
+    global QUERY
 
     menu = """
 c - clear selection
@@ -258,33 +256,32 @@ s - show selection
 q - show possible queries
 m - show menu
 r - return to main menu
-or enter list of query names, space separated
+or enter query name
 """
 
     print(menu)
-    print("current queries:  ", end=' ')
-    pprint(QUERIES)
+    print("current query:  %s" % QUERY)
     possible_queries = set(api_quiz.DEFINED_QUERIES.keys())
 
     while True:
-        prompt = '[select queries] ---> '
+        prompt = '[select query] ---> '
         answer = input(prompt).strip().casefold()
         if not answer:
             continue
 
         if answer == 'c':
-            QUERIES.clear()
+            QUERY.clear()
             print("selection cleared")
             continue
 
         if answer == 's':
-            print("selection:  ", end=' ')
-            pprint(QUERIES)
+            print("selection:  %s" % QUERY)
             continue
 
         if answer == 'q':
-            print("possible queries:  ", end=' ')
-            pprint(set(api_quiz.DEFINED_QUERIES.keys()))
+            print("possible queries:")
+            for q in api_quiz.DEFINED_QUERIES.keys():
+                print(" %s" % q)
             continue
 
         if answer == 'm':
@@ -294,15 +291,12 @@ or enter list of query names, space separated
         if answer == 'r':
             break
 
-        given = set(answer.split())
-        unknown = given - possible_queries
-        QUERIES |= given & possible_queries
+        if answer not in possible_queries:
+            print("not a valid query:  %s" % answer)
+            continue
 
-        print("selection:  ", end=' ')
-        pprint(QUERIES)
-        if unknown:
-            print("unknown queries:  ", end=' ')
-            pprint(unknown)
+        QUERY = answer
+        print("selection:  %s" % QUERY)
 
 
 def show_missed_words():
@@ -334,14 +328,14 @@ def show_missed_words():
         print("%s (%s)" % (w['word'], w['pos_name']))
 
 
-def get_next_word(wordlist_ids, queries):
-    # wordlist_ids and queries are both lists and may be empty
+def get_next_word(wordlist_ids, query):
+    # wordlist_ids and query are both lists and may be empty
     global QUIZ_KEY
 
     url = url_for('api_quiz.get_word_to_test',
                   wordlist_id=wordlist_ids,
                   quiz_key=QUIZ_KEY,
-                  query=queries,
+                  query=query,
                   _external=True)
 
     while True:
@@ -361,9 +355,8 @@ def get_next_word(wordlist_ids, queries):
     yield None
 
 
-def get_next_word_with_tags(wordlist_id, queries, tags):
+def get_next_word_with_tags(wordlist_id, query, tags):
     # wordlist_id is a single id, not a list.
-    # queries is a (possibly empty) list
 
     global QUIZ_KEY
 
@@ -371,7 +364,7 @@ def get_next_word_with_tags(wordlist_id, queries, tags):
                   wordlist_id=wordlist_id,
                   tag=tags,
                   quiz_key=QUIZ_KEY,
-                  query=queries,
+                  query=query,
                   _external=True)
 
     while True:
@@ -416,17 +409,17 @@ def make_triple(function, *args, **kwargs):
 
 def quiz_definitions():
     global WORDLISTS
-    global QUERIES
+    global QUERY
     global TAGS
 
     wordlist_ids = list(WORDLISTS.keys())
-    queries = list(QUERIES)
+    query = QUERY
     tags = list(TAGS)
 
     if len(wordlist_ids) == 1:
-        function_and_args = make_triple(get_next_word_with_tags, wordlist_ids[0], queries, tags)
+        function_and_args = make_triple(get_next_word_with_tags, wordlist_ids[0], query, tags)
     else:
-        function_and_args = make_triple(get_next_word, wordlist_ids, queries)
+        function_and_args = make_triple(get_next_word, wordlist_ids, query)
 
     quiz_loop(function_and_args)
 
@@ -562,9 +555,9 @@ CALLBACKS = {
         'callback': select_tags
     },
     'k': {
-        'tagline': 'select queries',
+        'tagline': 'select query',
         'display_order': 5,
-        'callback': select_queries
+        'callback': select_query
     },
     'go': {
         'tagline': 'start quiz',
@@ -611,9 +604,9 @@ CALLBACKS = {
 
 @bp.cli.command('quiz_defs_2')
 @click.option('--wordlist_ids', '-l', multiple=True)
-@click.option('--queries', '-q', multiple=True)
+@click.option('--query', '-q', multiple=True)
 @click.option('--tags', '-t', multiple=True)
-def quiz_words(wordlist_ids, queries, tags):
+def quiz_words(wordlist_ids, query, tags):
     global WORDLISTS
     global TAGS
 

@@ -78,7 +78,7 @@ limit 1
 """
 
 # get the word we have seen least recently.
-# this is the only one of the quiz queries that is guaranteed to get every word, if we run it enough times.
+# this is the only one of the quiz query that is guaranteed to get every word, if we run it enough times.
 OLDEST_FIRST_SQL = COMMON_SQL + """
 select 
     'oldest_first' query_name, 
@@ -161,22 +161,17 @@ DEFINED_QUERIES = {
 }
 
 
-def run_quiz_queries(cursor, queries, quiz_key, word_id_filter, word_ids):
-    words_chosen = []
+def run_quiz_query(cursor, query, quiz_key, word_id_filter, word_ids):
+    if query in DEFINED_QUERIES:
+        sql = DEFINED_QUERIES[query] % {
+            'quiz_key': quiz_key,
+            'word_id_filter': word_id_filter
+        }
 
-    for q in queries:
-        if q in DEFINED_QUERIES:
-            sql = DEFINED_QUERIES[q] % {
-                'quiz_key': quiz_key,
-                'word_id_filter': word_id_filter
-            }
-
-            cursor.execute(sql, word_ids)
-            rows = cursor.fetchall()
-            if rows:
-                words_chosen.append(rows[0])
-
-    return words_chosen
+        cursor.execute(sql, word_ids)
+        rows = cursor.fetchall()
+        if rows:
+            return rows[0]
 
 
 @bp.route('/<string:quiz_key>/word/<int:word_id>')
@@ -245,13 +240,9 @@ def get_word_to_test_single_wordlist(quiz_key, wordlist_id):
     tags = request.args.getlist('tag')
 
     # possible values for query are keys in DEFINED_QUERIES above
-    queries = request.args.getlist('query')
-    if not queries:
-        queries = list(DEFINED_QUERIES.keys())
-
-    undefined_queries = {x for x in queries} - set(DEFINED_QUERIES.keys())
-    if undefined_queries:
-        return "unknown queries: %s" % ', '.join(undefined_queries), 400
+    query = request.args.get('query', 'oldest_first')
+    if query not in DEFINED_QUERIES.keys():
+        return "unknown query: %s" % query, 400
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
@@ -281,12 +272,11 @@ def get_word_to_test_single_wordlist(quiz_key, wordlist_id):
 
             word_id_filter = " and word_id in (%(word_id_args)s) " % {'word_id_args': word_id_args}
 
-            words_chosen = run_quiz_queries(cursor, queries, quiz_key, word_id_filter, word_ids)
+            word_chosen = run_quiz_query(cursor, query, quiz_key, word_id_filter, word_ids)
 
-            if words_chosen:
-                winner = random.choice(words_chosen)
+            if word_chosen:
                 # if this is a noun, add its article to the response.
-                url = url_for('api_word.get_word_by_id', word_id=winner['word_id'], _external=True)
+                url = url_for('api_word.get_word_by_id', word_id=word_chosen['word_id'], _external=True)
 
                 r = requests.get(url)
                 if not r:
@@ -295,9 +285,9 @@ def get_word_to_test_single_wordlist(quiz_key, wordlist_id):
                 word_info = r.json()
                 if word_info['pos_name'].casefold() == 'noun':
                     article = list(filter(lambda x: x['attrkey'] == 'article', word_info['attributes']))
-                    winner['article'] = article[0]['attrvalue']
+                    word_chosen['article'] = article[0]['attrvalue']
 
-                result = [winner]
+                result = [word_chosen]
                 jsonschema.validate(result, dlernen_json_schema.QUIZ_RESPONSE_SCHEMA)
 
                 return result
@@ -311,13 +301,10 @@ def get_word_to_test(quiz_key):
     wordlist_ids = list(map(int, wordlist_ids))
 
     # possible values for query are keys in DEFINED_QUERIES above
-    queries = request.args.getlist('query')
-    if not queries:
-        queries = list(DEFINED_QUERIES.keys())
+    query = request.args.get('query', 'oldest_first')
 
-    undefined_queries = {x for x in queries} - set(DEFINED_QUERIES.keys())
-    if undefined_queries:
-        return "unknown queries: %s" % ', '.join(undefined_queries), 400
+    if query not in DEFINED_QUERIES.keys():
+        return "unknown query: %s" % query, 400
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         # check that quiz_key exists
@@ -362,23 +349,22 @@ def get_word_to_test(quiz_key):
                 word_id_args = ', '.join(word_id_args)
                 word_id_filter = " and word_id in (%(word_id_args)s) " % {'word_id_args': word_id_args}
 
-        words_chosen = []
-
-        #     wordlist_ids and     word_ids  - we have nonempty wordlists, run the queries
-        #     wordlist_ids and not word_ids  - wordlists are empty, don't run the queries
+        #     wordlist_ids and     word_ids  - we have nonempty wordlists, run the query
+        #     wordlist_ids and not word_ids  - wordlists are empty, don't run the query
         # not wordlist_ids and     word_ids  - won't happen
         # not wordlist_ids and not word_ids  - whole dictionary, this case is legit
 
+        word_chosen = {}
+
         if wordlist_ids and word_ids:
-            words_chosen = run_quiz_queries(cursor, queries, quiz_key, word_id_filter, word_ids)
+            word_chosen = run_quiz_query(cursor, query, quiz_key, word_id_filter, word_ids)
 
         if not wordlist_ids and not word_ids:
-            words_chosen = run_quiz_queries(cursor, queries, quiz_key, word_id_filter, word_ids)
+            word_chosen = run_quiz_query(cursor, query, quiz_key, word_id_filter, word_ids)
 
-        if words_chosen:
-            winner = random.choice(words_chosen)
+        if word_chosen:
             # if this is a noun, add its article to the response.
-            url = url_for('api_word.get_word_by_id', word_id=winner['word_id'], _external=True)
+            url = url_for('api_word.get_word_by_id', word_id=word_chosen['word_id'], _external=True)
 
             r = requests.get(url)
             if not r:
@@ -387,9 +373,9 @@ def get_word_to_test(quiz_key):
             word_info = r.json()
             if word_info['pos_name'].casefold() == 'noun':
                 article = list(filter(lambda x: x['attrkey'] == 'article', word_info['attributes']))
-                winner['article'] = article[0]['attrvalue']
+                word_chosen['article'] = article[0]['attrvalue']
 
-            result = [winner]
+            result = [word_chosen]
             jsonschema.validate(result, dlernen_json_schema.QUIZ_RESPONSE_SCHEMA)
 
             return result

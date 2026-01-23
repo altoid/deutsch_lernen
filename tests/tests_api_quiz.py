@@ -145,7 +145,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
     def test_undefined_query(self):
         url = url_for('api_quiz.get_word_to_test',
                       quiz_key=self.QUIZ_KEY,
-                      query=[''.join(random.choices(string.ascii_lowercase, k=11))],
+                      query=''.join(random.choices(string.ascii_lowercase, k=11)),
                       wordlist_id=[self.wordlist_id],
                       _external=True)
         r = self.client.get(url)
@@ -340,7 +340,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
         url = url_for('api_quiz.get_word_to_test_single_wordlist',
                       wordlist_id=self.wordlist_id,
                       quiz_key=self.QUIZ_KEY,
-                      query=[''.join(random.choices(string.ascii_lowercase, k=10))],
+                      query=''.join(random.choices(string.ascii_lowercase, k=10)),
                       _external=True)
         r = self.client.get(url)
         self.assertEqual(400, r.status_code)
