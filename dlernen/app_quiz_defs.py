@@ -270,7 +270,7 @@ or enter query name
             continue
 
         if answer == 'c':
-            QUERY.clear()
+            QUERY = None
             print("selection cleared")
             continue
 
@@ -289,6 +289,8 @@ or enter query name
             continue
 
         if answer == 'r':
+            if not QUERY:
+                QUERY = 'oldest_first'
             break
 
         if answer not in possible_queries:
