@@ -1,7 +1,6 @@
 from flask import Blueprint, request, current_app, url_for
 import requests
 from mysql.connector import connect
-import random
 from contextlib import closing
 import jsonschema
 from dlernen import dlernen_json_schema, common

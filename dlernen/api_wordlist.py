@@ -575,8 +575,11 @@ def delete_from_wordlist(wordlist_id):
             return str(e), 500
 
 
-@bp.route('/count')
-def count_words():
+@bp.route('/word_ids')
+def get_word_ids_from_wordlists():
+    # returns a list of the ids of the words in the given wordlists.  returns all the word ids
+    # in the dictionary if no wordlist ids are given.  the list will not have dups.
+
     wordlist_ids = list(set(request.args.getlist('wordlist_id')))
     tags = list(set(request.args.getlist('tag')))
 
@@ -590,7 +593,7 @@ def count_words():
             arglist = ['%s'] * len(tags)
             arglist = ', '.join(arglist)
             sql = """
-            select count(*) wordcount
+            select distinct word_id
             from tag
             where wordlist_id = %%s
             and tag in (%(arglist)s)
@@ -600,19 +603,19 @@ def count_words():
             cursor.execute(sql, args)
 
             rows = cursor.fetchall()
-            return rows[0]
+            return {'word_ids': [x['word_id'] for x in rows]}
 
         if wordlist_ids:
             word_ids = common.get_word_ids_from_wordlists(wordlist_ids, cursor)
 
-            return {'wordcount': len(word_ids)}
+            return {'word_ids': word_ids}
 
         sql = """
-        select count(*) wordcount
+        select id AS word_id
         from word
         """
 
         cursor.execute(sql)
 
         rows = cursor.fetchall()
-        return rows[0]
+        return {'word_ids': [x['word_id'] for x in rows]}
