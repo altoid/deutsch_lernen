@@ -54,7 +54,7 @@ def get_word_by_id(word_id):
 
     result = r.json()
 
-    r = requests.get(url_for('api_wordlist.get_wordlists_by_word_id', word_id=word_id, _external=True))
+    r = requests.get(url_for('api_wordlists.get_wordlists_by_word_id', word_id=word_id, _external=True))
     if not r:
         return render_template("error.html",
                                message=r.text,
@@ -93,7 +93,7 @@ def lookup_by_post():
     results = sorted(results, key=lambda x: str.lower(x['word']))
     template_args = []
     for result in results:
-        r = requests.get(url_for('api_wordlist.get_wordlists_by_word_id', word_id=result['word_id'], _external=True))
+        r = requests.get(url_for('api_wordlists.get_wordlists_by_word_id', word_id=result['word_id'], _external=True))
         if not r:
             return render_template("error.html",
                                    message=r.text,
@@ -109,7 +109,7 @@ def lookup_by_post():
 
 @bp.route('/wordlists')
 def wordlists():
-    url = url_for('api_wordlist.get_wordlists', _external=True)
+    url = url_for('api_wordlists.get_wordlists', _external=True)
     r = requests.get(url)
     if r:
         result = json.loads(r.text)

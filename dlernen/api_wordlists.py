@@ -141,7 +141,7 @@ def get_wordlists_by_word_id(word_id):
 
         result = []
         if wordlist_ids:
-            url = url_for('api_wordlist.get_wordlists', wordlist_id=wordlist_ids, _external=True)
+            url = url_for('api_wordlists.get_wordlists', wordlist_id=wordlist_ids, _external=True)
             r = requests.get(url)
             if not r:
                 return r.text, r.status_code
