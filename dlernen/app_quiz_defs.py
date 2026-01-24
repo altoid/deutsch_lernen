@@ -264,6 +264,7 @@ or enter query name
     print(menu)
     print("current query:  %s" % QUERY)
     possible_queries = set(api_quiz.DEFINED_QUERIES.keys())
+    possible_queries.add('random')
 
     while True:
         prompt = '[select query] ---> '
@@ -282,8 +283,8 @@ or enter query name
 
         if answer == 'q':
             print("possible queries:")
-            for q in api_quiz.DEFINED_QUERIES.keys():
-                print(" %s" % q)
+            for q in possible_queries:
+                print("    %s" % q)
             continue
 
         if answer == 'm':
