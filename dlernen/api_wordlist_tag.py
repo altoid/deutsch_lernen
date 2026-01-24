@@ -10,10 +10,10 @@ import requests
 
 # view functions for tags and word/tag linkages in wordlists
 
-bp = Blueprint('api_wordlist_tag', __name__)
+bp = Blueprint('api_wordlist_tag', __name__, url_prefix='/api/wordlist/tags')
 
 
-@bp.route('/api/wordlist/tags/<int:wordlist_id>/<int:word_id>', methods=['GET'])
+@bp.route('/<int:wordlist_id>/<int:word_id>', methods=['GET'])
 def get_tags(wordlist_id, word_id):
     # perform the following checks:
     #
@@ -70,7 +70,7 @@ def get_tags(wordlist_id, word_id):
             return str(e), 500
 
 
-@bp.route('/api/wordlist/tags/<int:wordlist_id>', methods=['GET'])
+@bp.route('/<int:wordlist_id>', methods=['GET'])
 def get_all_tags(wordlist_id):
     # get all the tags across all the words in the wordlist.
     # perform the following checks:
@@ -123,7 +123,7 @@ def get_all_tags(wordlist_id):
             return str(e), 500
 
 
-@bp.route('/api/wordlist/tags/<int:wordlist_id>/<int:word_id>', methods=['POST'])
+@bp.route('/<int:wordlist_id>/<int:word_id>', methods=['POST'])
 def add_tags(wordlist_id, word_id):
     # returns a message and a status code, no object
 
@@ -208,7 +208,7 @@ def add_tags(wordlist_id, word_id):
             return str(e), 500
 
 
-@bp.route('/api/wordlist/tags/<int:wordlist_id>/<int:word_id>', methods=['DELETE'])
+@bp.route('/<int:wordlist_id>/<int:word_id>', methods=['DELETE'])
 def delete_tags(wordlist_id, word_id):
     # operation is not allowed on smart lists.
     url = url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True)

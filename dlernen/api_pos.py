@@ -6,7 +6,7 @@ from contextlib import closing
 import jsonschema
 
 
-bp = Blueprint('api_pos', __name__)
+bp = Blueprint('api_pos', __name__, url_prefix='/api/pos')
 
 
 def __get_pos(sql, args):
@@ -51,7 +51,7 @@ def __get_pos(sql, args):
         return result
 
 
-@bp.route('/api/pos/<int:word_id>')
+@bp.route('/<int:word_id>')
 def get_pos_for_word_id(word_id):
     sql = """
     WITH pos_data
@@ -90,7 +90,7 @@ def get_pos_for_word_id(word_id):
     return __get_pos(sql, {'word_id': word_id})
 
 
-@bp.route('/api/pos/<string:word>')
+@bp.route('/<string:word>')
 def get_pos_for_word(word):
     # TODO - make sure the word conforms to dlernen_json_schema.WORD_PATTERN
     sql = """
@@ -130,7 +130,7 @@ def get_pos_for_word(word):
     return __get_pos(sql, {'word': word})
 
 
-@bp.route('/api/pos')
+@bp.route('')
 def get_pos():
     sql = """
     SELECT p.NAME AS pos_name,
@@ -151,7 +151,7 @@ def get_pos():
     return __get_pos(sql, None)
 
 
-@bp.route('/api/pos_keyword_mappings')
+@bp.route('/keyword_mappings')
 def get_pos_keyword_mappings():
     # from the comprehensive pos structure, create mappings of attribute and POS names to their respective ids,
     # and vice versa.

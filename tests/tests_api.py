@@ -67,7 +67,7 @@ class APITests(unittest.TestCase):
 
     def test_get_words_empty_list_1(self):
         with self.app.test_request_context():
-            url = url_for('api_word.get_words', _external=True)
+            url = url_for('api_words.get_words', _external=True)
             payload = {
             }
 
@@ -78,7 +78,7 @@ class APITests(unittest.TestCase):
 
     def test_get_words_empty_list_2(self):
         with self.app.test_request_context():
-            url = url_for('api_word.get_words', _external=True)
+            url = url_for('api_words.get_words', _external=True)
             payload = {
                 "word_ids": []
             }

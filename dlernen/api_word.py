@@ -5,74 +5,19 @@ from mysql.connector import connect
 from dlernen import dlernen_json_schema as js, common
 from contextlib import closing
 import jsonschema
-import sys
-import os
 
 # view functions for /api/word URLs are here.
 
-bp = Blueprint('api_word', __name__)
+bp = Blueprint('api_word', __name__, url_prefix='/api/word')
 
 
-def process_word_query_result(rows):
-    """
-    take the rows returned by the query in get_words_from_word_ids and morph them into the format specified
-    by WORDS_RESPONSE_SCHEMA.
-    """
-    dict_result = {}
-    for r in rows:
-        if not dict_result.get(r['word_id']):
-            dict_result[r['word_id']] = {}
-            dict_result[r['word_id']]['attributes'] = []
-        attr = {
-            "attrkey": r['attrkey'],
-            "attrvalue": r['attrvalue'],
-            "sort_order": r['sort_order']
-        }
-        dict_result[r['word_id']]['word'] = r['word']
-        dict_result[r['word_id']]['word_id'] = r['word_id']
-        dict_result[r['word_id']]['pos_name'] = r['pos_name']
-        dict_result[r['word_id']]['attributes'].append(attr)
-    result = list(dict_result.values())
-    return result
-
-
-def get_words_from_word_ids(word_ids):
-    """
-    returns word object for every valid word id.  returns empty list if no word_id was found.
-    """
-    format_args = ['%s'] * len(word_ids)
-    format_args = ', '.join(format_args)
-    sql = """
-    select
-        pos_name,
-        word,
-        word_id,
-        attrkey,
-        attrvalue,
-        sort_order
-    from
-        mashup_v
-    where word_id in (%s)
-    order by sort_order
-    """ % format_args
-
-    result = []
-    if word_ids:
-        with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            cursor.execute(sql, word_ids)
-            rows = cursor.fetchall()
-            result = process_word_query_result(rows)
-
-    return result
-
-
-@bp.route('/api/word/<int:word_id>')
+@bp.route('/<int:word_id>')
 def get_word_by_id(word_id):
     """
     returns word object, or 404 if word_id not found.
     """
     word_ids = [word_id]
-    words = get_words_from_word_ids(word_ids)
+    words = common.get_words_from_word_ids(word_ids)
 
     jsonschema.validate(words, js.WORDS_RESPONSE_SCHEMA)
 
@@ -82,7 +27,7 @@ def get_word_by_id(word_id):
     return "word id %s not found" % word_id, 404
 
 
-@bp.route('/api/word/<string:word>')
+@bp.route('/<string:word>')
 def get_word(word):
     """
     return every word that matches the given word.  will return 0 or more results, since the same word
@@ -124,7 +69,7 @@ def get_word(word):
         rows = cursor.fetchall()
         word_ids = list(map(lambda x: x['word_id'], rows))
 
-        result = get_words_from_word_ids(word_ids)
+        result = common.get_words_from_word_ids(word_ids)
         if not result:
             return "no match for %s" % word, 404
 
@@ -168,7 +113,7 @@ def save_attributes(word_id, attributes_adding, attributes_deleting, cursor):
         cursor.executemany(sql, args)
 
 
-@bp.route('/api/word', methods=['POST'])
+@bp.route('', methods=['POST'])
 def add_word():
     # add a single word to the dictionary.  the word's part-of-speech must be specified.  if successful, this
     # operation creates a single word id.
@@ -290,7 +235,7 @@ def add_word():
             return "error, transaction rolled back", 500
 
 
-@bp.route('/api/word/<int:word_id>', methods=['PUT'])
+@bp.route('/<int:word_id>', methods=['PUT'])
 def update_word(word_id):
     try:
         payload = request.get_json()
@@ -398,7 +343,7 @@ def update_word(word_id):
             return "error, transaction rolled back", 500
 
 
-@bp.route('/api/word/<int:word_id>', methods=['DELETE'])
+@bp.route('/<int:word_id>', methods=['DELETE'])
 def delete_word(word_id):
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
@@ -412,50 +357,3 @@ def delete_word(word_id):
         except Exception as e:
             cursor.execute('rollback')
             return 'error deleting word_id %s' % word_id, 500
-
-
-@bp.route('/api/words', methods=['GET'])
-def get_words_in_wordlists():
-    """
-    given a list of wordlist ids, get all the words in those lists.  if no word list ids are given, dump
-    the whole dictionary.
-    """
-    # TODO - currently no unit tests for this.  do we need any?
-
-    wordlist_ids = request.args.getlist('wordlist_id')
-    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        if wordlist_ids:
-            word_ids = common.get_word_ids_from_wordlists(wordlist_ids, cursor)
-        else:
-            sql = """
-            select id as word_id from word
-            """
-
-            cursor.execute(sql)
-            rows = cursor.fetchall()
-
-            word_ids = list(map(lambda x: x['word_id'], rows))
-
-    result = get_words_from_word_ids(word_ids)
-
-    jsonschema.validate(result, js.WORDS_RESPONSE_SCHEMA)
-
-    return result
-
-
-@bp.route('/api/words', methods=['PUT'])
-def get_words():
-    # this is for PUT requests because we have to send in the list of words ids as a payload.
-    # if we try to put the word_ids into a GET URL, the URL might be too long.
-    """
-    given a list of word_ids, get the details for each word:  word, attributes, etc.
-    """
-
-    payload = request.get_json()
-
-    word_ids = payload.get('word_ids', [])
-    result = get_words_from_word_ids(word_ids)
-
-    jsonschema.validate(result, js.WORDS_RESPONSE_SCHEMA)
-
-    return result
