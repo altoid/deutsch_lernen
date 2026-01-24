@@ -1,3 +1,5 @@
+import random
+
 from flask import Blueprint, url_for
 from pprint import pprint
 import requests
@@ -183,7 +185,7 @@ Tags:""")
     print("""
 Query:  %s""" % QUERY)
 
-    url = url_for('api_wordlist.count_words',
+    url = url_for('api_wordlist.get_word_ids_from_wordlists',
                   wordlist_id=list(WORDLISTS.keys()),
                   tag=list(TAGS),
                   _external=True)
@@ -191,7 +193,7 @@ Query:  %s""" % QUERY)
     if r:
         obj = r.json()
         print("""
-Word count:  %s""" % obj['wordcount'])
+Word count:  %s""" % len(obj['word_ids']))
     else:
         print("could not retrieve word count:  [%s - %s]" % (r.text, r.status_code))
 
@@ -315,9 +317,9 @@ def show_missed_words():
     """)
         return
 
-    r = requests.put(url_for('api_word.get_words', _external=True), json={'word_ids': missed_word_ids})
+    r = requests.put(url_for('api_words.get_words', _external=True), json={'word_ids': missed_word_ids})
     if not r:
-        print("api_word.get_words failed:  [%s - %s]" % (r.text, r.status_code))
+        print("api_words.get_words failed:  [%s - %s]" % (r.text, r.status_code))
         return
 
     obj = r.json()
@@ -409,6 +411,34 @@ def make_triple(function, *args, **kwargs):
     return function, args, kwargs
 
 
+def get_random_next_word(wordlist_ids, tags):
+    r = requests.get(url_for('api_wordlist.get_word_ids_from_wordlists',
+                             wordlist_id=wordlist_ids,
+                             tag=tags,
+                             _external=True))
+    obj = r.json()
+    word_ids = obj['word_ids']
+    random.shuffle(word_ids)  # shuffle in place
+
+    word_ids_to_attrs = {}
+    i = 0
+    while True:
+        if word_ids[i] not in word_ids_to_attrs:
+            url = url_for('api_quiz.get_all_attr_values_for_quiz',
+                          quiz_key=QUIZ_KEY,
+                          word_id=word_ids[i],
+                          _external=True)
+            r = requests.get(url)
+            obj = r.json()
+            word_ids_to_attrs[word_ids[i]] = obj[0]
+
+        yield word_ids_to_attrs[word_ids[i]]
+
+        i += 1
+        i = i % len(word_ids)
+
+
+
 def quiz_definitions():
     global WORDLISTS
     global QUERY
@@ -418,7 +448,9 @@ def quiz_definitions():
     query = QUERY
     tags = list(TAGS)
 
-    if len(wordlist_ids) == 1:
+    if QUERY == 'random':
+        function_and_args = make_triple(get_random_next_word, wordlist_ids, tags)
+    elif len(wordlist_ids) == 1:
         function_and_args = make_triple(get_next_word_with_tags, wordlist_ids[0], query, tags)
     else:
         function_and_args = make_triple(get_next_word, wordlist_ids, query)
@@ -482,7 +514,7 @@ def quiz_loop(generating_function_and_args):
 
             if answer.startswith('h'):
                 # show wordlists this word is in.
-                r = requests.get(url_for('api_wordlist.get_wordlists_by_word_id',
+                r = requests.get(url_for('api_wordlists.get_wordlists_by_word_id',
                                          word_id=attr_to_test['word_id'],
                                          _external=True))
                 if not r:
