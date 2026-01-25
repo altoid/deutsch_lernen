@@ -1,10 +1,68 @@
 from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app
 import requests
 import json
+import base64
+import urllib.parse
 from dlernen import dlernen_json_schema as js
 from pprint import pprint
 
 bp = Blueprint('dlernen', __name__, url_prefix='/dlernen')
+
+
+class TagState(object):
+    def __init__(self, wordlist_id=None, tags_to_states=None, tags=None):
+        self.wordlist_id = wordlist_id
+
+        if tags_to_states:
+            self.tags_to_states = tags_to_states
+        else:
+            self.tags_to_states = dict()
+
+        if tags:
+            self.tags = tags
+        else:
+            self.tags = []
+
+        if not tags:
+            self.update()
+
+    def update(self):
+        current_tags = set(self.tags_to_states.keys())
+        r = requests.get(url_for('api_wordlist_tag.get_all_tags',
+                                 wordlist_id=self.wordlist_id,
+                                 _external=True))
+        obj = r.json()
+        tags = obj['tags']
+        self.tags = sorted(tags)
+
+        tags_set = set(tags)
+        keys_to_remove = current_tags - tags_set
+        keys_to_add = tags_set - current_tags
+        for k in keys_to_remove:
+            del self.tags_to_states[k]
+        for k in keys_to_add:
+            self.tags_to_states[k] = False  # unchecked
+
+    def tag_state(self):
+        # returns tuple of (<tag>, state), for rendering, in sorted order
+        states = [self.tags_to_states[k] for k in self.tags]
+        return zip(self.tags, states)
+
+    def selected_tags(self):
+        return list(filter(lambda x: self.tags_to_states[x], self.tags))
+
+    def clear(self):
+        for k in self.tags_to_states.keys():
+            self.tags_to_states[k] = False  # unchecked
+
+    def set_tags(self, tags):
+        for t in tags:
+            if t in self.tags_to_states:
+                self.tags_to_states[t] = True  # checked
+
+    def serialize(self):
+        json_bytes = json.dumps(self, default=lambda x: x.__dict__).encode("utf-8")
+        return base64.urlsafe_b64encode(json_bytes).decode("ascii")
 
 
 def chunkify(arr, nchunks=1):
@@ -148,12 +206,37 @@ def list_editor(wordlist_id):
                            wordlist=wordlist)
 
 
+@bp.route('/wordlist/update_tags/<int:wordlist_id>', methods=['POST'])
+def update_tag_state(wordlist_id):
+    serialized_tag_state = request.form.get('serialized_tag_state')
+
+    deserialized_thing = json.loads(base64.urlsafe_b64decode(serialized_tag_state))
+
+    # the checkboxes are all called "tag"
+    tags = request.form.getlist('tag')
+
+    # we can only serialize the __dict__, have to reconstitute an object from it
+    tag_state_object = TagState(**deserialized_thing)
+    tag_state_object.clear()
+    tag_state_object.set_tags(tags)
+
+    serialized_tag_state = tag_state_object.serialize()
+
+    return redirect(url_for('dlernen.wordlist_page', wordlist_id=wordlist_id,
+                            serialized_tag_state=serialized_tag_state))
+
+
 @bp.route('/wordlist/<int:wordlist_id>')
 def wordlist_page(wordlist_id):
-    # FIXME - hack until i make a UI for setting tags
-    tag = request.args.getlist('tag')
+    serialized_tag_state = request.args.get('serialized_tag_state')
+    if serialized_tag_state:
+        deserialized_thing = json.loads(base64.urlsafe_b64decode(serialized_tag_state))
+        tag_state_object = TagState(**deserialized_thing)
+    else:
+        tag_state_object = TagState(wordlist_id)
+    pprint(tag_state_object.__dict__)
     r = requests.get(url_for('api_wordlist.get_wordlist',
-                             tag=tag,
+                             tag=tag_state_object.selected_tags(),
                              wordlist_id=wordlist_id,
                              _external=True))
     if r.status_code == 404:
@@ -183,9 +266,12 @@ def wordlist_page(wordlist_id):
     nchunks = request.args.get('nchunks', current_app.config['NCHUNKS'], type=int)
     known_words = chunkify(wordlist['known_words'], nchunks)
     unknown_words = chunkify(wordlist['unknown_words'], nchunks)
+    serialized_tag_state = tag_state_object.serialize()
 
     return render_template('wordlist.html',
                            wordlist=wordlist,
+                           tag_state=tag_state_object.tag_state(),
+                           serialized_tag_state=serialized_tag_state,
                            known_words=known_words,
                            unknown_words=unknown_words)
 
