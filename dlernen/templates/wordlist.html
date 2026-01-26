@@ -69,7 +69,7 @@ Wordlist:  {{ wordlist.name }}
         </tr>
     </table>
     {% endif %}
-
+    {% if serialized_tag_state %}
     <h2>Tags</h2>
     <form action="{{ url_for('dlernen.update_tag_state', wordlist_id=wordlist.wordlist_id) }}" method="post">
         <input type="hidden" value="{{serialized_tag_state}}" name="serialized_tag_state"/>
@@ -95,6 +95,7 @@ Wordlist:  {{ wordlist.name }}
         </table>
         <input type="submit" value="Filter list by tags"/>
     </form>
+    {% endif %}
     <h2>Bekannte Worte ({{ wordlist.known_words|length }})</h2>
     <table>
         {########################### known words #######################}

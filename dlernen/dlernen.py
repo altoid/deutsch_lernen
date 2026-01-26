@@ -234,7 +234,7 @@ def wordlist_page(wordlist_id):
         tag_state_object = TagState(**deserialized_thing)
     else:
         tag_state_object = TagState(wordlist_id)
-    pprint(tag_state_object.__dict__)
+
     r = requests.get(url_for('api_wordlist.get_wordlist',
                              tag=tag_state_object.selected_tags(),
                              wordlist_id=wordlist_id,
@@ -266,6 +266,14 @@ def wordlist_page(wordlist_id):
     nchunks = request.args.get('nchunks', current_app.config['NCHUNKS'], type=int)
     known_words = chunkify(wordlist['known_words'], nchunks)
     unknown_words = chunkify(wordlist['unknown_words'], nchunks)
+
+    if wordlist['list_type'] == 'smart':
+        return render_template('wordlist.html',
+                               wordlist=wordlist,
+                               tag_state=tag_state_object.tag_state(),
+                               known_words=known_words,
+                               unknown_words=unknown_words)
+
     serialized_tag_state = tag_state_object.serialize()
 
     return render_template('wordlist.html',
