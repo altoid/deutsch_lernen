@@ -2,7 +2,6 @@ from flask import Blueprint, request, render_template, redirect, url_for, flash,
 import requests
 import json
 import base64
-import urllib.parse
 from dlernen import dlernen_json_schema as js
 from pprint import pprint
 
@@ -10,6 +9,12 @@ bp = Blueprint('dlernen', __name__, url_prefix='/dlernen')
 
 
 class TagState(object):
+    @staticmethod
+    def deserialize(blob):
+        # we can only serialize the __dict__, have to reconstitute an object from it
+        deserialized_thing = json.loads(base64.urlsafe_b64decode(blob))
+        return TagState(**deserialized_thing)
+
     def __init__(self, wordlist_id=None, tags_to_states=None, tags=None):
         self.wordlist_id = wordlist_id
 
@@ -46,7 +51,7 @@ class TagState(object):
     def tag_state(self):
         # returns tuple of (<tag>, state), for rendering, in sorted order
         states = [self.tags_to_states[k] for k in self.tags]
-        return zip(self.tags, states)
+        return list(zip(self.tags, states))
 
     def selected_tags(self):
         return list(filter(lambda x: self.tags_to_states[x], self.tags))
@@ -208,15 +213,11 @@ def list_editor(wordlist_id):
 
 @bp.route('/wordlist/update_tags/<int:wordlist_id>', methods=['POST'])
 def update_tag_state(wordlist_id):
-    serialized_tag_state = request.form.get('serialized_tag_state')
-
-    deserialized_thing = json.loads(base64.urlsafe_b64decode(serialized_tag_state))
-
     # the checkboxes are all called "tag"
     tags = request.form.getlist('tag')
 
-    # we can only serialize the __dict__, have to reconstitute an object from it
-    tag_state_object = TagState(**deserialized_thing)
+    tag_state_object = TagState.deserialize(request.form.get('serialized_tag_state'))
+
     tag_state_object.clear()
     tag_state_object.set_tags(tags)
 
@@ -230,8 +231,7 @@ def update_tag_state(wordlist_id):
 def wordlist_page(wordlist_id):
     serialized_tag_state = request.args.get('serialized_tag_state')
     if serialized_tag_state:
-        deserialized_thing = json.loads(base64.urlsafe_b64decode(serialized_tag_state))
-        tag_state_object = TagState(**deserialized_thing)
+        tag_state_object = TagState.deserialize(serialized_tag_state)
     else:
         tag_state_object = TagState(wordlist_id)
 
@@ -494,26 +494,32 @@ def add_to_list():
     if not r:
         flash(r.text)
 
-    target = url_for('dlernen.wordlist_page', wordlist_id=wordlist_id)
+    target = url_for('dlernen.wordlist_page',
+                     wordlist_id=wordlist_id,
+                     serialized_tag_state=request.form.get('serialized_tag_state', ''))
     return redirect(target)
 
 
 @bp.route('/update_notes', methods=['POST'])
 def update_notes():
+    wordlist_id = request.form['wordlist_id']
+
     payload = {
         'notes': request.form['notes']
     }
-    wordlist_id = request.form['wordlist_id']
 
     url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True)
     r = requests.put(url, json=payload)
-    if r:
-        target = url_for('dlernen.wordlist_page', wordlist_id=wordlist_id)
-        return redirect(target)
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
 
-    return render_template("error.html",
-                           message=r.text,
-                           status_code=r.status_code)
+    target = url_for('dlernen.wordlist_page',
+                     wordlist_id=wordlist_id,
+                     serialized_tag_state=request.form.get('serialized_tag_state', ''))
+
+    return redirect(target)
 
 
 @bp.route('/delete_from_list', methods=['POST'])
