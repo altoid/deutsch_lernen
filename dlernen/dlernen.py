@@ -67,7 +67,7 @@ class TagState(object):
 
     def serialize(self):
         json_bytes = json.dumps(self, default=lambda x: x.__dict__).encode("utf-8")
-        return base64.urlsafe_b64encode(json_bytes).decode("utf-8")
+        return base64.urlsafe_b64encode(json_bytes).decode("ascii")
 
 
 def chunkify(arr, nchunks=1):
