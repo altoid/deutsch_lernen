@@ -16,18 +16,29 @@
 
     {% if serialized_tag_state %}
     <a href="{{ url_for('dlernen.wordlist_page', wordlist_id=wordlist.wordlist_id, serialized_tag_state=serialized_tag_state) }}">List</a>
+
+    {% if wordlist.list_type == 'empty' or wordlist.list_type == 'standard' %}
+    <a href="{{ url_for('dlernen.list_editor', wordlist_id=wordlist.wordlist_id, serialized_tag_state=serialized_tag_state) }}">Editor</a>
+    {% endif %}
+    <a href="{{ url_for('dlernen.list_attributes', wordlist_id=wordlist.wordlist_id, serialized_tag_state=serialized_tag_state) }}">Metadaten der Liste</a>
+    <a href="{{ url_for('dlernen.quiz_report', quiz_key='definitions', wordlist_id=wordlist.wordlist_id, serialized_tag_state=serialized_tag_state) }}">
+        Zeugnis: Definitionen</a>
+    <a href="{{ url_for('dlernen.study_guide', wordlist_id=wordlist.wordlist_id, serialized_tag_state=serialized_tag_state) }}">Studienanleitung</a>
+
     {% else %}
     <a href="{{ url_for('dlernen.wordlist_page', wordlist_id=wordlist.wordlist_id) }}">List</a>
-    {% endif %}
 
     {% if wordlist.list_type == 'empty' or wordlist.list_type == 'standard' %}
     <a href="{{ url_for('dlernen.list_editor', wordlist_id=wordlist.wordlist_id) }}">Editor</a>
     {% endif %}
+
     <a href="{{ url_for('dlernen.list_attributes', wordlist_id=wordlist.wordlist_id) }}">Metadaten der Liste</a>
     <a href="{{ url_for('dlernen.quiz_report', quiz_key='definitions', wordlist_id=wordlist.wordlist_id) }}">
         Zeugnis: Definitionen</a>
     <a href="{{ url_for('dlernen.study_guide', wordlist_id=wordlist.wordlist_id) }}">Studienanleitung</a>
     {% endif %}
+    {% endif %}
+
     Suche nach Wort
     <form action="{{ url_for('dlernen.lookup_by_post') }}" method="post">
         <input type="text" name="lookup"/>

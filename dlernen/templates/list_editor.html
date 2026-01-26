@@ -15,6 +15,7 @@ Manage List:  {{ wordlist.name }}
     {% if wordlist.list_type == 'standard' %}
     <form action="{{ url_for('dlernen.edit_list_contents') }}" method="post">
         <input type="hidden" value="{{ wordlist.wordlist_id }}" name="wordlist_id"/>
+        <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
         <table>
             <tr>
                 <th></th>
