@@ -89,7 +89,7 @@ def reset():
     global SAVED_PAYLOADS
 
     WORDLISTS.clear()
-    QUERY = {'oldest_first'}
+    QUERY = 'oldest_first'
     TAGS.clear()
     SAVED_PAYLOADS.clear()
 
@@ -375,7 +375,7 @@ def get_next_word_with_tags(wordlist_id, query, tags):
     while True:
         r = requests.get(url)
         if not r:
-            print("get_word_to_test failed:  [%s - %s]" % (r.text, r.status_code))
+            print("get_word_to_test_single_wordlist failed:  [%s - %s]" % (r.text, r.status_code))
             break
 
         attrs_to_test = r.json()
@@ -437,7 +437,6 @@ def get_random_next_word(wordlist_ids, tags):
 
         i += 1
         i = i % len(word_ids)
-
 
 
 def quiz_definitions():
