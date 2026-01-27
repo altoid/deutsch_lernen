@@ -39,9 +39,9 @@
     {% endif %}
     {% endif %}
 
-    Suche nach Wort
     <form action="{{ url_for('dlernen.lookup_by_post') }}" method="post">
-        <input type="text" name="lookup"/>
+        <label for="sidebar_search">Suche nach Wort</label>
+        <input type="text" id="sidebar_search" name="lookup"/>
     </form>
 </div>
 <div class="content">

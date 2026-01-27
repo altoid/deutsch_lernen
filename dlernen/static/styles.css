@@ -201,6 +201,23 @@ because it implies that a:visited is a descendant of a:link which isn't the case
     color: var(--sidebar-text-color);
 }
 
+.sidebar label {
+    display: block;
+    text-decoration: none;
+    font-size: large;
+    margin-top: 10px;
+    margin-bottom: 0px;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.sidebar input[type="text"] {
+    margin-top: 5x;
+    margin-bottom: 10px;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
 .content a:link, .content a:visited {
     color: var(--link-color);
     text-decoration:  none;
