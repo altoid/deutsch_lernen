@@ -412,6 +412,21 @@ def make_triple(function, *args, **kwargs):
     return function, args, kwargs
 
 
+def decorate_if_noun(word_object):
+    # if this is a noun, add its article to the object.
+    url = url_for('api_word.get_word_by_id', word_id=word_object['word_id'], _external=True)
+
+    r = requests.get(url)
+    # if not r, deal with it later, i'm tired.
+
+    obj = r.json()
+    if obj['pos_name'].casefold() == 'noun':
+        article = list(filter(lambda x: x['attrkey'] == 'article', obj['attributes']))
+        word_object['article'] = article[0]['attrvalue']
+
+    return word_object
+
+
 def get_random_next_word(wordlist_ids, tags):
     r = requests.get(url_for('api_wordlist.get_word_ids_from_wordlists',
                              wordlist_id=wordlist_ids,
@@ -431,7 +446,7 @@ def get_random_next_word(wordlist_ids, tags):
                           _external=True)
             r = requests.get(url)
             obj = r.json()
-            word_ids_to_attrs[word_ids[i]] = obj[0]
+            word_ids_to_attrs[word_ids[i]] = decorate_if_noun(obj[0])
 
         yield word_ids_to_attrs[word_ids[i]]
 
@@ -472,7 +487,7 @@ def quiz_missed_words():
                       _external=True)
         r = requests.get(url)
         obj = r.json()
-        word_ids_to_attrs[word_id] = obj[0]
+        word_ids_to_attrs[word_id] = decorate_if_noun(obj[0])
 
     function_and_args = make_triple(get_next_missed_word, missed_word_ids, word_ids_to_attrs)
 
