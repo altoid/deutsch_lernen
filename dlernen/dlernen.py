@@ -906,14 +906,23 @@ def study_guide(wordlist_id):
     # go through the wordlist and organize everything by tag.  invert the mapping of words to
     # tags that appears in the wordlist.
 
+    serialized_tag_state = request.args.get('serialized_tag_state')
+    tag_state_object = TagState.deserialize(serialized_tag_state)
+    selected_tags = set(tag_state_object.selected_tags())
+
     tags_to_words = {}
     untagged_words = []
     for word in wordlist['known_words']:
-        if not word['tags']:
+        word_tags = set(word['tags'])
+        if not word_tags:
             untagged_words.append(word)
             continue
 
-        for t in word['tags']:
+        filtered_word_tags = word_tags
+        if selected_tags:
+            filtered_word_tags &= selected_tags
+
+        for t in filtered_word_tags:
             if t not in tags_to_words:
                 tags_to_words[t] = []
             tags_to_words[t].append(word)
@@ -926,7 +935,7 @@ def study_guide(wordlist_id):
 
     return render_template("study_guide.html",
                            tags=tags,
-                           serialized_tag_state=request.args.get('serialized_tag_state'),
+                           serialized_tag_state=serialized_tag_state,
                            untagged_words=untagged_words,
                            tags_to_words=tags_to_words,
                            wordlist=wordlist)
