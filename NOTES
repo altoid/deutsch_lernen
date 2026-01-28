@@ -54,15 +54,6 @@ FIXME - in the lookup results page, add a word-entry text field.  it may be that
 
 FIXME - remove attrvalue_id column from mashup_v
 
-TODO - need a way to winnow down the display of large word lists.  ideas:
-    - in the wordlist page, show all the tags for the list with unchecked checkboxes next to each.
-      uncheck a tag to hide words with that tag.
-    - show sublists for each tag
-
-TODO - for quizzes, change the way the 'random' query works.  instead of selecting one item randomly from
-    the database, select them all in a random order and loop through them in that order.  that way we will
-    hit every word exactly once before we repeat any.
-
 ------
 
 rewrite of quiz_definitions app
