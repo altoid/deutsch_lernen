@@ -895,7 +895,13 @@ def quiz_report(quiz_key, wordlist_id):
 
 @bp.route('/study_guide/<int:wordlist_id>')
 def study_guide(wordlist_id):
-    r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True))
+    serialized_tag_state = request.args.get('serialized_tag_state')
+    tag_state_object = TagState.deserialize(serialized_tag_state)
+    selected_tags = tag_state_object.selected_tags()
+
+    r = requests.get(url_for('api_wordlist.get_wordlist',
+                             tag=selected_tags,
+                             wordlist_id=wordlist_id, _external=True))
     if not r:
         return render_template("error.html",
                                message=r.text,
@@ -906,23 +912,14 @@ def study_guide(wordlist_id):
     # go through the wordlist and organize everything by tag.  invert the mapping of words to
     # tags that appears in the wordlist.
 
-    serialized_tag_state = request.args.get('serialized_tag_state')
-    tag_state_object = TagState.deserialize(serialized_tag_state)
-    selected_tags = set(tag_state_object.selected_tags())
-
     tags_to_words = {}
     untagged_words = []
     for word in wordlist['known_words']:
-        word_tags = set(word['tags'])
-        if not word_tags:
+        if not word['tags']:
             untagged_words.append(word)
             continue
 
-        filtered_word_tags = word_tags
-        if selected_tags:
-            filtered_word_tags &= selected_tags
-
-        for t in filtered_word_tags:
+        for t in word['tags']:
             if t not in tags_to_words:
                 tags_to_words[t] = []
             tags_to_words[t].append(word)
