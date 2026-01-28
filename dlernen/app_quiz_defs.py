@@ -12,6 +12,7 @@ QUIZ_KEY = 'definitions'
 WORDLISTS = {}  # maps wordlist_ids to names
 QUERY = 'oldest_first'
 TAGS = set()
+HINTS_REQUESTED = set()
 SAVED_PAYLOADS = []  # so we can derive words missed
 
 
@@ -87,11 +88,13 @@ def reset():
     global QUERY
     global TAGS
     global SAVED_PAYLOADS
+    global HINTS_REQUESTED
 
     WORDLISTS.clear()
     QUERY = 'oldest_first'
     TAGS.clear()
     SAVED_PAYLOADS.clear()
+    HINTS_REQUESTED.clear()
 
 
 def select_lists():
@@ -121,6 +124,7 @@ or enter list of wordlist_ids, space separated
         if answer == 'c':
             WORDLISTS.clear()
             TAGS.clear()
+            HINTS_REQUESTED.clear()
             print("selection cleared")
             continue
 
@@ -333,6 +337,35 @@ def show_missed_words():
         print("%s (%s)" % (w['word'], w['pos_name']))
 
 
+def show_hinted_words():
+    global HINTS_REQUESTED
+
+    missed_words = list(filter(lambda x: not x['correct'], SAVED_PAYLOADS))
+    missed_word_ids = list({x['word_id'] for x in missed_words})
+
+    if not HINTS_REQUESTED:
+        print("""
+    ***********************************
+    * no hints requested this session *
+    ***********************************
+    """)
+        return
+
+    r = requests.put(url_for('api_words.get_words', _external=True), json={'word_ids': list(HINTS_REQUESTED)})
+    if not r:
+        print("api_words.get_words failed:  [%s - %s]" % (r.text, r.status_code))
+        return
+
+    obj = r.json()
+    print("""
+    ********************************
+    * hints requested this session *
+    ********************************
+    """)
+    for w in obj:
+        print("    %s (%s)" % (w['word'], w['pos_name']))
+
+
 def get_next_word(wordlist_ids, query):
     # wordlist_ids and query are both lists and may be empty
     global QUIZ_KEY
@@ -397,15 +430,15 @@ def dummy_get_next_word(wordlist_ids, queries):
     yield None
 
 
-def get_next_missed_word(missed_word_ids, word_ids_to_attrs):
-    if not missed_word_ids:
+def get_next_saved_word(saved_word_ids, word_ids_to_attrs):
+    if not saved_word_ids:
         yield None
 
     i = 0
     while True:
-        yield word_ids_to_attrs[missed_word_ids[i]]
+        yield word_ids_to_attrs[saved_word_ids[i]]
         i += 1
-        i = i % len(missed_word_ids)
+        i = i % len(saved_word_ids)
 
 
 def make_triple(function, *args, **kwargs):
@@ -473,6 +506,26 @@ def quiz_definitions():
     quiz_loop(function_and_args)
 
 
+def quiz_hinted_words():
+    global HINTS_REQUESTED
+    global QUIZ_KEY
+
+    hinted_word_ids = list(HINTS_REQUESTED)
+    word_ids_to_attrs = {}
+    for word_id in hinted_word_ids:
+        url = url_for('api_quiz.get_all_attr_values_for_quiz',
+                      quiz_key=QUIZ_KEY,
+                      word_id=word_id,
+                      _external=True)
+        r = requests.get(url)
+        obj = r.json()
+        word_ids_to_attrs[word_id] = decorate_if_noun(obj[0])
+
+    function_and_args = make_triple(get_next_saved_word, hinted_word_ids, word_ids_to_attrs)
+
+    quiz_loop(function_and_args)
+
+
 def quiz_missed_words():
     global SAVED_PAYLOADS
     global QUIZ_KEY
@@ -489,7 +542,7 @@ def quiz_missed_words():
         obj = r.json()
         word_ids_to_attrs[word_id] = decorate_if_noun(obj[0])
 
-    function_and_args = make_triple(get_next_missed_word, missed_word_ids, word_ids_to_attrs)
+    function_and_args = make_triple(get_next_saved_word, missed_word_ids, word_ids_to_attrs)
 
     quiz_loop(function_and_args)
 
@@ -528,6 +581,8 @@ def quiz_loop(generating_function_and_args):
                 break
 
             if answer.startswith('h'):
+                HINTS_REQUESTED.add(attr_to_test['word_id'])
+
                 # show wordlists this word is in.
                 r = requests.get(url_for('api_wordlists.get_wordlists_by_word_id',
                                          word_id=attr_to_test['word_id'],
@@ -622,6 +677,16 @@ CALLBACKS = {
         'tagline': 'quiz missed words',
         'display_order': 20,
         'callback': quiz_missed_words
+    },
+    'sh': {
+        'tagline': 'show words needing hints',
+        'display_order': 22,
+        'callback': show_hinted_words
+    },
+    'qh': {
+        'tagline': 'quiz words needing hints',
+        'display_order': 24,
+        'callback': quiz_hinted_words
     },
     'report': {
         'tagline': 'report',
