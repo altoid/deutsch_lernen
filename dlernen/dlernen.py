@@ -84,7 +84,7 @@ def lookup_by_post():
     # for looking up a word entered into a form.
     word = request.form.get('lookup')
     serialized_tag_state = request.form.get('serialized_tag_state')
-    print("######################### ", serialized_tag_state)
+
     results = []
     r = requests.get(url_for('api_word.get_word', word=word, partial=True, _external=True))
     if r.status_code == 404:
