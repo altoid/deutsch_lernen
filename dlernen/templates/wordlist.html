@@ -115,7 +115,7 @@ Wordlist:  {{ wordlist.name }}
                                         {{ r.article }}
                                     </td>
                                     <td>
-                                        <a href="{{ url_for('dlernen.get_word_by_id', word_id=r.word_id, wordlist_id=wordlist.wordlist_id) }}">
+                                        <a href="{{ url_for('dlernen.lookup_by_id', word_id=r.word_id, wordlist_id=wordlist.wordlist_id, serialized_tag_state=serialized_tag_state) }}">
                                             {{ r.word }}
                                         </a>
                                     </td>

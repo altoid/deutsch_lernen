@@ -35,7 +35,7 @@ def home():
 
 
 @bp.route('/lookup/<int:word_id>', methods=['GET'])
-def get_word_by_id(word_id):
+def lookup_by_id(word_id):
     # for when a word appears as a hyperlink in a page.
     wordlist_id = request.args.get('wordlist_id')
     wordlist = None
@@ -70,10 +70,12 @@ def get_word_by_id(word_id):
         return render_template('lookup.html',
                                word=result["word"],
                                wordlist=wordlist,
+                               serialized_tag_state=request.args.get('serialized_tag_state'),
                                template_args=template_args)
 
     return render_template('lookup.html',
                            word=result["word"],
+                           serialized_tag_state=request.args.get('serialized_tag_state'),
                            template_args=template_args)
 
 
@@ -81,6 +83,8 @@ def get_word_by_id(word_id):
 def lookup_by_post():
     # for looking up a word entered into a form.
     word = request.form.get('lookup')
+    serialized_tag_state = request.form.get('serialized_tag_state')
+    print("######################### ", serialized_tag_state)
     results = []
     r = requests.get(url_for('api_word.get_word', word=word, partial=True, _external=True))
     if r.status_code == 404:
@@ -103,6 +107,24 @@ def lookup_by_post():
 
         member_wordlists = r.json()
         template_args.append((result, member_wordlists))
+
+    # get wordlist if appropriate
+    if serialized_tag_state:
+        tag_state_object = TagState.deserialize(serialized_tag_state)
+
+        url = url_for('api_wordlist.get_wordlist', wordlist_id=tag_state_object.wordlist_id, _external=True)
+        r = requests.get(url)
+        if not r:
+            return render_template("error.html",
+                                   message=r.text,
+                                   status_code=r.status_code)
+        wordlist = r.json()
+
+        return render_template('lookup.html',
+                               word=word,
+                               wordlist=wordlist,
+                               serialized_tag_state=serialized_tag_state,
+                               template_args=template_args)
 
     return render_template('lookup.html',
                            word=word,
