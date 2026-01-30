@@ -881,12 +881,8 @@ def study_guide(wordlist_id):
     # tags that appears in the wordlist.
 
     tags_to_words = {}
-    untagged_words = []
+    untagged_words = list(filter(lambda x: not x['tags'], wordlist['known_words']))
     for word in wordlist['known_words']:
-        if not word['tags']:
-            untagged_words.append(word)
-            continue
-
         for t in word['tags']:
             if t not in tags_to_words:
                 tags_to_words[t] = []
@@ -895,8 +891,7 @@ def study_guide(wordlist_id):
     # sort everything
     untagged_words = sorted(untagged_words, key=lambda x: x['word'].casefold())
     tags = sorted(tags_to_words.keys())
-    for t in tags:
-        tags_to_words[t] = sorted(tags_to_words[t], key=lambda x: x['word'].casefold())
+    tags_to_words = {t: sorted(tags_to_words[t], key=lambda x: x['word'].casefold()) for t in tags}
 
     return render_template("study_guide.html",
                            tags=tags,
