@@ -229,6 +229,7 @@ def wordlist_page(wordlist_id):
     nchunks = request.args.get('nchunks', current_app.config['NCHUNKS'], type=int)
     known_words = chunkify(wordlist['known_words'], nchunks)
     unknown_words = chunkify(wordlist['unknown_words'], nchunks)
+    tag_chunks = chunkify(tag_state_object.tag_state(), 4)
 
     if wordlist['list_type'] == 'smart':
         return render_template('wordlist.html',
@@ -243,6 +244,7 @@ def wordlist_page(wordlist_id):
                            wordlist=wordlist,
                            tag_state=tag_state_object.tag_state(),
                            serialized_tag_state=serialized_tag_state,
+                           tag_chunks=tag_chunks,
                            known_words=known_words,
                            unknown_words=unknown_words)
 
@@ -860,8 +862,10 @@ def quiz_report(quiz_key, wordlist_id):
 @bp.route('/study_guide/<int:wordlist_id>')
 def study_guide(wordlist_id):
     serialized_tag_state = request.args.get('serialized_tag_state')
-    tag_state_object = TagState.deserialize(serialized_tag_state)
-    selected_tags = tag_state_object.selected_tags()
+    selected_tags = []
+    if serialized_tag_state:
+        tag_state_object = TagState.deserialize(serialized_tag_state)
+        selected_tags = tag_state_object.selected_tags()
 
     r = requests.get(url_for('api_wordlist.get_wordlist',
                              tag=selected_tags,
