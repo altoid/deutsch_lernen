@@ -25,18 +25,18 @@ Lookup {{ word }}
             <a href="#{{ tuple[0]['word'] }}">{{ tuple[0]['word'] }}</a>
         </li>
         {% endfor %}
-        {% endif %}
     </ul>
+    {% endif %}
     {% for tuple in template_args %}
     <h1>
         {% if wordlist %}
         <a name="{{ tuple[0]['word'] }}"
-           href="{{ url_for('dlernen.edit_word_form', wordlist_id=wordlist.wordlist_id, word=tuple[0]['word']) }}">
+           href="{{ url_for('dlernen.edit_word_form', wordlist_id=wordlist.wordlist_id, serialized_tag_state=serialized_tag_state, word=tuple[0]['word']) }}">
             {{ tuple[0]['word'] }}
         </a>
         {% else %}
         <a name="{{ tuple[0]['word'] }}"
-           href="{{ url_for('dlernen.edit_word_form', word=tuple[0]['word']) }}">
+           href="{{ url_for('dlernen.edit_word_form', serialized_tag_state=serialized_tag_state, word=tuple[0]['word']) }}">
             {{ tuple[0]['word'] }}
         </a>
         {% endif %}

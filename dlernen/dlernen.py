@@ -529,6 +529,7 @@ def edit_word_form(word):
     # FIXME - tags field should be disabled for smart lists
 
     wordlist_id = request.args.get('wordlist_id')
+    serialized_tag_state = request.args.get('serialized_tag_state')
 
     url = url_for('api_pos.get_pos_for_word', word=word, _external=True)
     r = requests.get(url)
@@ -619,11 +620,13 @@ def edit_word_form(word):
                                word=word,
                                wordlist=wordlist,
                                form_data=form_data,
+                               serialized_tag_state=serialized_tag_state,
                                field_values_before=json.dumps(field_values_before))
 
     return render_template('word_editor.html',
                            word=word,
                            form_data=form_data,
+                           serialized_tag_state=serialized_tag_state,
                            field_values_before=json.dumps(field_values_before))
 
 
