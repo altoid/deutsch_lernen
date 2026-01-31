@@ -16,6 +16,7 @@ Manage List:  {{ wordlist.name }}
     <div>
         <form action="{{ url_for('dlernen.update_via_editor') }}" method="post">
             <input type="hidden" value="{{ wordlist.wordlist_id }}" name="wordlist_id"/>
+            <input type="hidden" value="dlernen.list_editor" name="redirect_to"/>
             <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
             <input type="text" id="add_word" name="add_word"/>
             <input type="submit" name="submit" value="Add Word"/>

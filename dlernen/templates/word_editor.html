@@ -36,6 +36,7 @@ for the tags fields, the names are:
     <form action="{{ url_for('dlernen.update_dict') }}" method="post">
         <input type="hidden" name="field_values_before" value="{{ field_values_before }}">
         <input type="hidden" name="serialized_tag_state" value="{{ serialized_tag_state }}">
+        <input type="hidden" name="redirect_to" value="{{ redirect_to }}">
         {% if wordlist %}
         <input type="hidden" name="wordlist_id" value="{{ wordlist.wordlist_id }}">
         {% endif %}
