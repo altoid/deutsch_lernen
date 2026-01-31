@@ -9,6 +9,7 @@ Study Guide:  {{ wordlist.name }}
 <div class="study_guide">
     {% include 'header.html' %}
     <h1>{{ wordlist.name }} ({{ wordlist.wordlist_id }})</h1>
+    {{ wordlist.known_words|length }} Wörter
     <table class="study_guide">
         <tr>
             <th>
