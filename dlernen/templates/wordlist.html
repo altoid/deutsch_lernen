@@ -25,9 +25,7 @@ Wordlist:  {{ wordlist.name }}
                     Word:
                     <input type="text" name="word"/>
                     <input type="hidden" value="{{wordlist.wordlist_id}}" name="wordlist_id"/>
-                    {% if serialized_tag_state %}
                     <input type="hidden" value="{{serialized_tag_state}}" name="serialized_tag_state"/>
-                    {% endif %}
                     <input type="submit" value="Add Word"/>
                 </form>
             </td>

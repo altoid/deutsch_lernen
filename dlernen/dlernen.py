@@ -357,7 +357,7 @@ def edit_list_attributes():
                                status_code=r.status_code)
 
     return redirect(url_for('dlernen.wordlist_page',
-                            serialized_tag_state=request.form.get('serialized_tag_state', ''),
+                            serialized_tag_state=request.form.get('serialized_tag_state'),
                             wordlist_id=wordlist_id))
 
 
@@ -460,7 +460,7 @@ def add_to_list():
         could not deal with word "%s" [%s]:  %s
         """ % (word, r.status_code, r.text))
         target = url_for('dlernen.wordlist_page',
-                         serialized_tag_state=request.form.get('serialized_tag_state', ''),
+                         serialized_tag_state=request.form.get('serialized_tag_state'),
                          wordlist_id=wordlist_id)
         return redirect(target)
 
@@ -471,7 +471,7 @@ def add_to_list():
 
     target = url_for('dlernen.wordlist_page',
                      wordlist_id=wordlist_id,
-                     serialized_tag_state=request.form.get('serialized_tag_state', ''))
+                     serialized_tag_state=request.form.get('serialized_tag_state'))
     return redirect(target)
 
 
@@ -903,3 +903,36 @@ def study_guide(wordlist_id):
                            untagged_words=untagged_words,
                            tags_to_words=tags_to_words,
                            wordlist=wordlist)
+
+
+@bp.route('/update_via_editor', methods=['POST'])
+def update_via_editor():
+    # if the word that is entered is is the dictionary, add it (all parts of speech)
+    # and reload the editor page.  if it is not, go to the word_edit page.
+    # on submit from the word_edit page, come back here.
+
+    pprint(request.form)
+
+    wordlist_id = request.form.get('wordlist_id')
+    word = request.form.get('add_word').strip()
+    serialized_tag_state = request.form.get('serialized_tag_state')
+    tag_state_object = TagState.deserialize(serialized_tag_state)
+
+    if word:
+        url = url_for('api_word.get_word', word=word, _external=True)
+        r = requests.get(url)
+        if r:
+            payload = {
+                "words": [word]
+            }
+
+            url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True)
+            r = requests.put(url, json=payload)
+            if not r:
+                flash(r.text)
+        elif r.status_code == 404:
+            flash("%s not found" % word)
+
+    return redirect(url_for('dlernen.list_editor',
+                            wordlist_id=wordlist_id,
+                            serialized_tag_state=tag_state_object.serialize()))
