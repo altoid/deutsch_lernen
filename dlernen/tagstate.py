@@ -5,12 +5,6 @@ from flask import url_for
 
 
 class TagState(object):
-    @staticmethod
-    def deserialize(blob):
-        # we can only serialize the __dict__, have to reconstitute an object from it
-        deserialized_thing = json.loads(base64.urlsafe_b64decode(blob))
-        return TagState(**deserialized_thing)
-
     def __init__(self, wordlist_id=None, tags_to_states=None, tags=None):
         self.wordlist_id = wordlist_id
 
@@ -60,6 +54,12 @@ class TagState(object):
         for t in tags:
             if t in self.tags_to_states:
                 self.tags_to_states[t] = True  # checked
+
+    @staticmethod
+    def deserialize(blob):
+        # we can only serialize the __dict__, have to reconstitute an object from it
+        deserialized_thing = json.loads(base64.urlsafe_b64decode(blob))
+        return TagState(**deserialized_thing)
 
     def serialize(self):
         json_bytes = json.dumps(self, default=lambda x: x.__dict__).encode("utf-8")

@@ -4,6 +4,7 @@ from flask import Blueprint, url_for
 from pprint import pprint
 import requests
 from dlernen import api_quiz
+import pickle
 
 bp = Blueprint('app_quiz_defs', __name__)
 
@@ -48,6 +49,7 @@ class AppState(object):
 
 
 APPSTATE = AppState()
+STATE_FILE = '.quiz_defs'
 
 
 def unimplemented():
@@ -59,6 +61,12 @@ def unimplemented():
 
 
 def quit_program():
+    global APPSTATE
+    global STATE_FILE
+
+    with open(STATE_FILE, 'wb') as f:
+        pickle.dump(APPSTATE, f)
+
     print('bis bald')
 
 
@@ -132,6 +140,7 @@ c - clear selection
 s - show selection
 m - show menu
 r - return to main menu
+
 or enter list of wordlist_ids, space separated
 """
 
@@ -230,6 +239,9 @@ Words tested this session:  %s""" % len(APPSTATE.saved_payloads))
 
     print("""
 Words missed this session:  %s""" % nmissed)
+
+    print("""
+Words where hints requested:  %s""" % len(APPSTATE.hints_requested))
 
 
 def select_tags():
@@ -736,6 +748,15 @@ CALLBACKS = {
 
 @bp.cli.command('quiz_defs_2')
 def quiz_words():
+    global STATE_FILE
+    global APPSTATE
+
+    try:
+        with open(STATE_FILE, 'rb') as f:
+            APPSTATE = pickle.load(f)
+    except FileNotFoundError as e:
+        APPSTATE = AppState()
+
     while True:
         callback = main_menu()
 

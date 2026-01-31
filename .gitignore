@@ -9,3 +9,4 @@ config.py
 **/x
 **/.idea
 **.egg-info
+**/.quiz_defs
