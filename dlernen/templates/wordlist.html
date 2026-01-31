@@ -51,7 +51,7 @@ Wordlist:  {{ wordlist.name }}
                                     <tr>
                                         <td><input type="checkbox" name="unknown_wordlist" value="{{ r }}"></td>
                                         <td>
-                                            <a href="{{ url_for('dlernen.edit_word_form', wordlist_id=wordlist.wordlist_id, word=r) }}">
+                                            <a href="{{ url_for('dlernen.edit_word_form', serialized_tag_state=serialized_tag_state, wordlist_id=wordlist.wordlist_id, word=r) }}">
                                                 {{ r }}
                                             </a>
                                         </td>

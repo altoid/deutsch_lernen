@@ -824,8 +824,12 @@ def update_dict():
                                        status_code=r.status_code)
 
     if wordlist_id:
+        # in case we added a new tag while editing the word
+        tag_state_object = TagState.deserialize(request.form.get('serialized_tag_state'))
+        tag_state_object.update()
+
         target = url_for('dlernen.wordlist_page',
-                         serialized_tag_state=request.form.get('serialized_tag_state', ''),
+                         serialized_tag_state=tag_state_object.serialize(),
                          wordlist_id=wordlist_id)
     else:
         # if we didn't add a word to any list, return to the editing form for this word.
