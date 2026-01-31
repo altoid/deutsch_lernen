@@ -3,17 +3,51 @@ import random
 from flask import Blueprint, url_for
 from pprint import pprint
 import requests
-import click
 from dlernen import api_quiz
 
 bp = Blueprint('app_quiz_defs', __name__)
 
-QUIZ_KEY = 'definitions'
-WORDLISTS = {}  # maps wordlist_ids to names
-QUERY = 'oldest_first'
-TAGS = set()
-HINTS_REQUESTED = set()
-SAVED_PAYLOADS = []  # so we can derive words missed
+
+class AppState(object):
+    def __init__(self,
+                 quiz_key='definitions',
+                 query='oldest_first',
+                 wordlists=None,
+                 tags=None,
+                 hints_requested=None,
+                 saved_payloads=None):
+        self.quiz_key = quiz_key
+        self.query = query
+
+        if wordlists:
+            self.wordlists = wordlists
+        else:
+            self.wordlists = {}
+
+        if tags:
+            self.tags = tags
+        else:
+            self.tags = set()
+
+        if hints_requested:
+            self.hints_requested = hints_requested
+        else:
+            self.hints_requested = set()
+
+        if saved_payloads:
+            self.saved_payloads = saved_payloads
+        else:
+            self.saved_payloads = []
+
+    def reset(self):
+        self.wordlists.clear()
+        self.query = 'oldest_first'
+        self.tags.clear()
+        self.saved_payloads.clear()
+        self.hints_requested.clear()
+
+
+APPSTATE = AppState()
 
 
 def unimplemented():
@@ -29,10 +63,10 @@ def quit_program():
 
 
 def main_menu():
-    global WORDLISTS
+    global APPSTATE
 
     options_in_display_order = sorted(CALLBACKS.keys(), key=lambda x: CALLBACKS[x]['display_order'])
-    if len(WORDLISTS) != 1:
+    if len(APPSTATE.wordlists) != 1:
         options_in_display_order.remove('tags')
 
     print("""
@@ -61,7 +95,7 @@ Hauptmenü:
 def set_wordlists(given_wordlist_ids):
     # returns a set containing any wordlist_ids that weren't in the database
 
-    global WORDLISTS
+    global APPSTATE
 
     unknown_wordlist_ids = set()
     for wl_id in given_wordlist_ids:
@@ -78,28 +112,19 @@ def set_wordlists(given_wordlist_ids):
 
         obj = r.json()
 
-        WORDLISTS[wl_id] = obj['name']
+        APPSTATE.wordlists[wl_id] = obj['name']
 
     return unknown_wordlist_ids
 
 
 def reset():
-    global WORDLISTS
-    global QUERY
-    global TAGS
-    global SAVED_PAYLOADS
-    global HINTS_REQUESTED
+    global APPSTATE
 
-    WORDLISTS.clear()
-    QUERY = 'oldest_first'
-    TAGS.clear()
-    SAVED_PAYLOADS.clear()
-    HINTS_REQUESTED.clear()
+    APPSTATE.reset()
 
 
 def select_lists():
-    global WORDLISTS
-    global TAGS
+    global APPSTATE
 
     wordlist_ids = []
     menu = """
@@ -122,17 +147,17 @@ or enter list of wordlist_ids, space separated
             continue
 
         if answer == 'c':
-            WORDLISTS.clear()
-            TAGS.clear()
-            HINTS_REQUESTED.clear()
+            APPSTATE.wordlists.clear()
+            APPSTATE.tags.clear()
+            APPSTATE.hints_requested.clear()
             print("selection cleared")
             continue
 
         if answer == 's':
-            if not WORDLISTS:
+            if not APPSTATE.wordlists:
                 print("no lists selected, defaults to whole dictionary")
             else:
-                for k, v in WORDLISTS.items():
+                for k, v in APPSTATE.wordlists.items():
                     print("[%s] - %s" % (k, v))
             continue
 
@@ -148,7 +173,7 @@ or enter list of wordlist_ids, space separated
         unknown_wordlist_ids = set_wordlists(wordlist_ids)
 
         print("list_ids:  ", end=' ')
-        pprint(set(WORDLISTS.keys()))
+        pprint(set(APPSTATE.wordlists.keys()))
 
         if unknown_wordlist_ids:
             print("unknown wordlist_ids:  ", end=' ')
@@ -156,10 +181,7 @@ or enter list of wordlist_ids, space separated
 
 
 def status():
-    global WORDLISTS
-    global TAGS
-    global SAVED_PAYLOADS
-    global QUERY
+    global APPSTATE
 
     print("""
 ****************************************
@@ -172,26 +194,26 @@ def status():
 
     print("""
 Lists:""")
-    if WORDLISTS:
-        for k, v in WORDLISTS.items():
+    if APPSTATE.wordlists:
+        for k, v in APPSTATE.wordlists.items():
             print("[%s] - %s" % (k, v))
     else:
         print("** entire dictionary")
 
     print("""
 Tags:""")
-    if TAGS:
+    if APPSTATE.tags:
         print("current tags:  ", end=' ')
-        pprint(TAGS)
+        pprint(APPSTATE.tags)
     else:
         print("** no tags")
 
     print("""
-Query:  %s""" % QUERY)
+Query:  %s""" % APPSTATE.query)
 
     url = url_for('api_wordlist.get_word_ids_from_wordlists',
-                  wordlist_id=list(WORDLISTS.keys()),
-                  tag=list(TAGS),
+                  wordlist_id=list(APPSTATE.wordlists.keys()),
+                  tag=list(APPSTATE.tags),
                   _external=True)
     r = requests.get(url)
     if r:
@@ -202,16 +224,16 @@ Word count:  %s""" % len(obj['word_ids']))
         print("could not retrieve word count:  [%s - %s]" % (r.text, r.status_code))
 
     print("""
-Words tested this session:  %s""" % len(SAVED_PAYLOADS))
+Words tested this session:  %s""" % len(APPSTATE.saved_payloads))
 
-    nmissed = len(list(filter(lambda x: not x['correct'], SAVED_PAYLOADS)))
+    nmissed = len(list(filter(lambda x: not x['correct'], APPSTATE.saved_payloads)))
 
     print("""
 Words missed this session:  %s""" % nmissed)
 
 
 def select_tags():
-    global TAGS
+    global APPSTATE
 
     menu = """
 c - clear selection
@@ -232,12 +254,12 @@ or enter list of tags, space separated
             continue
 
         if answer == 'c':
-            TAGS.clear()
+            APPSTATE.tags.clear()
             continue
 
         if answer == 's':
             print("current tags:  ", end=' ')
-            pprint(TAGS)
+            pprint(APPSTATE.tags)
             continue
 
         if answer == 'm':
@@ -248,13 +270,13 @@ or enter list of tags, space separated
             break
 
         tags = set(answer.split())
-        TAGS |= tags
+        APPSTATE.tags |= tags
         print("current tags:  ", end=' ')
-        pprint(TAGS)
+        pprint(APPSTATE.tags)
 
 
 def select_query():
-    global QUERY
+    global APPSTATE
 
     menu = """
 c - clear selection
@@ -266,7 +288,7 @@ or enter query name
 """
 
     print(menu)
-    print("current query:  %s" % QUERY)
+    print("current query:  %s" % APPSTATE.query)
     possible_queries = set(api_quiz.DEFINED_QUERIES.keys())
     possible_queries.add('random')
 
@@ -277,12 +299,12 @@ or enter query name
             continue
 
         if answer == 'c':
-            QUERY = None
+            APPSTATE.query = None
             print("selection cleared")
             continue
 
         if answer == 's':
-            print("selection:  %s" % QUERY)
+            print("selection:  %s" % APPSTATE.query)
             continue
 
         if answer == 'q':
@@ -296,22 +318,22 @@ or enter query name
             continue
 
         if answer == 'r':
-            if not QUERY:
-                QUERY = 'oldest_first'
+            if not APPSTATE.query:
+                APPSTATE.query = 'oldest_first'
             break
 
         if answer not in possible_queries:
             print("not a valid query:  %s" % answer)
             continue
 
-        QUERY = answer
-        print("selection:  %s" % QUERY)
+        APPSTATE.query = answer
+        print("selection:  %s" % APPSTATE.query)
 
 
 def show_missed_words():
-    global SAVED_PAYLOADS
+    global APPSTATE
 
-    missed_words = list(filter(lambda x: not x['correct'], SAVED_PAYLOADS))
+    missed_words = list(filter(lambda x: not x['correct'], APPSTATE.saved_payloads))
     missed_word_ids = list({x['word_id'] for x in missed_words})
 
     if not missed_word_ids:
@@ -338,12 +360,12 @@ def show_missed_words():
 
 
 def show_hinted_words():
-    global HINTS_REQUESTED
+    global APPSTATE
 
-    missed_words = list(filter(lambda x: not x['correct'], SAVED_PAYLOADS))
+    missed_words = list(filter(lambda x: not x['correct'], APPSTATE.saved_payloads))
     missed_word_ids = list({x['word_id'] for x in missed_words})
 
-    if not HINTS_REQUESTED:
+    if not APPSTATE.hints_requested:
         print("""
     ***********************************
     * no hints requested this session *
@@ -351,7 +373,7 @@ def show_hinted_words():
     """)
         return
 
-    r = requests.put(url_for('api_words.get_words', _external=True), json={'word_ids': list(HINTS_REQUESTED)})
+    r = requests.put(url_for('api_words.get_words', _external=True), json={'word_ids': list(APPSTATE.hints_requested)})
     if not r:
         print("api_words.get_words failed:  [%s - %s]" % (r.text, r.status_code))
         return
@@ -368,11 +390,11 @@ def show_hinted_words():
 
 def get_next_word(wordlist_ids, query):
     # wordlist_ids and query are both lists and may be empty
-    global QUIZ_KEY
+    global APPSTATE
 
     url = url_for('api_quiz.get_word_to_test',
                   wordlist_id=wordlist_ids,
-                  quiz_key=QUIZ_KEY,
+                  quiz_key=APPSTATE.quiz_key,
                   query=query,
                   _external=True)
 
@@ -396,12 +418,12 @@ def get_next_word(wordlist_ids, query):
 def get_next_word_with_tags(wordlist_id, query, tags):
     # wordlist_id is a single id, not a list.
 
-    global QUIZ_KEY
+    global APPSTATE
 
     url = url_for('api_quiz.get_word_to_test_single_wordlist',
                   wordlist_id=wordlist_id,
                   tag=tags,
-                  quiz_key=QUIZ_KEY,
+                  quiz_key=APPSTATE.quiz_key,
                   query=query,
                   _external=True)
 
@@ -474,7 +496,7 @@ def get_random_next_word(wordlist_ids, tags):
     while True:
         if word_ids[i] not in word_ids_to_attrs:
             url = url_for('api_quiz.get_all_attr_values_for_quiz',
-                          quiz_key=QUIZ_KEY,
+                          quiz_key=APPSTATE.quiz_key,
                           word_id=word_ids[i],
                           _external=True)
             r = requests.get(url)
@@ -488,15 +510,13 @@ def get_random_next_word(wordlist_ids, tags):
 
 
 def quiz_definitions():
-    global WORDLISTS
-    global QUERY
-    global TAGS
+    global APPSTATE
 
-    wordlist_ids = list(WORDLISTS.keys())
-    query = QUERY
-    tags = list(TAGS)
+    wordlist_ids = list(APPSTATE.wordlists.keys())
+    query = APPSTATE.query
+    tags = list(APPSTATE.tags)
 
-    if QUERY == 'random':
+    if APPSTATE.query == 'random':
         function_and_args = make_triple(get_random_next_word, wordlist_ids, tags)
     elif len(wordlist_ids) == 1:
         function_and_args = make_triple(get_next_word_with_tags, wordlist_ids[0], query, tags)
@@ -507,14 +527,13 @@ def quiz_definitions():
 
 
 def quiz_hinted_words():
-    global HINTS_REQUESTED
-    global QUIZ_KEY
+    global APPSTATE
 
-    hinted_word_ids = list(HINTS_REQUESTED)
+    hinted_word_ids = list(APPSTATE.hints_requested)
     word_ids_to_attrs = {}
     for word_id in hinted_word_ids:
         url = url_for('api_quiz.get_all_attr_values_for_quiz',
-                      quiz_key=QUIZ_KEY,
+                      quiz_key=APPSTATE.quiz_key,
                       word_id=word_id,
                       _external=True)
         r = requests.get(url)
@@ -527,15 +546,14 @@ def quiz_hinted_words():
 
 
 def quiz_missed_words():
-    global SAVED_PAYLOADS
-    global QUIZ_KEY
+    global APPSTATE
 
-    missed_words = list(filter(lambda x: not x['correct'], SAVED_PAYLOADS))
+    missed_words = list(filter(lambda x: not x['correct'], APPSTATE.saved_payloads))
     missed_word_ids = list({x['word_id'] for x in missed_words})
     word_ids_to_attrs = {}
     for word_id in missed_word_ids:
         url = url_for('api_quiz.get_all_attr_values_for_quiz',
-                      quiz_key=QUIZ_KEY,
+                      quiz_key=APPSTATE.quiz_key,
                       word_id=word_id,
                       _external=True)
         r = requests.get(url)
@@ -548,7 +566,7 @@ def quiz_missed_words():
 
 
 def quiz_loop(generating_function_and_args):
-    global SAVED_PAYLOADS
+    global APPSTATE
 
     # while generator.next()
     #     show word
@@ -559,7 +577,7 @@ def quiz_loop(generating_function_and_args):
 
     function, args, kwargs = generating_function_and_args
 
-    count = len(SAVED_PAYLOADS) + 1  # add 1 so we don't count up from 0
+    count = len(APPSTATE.saved_payloads) + 1  # add 1 so we don't count up from 0
     for attr_to_test in function(*args, **kwargs):
         if not attr_to_test:
             print("es gibt keine Welten mehr zu erobern")
@@ -581,7 +599,7 @@ def quiz_loop(generating_function_and_args):
                 break
 
             if answer.startswith('h'):
-                HINTS_REQUESTED.add(attr_to_test['word_id'])
+                APPSTATE.hints_requested.add(attr_to_test['word_id'])
 
                 # show wordlists this word is in.
                 r = requests.get(url_for('api_wordlists.get_wordlists_by_word_id',
@@ -635,7 +653,7 @@ def quiz_loop(generating_function_and_args):
         }
 
         r = requests.post(url_for('api_quiz.post_quiz_answer',
-                                  quiz_key=QUIZ_KEY,
+                                  quiz_key=APPSTATE.quiz_key,
                                   _external=True), json=payload)
 
         if not r:
@@ -643,7 +661,7 @@ def quiz_loop(generating_function_and_args):
             print(message)
             break
 
-        SAVED_PAYLOADS.append(payload)
+        APPSTATE.saved_payloads.append(payload)
         count += 1
 
 
@@ -653,7 +671,7 @@ CALLBACKS = {
         'display_order': 0,
         'callback': select_lists
     },
-    'tags': {  # this won't appear in the main menu unless WORDLISTS has exactly one id in it.
+    'tags': {  # this won't appear in the main menu unless APPSTATE.wordlists has exactly one id in it.
         'tagline': 'select tags',
         'display_order': 2,
         'callback': select_tags
@@ -717,25 +735,7 @@ CALLBACKS = {
 
 
 @bp.cli.command('quiz_defs_2')
-@click.option('--wordlist_ids', '-l', multiple=True)
-@click.option('--query', '-q', multiple=True)
-@click.option('--tags', '-t', multiple=True)
-def quiz_words(wordlist_ids, query, tags):
-    global WORDLISTS
-    global TAGS
-
-    unknown_wordlist_ids = set_wordlists(wordlist_ids)
-
-    if unknown_wordlist_ids:
-        print("unknown wordlist_ids:  ", end=' ')
-        pprint(set(unknown_wordlist_ids))
-
-    TAGS = set(tags)
-    if TAGS and WORDLISTS:
-        if len(WORDLISTS) > 1:
-            print("only one list permitted if filtering by tags")
-            return
-
+def quiz_words():
     while True:
         callback = main_menu()
 
