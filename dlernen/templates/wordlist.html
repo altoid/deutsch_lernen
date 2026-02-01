@@ -22,7 +22,6 @@ Wordlist:  {{ wordlist.name }}
         <tr>
             <td>
                 <form action="{{ url_for('dlernen.add_to_list') }}" method="post">
-                    Word:
                     <input type="text" name="word"/>
                     <input type="hidden" value="{{wordlist.wordlist_id}}" name="wordlist_id"/>
                     <input type="hidden" value="{{serialized_tag_state}}" name="serialized_tag_state"/>
@@ -39,6 +38,7 @@ Wordlist:  {{ wordlist.name }}
         <tr>
             <td>
                 <form action="{{ url_for('dlernen.delete_from_list') }}" method="post">
+                    <input type="hidden" value="{{serialized_tag_state}}" name="serialized_tag_state"/>
                     <input type="hidden" value="{{wordlist.wordlist_id}}" name="wordlist_id"/>
                     <table class="tableau">
                         <tr>
