@@ -1,4 +1,4 @@
-import json
+import pickle
 import base64
 import requests
 from flask import url_for
@@ -57,12 +57,11 @@ class TagState(object):
 
     @staticmethod
     def deserialize(blob):
-        # we can only serialize the __dict__, have to reconstitute an object from it
-        deserialized_thing = json.loads(base64.urlsafe_b64decode(blob))
-        return TagState(**deserialized_thing)
+        deserialized_thing = pickle.loads(base64.urlsafe_b64decode(blob))
+        return deserialized_thing
 
     def serialize(self):
-        json_bytes = json.dumps(self, default=lambda x: x.__dict__).encode("utf-8")
-        return base64.urlsafe_b64encode(json_bytes).decode("ascii")
+        ser_bytes = pickle.dumps(self)
+        return base64.urlsafe_b64encode(ser_bytes).decode("utf-8")
 
 
