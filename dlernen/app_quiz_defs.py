@@ -757,6 +757,8 @@ def quiz_words():
     except FileNotFoundError as e:
         APPSTATE = AppState()
 
+    status()
+
     while True:
         callback = main_menu()
 
