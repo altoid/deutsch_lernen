@@ -746,7 +746,7 @@ CALLBACKS = {
 }
 
 
-@bp.cli.command('quiz_defs_2')
+@bp.cli.command('quiz_definitions')
 def quiz_words():
     global STATE_FILE
     global APPSTATE

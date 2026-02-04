@@ -1,3 +1,0 @@
-#!/bin/bash
-
-python -m flask --app run app_quiz_defs quiz_defs_2 $*
