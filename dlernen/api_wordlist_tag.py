@@ -125,7 +125,8 @@ def get_all_tags(wordlist_id):
 
 @bp.route('/<int:wordlist_id>/<int:word_id>', methods=['POST'])
 def add_tags(wordlist_id, word_id):
-    # returns a message and a status code, no object
+    # returns a message and a status code, no object.
+    # the payload is just a list of tags.
 
     # operation is not allowed on smart lists.
     url = url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
@@ -180,6 +181,9 @@ def add_tags(wordlist_id, word_id):
                 return "word %s not in list %s" % (word_id, wordlist_id), 400
 
             # checks complete, let's do this.
+
+            # note that if word_id is not in the wordlist, this insert won't do anything.  the check above
+            # keeps this from happening, but without the check nothing bad will happen anyway.
             sql = """
             insert ignore into tag (wordlist_id, word_id, tag)
             values (%(wordlist_id)s, %(word_id)s, %(tag)s)
