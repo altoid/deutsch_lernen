@@ -582,7 +582,7 @@ def edit_word_form(word):
                               word_id=p['word_id'],
                               _external=True)
                 r = requests.get(url)
-                if r.status_code == 400:
+                if r.status_code == 404:
                     # p['word_id'] is not in the word list.  no big deal.
                     field_disabled = True
                     tags = ''
