@@ -8,6 +8,10 @@ import pickle
 
 bp = Blueprint('app_quiz_defs', __name__)
 
+STATE_FILE = '.quiz_defs'
+MISSED_TAG = '__missed'
+HINTED_TAG = '__hinted'
+
 
 class AppState(object):
     def __init__(self,
@@ -49,7 +53,6 @@ class AppState(object):
 
 
 APPSTATE = AppState()
-STATE_FILE = '.quiz_defs'
 
 
 def unimplemented():
@@ -521,6 +524,31 @@ def get_random_next_word(wordlist_ids, tags):
         i = i % len(word_ids)
 
 
+def tag_word(word_id, tag):
+    # for each wordlist in the app state, affix the HINTED tag to the word.
+    # we will get a 400 if the word_id is not in a list, but we will ignore that condition.
+
+    global APPSTATE
+
+    for wordlist_id in APPSTATE.wordlists:
+        r = requests.post(url_for('api_wordlist_tag.add_tags',
+                                  wordlist_id=wordlist_id,
+                                  word_id=word_id,
+                                  _external=True),
+                          json=[tag])
+
+        if r.status_code == 400:
+            pass
+
+
+def tag_hinted_word(word_id):
+    tag_word(word_id, HINTED_TAG)
+
+
+def tag_missed_word(word_id):
+    tag_word(word_id, MISSED_TAG)
+
+
 def quiz_definitions():
     global APPSTATE
 
@@ -580,13 +608,6 @@ def quiz_missed_words():
 def quiz_loop(generating_function_and_args):
     global APPSTATE
 
-    # while generator.next()
-    #     show word
-    #     prompt loop
-    #     show answer
-    #     prompt for correct
-    #     post result
-
     function, args, kwargs = generating_function_and_args
 
     count = len(APPSTATE.saved_payloads) + 1  # add 1 so we don't count up from 0
@@ -642,6 +663,9 @@ def quiz_loop(generating_function_and_args):
                         print("%s [%s:  %s]" % (n['name'], n['wordlist_id'], tags))
                     else:
                         print("%s [%s]" % (n['name'], n['wordlist_id']))
+
+                tag_hinted_word(attr_to_test['word_id'])
+
                 continue
 
             print("unknown response:  %s" % answer)
@@ -657,21 +681,27 @@ def quiz_loop(generating_function_and_args):
         while len(answer) == 0:
             answer = input(prompt).strip().lower()
 
+        correct = answer.startswith('y')
+
         payload = {
             "quiz_id": attr_to_test['quiz_id'],
             "word_id": attr_to_test['word_id'],
             "attribute_id": attr_to_test['attribute_id'],
-            'correct': answer.startswith('y')
+            'correct': correct
         }
 
         r = requests.post(url_for('api_quiz.post_quiz_answer',
                                   quiz_key=APPSTATE.quiz_key,
-                                  _external=True), json=payload)
+                                  _external=True),
+                          json=payload)
 
         if not r:
             message = "could not post answer [%s, %s]" % (r.text, r.status_code)
             print(message)
             break
+
+        if not correct:
+            tag_missed_word(attr_to_test['word_id'])
 
         APPSTATE.saved_payloads.append(payload)
         count += 1
