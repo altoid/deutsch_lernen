@@ -60,7 +60,7 @@ class ValidateData(unittest.TestCase):
                     payload = {
                         'word_id': list(map(lambda x: x['id'], rows))
                     }
-                    r = self.client.put(url_for('api_words.get_words', _external=True), json=payload)
+                    r = self.client.put(url_for('api_words.get_words_from_word_ids', _external=True), json=payload)
                     self.assertEqual(r.status_code, 200)
 
                     offset += limit

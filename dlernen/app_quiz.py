@@ -18,7 +18,7 @@ def quiz_words(wordlist_ids, queries):
     # distance away from the real answer.
 
     # get all the words
-    url = url_for('api_word.get_words_in_wordlists', _external=True)
+    url = url_for('api_word.get_words', _external=True)
     r = requests.get(url)
     if not r:
         return r.text, r.status_code

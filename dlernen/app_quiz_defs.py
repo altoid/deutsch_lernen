@@ -359,9 +359,9 @@ def show_missed_words():
     """)
         return
 
-    r = requests.put(url_for('api_words.get_words', _external=True), json={'word_ids': missed_word_ids})
+    r = requests.put(url_for('api_words.get_words_from_word_ids', _external=True), json={'word_ids': missed_word_ids})
     if not r:
-        print("api_words.get_words failed:  [%s - %s]" % (r.text, r.status_code))
+        print("api_words.get_words_from_word_ids failed:  [%s - %s]" % (r.text, r.status_code))
         return
 
     obj = r.json()
@@ -388,9 +388,9 @@ def show_hinted_words():
     """)
         return
 
-    r = requests.put(url_for('api_words.get_words', _external=True), json={'word_ids': list(APPSTATE.hints_requested)})
+    r = requests.put(url_for('api_words.get_words_from_word_ids', _external=True), json={'word_ids': list(APPSTATE.hints_requested)})
     if not r:
-        print("api_words.get_words failed:  [%s - %s]" % (r.text, r.status_code))
+        print("api_words.get_words_from_word_ids failed:  [%s - %s]" % (r.text, r.status_code))
         return
 
     obj = r.json()

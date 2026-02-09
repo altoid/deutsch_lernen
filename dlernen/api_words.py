@@ -12,7 +12,7 @@ bp = Blueprint('api_words', __name__, url_prefix='/api/words')
 
 
 @bp.route('', methods=['GET'])
-def get_words_in_wordlists():
+def get_words():
     """
     given a list of wordlist ids, get all the words in those lists.  if no word list ids are given, dump
     the whole dictionary.
@@ -41,7 +41,7 @@ def get_words_in_wordlists():
 
 
 @bp.route('', methods=['PUT'])
-def get_words():
+def get_words_from_word_ids():
     # this is for PUT requests because we have to send in the list of words ids as a payload.
     # if we try to put the word_ids into a GET URL, the URL might be too long.
     """
