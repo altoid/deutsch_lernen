@@ -15,6 +15,8 @@ bp = Blueprint('api_wordlist_tag', __name__, url_prefix='/api/wordlist/tags')
 
 @bp.route('/<int:wordlist_id>/<int:word_id>', methods=['GET'])
 def get_tags(wordlist_id, word_id):
+    # get all the tags affixed to this word id in this wordlist.
+
     # perform the following checks:
     #
     # - wordlist exists
@@ -73,6 +75,9 @@ def get_tags(wordlist_id, word_id):
 @bp.route('/<int:wordlist_id>', methods=['GET'])
 def get_all_tags(wordlist_id):
     # get all the tags across all the words in the wordlist.
+    # the response will not indicate with tags go with which word.  it contains just the wordlist id and
+    # the list of tags.
+    
     # perform the following checks:
     #
     # - wordlist exists
@@ -214,6 +219,9 @@ def add_tags(wordlist_id, word_id):
 
 @bp.route('/<int:wordlist_id>/<int:word_id>', methods=['DELETE'])
 def delete_tags(wordlist_id, word_id):
+    # clear tags from this word id in this wordlist.  tags are given in the URL.  if no tags are given in the URL,
+    # do nothing.
+
     # operation is not allowed on smart lists.
     url = url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
