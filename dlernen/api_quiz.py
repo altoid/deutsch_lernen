@@ -391,7 +391,7 @@ def post_quiz_answer():
     return 'OK', 200
 
 
-@bp.route('/report/<string:quiz_key>/<int:wordlist_id>')
+@bp.route('/report/<string:quiz_key>/<int:wordlist_id>')   # url may have ?tag=x&tag=x& ...
 def get_report(quiz_key, wordlist_id):
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
@@ -400,6 +400,7 @@ def get_report(quiz_key, wordlist_id):
         where quiz_key = %(quiz_key)s
         """
 
+        tags = request.args.getlist('tag')
         cursor.execute(sql, {'quiz_key': quiz_key})
         rows = cursor.fetchall()
         if not rows:
@@ -409,7 +410,7 @@ def get_report(quiz_key, wordlist_id):
 
         # check that the wordlist_id is real
         sql = """
-        select id
+        select id, sqlcode
         from wordlist
         where id = %(wordlist_id)s
         """
@@ -418,7 +419,25 @@ def get_report(quiz_key, wordlist_id):
         if not wordlist_row:
             return "wordlist %s not found" % wordlist_id, 404
 
-        word_ids = common.get_word_ids_from_wordlists([wordlist_id], cursor)
+        if tags and wordlist_row[0]['sqlcode']:
+            return "no tags on smart list (%s)" % wordlist_id, 400
+
+        if tags:
+            tag_args = ['%s'] * len(tags)
+            tag_args = ', '.join(tag_args)
+            sql = """
+            select word_id
+            from tag
+            where tag in (%(tag_args)s)
+            and wordlist_id = %%s
+            """ % {'tag_args': tag_args}
+
+            cursor.execute(sql, tags + [wordlist_id])
+
+            rows = cursor.fetchall()
+            word_ids = [x['word_id'] for x in rows]
+        else:
+            word_ids = common.get_word_ids_from_wordlists([wordlist_id], cursor)
 
         word_id_args = ['%s'] * len(word_ids)
         word_id_args = ', '.join(word_id_args)

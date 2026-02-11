@@ -54,28 +54,28 @@ FIXME - in the lookup results page, add a word-entry text field.  it may be that
 
 FIXME - remove attrvalue_id column from mashup_v
 
+TODO - for definitions quiz app, can we just rewrite the whole thing as a class?
+
+TODO - in quiz app, tag words that were missed/hinted, and also remove these tags
+
+TODO - in quiz app, add options to k, l, and tags subcommands
+
+FIXME - in quiz app, if you go to the main menu in the middle of a quiz where all word ids are prefetched,
+    state is lost and you lose your place.  should keep state until list is changed or app is reset.  this state
+    should be saved to disk on program exit.
+
+TODO - api changes to support fetching words with the same tag from multiple wordlists
+    augment GET /api/words to have tags in the URL
+
 ------
 
-rewrite of quiz_definitions app
+tag api changes:
 
-show and retest words missed during the session
-switch lists during the session
+relaxing the 'tags are per wordlist' restriction a bit.
 
-main menu (Hauptmenü)
-- select lists
-- if single list selected, select tags
-- if any missed words, provide this as a selection option
-- (if lists/tags not selected, quiz the whole dictionary)
-- select queries
-- start quiz
-- show words tested this session, with correct/total/raw score, flag words missed
-- show words missed this session, with definitions
-- status
--- what lists, tags, queries, correct/total
+- we want to query the same tag from multiple wordlists (e.g. hinted and missed tags)
+- clear the same tag from multiple wordlists? ==> yes
 
-quiz loop:
-- display word
-- prompt:  return for answer, h for hint, q return to main menu
 
 
 ------

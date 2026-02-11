@@ -858,6 +858,12 @@ def update_dict():
 
 @bp.route('/quiz_report/<string:quiz_key>/<int:wordlist_id>')
 def quiz_report(quiz_key, wordlist_id):
+    serialized_tag_state = request.args.get('serialized_tag_state')
+    selected_tags = []
+    if serialized_tag_state:
+        tag_state_object = TagState.deserialize(serialized_tag_state)
+        selected_tags = tag_state_object.selected_tags()
+
     r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True))
     if not r:
         return render_template("error.html",
@@ -866,8 +872,11 @@ def quiz_report(quiz_key, wordlist_id):
 
     wordlist = r.json()
 
-    url = url_for('api_quiz.get_report', quiz_key=quiz_key, wordlist_id=wordlist_id, _external=True)
-    r = requests.get(url)
+    r = requests.get(url_for('api_quiz.get_report',
+                             quiz_key=quiz_key,
+                             wordlist_id=wordlist_id,
+                             tag=selected_tags,
+                             _external=True))
     if not r:
         return render_template("error.html",
                                message=r.text,
@@ -877,7 +886,7 @@ def quiz_report(quiz_key, wordlist_id):
     return render_template("quiz_report.html",
                            quiz_key=report['quiz_key'],
                            wordlist=wordlist,
-                           serialized_tag_state=request.args.get('serialized_tag_state'),
+                           serialized_tag_state=serialized_tag_state,
                            scores=report['scores'])
 
 
