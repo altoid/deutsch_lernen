@@ -440,42 +440,6 @@ def edit_list_contents():
                            wordlist=wordlist)
 
 
-@bp.route('/add_to_list', methods=['POST'])
-def add_to_list():
-    # the get_word function will check that the word is not garbage, no need to do it here.
-    word = request.form['word'].strip()
-    wordlist_id = request.form['wordlist_id']
-
-    url = url_for('api_word.get_word', word=word, _external=True)
-    r = requests.get(url)
-    payload = None
-    if r.status_code == 404 or r.status_code == 200:
-        payload = {
-            "words": [
-                word
-            ]
-        }
-
-    if not payload:
-        flash("""
-        could not deal with word "%s" [%s]:  %s
-        """ % (word, r.status_code, r.text))
-        target = url_for('dlernen.wordlist_page',
-                         serialized_tag_state=request.form.get('serialized_tag_state'),
-                         wordlist_id=wordlist_id)
-        return redirect(target)
-
-    url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True)
-    r = requests.put(url, json=payload)
-    if not r:
-        flash(r.text)
-
-    target = url_for('dlernen.wordlist_page',
-                     wordlist_id=wordlist_id,
-                     serialized_tag_state=request.form.get('serialized_tag_state'))
-    return redirect(target)
-
-
 @bp.route('/update_notes', methods=['POST'])
 def update_notes():
     wordlist_id = request.form['wordlist_id']
