@@ -413,7 +413,7 @@ def edit_list_contents():
             word_ids_to_tags[word_id].append(tag)
 
         for word_id, tags in word_ids_to_tags.items():
-            url = url_for('api_wordlist_tag.delete_tags',
+            url = url_for('api_wordlist_tag.delete_tags_for_word_id',
                           wordlist_id=wordlist_id,
                           word_id=word_id,
                           tag=tags,
@@ -778,7 +778,7 @@ def update_dict():
             if p['pos_id'] not in pos_id_to_tags_deleting:
                 continue
 
-            url = url_for('api_wordlist_tag.delete_tags',
+            url = url_for('api_wordlist_tag.delete_tags_for_word_id',
                           word_id=p['word_id'],
                           wordlist_id=wordlist_id,
                           tag=pos_id_to_tags_deleting[p['pos_id']],

@@ -218,9 +218,10 @@ def add_tags(wordlist_id, word_id):
 
 
 @bp.route('/<int:wordlist_id>/<int:word_id>', methods=['DELETE'])
-def delete_tags(wordlist_id, word_id):
+def delete_tags_for_word_id(wordlist_id, word_id):
     # clear tags from this word id in this wordlist.  tags are given in the URL.  if no tags are given in the URL,
     # do nothing.
+    # returns a message and a status code, no object.
 
     # operation is not allowed on smart lists.
     url = url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
@@ -233,7 +234,6 @@ def delete_tags(wordlist_id, word_id):
         message = "cannot remove tags from words in a smart list:  %s" % wordlist_id
         return message, 400
 
-    # returns a message and a status code, no object.
     doomed_tags = request.args.getlist('tag')
 
     doomed_tags = list(set(doomed_tags))  # ensure no redundant tags

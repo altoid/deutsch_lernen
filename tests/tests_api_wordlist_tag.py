@@ -100,7 +100,7 @@ class APIWordlistTagSmartList(unittest.TestCase):
         self.assertNotEqual(200, r.status_code)
 
     def test_deleteTags(self):
-        r = self.client.delete(url_for('api_wordlist_tag.delete_tags',
+        r = self.client.delete(url_for('api_wordlist_tag.delete_tags_for_word_id',
                                        wordlist_id=self.wordlist_id,
                                        word_id=self.word1_id,
                                        _external=True),
