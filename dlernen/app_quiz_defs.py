@@ -34,6 +34,7 @@ class AppState(object):
         else:
             self.tags = set()
 
+        # set of word ids for which hints were requested.
         if hints_requested:
             self.hints_requested = hints_requested
         else:
@@ -371,14 +372,11 @@ def show_missed_words():
     *****************************
     """)
     for w in obj:
-        print("%s (%s)" % (w['word'], w['pos_name']))
+        print("    %s (%s)" % (w['word'], w['pos_name']))
 
 
 def show_hinted_words():
     global APPSTATE
-
-    missed_words = list(filter(lambda x: not x['correct'], APPSTATE.saved_payloads))
-    missed_word_ids = list({x['word_id'] for x in missed_words})
 
     if not APPSTATE.hints_requested:
         print("""
