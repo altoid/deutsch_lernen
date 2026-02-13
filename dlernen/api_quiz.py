@@ -72,7 +72,7 @@ select
 from word_scores, total_presentations
 where raw_score < 0.8
 or presentation_count <= 5   -- without this, if we get it right the first time we never see it again
-order by raw_score, presentation_count
+order by raw_score, presentation_count, last_presentation
 limit 1
 """
 
@@ -119,7 +119,7 @@ select
     word_scores.attribute_id
 from word_scores
 where presentation_count <= 5
-order by presentation_count
+order by presentation_count, last_presentation
 limit 1
 """
 
@@ -134,7 +134,7 @@ select
     ifnull((presentation_count / npresentations) * raw_score, 0) as weighted_score,
     ifnull(last_presentation, '--') last_presentation
 from word_scores, total_presentations
-order by raw_score, presentation_count
+order by raw_score, presentation_count, last_presentation
 """
 
 DEFINED_QUERIES = {
