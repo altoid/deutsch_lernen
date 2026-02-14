@@ -11,6 +11,193 @@ def cleanupWordID(client, word_id):
     client.delete(url_for('api_word.delete_word', word_id=word_id, _external=True))
 
 
+class APITestsWordNotes(unittest.TestCase):
+    # tests for operations on word notes.
+
+    app = None
+    app_context = None
+    keyword_mappings = None
+    client = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
+            TESTING=True,
+        )
+
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
+
+        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
+        cls.keyword_mappings = json.loads(r.data)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
+
+    # do nothing, just make sure that setUp and tearDown work
+    def test_nothing(self):
+        pass
+
+    # create a word with no notes.  fetch the word and verify notes are None.
+    def test1(self):
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+        add_payload = {
+            "word": word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
+            "notes": None,
+            js.ATTRIBUTES: [
+                {
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 201)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
+
+        r = self.client.get(url_for('api_word.get_word_by_id', word_id=word_id, _external=True))
+        self.assertEqual(r.status_code, 200)
+        obj = json.loads(r.data)
+        self.assertIsNone(obj['notes'])
+
+    # create a word with no notes.  add notes via update.  verify.
+    def test2(self):
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+        add_payload = {
+            "word": word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
+            "notes": None,
+            js.ATTRIBUTES: [
+                {
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 201)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
+        self.assertIsNone(obj['notes'])
+
+        new_notes = "rubba dubba"
+
+        payload = {
+            "notes": new_notes
+        }
+
+        r = self.client.put(url_for('api_word.update_word', word_id=word_id, _external=True), json=payload)
+        self.assertEqual(200, r.status_code)
+
+        r = self.client.get(url_for('api_word.get_word_by_id', word_id=word_id, _external=True))
+        self.assertEqual(r.status_code, 200)
+        obj = json.loads(r.data)
+        self.assertEqual(new_notes, obj['notes'])
+
+    # create a word with notes.  fetch the word and verify the notes.
+    def test3(self):
+        notes = "do re mi"
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+        add_payload = {
+            "word": word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
+            "notes": notes,
+            js.ATTRIBUTES: [
+                {
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 201)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
+
+        r = self.client.get(url_for('api_word.get_word_by_id', word_id=word_id, _external=True))
+        self.assertEqual(r.status_code, 200)
+        obj = json.loads(r.data)
+        self.assertEqual(notes, obj['notes'])
+
+    # create a word with notes.  change the notes via update.  verify.
+    def test4(self):
+        old_notes = "do re mi"
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+        add_payload = {
+            "word": word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
+            "notes": old_notes,
+            js.ATTRIBUTES: [
+                {
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 201)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
+        self.assertEqual(old_notes, obj['notes'])
+
+        new_notes = "rubba dubba"
+
+        payload = {
+            "notes": new_notes
+        }
+
+        r = self.client.put(url_for('api_word.update_word', word_id=word_id, _external=True), json=payload)
+        self.assertEqual(200, r.status_code)
+
+        r = self.client.get(url_for('api_word.get_word_by_id', word_id=word_id, _external=True))
+        self.assertEqual(r.status_code, 200)
+        obj = json.loads(r.data)
+        self.assertEqual(new_notes, obj['notes'])
+
+    # create a word with notes.  remove the notes via update.  verify notes are None.
+    def test5(self):
+        old_notes = "do re mi"
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+        add_payload = {
+            "word": word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
+            "notes": old_notes,
+            js.ATTRIBUTES: [
+                {
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 201)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
+        self.assertEqual(old_notes, obj['notes'])
+
+        payload = {
+            "notes": None
+        }
+
+        r = self.client.put(url_for('api_word.update_word', word_id=word_id, _external=True), json=payload)
+        self.assertEqual(200, r.status_code)
+
+        r = self.client.get(url_for('api_word.get_word_by_id', word_id=word_id, _external=True))
+        self.assertEqual(r.status_code, 200)
+        obj = json.loads(r.data)
+        self.assertIsNone(obj['notes'])
+
+
 class APITestsWordEndToEnd(unittest.TestCase):
     app = None
     app_context = None

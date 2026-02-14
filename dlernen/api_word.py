@@ -158,11 +158,12 @@ def add_word():
     except Exception as e:
         return "bad payload: %s" % str(e), 400
 
-    # word and pos_id are required fields in the json schema.  so if the payload passes validation we know these
+    # word, notes, and pos_id are required fields in the json schema.  so if the payload passes validation we know these
     # are present.
 
     word = payload['word']
     pos_id = payload['pos_id']
+    notes = payload['notes']
 
     # checks:
     # - pos_id is valid
@@ -224,8 +225,8 @@ def add_word():
         try:
             cursor.execute('start transaction')
 
-            sql = "insert into word (word, pos_id) values (%s, %s)"
-            cursor.execute(sql, (word, pos_id))
+            sql = "insert into word (word, notes, pos_id) values (%s, %s, %s)"
+            cursor.execute(sql, (word, notes, pos_id))
             cursor.execute("select last_insert_id() word_id")
             result = cursor.fetchone()
             word_id = result['word_id']
@@ -364,6 +365,19 @@ def update_word(word_id):
                     'word_id': word_id
                 }
                 cursor.execute(sql, d)
+
+            if 'notes' in payload:
+                notes = payload.get('notes')
+                sql = """
+                    update word set notes = %(notes)s
+                    where id = %(word_id)s
+                    """
+                d = {
+                    'notes': notes,
+                    'word_id': word_id
+                }
+                cursor.execute(sql, d)
+
             save_attributes(word_id, attributes_adding, attributes_deleting, cursor)
 
             cursor.execute('commit')
