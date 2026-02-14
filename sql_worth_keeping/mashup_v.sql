@@ -5,6 +5,7 @@ select
 	w.id AS word_id,
 	w.word AS word,
 	w.added AS added,
+	w.notes AS notes,
 	pos.id AS pos_id,
 	pos.name AS pos_name,
 	a.id AS attribute_id,
