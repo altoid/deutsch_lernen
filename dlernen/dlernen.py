@@ -464,6 +464,20 @@ def update_notes():
     return redirect(target)
 
 
+@bp.route('/update_word_notes', methods=['POST'])
+def update_word_notes():
+    word_id = request.form.get('word_id')
+    wordlist_id = request.form.get('wordlist_id')
+    serialized_tag_state = request.form.get('serialized_tag_state')
+
+    target = url_for('dlernen.lookup_by_id',
+                     word_id=word_id,
+                     serialized_tag_state=serialized_tag_state,
+                     wordlist_id=wordlist_id)
+
+    return redirect(target)
+
+
 @bp.route('/delete_from_list', methods=['POST'])
 def delete_from_list():
     wordlist_id = request.form['wordlist_id']
