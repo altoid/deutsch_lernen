@@ -16,15 +16,47 @@ def get_word_by_id(word_id):
     """
     returns word object, or 404 if word_id not found.
     """
-    word_ids = [word_id]
-    words = common.get_words_from_word_ids(word_ids)
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        sql = """
+        select
+            pos_name,
+            word,
+            word_id,
+            notes,
+            attrkey,
+            attrvalue,
+            sort_order
+        from
+            mashup_v
+        where word_id = %(word_id)s
+        order by sort_order
+        """
 
-    jsonschema.validate(words, js.WORDS_RESPONSE_SCHEMA)
+        cursor.execute(sql, {"word_id": word_id} )
+        rows = cursor.fetchall()
 
-    if words:
-        return words[0]
+        if not rows:
+            return "word id %s not found" % word_id, 404
 
-    return "word id %s not found" % word_id, 404
+        # take the rows returned by the query and morph them into a SINGLE_WORD_RESPONSE_SCHEMA object.
+        result = {
+            "attributes": []
+        }
+        for r in rows:
+            attr = {
+                "attrkey": r['attrkey'],
+                "attrvalue": r['attrvalue'],
+                "sort_order": r['sort_order']
+            }
+            result['word'] = r['word']
+            result['word_id'] = r['word_id']
+            result['pos_name'] = r['pos_name']
+            result['notes'] = r['notes']
+            result['attributes'].append(attr)
+
+        jsonschema.validate(result, js.SINGLE_WORD_RESPONSE_SCHEMA)
+
+        return result
 
 
 @bp.route('/<string:word>')

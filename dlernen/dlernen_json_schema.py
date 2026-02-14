@@ -46,7 +46,8 @@ WORD_ADD_PAYLOAD_SCHEMA = {
     "type": "object",
     "required": [
         "word",
-        "pos_id"
+        "pos_id",
+        "notes"
     ],
     "properties": {
         "word": {
@@ -56,6 +57,9 @@ WORD_ADD_PAYLOAD_SCHEMA = {
         "pos_id": {
             "type": "integer",
             "minimum": 1
+        },
+        "notes": {
+            "type": ["string", 'null']
         },
         ATTRIBUTES: {
             "type": "array",
@@ -94,6 +98,9 @@ WORD_UPDATE_PAYLOAD_SCHEMA = {
             # not required, but if present, we are making a spelling change
             "type": "string",
             "pattern": WORD_PATTERN
+        },
+        "notes": {
+            "type": ["string", 'null']
         },
         ATTRIBUTES: {
             "type": "array",
