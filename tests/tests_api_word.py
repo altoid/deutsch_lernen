@@ -11,10 +11,6 @@ def cleanupWordID(client, word_id):
     client.delete(url_for('api_word.delete_word', word_id=word_id, _external=True))
 
 
-def cleanupWordlistID(client, wordlist_id):
-    client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id, _external=True))
-
-
 class APITestsWordEndToEnd(unittest.TestCase):
     app = None
     app_context = None
