@@ -313,272 +313,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
-class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = js.WORDLIST_RESPONSE_SCHEMA
-
-    valid_docs = [
-        {'citation': None,
-         'known_words': [{'article': None,
-                          'definition': "it's an adjective",
-                          'word': 'anohteduntaheoud',
-                          'tags': [],
-                          'word_id': 9185},
-                         {'article': None,
-                          'definition': "no it's a floor cleaner",
-                          'word': 'anohteduntaheoud',
-                          'tags': ['abcd'],
-                          'word_id': 9186},
-                         {'article': None,
-                          'definition': "now it's a noun",
-                          'word': 'Anohteduntaheoud',
-                          'tags': [],
-                          'word_id': 9187},
-                         {'article': None,
-                          'definition': None,  # null is OK
-                          'word': 'anohteduntaheoud',
-                          'tags': [],
-                          'word_id': 9188},
-                         {'article': None,
-                          'definition': "look it's a verb",
-                          'word': 'anohteduntaheoud',
-                          'tags': ['fish', 'heads'],
-                          'word_id': 9189}],
-         'list_type': 'standard',
-         'name': 'aaa fake list 1',
-         'notes': None,
-         'source_is_url': False,
-         'sqlcode': None,
-         'unknown_words': [],
-         'wordlist_id': 4237},
-        {
-            "name": "sample_word_list",
-            "wordlist_id": 1234,
-            "list_type": "standard",
-            "known_words": [
-                {
-                    "word": "aoeuaeou",
-                    "word_id": 123,
-                    "tags": ["aoeu"],
-                    "definition": "hell if i know"
-                },
-                {
-                    "word": "Iethdsenihtd",
-                    "word_id": 465,
-                    "article": "das",
-                    "tags": ["aoeu", "oeui"],
-                    "definition": "an odd noun"
-                }
-            ],
-            "citation": "where i got this",
-            "source_is_url": False,
-            "unknown_words": [
-                "othuedtiu", "tehuidntuh", "tuehdinteuh"
-            ],
-            "notes": "lots of stuff"
-        },
-        {
-            "name": "no words",
-            "wordlist_id": 1234,
-            "list_type": "standard",
-            "known_words": [],
-            "citation": "where i got this",
-            "source_is_url": False,
-            "unknown_words": [],
-            "notes": "lots of stuff"
-        },
-        {
-            "name": "null citation and notes",
-            "wordlist_id": 1234,
-            "list_type": "standard",
-            "known_words": [],
-            "citation": None,
-            "source_is_url": False,
-            "unknown_words": [],
-            "notes": None
-        }
-    ]
-
-    invalid_docs = [
-        {
-            "name": "bullshit list type",
-            "wordlist_id": 1234,
-            "list_type": "bullshit",
-            "known_words": [],
-            "citation": "where i got this",
-            "source_is_url": False,
-            "unknown_words": [],
-            "notes": "lots of stuff"
-        },
-        {
-            # "name": "no words",
-            "wordlist_id": 1234,
-            "list_type": "standard",
-            "known_words": [],
-            "citation": "where i got this",
-            "source_is_url": False,
-            "unknown_words": [],
-            "notes": "lots of stuff"
-        },
-        {
-            "name": "no words",
-            # "wordlist_id": 1234,
-            "list_type": "standard",
-            "known_words": [],
-            "citation": "where i got this",
-            "source_is_url": False,
-            "unknown_words": [],
-            "notes": "lots of stuff"
-        },
-        {
-            "name": "no words",
-            "wordlist_id": 1234,
-            # "list_type": "standard",
-            "known_words": [],
-            "citation": "where i got this",
-            "source_is_url": False,
-            "unknown_words": [],
-            "notes": "lots of stuff"
-        },
-        {
-            "name": "no words",
-            "wordlist_id": 1234,
-            "list_type": "standard",
-            "known_words": [],
-            # "citation": "where i got this",
-            "source_is_url": False,
-            "unknown_words": [],
-            "notes": "lots of stuff"
-        },
-        {
-            "name": "no words",
-            "wordlist_id": 1234,
-            "list_type": "standard",
-            "known_words": [],
-            "citation": "where i got this",
-            # "source_is_url": False,
-            "unknown_words": [],
-            "notes": "lots of stuff"
-        },
-        {
-            "name": "no words",
-            "wordlist_id": 1234,
-            "list_type": "standard",
-            "known_words": [],
-            "citation": "where i got this",
-            "source_is_url": False,
-            # "unknown_words": [],
-            "notes": "lots of stuff"
-        },
-        {
-            "name": "no words",
-            "wordlist_id": 1234,
-            "list_type": "standard",
-            "known_words": [],
-            "citation": "where i got this",
-            "source_is_url": False,
-            "unknown_words": [],
-            # "notes": "lots of stuff"
-        },
-        {
-            "name": "messin with words",
-            "wordlist_id": 1234,
-            "list_type": "standard",
-            "known_words": [
-                {
-                    # "word": "werrd",
-                    "word_id": 1234,
-                    "tags": ["egad"],
-                }
-            ],
-            "citation": "where i got this",
-            "source_is_url": False,
-            "unknown_words": [],
-            "notes": "lots of stuff"
-        },
-        {
-            "name": "messin with words",
-            "wordlist_id": 1234,
-            "list_type": "standard",
-            "known_words": [
-                {
-                    "word": "werrd",
-                    # "word_id": 1234,
-                    "tags": ["egad"],
-                }
-            ],
-            "citation": "where i got this",
-            "source_is_url": False,
-            "unknown_words": [],
-            "notes": "lots of stuff"
-        },
-        {
-            "name": "messin with words",
-            "wordlist_id": 1234,
-            "list_type": "standard",
-            "known_words": [
-                {
-                    "word": "werrd",
-                    "word_id": 1234,
-                    # "tags": ["egad"],
-                }
-            ],
-            "citation": "where i got this",
-            "source_is_url": False,
-            "unknown_words": [],
-            "notes": "lots of stuff"
-        },
-        {
-            # empty doc not allowed
-        }
-    ]
-
-    def test_valid_docs(self):
-        for jdoc in self.valid_docs:
-            with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
-
-    def test_invalid_docs(self):
-        for jdoc in self.invalid_docs:
-            with self.subTest(jdoc=jdoc):
-                with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
-
-    def test_check_schema(self):
-        jsonschema.Draft202012Validator.check_schema(self.schema)
-
-
-class Test_WORDLISTS_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = js.WORDLISTS_RESPONSE_SCHEMA
-
-    valid_docs = [
-        [
-            {
-                "name": "sample_word_list",
-                "wordlist_id": 1234,
-                "count": 111,
-                "list_type": "standard"
-            }
-        ]
-    ]
-
-    invalid_docs = [
-    ]
-
-    def test_valid_docs(self):
-        for jdoc in self.valid_docs:
-            with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
-
-    def test_invalid_docs(self):
-        for jdoc in self.invalid_docs:
-            with self.subTest(jdoc=jdoc):
-                with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
-
-    def test_check_schema(self):
-        jsonschema.Draft202012Validator.check_schema(self.schema)
-
-
 class Test_QUIZ_ANSWER_PAYLOAD_SCHEMA(unittest.TestCase):
     schema = js.QUIZ_ANSWER_PAYLOAD_SCHEMA
 
@@ -970,6 +704,156 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
+class Test_SINGLE_WORD_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = js.SINGLE_WORD_RESPONSE_SCHEMA
+
+    valid_docs = [
+        {
+            "word": "saoethus",
+            "word_id": 1234,
+            "pos_name": "eoui",
+            "notes": "this is a cool word",
+            "attributes": [
+                {
+                    'attrkey': 'definition',
+                    'sort_order': 5,
+                    'attrvalue': 'to spoil, deteriorate, go bad'
+                },
+            ],
+        },
+        {
+            "word": "saoethus",
+            "word_id": 1234,
+            "pos_name": "eoui",
+            "notes": None,
+            "attributes": [
+            ],
+        },
+    ]
+
+    invalid_docs = [
+        {
+            # "word": "saoethus",
+            "word_id": 1234,
+            "pos_name": "eoui",
+            "notes": "this is a cool word",
+            "attributes": [
+                {
+                    'attrkey': 'definition',
+                    'sort_order': 5,
+                    'attrvalue': 'to spoil, deteriorate, go bad'
+                },
+            ],
+        },
+        {
+            "word": "saoethus",
+            # "word_id": 1234,
+            "pos_name": "eoui",
+            "notes": "this is a cool word",
+            "attributes": [
+                {
+                    'attrkey': 'definition',
+                    'sort_order': 5,
+                    'attrvalue': 'to spoil, deteriorate, go bad'
+                },
+            ],
+        },
+        {
+            "word": "saoethus",
+            "word_id": 1234,
+            # "pos_name": "eoui",
+            "notes": "this is a cool word",
+            "attributes": [
+                {
+                    'attrkey': 'definition',
+                    'sort_order': 5,
+                    'attrvalue': 'to spoil, deteriorate, go bad'
+                },
+            ],
+        },
+        {
+            "word": "saoethus",
+            "word_id": 1234,
+            "pos_name": "eoui",
+            # "notes": "this is a cool word",
+            "attributes": [
+                {
+                    'attrkey': 'definition',
+                    'sort_order': 5,
+                    'attrvalue': 'to spoil, deteriorate, go bad'
+                },
+            ],
+        },
+        {
+            "word": "saoethus",
+            "word_id": 1234,
+            "pos_name": "eoui",
+            "notes": "this is a cool word",
+            # "attributes": [
+            #     {
+            #         'attrkey': 'definition',
+            #         'sort_order': 5,
+            #         'attrvalue': 'to spoil, deteriorate, go bad'
+            #     },
+            # ],
+        },
+        {
+            "word": "saoethus",
+            "word_id": 1234,
+            "pos_name": "eoui",
+            "notes": "this is a cool word",
+            "attributes": [
+                {
+                    # 'attrkey': 'definition',
+                    'sort_order': 5,
+                    'attrvalue': 'to spoil, deteriorate, go bad'
+                },
+            ],
+        },
+        {
+            "word": "saoethus",
+            "word_id": 1234,
+            "pos_name": "eoui",
+            "notes": "this is a cool word",
+            "attributes": [
+                {
+                    'attrkey': 'definition',
+                    # 'sort_order': 5,
+                    'attrvalue': 'to spoil, deteriorate, go bad'
+                },
+            ],
+        },
+        {
+            "word": "saoethus",
+            "word_id": 1234,
+            "pos_name": "eoui",
+            "notes": "this is a cool word",
+            "attributes": [
+                {
+                    'attrkey': 'definition',
+                    'sort_order': 5,
+                    # 'attrvalue': 'to spoil, deteriorate, go bad'
+                },
+            ],
+        },
+
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, self.schema)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
 class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
     schema = js.WORD_ADD_PAYLOAD_SCHEMA
 
@@ -1243,66 +1127,6 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
-class Test_WORDS_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = js.WORDS_RESPONSE_SCHEMA
-
-    valid_docs = [
-        [
-            {
-                "attributes": [
-                    {'attrkey': 'definition',
-                     'sort_order': 5,
-                     'attrvalue': 'to spoil, deteriorate, go bad'},
-                    {'attrkey': 'first_person_singular',
-                     'sort_order': 6,
-                     'attrvalue': 'verderbe'},
-                    {'attrkey': 'second_person_singular',
-                     'sort_order': 7,
-                     'attrvalue': 'verdirbst'},
-                    {'attrkey': 'third_person_singular',
-                     'sort_order': 8,
-                     'attrvalue': 'verdirbt'},
-                    {'attrkey': 'first_person_plural',
-                     'sort_order': 9,
-                     'attrvalue': 'verderben'},
-                    {'attrkey': 'second_person_plural',
-                     'sort_order': 10,
-                     'attrvalue': 'verderbt'},
-                    {'attrkey': 'third_person_plural',
-                     'sort_order': 11,
-                     'attrvalue': 'verderben'},
-                    {'attrkey': 'third_person_past',
-                     'sort_order': 16,
-                     'attrvalue': 'verdarb'},
-                    {'attrkey': 'past_participle',
-                     'sort_order': 17,
-                     'attrvalue': 'verdorben'}
-                ],
-                "pos_name": "Verb",
-                "word": "verderben",
-                "word_id": 2267
-            }
-        ]
-    ]
-
-    invalid_docs = [
-    ]
-
-    def test_valid_docs(self):
-        for jdoc in self.valid_docs:
-            with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
-
-    def test_invalid_docs(self):
-        for jdoc in self.invalid_docs:
-            with self.subTest(jdoc=jdoc):
-                with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
-
-    def test_check_schema(self):
-        jsonschema.Draft202012Validator.check_schema(self.schema)
-
-
 class Test_WORDLIST_CONTENTS_PAYLOAD_SCHEMA(unittest.TestCase):
     schema = js.WORDLIST_CONTENTS_PAYLOAD_SCHEMA
 
@@ -1353,35 +1177,6 @@ class Test_WORDLIST_CONTENTS_PAYLOAD_SCHEMA(unittest.TestCase):
         {
             "words": "value should be an array"
         }
-    ]
-
-    def test_valid_docs(self):
-        for jdoc in self.valid_docs:
-            with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
-
-    def test_invalid_docs(self):
-        for jdoc in self.invalid_docs:
-            with self.subTest(jdoc=jdoc):
-                with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
-
-    def test_check_schema(self):
-        jsonschema.Draft202012Validator.check_schema(self.schema)
-
-
-class Test_WORDLISTS_DELETE_PAYLOAD_SCHEMA(unittest.TestCase):
-    schema = js.WORDLISTS_DELETE_PAYLOAD_SCHEMA
-
-    valid_docs = [
-        [1, 2, 3],
-        []
-    ]
-
-    invalid_docs = [
-        {},
-        "bullshit",
-        ["more bullshit"]
     ]
 
     def test_valid_docs(self):
@@ -1552,6 +1347,240 @@ class Test_WORDLIST_METADATA_RESPONSE_SCHEMA(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
+class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = js.WORDLIST_RESPONSE_SCHEMA
+
+    valid_docs = [
+        {'citation': None,
+         'known_words': [{'article': None,
+                          'definition': "it's an adjective",
+                          'word': 'anohteduntaheoud',
+                          'tags': [],
+                          'word_id': 9185},
+                         {'article': None,
+                          'definition': "no it's a floor cleaner",
+                          'word': 'anohteduntaheoud',
+                          'tags': ['abcd'],
+                          'word_id': 9186},
+                         {'article': None,
+                          'definition': "now it's a noun",
+                          'word': 'Anohteduntaheoud',
+                          'tags': [],
+                          'word_id': 9187},
+                         {'article': None,
+                          'definition': None,  # null is OK
+                          'word': 'anohteduntaheoud',
+                          'tags': [],
+                          'word_id': 9188},
+                         {'article': None,
+                          'definition': "look it's a verb",
+                          'word': 'anohteduntaheoud',
+                          'tags': ['fish', 'heads'],
+                          'word_id': 9189}],
+         'list_type': 'standard',
+         'name': 'aaa fake list 1',
+         'notes': None,
+         'source_is_url': False,
+         'sqlcode': None,
+         'unknown_words': [],
+         'wordlist_id': 4237},
+        {
+            "name": "sample_word_list",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [
+                {
+                    "word": "aoeuaeou",
+                    "word_id": 123,
+                    "tags": ["aoeu"],
+                    "definition": "hell if i know"
+                },
+                {
+                    "word": "Iethdsenihtd",
+                    "word_id": 465,
+                    "article": "das",
+                    "tags": ["aoeu", "oeui"],
+                    "definition": "an odd noun"
+                }
+            ],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [
+                "othuedtiu", "tehuidntuh", "tuehdinteuh"
+            ],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "no words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "null citation and notes",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [],
+            "citation": None,
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": None
+        }
+    ]
+
+    invalid_docs = [
+        {
+            "name": "bullshit list type",
+            "wordlist_id": 1234,
+            "list_type": "bullshit",
+            "known_words": [],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            # "name": "no words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "no words",
+            # "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "no words",
+            "wordlist_id": 1234,
+            # "list_type": "standard",
+            "known_words": [],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "no words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [],
+            # "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "no words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [],
+            "citation": "where i got this",
+            # "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "no words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [],
+            "citation": "where i got this",
+            "source_is_url": False,
+            # "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "no words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            # "notes": "lots of stuff"
+        },
+        {
+            "name": "messin with words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [
+                {
+                    # "word": "werrd",
+                    "word_id": 1234,
+                    "tags": ["egad"],
+                }
+            ],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "messin with words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [
+                {
+                    "word": "werrd",
+                    # "word_id": 1234,
+                    "tags": ["egad"],
+                }
+            ],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "messin with words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "known_words": [
+                {
+                    "word": "werrd",
+                    "word_id": 1234,
+                    # "tags": ["egad"],
+                }
+            ],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "unknown_words": [],
+            "notes": "lots of stuff"
+        },
+        {
+            # empty doc not allowed
+        }
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, self.schema)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
 class Test_WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA(unittest.TestCase):
     schema = js.WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA
 
@@ -1563,6 +1592,127 @@ class Test_WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA(unittest.TestCase):
     invalid_docs = [
         ["no spaces allowed"],
         [1, 2, 3]
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, self.schema)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
+class Test_WORDLISTS_DELETE_PAYLOAD_SCHEMA(unittest.TestCase):
+    schema = js.WORDLISTS_DELETE_PAYLOAD_SCHEMA
+
+    valid_docs = [
+        [1, 2, 3],
+        []
+    ]
+
+    invalid_docs = [
+        {},
+        "bullshit",
+        ["more bullshit"]
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, self.schema)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
+class Test_WORDLISTS_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = js.WORDLISTS_RESPONSE_SCHEMA
+
+    valid_docs = [
+        [
+            {
+                "name": "sample_word_list",
+                "wordlist_id": 1234,
+                "count": 111,
+                "list_type": "standard"
+            }
+        ]
+    ]
+
+    invalid_docs = [
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, self.schema)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
+class Test_WORDS_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = js.WORDS_RESPONSE_SCHEMA
+
+    valid_docs = [
+        [
+            {
+                "attributes": [
+                    {'attrkey': 'definition',
+                     'sort_order': 5,
+                     'attrvalue': 'to spoil, deteriorate, go bad'},
+                    {'attrkey': 'first_person_singular',
+                     'sort_order': 6,
+                     'attrvalue': 'verderbe'},
+                    {'attrkey': 'second_person_singular',
+                     'sort_order': 7,
+                     'attrvalue': 'verdirbst'},
+                    {'attrkey': 'third_person_singular',
+                     'sort_order': 8,
+                     'attrvalue': 'verdirbt'},
+                    {'attrkey': 'first_person_plural',
+                     'sort_order': 9,
+                     'attrvalue': 'verderben'},
+                    {'attrkey': 'second_person_plural',
+                     'sort_order': 10,
+                     'attrvalue': 'verderbt'},
+                    {'attrkey': 'third_person_plural',
+                     'sort_order': 11,
+                     'attrvalue': 'verderben'},
+                    {'attrkey': 'third_person_past',
+                     'sort_order': 16,
+                     'attrvalue': 'verdarb'},
+                    {'attrkey': 'past_participle',
+                     'sort_order': 17,
+                     'attrvalue': 'verdorben'}
+                ],
+                "pos_name": "Verb",
+                "word": "verderben",
+                "word_id": 2267
+            }
+        ]
+    ]
+
+    invalid_docs = [
     ]
 
     def test_valid_docs(self):

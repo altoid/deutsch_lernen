@@ -532,6 +532,53 @@ QUIZ_RESPONSE_SCHEMA = {
     }
 }
 
+SINGLE_WORD_RESPONSE_SCHEMA = {
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Single Word Response",
+    "description": """
+    returned by api_word.get_word_by_id.  i.e. this is used when fetching a single word by its id.  
+    this differs from WORDS_RESPONSE_SCHEMA in that it is a single object, not an array, and includes the
+    notes for the word.
+    """,
+    "type": "object",
+    "required": ["word", "word_id", "pos_name", "attributes", "notes"],
+    "properties": {
+        "word": {
+            "type": "string"
+        },
+        "word_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "pos_name": {
+            "type": "string"
+        },
+        "notes": {
+            "type": ["string", "null"]
+        },
+        "attributes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["attrkey", "sort_order", "attrvalue"],
+                "properties": {
+                    "attrkey": {
+                        "type": "string"
+                    },
+                    "sort_order": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "attrvalue": {
+                        "type": ["string", "null"]
+                    }
+                }
+            }
+        }
+    }
+    # the attributes - article, definition, etc. - are all optional but the attributes keyword is not.
+}
+
 WORD_TAG_RESPONSE_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
