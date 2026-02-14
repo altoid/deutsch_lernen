@@ -733,6 +733,19 @@ class Test_SINGLE_WORD_RESPONSE_SCHEMA(unittest.TestCase):
 
     invalid_docs = [
         {
+            "word": "saoethus",
+            "word_id": "1234",
+            "pos_name": "eoui",
+            "notes": "this is a cool word",
+            "attributes": [
+                {
+                    'attrkey': 'definition',
+                    'sort_order': 5,
+                    'attrvalue': 'to spoil, deteriorate, go bad'
+                },
+            ],
+        },
+        {
             # "word": "saoethus",
             "word_id": 1234,
             "pos_name": "eoui",
