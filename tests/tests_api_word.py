@@ -197,6 +197,64 @@ class APITestsWordNotes(unittest.TestCase):
         obj = json.loads(r.data)
         self.assertIsNone(obj['notes'])
 
+    # create a word with notes that are all whitespace, then fetch.  value of notes should be None.
+    def test6(self):
+        old_notes = "   "
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+        add_payload = {
+            "word": word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
+            "notes": old_notes,
+            js.ATTRIBUTES: [
+                {
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 201)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
+        self.assertIsNone(obj['notes'])
+
+    # create a word; update its notes to all whitespace, then retrieve.  value of notes should be None.
+    def test7(self):
+        old_notes = "do re mi"
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+        add_payload = {
+            "word": word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
+            "notes": old_notes,
+            js.ATTRIBUTES: [
+                {
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attrvalue": "feelthy"
+                }
+            ]
+        }
+        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 201)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
+        self.assertEqual(old_notes, obj['notes'])
+
+        new_notes = "   "
+
+        payload = {
+            "notes": new_notes
+        }
+
+        r = self.client.put(url_for('api_word.update_word', word_id=word_id, _external=True), json=payload)
+        self.assertEqual(200, r.status_code)
+
+        r = self.client.get(url_for('api_word.get_word_by_id', word_id=word_id, _external=True))
+        self.assertEqual(r.status_code, 200)
+        obj = json.loads(r.data)
+        self.assertIsNone(obj['notes'])
+
 
 class APITestsWordEndToEnd(unittest.TestCase):
     app = None

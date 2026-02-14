@@ -54,7 +54,7 @@ def lookup_by_id(word_id):
                                message=r.text,
                                status_code=r.status_code)
 
-    result = r.json()
+    wordobject = r.json()
 
     r = requests.get(url_for('api_wordlists.get_wordlists_by_word_id', word_id=word_id, _external=True))
     if not r:
@@ -64,21 +64,17 @@ def lookup_by_id(word_id):
 
     member_wordlists = r.json()
 
-    template_args = [(result, member_wordlists)]
-
     if wordlist:
         return render_template('lookup.html',
-                               wordobject=result,
+                               wordobject=wordobject,
                                member_wordlists=member_wordlists,
                                wordlist=wordlist,
-                               serialized_tag_state=request.args.get('serialized_tag_state'),
-                               template_args=template_args)
+                               serialized_tag_state=request.args.get('serialized_tag_state'))
 
     return render_template('lookup.html',
-                           wordobject=result,
+                           wordobject=wordobject,
                            member_wordlists=member_wordlists,
-                           serialized_tag_state=request.args.get('serialized_tag_state'),
-                           template_args=template_args)
+                           serialized_tag_state=request.args.get('serialized_tag_state'))
 
 
 @bp.route('/lookup', methods=['POST'])
@@ -469,6 +465,20 @@ def update_word_notes():
     word_id = request.form.get('word_id')
     wordlist_id = request.form.get('wordlist_id')
     serialized_tag_state = request.form.get('serialized_tag_state')
+
+    notes = request.form.get('notes')
+    if not notes.strip():
+        notes = None
+
+    payload = {
+        "notes": notes
+    }
+
+    r = requests.put(url_for('api_word.update_word', word_id=word_id, _external=True), json=payload)
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
 
     target = url_for('dlernen.lookup_by_id',
                      word_id=word_id,

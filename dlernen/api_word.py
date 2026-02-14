@@ -225,6 +225,9 @@ def add_word():
         try:
             cursor.execute('start transaction')
 
+            if notes is not None and not notes.strip():
+                notes = None
+
             sql = "insert into word (word, notes, pos_id) values (%s, %s, %s)"
             cursor.execute(sql, (word, notes, pos_id))
             cursor.execute("select last_insert_id() word_id")
@@ -368,6 +371,9 @@ def update_word(word_id):
 
             if 'notes' in payload:
                 notes = payload.get('notes')
+                if notes is not None and not notes.strip():
+                    notes = None
+
                 sql = """
                     update word set notes = %(notes)s
                     where id = %(word_id)s
@@ -385,6 +391,8 @@ def update_word(word_id):
             return get_word_by_id(word_id)
 
         except Exception as e:
+            print(e.__class__)
+            print(str(e))
             cursor.execute('rollback')
             return "error, transaction rolled back", 500
 
