@@ -63,6 +63,12 @@ td {
     min-height: 100vh;
 }
 
+.results {
+    background-color: #f7ffe6;
+    padding: 10px;
+    min-height: 100vh;
+}
+
 .wordlist {
     background-color: var(--background-color);
     padding: 10px;

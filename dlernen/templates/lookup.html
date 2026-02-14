@@ -7,10 +7,8 @@ Lookup {{ word }}
 this page is for displaying a single word given its word id.  recall that each (word, pos_id) pair gets its own
 word id.
 
-# template_args is a list of 2-ples.
-#
-# tuple[0] is an element of the array in WORDS_RESPONSE_SCHEMA.
-# tuple[1] is the member wordlists for the word_id in tuple[0], as returned by /api/wordlists/word_id.
+# wordobject is an element of the array in WORDS_RESPONSE_SCHEMA.
+# member_wordlists is the member wordlists for the word_id in wordobject, as returned by /api/wordlists/word_id.
 # this list may be empty.
 #}
 
@@ -19,34 +17,23 @@ word id.
 <div class="lookup">
     {% include 'header.html' %}
 
-    {% if template_args %}
-    {% if template_args|length > 1 %}
-    <h1>Worte, die zu "{{ word }}" passen</h1>
-    <ul>
-        {% for tuple in template_args %}
-        <li>
-            <a href="#{{ tuple[0]['word'] }}">{{ tuple[0]['word'] }}</a>
-        </li>
-        {% endfor %}
-    </ul>
-    {% endif %}
     {% for tuple in template_args %}
     <h1>
         {% if wordlist %}
-        <a name="{{ tuple[0]['word'] }}"
-           href="{{ url_for('dlernen.edit_word_form', wordlist_id=wordlist.wordlist_id, serialized_tag_state=serialized_tag_state, word=tuple[0]['word']) }}">
-            {{ tuple[0]['word'] }}
+        <a name="{{ wordobject['word'] }}"
+           href="{{ url_for('dlernen.edit_word_form', wordlist_id=wordlist.wordlist_id, serialized_tag_state=serialized_tag_state, word=wordobject['word']) }}">
+            {{ wordobject['word'] }}
         </a>
         {% else %}
-        <a name="{{ tuple[0]['word'] }}"
-           href="{{ url_for('dlernen.edit_word_form', serialized_tag_state=serialized_tag_state, word=tuple[0]['word']) }}">
-            {{ tuple[0]['word'] }}
+        <a name="{{ wordobject['word'] }}"
+           href="{{ url_for('dlernen.edit_word_form', serialized_tag_state=serialized_tag_state, word=wordobject['word']) }}">
+            {{ wordobject['word'] }}
         </a>
         {% endif %}
     </h1>
-    <h3>{{ tuple[0]['pos_name'] }}</h3>
+    <h3>{{ wordobject['pos_name'] }}</h3>
     <table>
-        {% for attr in tuple[0]['attributes'] %}
+        {% for attr in wordobject['attributes'] %}
         <tr>
             <td class="word_attributes">{{ attr['attrkey'] }}</td>
             <td>
@@ -57,10 +44,10 @@ word id.
         </tr>
         {% endfor %}
     </table>
-    {% if tuple[1] %}
+    {% if member_wordlists %}
     <h2>Wortlisten, die dieses Wort enthalten</h2>
     <ul>
-        {% for wl in tuple[1] %}
+        {% for wl in member_wordlists %}
         <li><a href="{{ url_for('dlernen.wordlist_page', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a></li>
         {% endfor %}
     </ul>
@@ -68,8 +55,5 @@ word id.
     <h2>(no member wordlists)</h2>
     {% endif %}
     {% endfor %}
-    {% else %}
-    {{ word }} not found. Click <a href="{{ url_for('dlernen.edit_word_form', word=word) }}">here</a> to define it.
-    {% endif %}
 </div>
 {% endblock %}

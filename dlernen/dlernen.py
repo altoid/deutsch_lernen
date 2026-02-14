@@ -68,13 +68,15 @@ def lookup_by_id(word_id):
 
     if wordlist:
         return render_template('lookup.html',
-                               word=result["word"],
+                               wordobject=result,
+                               member_wordlists=member_wordlists,
                                wordlist=wordlist,
                                serialized_tag_state=request.args.get('serialized_tag_state'),
                                template_args=template_args)
 
     return render_template('lookup.html',
-                           word=result["word"],
+                           wordobject=result,
+                           member_wordlists=member_wordlists,
                            serialized_tag_state=request.args.get('serialized_tag_state'),
                            template_args=template_args)
 
@@ -120,13 +122,13 @@ def lookup_by_post():
                                    status_code=r.status_code)
         wordlist = r.json()
 
-        return render_template('lookup.html',
+        return render_template('results.html',
                                word=word,
                                wordlist=wordlist,
                                serialized_tag_state=serialized_tag_state,
                                template_args=template_args)
 
-    return render_template('lookup.html',
+    return render_template('results.html',
                            word=word,
                            template_args=template_args)
 
