@@ -217,6 +217,30 @@ def add_tags(wordlist_id, word_id):
             return str(e), 500
 
 
+@bp.route('/<string:tag>', methods=['DELETE'])
+def delete_tag(tag):
+    # delete this tag from every wordlist.
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        try:
+            cursor.execute('start transaction')
+
+            sql = """
+            delete from tag
+            where tag = %(tag)s
+            """
+
+            cursor.execute(sql, {'tag': tag})
+            cursor.execute('commit')
+            return "OK", 200
+
+        except mysql.connector.errors.ProgrammingError as e:
+            cursor.execute('rollback')
+            return str(e), 500
+        except Exception as e:
+            cursor.execute('rollback')
+            return str(e), 500
+
+
 @bp.route('/<int:wordlist_id>/<int:word_id>', methods=['DELETE'])
 def delete_tags_for_word_id(wordlist_id, word_id):
     # clear tags from this word id in this wordlist.  tags are given in the URL.  if no tags are given in the URL,
