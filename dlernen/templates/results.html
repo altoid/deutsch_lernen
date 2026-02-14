@@ -4,9 +4,6 @@ Lookup {{ word }}
 {% endblock %}
 
 {#
-this page is for displaying a single word given its word id.  recall that each (word, pos_id) pair gets its own
-word id.
-
 # template_args is a list of 2-ples.
 #
 # tuple[0] is an element of the array in WORDS_RESPONSE_SCHEMA.
@@ -16,7 +13,7 @@ word id.
 
 {% block body %}
 {{ super() }}
-<div class="lookup">
+<div class="results">
     {% include 'header.html' %}
 
     {% if template_args %}
