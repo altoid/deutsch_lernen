@@ -64,7 +64,7 @@ td {
 }
 
 .results {
-    background-color: #f7ffe6;
+    background-color: var(--background-color);
     padding: 10px;
     min-height: 100vh;
 }
