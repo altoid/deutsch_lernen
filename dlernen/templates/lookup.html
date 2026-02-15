@@ -60,7 +60,7 @@ word id.
         <input type="hidden" value="{{ wordobject['word_id'] }}" name="word_id"/>
         <h2>Noten</h2>
         <input type="submit" value="Update Notes"/>
-        <textarea class="notes" name="notes">{{ wordobject.notes if wordobject.notes else '' }}</textarea>
+        <textarea class="word_notes" name="notes">{{ wordobject.notes if wordobject.notes else '' }}</textarea>
         <input type="submit" value="Update Notes"/>
     </form>
 
