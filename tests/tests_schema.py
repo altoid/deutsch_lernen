@@ -917,11 +917,6 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
             "notes": "boo boo",
         },
         {
-            "word": "aoeu",
-            "pos_id": 123,
-            # "notes": "boo boo",
-        },
-        {
             "word": "",
             "pos_id": 1234,
             "notes": "boo boo",

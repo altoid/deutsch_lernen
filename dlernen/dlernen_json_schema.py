@@ -46,8 +46,7 @@ WORD_ADD_PAYLOAD_SCHEMA = {
     "type": "object",
     "required": [
         "word",
-        "pos_id",
-        "notes"
+        "pos_id"
     ],
     "properties": {
         "word": {

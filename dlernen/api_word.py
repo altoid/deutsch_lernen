@@ -158,12 +158,12 @@ def add_word():
     except Exception as e:
         return "bad payload: %s" % str(e), 400
 
-    # word, notes, and pos_id are required fields in the json schema.  so if the payload passes validation we know these
-    # are present.
+    # word pos_id are required fields in the json schema.  so if the payload passes validation we know these
+    # are present.  notes are optional.
 
     word = payload['word']
     pos_id = payload['pos_id']
-    notes = payload['notes']
+    notes = payload.get('notes')
 
     # checks:
     # - pos_id is valid

@@ -744,7 +744,10 @@ def update_dict():
             url = url_for('api_word.add_word', _external=True)
             r = requests.post(url, json=payload)
             if not r:
-                flash("could not insert word %s [%s]:  %s" % (word, r.status_code, r.text))
+                message = "could not insert word %s [%s]:  %s" % (word, r.status_code, r.text)
+                return render_template("error.html",
+                                       message=message,
+                                       status_code=r.status_code)
 
             obj = r.json()
             # if we have a wordlist_id, add the newly-minted word to the wordlist.
