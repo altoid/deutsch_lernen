@@ -289,7 +289,7 @@ def deletelist():
     doomed = request.form.getlist('deletelist')
     doomed = list(map(int, doomed))
 
-    r = requests.put(url_for('api_wordlist.delete_wordlists', _external=True), json=doomed)
+    r = requests.put(url_for('api_wordlists.delete_wordlists', _external=True), json=doomed)
     if r:
         return redirect(url_for('dlernen.wordlists'))
 
