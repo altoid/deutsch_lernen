@@ -79,9 +79,39 @@ def lookup_by_id(word_id):
 
 @bp.route('/lookup', methods=['POST'])
 def lookup_by_post():
-    # for looking up a word entered into a form.
+    # for looking up a word entered into a form.  we want to render the results page with a link to add the word
+    # if we don't find an exact match for it.
+    #
+    # do an exact-match search
+    # if found
+    #     exact_match_found = true
+    # else
+    #     exact_match_found = false
+    #
+    # then do a partial-match search
+    #
+    # NB:  if exact_match_found is true, then the results of the partial-match search SHOULD contain the search string.
+    #      otherwise, it's not there and we need to display the add-word form in the results page.
+    #
+    # render the template with:
+    # - the partial-match results
+    # - the value of exact_match_found
+    # - the search string
+
     word = request.form.get('lookup')
     serialized_tag_state = request.form.get('serialized_tag_state')
+
+    exact_match_found = False
+    r = requests.get(url_for('api_word.get_word', word=word, _external=True))
+    if r.status_code == 404:
+        # we do not need to keep the results of the exact-match search, just need to know if it succeeded.
+        pass
+    elif r.status_code == 200:
+        exact_match_found = True
+    else:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
 
     results = []
     r = requests.get(url_for('api_word.get_word', word=word, partial=True, _external=True))
@@ -121,11 +151,13 @@ def lookup_by_post():
         return render_template('results.html',
                                word=word,
                                wordlist=wordlist,
+                               exact_match_found=exact_match_found,
                                serialized_tag_state=serialized_tag_state,
                                template_args=template_args)
 
     return render_template('results.html',
                            word=word,
+                           exact_match_found=exact_match_found,
                            template_args=template_args)
 
 

@@ -16,6 +16,10 @@ Lookup {{ word }}
 <div class="results">
     {% include 'header.html' %}
 
+    {% if not exact_match_found %}
+    {{ word }} not found. Click <a href="{{ url_for('dlernen.edit_word_form', word=word) }}">here</a> to define it.
+    {% endif %}
+
     {% if template_args %}
     {% if template_args|length > 1 %}
     <h1>Worte, die zu "{{ word }}" passen</h1>
@@ -65,8 +69,6 @@ Lookup {{ word }}
     <h2>(no member wordlists)</h2>
     {% endif %}
     {% endfor %}
-    {% else %}
-    {{ word }} not found. Click <a href="{{ url_for('dlernen.edit_word_form', word=word) }}">here</a> to define it.
-    {% endif %}
+    {% endif %} {# if template_args #}
 </div>
 {% endblock %}
