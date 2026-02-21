@@ -17,7 +17,7 @@ Lookup {{ word }}
     {% include 'header.html' %}
 
     {% if not exact_match_found %}
-    {{ word }} not found. Click <a href="{{ url_for('dlernen.edit_word_form', word=word) }}">here</a> to define it.
+    {{ word }} not found. Click <a href="{{ url_for('dlernen.edit_word_form', serialized_tag_state=serialized_tag_state, word=word) }}">here</a> to define it.
     {% endif %}
 
     {% if template_args %}
@@ -62,7 +62,7 @@ Lookup {{ word }}
     <h2>Wortlisten, die dieses Wort enthalten</h2>
     <ul>
         {% for wl in tuple[1] %}
-        <li><a href="{{ url_for('dlernen.wordlist_page', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a></li>
+        <li><a href="{{ url_for('dlernen.wordlist_page', serialized_tag_state=serialized_tag_state, wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a></li>
         {% endfor %}
     </ul>
     {% else %}
