@@ -402,6 +402,8 @@ class APITestsWordEndToEnd(unittest.TestCase):
         r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
         self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
+        self.addCleanup(cleanupWordID, self.client, obj['word_id'])
+
         plural = list(filter(lambda x: x['attrkey'] == attrkey, obj['attributes']))[0]
         self.assertEqual(word_capitalized, plural['attrvalue'])
 
@@ -428,6 +430,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         r = self.client.post(url_for('api_word.add_word', _external=True), json=payload)
         self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
+        self.addCleanup(cleanupWordID, self.client, obj['word_id'])
 
         plural_attr = list(filter(lambda x: x['attrkey'] == attrkey, obj['attributes']))[0]
         self.assertEqual(word_capitalized, plural_attr['attrvalue'])
@@ -467,6 +470,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
         word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
 
         r = self.client.get(url_for('api_word.get_word_by_id', word_id=word_id, _external=True))
         self.assertEqual(r.status_code, 200)
@@ -487,6 +491,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
         word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
 
         r = self.client.get(url_for('api_word.get_word_by_id', word_id=word_id, _external=True))
         self.assertEqual(r.status_code, 200)
@@ -507,6 +512,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
         self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
+        self.addCleanup(cleanupWordID, self.client, obj['word_id'])
 
         update_payload = {
             js.ATTRIBUTES: [
@@ -607,6 +613,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         r = self.client.post(url_for('api_word.add_word', _external=True), json=payload)
         self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
+        self.addCleanup(cleanupWordID, self.client, obj['word_id'])
         word_id_1 = obj['word_id']
 
         r = self.client.post(url_for('api_word.add_word', _external=True), json=payload)
@@ -644,6 +651,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         r = self.client.post(url_for('api_word.add_word', _external=True), json=payload)
         self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
+        self.addCleanup(cleanupWordID, self.client, obj['word_id'])
         word_id_1 = obj['word_id']
 
         payload = {
@@ -661,6 +669,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         self.assertEqual(r.status_code, 201)
 
         obj = json.loads(r.data)
+        self.addCleanup(cleanupWordID, self.client, obj['word_id'])
         word_id_2 = obj['word_id']
 
         self.assertNotEqual(word_id_1, word_id_2)
