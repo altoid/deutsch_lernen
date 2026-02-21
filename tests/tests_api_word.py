@@ -284,6 +284,38 @@ class APITestsWordEndToEnd(unittest.TestCase):
     def test_nothing(self):
         pass
 
+    # insert a word with 'ss' but look it up with 'ß'.  should succeed.
+    def test_add_ss_lookup_with_eszet(self):
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+        add_payload = {
+            "word": word + 'ss',
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
+        }
+        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 201)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
+
+        r = self.client.get(url_for('api_word.get_word', word=word + 'ß', _external=True))
+        self.assertEqual(200, r.status_code)
+
+    # insert a word with 'ß' but look it up with 'ss'.  should succeed.
+    def test_add_eszet_lookup_with_ss(self):
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+        add_payload = {
+            "word": word + 'ß',
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
+        }
+        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 201)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
+
+        r = self.client.get(url_for('api_word.get_word', word=word + 'ss', _external=True))
+        self.assertEqual(200, r.status_code)
+
     # end-to-end test:  add a word, verify existence, delete it, verify deletion.
     # delete it again, should be no errors.
     def test_basic_add(self):
@@ -310,6 +342,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
         word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
 
         r = self.client.get(url_for('api_word.get_word_by_id', word_id=word_id, _external=True))
         self.assertEqual(r.status_code, 200)

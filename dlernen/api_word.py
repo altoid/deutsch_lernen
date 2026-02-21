@@ -77,7 +77,7 @@ def get_word(word):
         word_id
     from
         mashup_v
-    where word = %s
+    where word = %(word)s
     """
 
     partial_match_sql = """
@@ -85,19 +85,16 @@ def get_word(word):
         word_id
     from
         mashup_v
-    where word like %s or (attrvalue like %s and attrkey <> 'definition')
+    where regexp_like(word, %(word)s) or (regexp_like(attrvalue, %(word)s) and attrkey <> 'definition')
     """
 
     if partial:
         query = partial_match_sql
-        w = "%%%s%%" % word
-        query_args = (w, w)
     else:
         query = exact_match_sql
-        query_args = (word,)
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        cursor.execute(query, query_args)
+        cursor.execute(query, {'word': word})
         rows = cursor.fetchall()
         word_ids = list(map(lambda x: x['word_id'], rows))
 
