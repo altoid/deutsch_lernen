@@ -1,10 +1,18 @@
 import unittest
-from dlernen import create_app, dlernen_json_schema as js
+from dlernen import create_app
 from flask import url_for
 import json
 import random
 import string
 from pprint import pprint
+
+
+def cleanupWordID(client, word_id):
+    client.delete(url_for('api_word.delete_word', word_id=word_id, _external=True))
+
+
+def cleanupWordlistID(client, wordlist_id):
+    client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id, _external=True))
 
 
 class TestWordlistRefresh(unittest.TestCase):
@@ -25,9 +33,8 @@ class TestWordlistRefresh(unittest.TestCase):
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
 
-        with cls.app.test_request_context():
-            r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
-            cls.keyword_mappings = json.loads(r.data)
+        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
+        cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
     def tearDownClass(cls):
@@ -43,18 +50,11 @@ class TestWordlistRefresh(unittest.TestCase):
         r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
         obj = json.loads(r.data)
         self.wordlist_id = obj['wordlist_id']
-
-    def tearDown(self):
-        with self.app.test_request_context():
-            self.client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=self.wordlist_id,
-                                       _external=True))
+        self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
 
     # do nothing, just make sure that setUp and tearDown work
     def test_nothing(self):
         pass
-
-    def cleanupWordID(self, word_id):
-        self.client.delete(url_for('api_word.delete_word', word_id=word_id, _external=True))
 
     # adding an unknown word to a list is idempotent.
     def test_idempotent(self):
@@ -110,7 +110,7 @@ class TestWordlistRefresh(unittest.TestCase):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         word_id = obj['word_id']
-        self.addCleanup(self.cleanupWordID, word_id)
+        self.addCleanup(cleanupWordID, self.client, word_id)
 
         # check that the wordlist has been updated:  the garbage word should be moved
         # to the known words.
@@ -135,7 +135,7 @@ class TestWordlistRefresh(unittest.TestCase):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         word_id = obj['word_id']
-        self.addCleanup(self.cleanupWordID, word_id)
+        self.addCleanup(cleanupWordID, self.client, word_id)
 
         # then put it into the list.  it should be among the known words.
         r = self.client.put(url_for('api_wordlist.update_wordlist_contents',

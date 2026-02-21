@@ -6,6 +6,14 @@ from flask import url_for
 from dlernen import create_app
 
 
+def cleanupWordID(client, word_id):
+    client.delete(url_for('api_word.delete_word', word_id=word_id, _external=True))
+
+
+def cleanupWordlistID(client, wordlist_id):
+    client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id, _external=True))
+
+
 class APIWordListMetadataCreate(unittest.TestCase):
     app = None
     app_context = None
@@ -32,110 +40,104 @@ class APIWordListMetadataCreate(unittest.TestCase):
 
     # create a list, name only. get it, verify that fields retrieved are correct.  delete it and make sure it's gone.
     def test_create_1(self):
-        with self.app.test_request_context():
-            list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
-            add_payload = {
-                'name': list_name
-            }
-    
-            r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
-            self.assertEqual(r.status_code, 201)
-            obj = json.loads(r.data)
-            wordlist_id = obj['wordlist_id']
-    
-            r = self.client.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True))
-            self.assertEqual(r.status_code, 200)
-            obj = json.loads(r.data)
-    
-            self.assertIsNone(obj['citation'])
-            self.assertIsNone(obj['sqlcode'])
-            self.assertEqual('empty', obj['list_type'])
-    
-            # delete it
-            r = self.client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id, _external=True))
-            self.assertEqual(r.status_code, 200)
-    
-            # make sure it's gone
-            r = self.client.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True))
-            self.assertEqual(r.status_code, 404)
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 201)
+        obj = json.loads(r.data)
+        wordlist_id = obj['wordlist_id']
+
+        r = self.client.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True))
+        self.assertEqual(r.status_code, 200)
+        obj = json.loads(r.data)
+
+        self.assertIsNone(obj['citation'])
+        self.assertIsNone(obj['sqlcode'])
+        self.assertEqual('empty', obj['list_type'])
+
+        # delete it
+        r = self.client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id, _external=True))
+        self.assertEqual(r.status_code, 200)
+
+        # make sure it's gone
+        r = self.client.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True))
+        self.assertEqual(r.status_code, 404)
 
     # create a list with citation and sqlcode set (will be a smart list).  get it, verify that fields
     # retrieved are correct.  delete it and make sure it's gone.
     def test_create_2(self):
-        with self.app.test_request_context():
-            list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
-            citation = 'speeding'
-            sqlcode = 'select id as word_id from word where id = 111'
-            add_payload = {
-                'name': list_name,
-                'citation': citation,
-                'sqlcode': sqlcode
-            }
-    
-            r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
-            self.assertEqual(r.status_code, 201)
-            obj = json.loads(r.data)
-            wordlist_id = obj['wordlist_id']
-    
-            r = self.client.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True))
-            self.assertEqual(r.status_code, 200)
-            obj = json.loads(r.data)
-    
-            self.assertEqual(citation, obj['citation'])
-            self.assertEqual(sqlcode, obj['sqlcode'])
-            self.assertEqual('smart', obj['list_type'])
-    
-            # delete it
-            r = self.client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id, _external=True))
-            self.assertEqual(r.status_code, 200)
-    
-            # make sure it's gone
-            r = self.client.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True))
-            self.assertEqual(r.status_code, 404)
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        citation = 'speeding'
+        sqlcode = 'select id as word_id from word where id = 111'
+        add_payload = {
+            'name': list_name,
+            'citation': citation,
+            'sqlcode': sqlcode
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 201)
+        obj = json.loads(r.data)
+        wordlist_id = obj['wordlist_id']
+
+        r = self.client.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True))
+        self.assertEqual(r.status_code, 200)
+        obj = json.loads(r.data)
+
+        self.assertEqual(citation, obj['citation'])
+        self.assertEqual(sqlcode, obj['sqlcode'])
+        self.assertEqual('smart', obj['list_type'])
+
+        # delete it
+        r = self.client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id, _external=True))
+        self.assertEqual(r.status_code, 200)
+
+        # make sure it's gone
+        r = self.client.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True))
+        self.assertEqual(r.status_code, 404)
 
     # create a list with no name.  should not succeed.
     def test_create_3(self):
-        with self.app.test_request_context():
-            add_payload = {
-            }
-    
-            r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
-            self.assertEqual(r.status_code, 400)
+        add_payload = {
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 400)
 
     # create a list with a bad name.  should not succeed.
     def test_create_4(self):
-        with self.app.test_request_context():
-            add_payload = {
-                "name": "  leading and trailing whitespace is verboten  "
-            }
-    
-            r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
-            self.assertEqual(r.status_code, 400)
+        add_payload = {
+            "name": "  leading and trailing whitespace is verboten  "
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 400)
 
     # create a list with bad sqlcode.  should not succeed.
     def test_create_5(self):
-        with self.app.test_request_context():
-            list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
-            sqlcode = 'bullshit sql'
-            add_payload = {
-                'name': list_name,
-                'sqlcode': sqlcode
-            }
-    
-            r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
-            self.assertEqual(r.status_code, 422)
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        sqlcode = 'bullshit sql'
+        add_payload = {
+            'name': list_name,
+            'sqlcode': sqlcode
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 422)
 
     # create a list with a bad citation.  should not succeed.
     def test_create_6(self):
-        with self.app.test_request_context():
-            list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
-            add_payload = {
-                'name': list_name,
-                'citation': " "
-            }
-    
-            r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
-            self.assertEqual(r.status_code, 400)
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name,
+            'citation': " "
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        self.assertEqual(r.status_code, 400)
 
 
 class APIWordListMetadataUpdate(unittest.TestCase):
@@ -165,22 +167,16 @@ class APIWordListMetadataUpdate(unittest.TestCase):
             'name': self.list_name
         }
 
-        with self.app.test_request_context():
-            r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
-            obj = json.loads(r.data)
-            self.wordlist_id = obj['wordlist_id']
-
-            self.contents_update_url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=self.wordlist_id,
-                                               _external=True)
-            self.wordlist_get_url = url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id,
-                                            _external=True)
-            self.metadata_update_url = url_for('api_wordlist.update_wordlist_metadata', wordlist_id=self.wordlist_id,
-                                               _external=True)
-
-    def tearDown(self):
-        with self.app.test_request_context():
-            self.client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=self.wordlist_id,
-                                       _external=True))
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        obj = json.loads(r.data)
+        self.wordlist_id = obj['wordlist_id']
+        self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
+        self.contents_update_url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=self.wordlist_id,
+                                           _external=True)
+        self.wordlist_get_url = url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id,
+                                        _external=True)
+        self.metadata_update_url = url_for('api_wordlist.update_wordlist_metadata', wordlist_id=self.wordlist_id,
+                                           _external=True)
 
     # do nothing, just make sure that setUp and tearDown work
     def test_nothing(self):

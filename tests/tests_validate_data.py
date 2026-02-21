@@ -35,35 +35,34 @@ class ValidateData(unittest.TestCase):
         pass
 
     def test_get_wordlists(self):
-        with self.app.test_request_context():
-            r = self.client.get(url_for('api_wordlists.get_wordlists', _external=True))
-            self.assertEqual(r.status_code, 200)
-            results = json.loads(r.data)
-            self.assertGreater(len(results), 0)
+        r = self.client.get(url_for('api_wordlists.get_wordlists', _external=True))
+        self.assertEqual(r.status_code, 200)
+        results = json.loads(r.data)
+        self.assertGreater(len(results), 0)
 
     def test_get_words(self):
         limit = 1000
         offset = 0
-        with self.app.test_request_context():
-            with closing(connect(**self.app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-                # fetch all the word ids 1000 at a time
-                sql = """
-                select id
-                from word
-                limit %(offset)s, %(limit)s
-                """
 
+        with closing(connect(**self.app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            # fetch all the word ids 1000 at a time
+            sql = """
+            select id
+            from word
+            limit %(offset)s, %(limit)s
+            """
+
+            cursor.execute(sql, {'offset': offset, 'limit': limit})
+            rows = cursor.fetchall()
+
+            while len(rows) > 0:
+                payload = {
+                    'word_id': list(map(lambda x: x['id'], rows))
+                }
+                r = self.client.put(url_for('api_words.get_words_from_word_ids', _external=True), json=payload)
+                self.assertEqual(r.status_code, 200)
+
+                offset += limit
                 cursor.execute(sql, {'offset': offset, 'limit': limit})
                 rows = cursor.fetchall()
-
-                while len(rows) > 0:
-                    payload = {
-                        'word_id': list(map(lambda x: x['id'], rows))
-                    }
-                    r = self.client.put(url_for('api_words.get_words_from_word_ids', _external=True), json=payload)
-                    self.assertEqual(r.status_code, 200)
-
-                    offset += limit
-                    cursor.execute(sql, {'offset': offset, 'limit': limit})
-                    rows = cursor.fetchall()
 
