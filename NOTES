@@ -4,15 +4,6 @@ TODO - really need a better way to deal with reflexive verbs
 TODO - import word lists
     CSV:  word, pos, definition
 
-TODO - notes for individual words.  there is already a notes column in the word table.  be aware that
-    each word/pos_id pair will have its own notes, as these are a key in the word table.
-
-FIXME - bug:
-    go to a wordlist
-    select a word - note the return-to-list link
-    look up a word, doesn't matter if it's real
-    there is no return-to-list link in the resultant lookup page
-
 TODO - Nouns should be three separate parts of speech, one for each gender
     would have to update wordlists and quiz data.
 
@@ -47,13 +38,6 @@ FIXME - make sure http DELETE is not used for batch delete.
 
 FIXME - when PUT or POST methods create something, send back a 201 not a 200.
 
-TODO - TestCase.addCleanup exists, use it!
-
-FIXME - in the lookup results page, add a word-entry text field.  it may be that an exact match of our input
-    string is wanted but not present.
-
-FIXME - remove attrvalue_id column from mashup_v
-
 TODO - for definitions quiz app, can we just rewrite the whole thing as a class?
 
 TODO - in quiz app, tag words that were missed/hinted, and also remove these tags
@@ -65,8 +49,12 @@ FIXME - in quiz app, if you go to the main menu in the middle of a quiz where al
     should be saved to disk on program exit.
 
 TODO - api changes to support fetching words with the same tag from multiple wordlists
-    augment GET /api/words to have tags in the URL
+    - augment GET /api/words to have tags in the URL
+    - delete tag from all wordlists
 
+TODO - in quiz app, imperfect query should prefetch all candidate words, not use the sql for one-at-a-time queries
+
+TODO - new feature - link words that have connections/differences.
 ------
 
 tag api changes:
