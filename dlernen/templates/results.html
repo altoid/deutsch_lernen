@@ -17,7 +17,7 @@ Lookup {{ word }}
     {% include 'header.html' %}
 
     {% if not exact_match_found %}
-    {{ word }} not found. Click <a href="{{ url_for('dlernen.edit_word_form', serialized_tag_state=serialized_tag_state, word=word) }}">here</a> to define it.
+    {{ word }} not found. Click <a href="{{ url_for('dlernen.edit_word_form', wordlist_id=wordlist.wordlist_id, serialized_tag_state=serialized_tag_state, word=word) }}">here</a> to define it.
     {% endif %}
 
     {% if template_args %}
