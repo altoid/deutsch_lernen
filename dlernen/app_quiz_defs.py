@@ -24,6 +24,7 @@ class AppState(object):
         self.quiz_key = quiz_key
         self.query = query
 
+        # dict mapping wordlist_ids to wordlist names.
         if wordlists:
             self.wordlists = wordlists
         else:
@@ -246,6 +247,21 @@ Words missed this session:  %s""" % nmissed)
 
     print("""
 Words where hints requested:  %s""" % len(APPSTATE.hints_requested))
+
+
+def clear_tags():
+    global APPSTATE
+
+    ids = list(APPSTATE.wordlists.keys())
+
+    # clear the __missed and __hinted tags from appstate word lists
+    r = requests.delete(url_for('api_wordlist_tag.delete_tag',
+                                wordlist_id=ids,
+                                tag=MISSED_TAG))
+
+    r = requests.delete(url_for('api_wordlist_tag.delete_tag',
+                                wordlist_id=ids,
+                                tag=HINTED_TAG))
 
 
 def select_tags():
@@ -716,9 +732,14 @@ CALLBACKS = {
         'display_order': 2,
         'callback': select_tags
     },
+    'e': {
+        'tagline': 'clear missed and hinted tags',
+        'display_order': 4,
+        'callback': clear_tags,
+    },
     'k': {
         'tagline': 'select query',
-        'display_order': 5,
+        'display_order': 7,
         'callback': select_query
     },
     'go': {
