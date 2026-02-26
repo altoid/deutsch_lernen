@@ -8,11 +8,11 @@ from pprint import pprint
 
 
 def cleanupWordID(client, word_id):
-    client.delete(url_for('api_word.delete_word', word_id=word_id, _external=True))
+    client.delete(url_for('api_word.delete_word', word_id=word_id))
 
 
 def cleanupWordlistID(client, wordlist_id):
-    client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id, _external=True))
+    client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id))
 
 
 class TestWordlistRefresh(unittest.TestCase):
@@ -33,7 +33,7 @@ class TestWordlistRefresh(unittest.TestCase):
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
 
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
+        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
         cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
@@ -47,7 +47,7 @@ class TestWordlistRefresh(unittest.TestCase):
             'name': self.list_name
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
         obj = json.loads(r.data)
         self.wordlist_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
@@ -62,7 +62,7 @@ class TestWordlistRefresh(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
 
         r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
-                                    wordlist_id=self.wordlist_id, _external=True),
+                                    wordlist_id=self.wordlist_id),
                             json={
                                 "words": [word]
                             })
@@ -74,7 +74,7 @@ class TestWordlistRefresh(unittest.TestCase):
 
         # add it again.  nothing should change.
         r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
-                                    wordlist_id=self.wordlist_id, _external=True),
+                                    wordlist_id=self.wordlist_id),
                             json={
                                 "words": [word]
                             })
@@ -90,7 +90,7 @@ class TestWordlistRefresh(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
 
         r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
-                                    wordlist_id=self.wordlist_id, _external=True),
+                                    wordlist_id=self.wordlist_id),
                             json={
                                 "words": [word]
                             })
@@ -106,7 +106,7 @@ class TestWordlistRefresh(unittest.TestCase):
             "word": word,
             "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
         }
-        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         word_id = obj['word_id']
@@ -115,7 +115,7 @@ class TestWordlistRefresh(unittest.TestCase):
         # check that the wordlist has been updated:  the garbage word should be moved
         # to the known words.
         r = self.client.get(url_for('api_wordlist.get_wordlist',
-                                    wordlist_id=self.wordlist_id, _external=True))
+                                    wordlist_id=self.wordlist_id))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
         self.assertEqual(1, len(obj['known_words']))
@@ -131,7 +131,7 @@ class TestWordlistRefresh(unittest.TestCase):
             "word": word,
             "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
         }
-        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         word_id = obj['word_id']
@@ -139,7 +139,7 @@ class TestWordlistRefresh(unittest.TestCase):
 
         # then put it into the list.  it should be among the known words.
         r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
-                                    wordlist_id=self.wordlist_id, _external=True),
+                                    wordlist_id=self.wordlist_id),
                             json={
                                 "words": [word]
                             })

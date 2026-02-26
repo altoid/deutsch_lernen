@@ -35,7 +35,7 @@ class ValidateData(unittest.TestCase):
         pass
 
     def test_get_wordlists(self):
-        r = self.client.get(url_for('api_wordlists.get_wordlists', _external=True))
+        r = self.client.get(url_for('api_wordlists.get_wordlists'))
         self.assertEqual(r.status_code, 200)
         results = json.loads(r.data)
         self.assertGreater(len(results), 0)
@@ -59,7 +59,7 @@ class ValidateData(unittest.TestCase):
                 payload = {
                     'word_id': list(map(lambda x: x['id'], rows))
                 }
-                r = self.client.put(url_for('api_words.get_words_from_word_ids', _external=True), json=payload)
+                r = self.client.put(url_for('api_words.get_words_from_word_ids'), json=payload)
                 self.assertEqual(r.status_code, 200)
 
                 offset += limit

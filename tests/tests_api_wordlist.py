@@ -8,11 +8,11 @@ from pprint import pprint
 
 
 def cleanupWordID(client, word_id):
-    client.delete(url_for('api_word.delete_word', word_id=word_id, _external=True))
+    client.delete(url_for('api_word.delete_word', word_id=word_id))
 
 
 def cleanupWordlistID(client, wordlist_id):
-    client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id, _external=True))
+    client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id))
 
 
 class APIWordlistBatchDelete(unittest.TestCase):
@@ -47,7 +47,7 @@ class APIWordlistBatchDelete(unittest.TestCase):
             'name': list_name_1
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
         self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
         wordlist_id_1 = obj['wordlist_id']
@@ -58,7 +58,7 @@ class APIWordlistBatchDelete(unittest.TestCase):
             'name': list_name_2
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
         self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
         wordlist_id_2 = obj['wordlist_id']
@@ -66,20 +66,20 @@ class APIWordlistBatchDelete(unittest.TestCase):
 
         delete_these = [wordlist_id_1, wordlist_id_2]
 
-        r = self.client.put(url_for('api_wordlists.delete_wordlists', _external=True), json=delete_these)
+        r = self.client.put(url_for('api_wordlists.delete_wordlists'), json=delete_these)
         self.assertEqual(r.status_code, 200)
 
         # make sure they are gone
-        url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id_1, _external=True)
+        url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id_1)
         r = self.client.get(url)
         self.assertEqual(404, r.status_code)
 
-        url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id_2, _external=True)
+        url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id_2)
         r = self.client.get(url)
         self.assertEqual(404, r.status_code)
 
     def test_batch_delete_nothing(self):
-        r = self.client.put(url_for('api_wordlists.delete_wordlists', _external=True), json=[])
+        r = self.client.put(url_for('api_wordlists.delete_wordlists'), json=[])
         self.assertEqual(r.status_code, 200)
 
 
@@ -111,17 +111,14 @@ class APIWordlist(unittest.TestCase):
             'name': self.list_name
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
         obj = json.loads(r.data)
         self.wordlist_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
 
-        self.contents_update_url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=self.wordlist_id,
-                                           _external=True)
-        self.wordlist_get_url = url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id,
-                                        _external=True)
-        self.metadata_update_url = url_for('api_wordlist.update_wordlist_metadata', wordlist_id=self.wordlist_id,
-                                           _external=True)
+        self.contents_update_url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=self.wordlist_id)
+        self.wordlist_get_url = url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id)
+        self.metadata_update_url = url_for('api_wordlist.update_wordlist_metadata', wordlist_id=self.wordlist_id)
 
     # do nothing, just make sure that setUp works
     def test_nothing(self):
@@ -225,7 +222,7 @@ class APIWordlist(unittest.TestCase):
 
         self.assertTrue(len(obj['unknown_words']) > 0)
         word = obj['unknown_words'][0]
-        url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id, _external=True)
+        url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id)
         r = self.client.post(url, json={
             "unknown_words": [word]
         })
@@ -278,7 +275,7 @@ class APIWordlist(unittest.TestCase):
         payload = {
             "word_ids": [word_id]
         }
-        url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id, _external=True)
+        url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id)
         r = self.client.post(url, json=payload)
         self.assertEqual(r.status_code, 200)
 
@@ -402,7 +399,7 @@ class APIWordlist(unittest.TestCase):
 
     # get with bullshit wordlist id
     def test_get_bullshit_wordlist_id(self):
-        url = url_for('api_wordlist.get_wordlist', wordlist_id=6666666, _external=True)
+        url = url_for('api_wordlist.get_wordlist', wordlist_id=6666666)
         r = self.client.get(url)
         self.assertEqual(404, r.status_code)
 
@@ -474,7 +471,7 @@ class APIWordlist(unittest.TestCase):
             "word_ids": [word_id],
             "unknown_words": [word]
         }
-        url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id, _external=True)
+        url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id)
         r = self.client.post(url, json=payload)
         self.assertEqual(r.status_code, 200)
 
@@ -497,7 +494,7 @@ class APIWordlist(unittest.TestCase):
 
         self.assertEqual('smart', obj['list_type'])
 
-        url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id, _external=True)
+        url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id)
 
         r = self.client.post(url, json={
             "word_ids": [66666],
@@ -529,7 +526,7 @@ class APIWordlistAddByID(unittest.TestCase):
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
 
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
+        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
         cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
@@ -543,7 +540,7 @@ class APIWordlistAddByID(unittest.TestCase):
             'name': self.list_name
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
         obj = json.loads(r.data)
         self.wordlist_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
@@ -554,14 +551,13 @@ class APIWordlistAddByID(unittest.TestCase):
             "word": word,
             "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
         }
-        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         obj = json.loads(r.data)
         self.word_id = obj['word_id']
         self.addCleanup(cleanupWordID, self.client, self.word_id)
 
         self.metadata_update_url = url_for('api_wordlist.update_wordlist_metadata',
-                                           wordlist_id=self.wordlist_id,
-                                           _external=True)
+                                           wordlist_id=self.wordlist_id)
 
     # do nothing, just make sure that setUp works
     def test_nothing(self):
@@ -570,21 +566,19 @@ class APIWordlistAddByID(unittest.TestCase):
     # base case, add word ids to a list.
     def test_add_by_word_id(self):
         # make sure the list is empty
-        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id,
-                                    _external=True))
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
         self.assertEqual(0, len(obj['known_words']))
 
         # add the word by id
         r = self.client.put(url_for('api_wordlist.add_words_by_id',
-                                    wordlist_id=self.wordlist_id, _external=True),
+                                    wordlist_id=self.wordlist_id),
                             json=[self.word_id])
         self.assertEqual(200, r.status_code)
 
         # make sure the list now has our word in it.
-        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id,
-                                    _external=True))
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
         self.assertEqual(1, len(obj['known_words']))
@@ -593,19 +587,18 @@ class APIWordlistAddByID(unittest.TestCase):
     def test_add_by_word_id_repeat(self):
         # add the word by id
         r = self.client.put(url_for('api_wordlist.add_words_by_id',
-                                    wordlist_id=self.wordlist_id, _external=True),
+                                    wordlist_id=self.wordlist_id),
                             json=[self.word_id])
         self.assertEqual(200, r.status_code)
 
         # add it again.
         r = self.client.put(url_for('api_wordlist.add_words_by_id',
-                                    wordlist_id=self.wordlist_id, _external=True),
+                                    wordlist_id=self.wordlist_id),
                             json=[self.word_id])
         self.assertEqual(200, r.status_code)
 
         # make sure the list now has our word in it exactly once.
-        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id,
-                                    _external=True))
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
         self.assertEqual(1, len(obj['known_words']))
@@ -613,7 +606,7 @@ class APIWordlistAddByID(unittest.TestCase):
     # add with empty payload
     def test_add_by_word_id_empty_payload(self):
         r = self.client.put(url_for('api_wordlist.add_words_by_id',
-                                    wordlist_id=self.wordlist_id, _external=True),
+                                    wordlist_id=self.wordlist_id),
                             json=[])
         self.assertEqual(200, r.status_code)
 
@@ -630,14 +623,14 @@ class APIWordlistAddByID(unittest.TestCase):
 
         # add the word by id - should not succeed
         r = self.client.put(url_for('api_wordlist.add_words_by_id',
-                                    wordlist_id=self.wordlist_id, _external=True),
+                                    wordlist_id=self.wordlist_id),
                             json=[self.word_id])
         self.assertEqual(400, r.status_code)
 
     # # add with bullshit wordlist_id - won't work because view function uses insert ignore
     # def test_add_by_word_id_bullshit_wordlist(self):
     #     r = self.client.put(url_for('api_wordlist.add_words_by_id',
-    #                                 wordlist_id=self.wordlist_id, _external=True),
+    #                                 wordlist_id=self.wordlist_id),
     #                         json=[6666666])
     #     self.assertNotEqual(200, r.status_code)
     #
@@ -662,7 +655,7 @@ class APIWordlistGetWordIDs(unittest.TestCase):
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
 
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
+        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
         cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
@@ -681,7 +674,7 @@ class APIWordlistGetWordIDs(unittest.TestCase):
             'name': self.list_name_1
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
         obj = json.loads(r.data)
         self.wordlist1_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, self.wordlist1_id)
@@ -691,7 +684,7 @@ class APIWordlistGetWordIDs(unittest.TestCase):
             'name': self.list_name_2
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
         obj = json.loads(r.data)
         self.wordlist2_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, self.wordlist2_id)
@@ -706,7 +699,7 @@ class APIWordlistGetWordIDs(unittest.TestCase):
             "word": self.word1,
             "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
         }
-        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         self.word1_id = obj['word_id']
@@ -715,7 +708,7 @@ class APIWordlistGetWordIDs(unittest.TestCase):
             "word": self.word2,
             "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
         }
-        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         self.word2_id = obj['word_id']
@@ -724,7 +717,7 @@ class APIWordlistGetWordIDs(unittest.TestCase):
             "word": self.word3,
             "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
         }
-        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         self.word3_id = obj['word_id']
@@ -734,14 +727,14 @@ class APIWordlistGetWordIDs(unittest.TestCase):
         self.addCleanup(cleanupWordID, self.client, self.word3_id)
 
         r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
-                                    wordlist_id=self.wordlist1_id, _external=True),
+                                    wordlist_id=self.wordlist1_id),
                             json={
                                 "words": [self.word1, self.word2]
                             })
         self.assertEqual(200, r.status_code)
 
         r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
-                                    wordlist_id=self.wordlist2_id, _external=True),
+                                    wordlist_id=self.wordlist2_id),
                             json={
                                 "words": [self.word2, self.word3]
                             })
@@ -758,8 +751,7 @@ class APIWordlistGetWordIDs(unittest.TestCase):
     # verify correctness of returned list of word ids.
     def test1(self):
         r = self.client.get(url_for('api_wordlist.get_word_ids_from_wordlists',
-                                    wordlist_id=[self.wordlist1_id, self.wordlist2_id],
-                                    _external=True))
+                                    wordlist_id=[self.wordlist1_id, self.wordlist2_id]))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -772,15 +764,13 @@ class APIWordlistGetWordIDs(unittest.TestCase):
         # in list 1, give one word two tags, then fetch with both tags.  verify correctness of result.
         r = self.client.post(url_for('api_wordlist_tag.add_tags',
                                      wordlist_id=self.wordlist1_id,
-                                     word_id=self.word1_id,
-                                     _external=True),
+                                     word_id=self.word1_id),
                              json=['tag1', 'tag2'])
         self.assertEqual(200, r.status_code)
 
         r = self.client.get(url_for('api_wordlist.get_word_ids_from_wordlists',
                                     wordlist_id=[self.wordlist1_id],
-                                    tag=['tag1', 'tag2'],
-                                    _external=True))
+                                    tag=['tag1', 'tag2']))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -792,14 +782,12 @@ class APIWordlistGetWordIDs(unittest.TestCase):
         # correct behavior if fetching by tags with multiple list ids.
         r = self.client.get(url_for('api_wordlist.get_word_ids_from_wordlists',
                                     wordlist_id=[self.wordlist1_id, self.wordlist2_id],
-                                    tag=['tag1', 'tag2'],
-                                    _external=True))
+                                    tag=['tag1', 'tag2']))
         self.assertEqual(400, r.status_code)
 
     def test4(self):
         # fetch whole damn dictionary.
-        r = self.client.get(url_for('api_wordlist.get_word_ids_from_wordlists',
-                                    _external=True))
+        r = self.client.get(url_for('api_wordlist.get_word_ids_from_wordlists'))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 

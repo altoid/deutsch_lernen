@@ -8,11 +8,11 @@ from pprint import pprint
 
 
 def cleanupWordID(client, word_id):
-    client.delete(url_for('api_word.delete_word', word_id=word_id, _external=True))
+    client.delete(url_for('api_word.delete_word', word_id=word_id))
 
 
 def cleanupWordlistID(client, wordlist_id):
-    client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id, _external=True))
+    client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id))
 
 
 class APIQuizGetWordToTest(unittest.TestCase):
@@ -35,7 +35,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
 
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
+        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
         cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
@@ -49,7 +49,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
             'name': self.list_name
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
         obj = json.loads(r.data)
         self.wordlist_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
@@ -77,7 +77,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
             js.ATTRIBUTES: attributes
         }
 
-        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         obj = json.loads(r.data)
         self.word_id = obj['word_id']
 
@@ -91,8 +91,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
         }
 
         r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
-                                    wordlist_id=self.wordlist_id,
-                                    _external=True),
+                                    wordlist_id=self.wordlist_id),
                             json=payload)
 
     # do nothing, just make sure that setUp works
@@ -105,8 +104,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
         # attributes, we don't know which one.
         url = url_for('api_quiz.get_word_to_test',
                       quiz_key=self.QUIZ_KEY,
-                      wordlist_id=[self.wordlist_id],
-                      _external=True)
+                      wordlist_id=[self.wordlist_id])
         r = self.client.get(url)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
@@ -116,8 +114,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
     def test_nonmatching_quiz_key(self):
         url = url_for('api_quiz.get_word_to_test',
                       quiz_key='genders',
-                      wordlist_id=[self.wordlist_id],
-                      _external=True)
+                      wordlist_id=[self.wordlist_id])
         r = self.client.get(url)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
@@ -126,8 +123,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
     def test_undefined_quiz_key(self):
         url = url_for('api_quiz.get_word_to_test',
                       quiz_key=''.join(random.choices(string.ascii_lowercase, k=11)),
-                      wordlist_id=[self.wordlist_id],
-                      _external=True)
+                      wordlist_id=[self.wordlist_id])
         r = self.client.get(url)
         self.assertEqual(404, r.status_code)
 
@@ -135,8 +131,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
     def test_no_wordlist(self):
         url = url_for('api_quiz.get_word_to_test',
                       quiz_key=self.QUIZ_KEY,
-                      wordlist_id=None,
-                      _external=True)
+                      wordlist_id=None)
         r = self.client.get(url)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
@@ -146,8 +141,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
         url = url_for('api_quiz.get_word_to_test',
                       quiz_key=self.QUIZ_KEY,
                       query=''.join(random.choices(string.ascii_lowercase, k=11)),
-                      wordlist_id=[self.wordlist_id],
-                      _external=True)
+                      wordlist_id=[self.wordlist_id])
         r = self.client.get(url)
         self.assertEqual(400, r.status_code)
 
@@ -158,7 +152,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
             'name': self.list_name
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         wordlist_id = obj['wordlist_id']
@@ -166,8 +160,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
 
         url = url_for('api_quiz.get_word_to_test',
                       quiz_key=self.QUIZ_KEY,
-                      wordlist_id=[wordlist_id],
-                      _external=True)
+                      wordlist_id=[wordlist_id])
         r = self.client.get(url)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
@@ -176,8 +169,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
     def test_undefined_wordlist(self):
         url = url_for('api_quiz.get_word_to_test',
                       quiz_key=self.QUIZ_KEY,
-                      wordlist_id=[111111111],
-                      _external=True)
+                      wordlist_id=[111111111])
         r = self.client.get(url)
         self.assertEqual(404, r.status_code)
 
@@ -203,7 +195,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
 
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
+        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
         cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
@@ -217,7 +209,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
             'name': self.list_name
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
         obj = json.loads(r.data)
         self.wordlist_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
@@ -246,7 +238,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
             js.ATTRIBUTES: attributes
         }
 
-        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         obj = json.loads(r.data)
         self.word_id_1 = obj['word_id']
         self.addCleanup(cleanupWordID, self.client, self.word_id_1)
@@ -258,7 +250,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
             js.ATTRIBUTES: attributes
         }
 
-        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         obj = json.loads(r.data)
         self.word_id_2 = obj['word_id']
         self.addCleanup(cleanupWordID, self.client, self.word_id_2)
@@ -272,15 +264,13 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
         }
 
         r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
-                                    wordlist_id=self.wordlist_id,
-                                    _external=True),
+                                    wordlist_id=self.wordlist_id),
                             json=payload)
 
         # tag word_1
         r = self.client.post(url_for('api_wordlist_tag.add_tags',
                                      wordlist_id=self.wordlist_id,
-                                     word_id=self.word_id_1,
-                                     _external=True),
+                                     word_id=self.word_id_1),
                              json=['tag1'])
         self.assertEqual(200, r.status_code)
 
@@ -293,8 +283,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
         url = url_for('api_quiz.get_word_to_test_single_wordlist',
                       tag=['tag1'],
                       wordlist_id=self.wordlist_id,
-                      quiz_key=self.QUIZ_KEY,
-                      _external=True)
+                      quiz_key=self.QUIZ_KEY)
         r = self.client.get(url)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
@@ -307,8 +296,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
         # untagged one.
         url = url_for('api_quiz.get_word_to_test_single_wordlist',
                       wordlist_id=self.wordlist_id,
-                      quiz_key=self.QUIZ_KEY,
-                      _external=True)
+                      quiz_key=self.QUIZ_KEY)
         r = self.client.get(url)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
@@ -320,8 +308,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
         url = url_for('api_quiz.get_word_to_test_single_wordlist',
                       tag=['tag1'],
                       wordlist_id=self.wordlist_id,
-                      quiz_key='genders',
-                      _external=True)
+                      quiz_key='genders')
         r = self.client.get(url)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
@@ -331,8 +318,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
         url = url_for('api_quiz.get_word_to_test_single_wordlist',
                       tag=['tag1'],
                       wordlist_id=self.wordlist_id,
-                      quiz_key=''.join(random.choices(string.ascii_lowercase, k=10)),
-                      _external=True)
+                      quiz_key=''.join(random.choices(string.ascii_lowercase, k=10)))
         r = self.client.get(url)
         self.assertEqual(404, r.status_code)
 
@@ -340,16 +326,14 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
         url = url_for('api_quiz.get_word_to_test_single_wordlist',
                       wordlist_id=self.wordlist_id,
                       quiz_key=self.QUIZ_KEY,
-                      query=''.join(random.choices(string.ascii_lowercase, k=10)),
-                      _external=True)
+                      query=''.join(random.choices(string.ascii_lowercase, k=10)))
         r = self.client.get(url)
         self.assertEqual(400, r.status_code)
 
     def test_undefined_wordlist(self):
         url = url_for('api_quiz.get_word_to_test_single_wordlist',
                       wordlist_id=111111111,
-                      quiz_key=self.QUIZ_KEY,
-                      _external=True)
+                      quiz_key=self.QUIZ_KEY)
         r = self.client.get(url)
         self.assertEqual(404, r.status_code)
 
@@ -357,8 +341,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
         url = url_for('api_quiz.get_word_to_test_single_wordlist',
                       tag=[''.join(random.choices(string.ascii_lowercase, k=10))],
                       wordlist_id=self.wordlist_id,
-                      quiz_key=self.QUIZ_KEY,
-                      _external=True)
+                      quiz_key=self.QUIZ_KEY)
         r = self.client.get(url)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
@@ -371,15 +354,14 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
             'name': self.list_name
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
         obj = json.loads(r.data)
         wordlist_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, wordlist_id)
 
         url = url_for('api_quiz.get_word_to_test_single_wordlist',
                       quiz_key=self.QUIZ_KEY,
-                      wordlist_id=wordlist_id,
-                      _external=True)
+                      wordlist_id=wordlist_id)
         r = self.client.get(url)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
@@ -409,7 +391,7 @@ class APIQuizTestGetAllAttrValuesForQuiz(unittest.TestCase):
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
 
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
+        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
         cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
@@ -441,7 +423,7 @@ class APIQuizTestGetAllAttrValuesForQuiz(unittest.TestCase):
             js.ATTRIBUTES: attributes
         }
 
-        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         obj = json.loads(r.data)
         self.word_id = obj['word_id']
 
@@ -454,7 +436,7 @@ class APIQuizTestGetAllAttrValuesForQuiz(unittest.TestCase):
     # see if we fetch the word in the wordlist when using the api correctly
     def test_basic(self):
         url = url_for('api_quiz.get_all_attr_values_for_quiz',
-                      quiz_key=self.QUIZ_KEY, word_id=self.word_id, _external=True)
+                      quiz_key=self.QUIZ_KEY, word_id=self.word_id)
         r = self.client.get(url)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
@@ -501,7 +483,7 @@ class APIQuizTestGetAllAttrValuesForQuiz(unittest.TestCase):
     # use a valid quiz key but one that won't return anything:  genders for a verb
     def test_nonmatching_quiz_key(self):
         url = url_for('api_quiz.get_all_attr_values_for_quiz',
-                      quiz_key='genders', word_id=self.word_id, _external=True)
+                      quiz_key='genders', word_id=self.word_id)
         r = self.client.get(url)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
@@ -510,14 +492,13 @@ class APIQuizTestGetAllAttrValuesForQuiz(unittest.TestCase):
     def test_undefined_quiz_key(self):
         url = url_for('api_quiz.get_all_attr_values_for_quiz',
                       quiz_key=''.join(random.choices(string.ascii_lowercase, k=10)),
-                      word_id=self.word_id, _external=True)
+                      word_id=self.word_id)
         r = self.client.get(url)
         self.assertEqual(404, r.status_code)
 
     def test_undefined_word_id(self):
         url = url_for('api_quiz.get_all_attr_values_for_quiz',
                       quiz_key=self.QUIZ_KEY,
-                      word_id=111111111,
-                      _external=True)
+                      word_id=111111111)
         r = self.client.get(url)
         self.assertEqual(404, r.status_code)
