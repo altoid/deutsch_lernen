@@ -388,7 +388,7 @@ def post_quiz_answer():
         cursor.execute(update, payload)
         cursor.execute('commit')
 
-    return 'OK', 200
+    return 'OK', 201
 
 
 @bp.route('/report/<string:quiz_key>/<int:wordlist_id>')   # url may have ?tag=x&tag=x& ...

@@ -152,7 +152,7 @@ def add_tags(wordlist_id, word_id):
 
     new_tags = list(set(payload))  # ensure no redundant tags
     if not new_tags:
-        return "OK", 200
+        return "OK", 201
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
@@ -205,7 +205,7 @@ def add_tags(wordlist_id, word_id):
             cursor.executemany(sql, args)
 
             cursor.execute('commit')
-            return "OK", 200
+            return "OK", 201
 
         except mysql.connector.errors.ProgrammingError as e:
             cursor.execute('rollback')

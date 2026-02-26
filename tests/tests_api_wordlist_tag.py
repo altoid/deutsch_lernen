@@ -76,7 +76,7 @@ class APIWordlistTagMultiList(unittest.TestCase):
                                      wordlist_id=wordlist_id,
                                      word_id=word_id),
                              json=tags)
-        self.assertEqual(200, r.status_code)
+        self.assertEqual(201, r.status_code)
 
     def setUp(self):
         # create multiple word lists and dictionary entries.
@@ -329,7 +329,7 @@ class APIWordlistTagSmartList(unittest.TestCase):
                                      wordlist_id=self.wordlist_id,
                                      word_id=self.word1_id),
                              json=['tag1', 'tag2'])
-        self.assertNotEqual(200, r.status_code)
+        self.assertNotEqual(201, r.status_code)
 
     def test_deleteTags(self):
         r = self.client.delete(url_for('api_wordlist_tag.delete_tags_for_word_id',
@@ -441,13 +441,13 @@ class APIWordlistTag(unittest.TestCase):
                                      wordlist_id=self.wordlist_id,
                                      word_id=self.word2_id),
                              json=['tag1', 'tag2'])
-        self.assertEqual(200, r.status_code)
+        self.assertEqual(201, r.status_code)
 
         r = self.client.post(url_for('api_wordlist_tag.add_tags',
                                      wordlist_id=self.wordlist_id,
                                      word_id=self.word3_id),
                              json=['tag1'])
-        self.assertEqual(200, r.status_code)
+        self.assertEqual(201, r.status_code)
 
     # ################################
     # there is no tearDown method (we do have tearDownClass).  addCleanup takes care of housekeeping.
