@@ -30,18 +30,16 @@ class APITests(unittest.TestCase):
         pass
 
     def test_pos_structure(self):
-        with self.app.test_request_context():
-            url = url_for('api_pos.get_pos', _external=True)
-            r = self.client.get(url)
-            self.assertEqual(200, r.status_code)
+        url = url_for('api_pos.get_pos', _external=True)
+        r = self.client.get(url)
+        self.assertEqual(200, r.status_code)
 
     def test_bullshit_wordid(self):
-        with self.app.test_request_context():
-            url = url_for('api_pos.get_pos_for_word_id', word_id=83674587, _external=True)
-            r = self.client.get(url)
-            self.assertEqual(200, r.status_code)
+        url = url_for('api_pos.get_pos_for_word_id', word_id=83674587, _external=True)
+        r = self.client.get(url)
+        self.assertEqual(200, r.status_code)
 
-            obj = json.loads(r.data)
+        obj = json.loads(r.data)
 
-            self.assertEqual(0, len(obj))
+        self.assertEqual(0, len(obj))
 

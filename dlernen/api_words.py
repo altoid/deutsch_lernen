@@ -17,12 +17,49 @@ def get_words():
     given a list of wordlist ids, get all the words in those lists.  if no word list ids are given, dump
     the whole dictionary.
     """
-    # TODO - currently no unit tests for this.  do we need any?
+
+    # NB there is no check for invalid wordlist_id.  i'm tired.
 
     wordlist_ids = request.args.getlist('wordlist_id')
+    tags = request.args.getlist('tag')
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        if wordlist_ids:
+        if wordlist_ids and tags:
+            tag_args = ', '.join(['%s'] * len(tags))
+            id_args = ', '.join(['%s'] * len(wordlist_ids))
+
+            sql = """
+            select distinct word_id
+            from tag
+            where tag in (%(tag_args)s)
+            and wordlist_id in (%(id_args)s)
+            """ % {
+                'tag_args': tag_args,
+                'id_args': id_args
+            }
+
+            cursor.execute(sql, tags + wordlist_ids)
+            rows = cursor.fetchall()
+
+            word_ids = list(map(lambda x: x['word_id'], rows))
+
+        elif wordlist_ids:
             word_ids = common.get_word_ids_from_wordlists(wordlist_ids, cursor)
+
+        elif tags:
+            tag_args = ['%s'] * len(tags)
+            tag_args = ', '.join(tag_args)
+
+            sql = """
+            select distinct word_id
+            from tag
+            where tag in (%(tag_args)s)
+            """ % {'tag_args': tag_args}
+
+            cursor.execute(sql, tags)
+            rows = cursor.fetchall()
+
+            word_ids = list(map(lambda x: x['word_id'], rows))
+
         else:
             sql = """
             select id as word_id from word
@@ -35,7 +72,11 @@ def get_words():
 
     result = common.get_words_from_word_ids(word_ids)
 
+    # NB  the word response does not have any tag info in it.
     jsonschema.validate(result, js.WORDS_RESPONSE_SCHEMA)
+
+    if not result:
+        return 'Not found', 404
 
     return result
 

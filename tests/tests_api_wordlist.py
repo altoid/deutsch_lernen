@@ -123,7 +123,7 @@ class APIWordlist(unittest.TestCase):
         self.metadata_update_url = url_for('api_wordlist.update_wordlist_metadata', wordlist_id=self.wordlist_id,
                                            _external=True)
 
-    # do nothing, just make sure that setUp and tearDown work
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
 
@@ -563,7 +563,7 @@ class APIWordlistAddByID(unittest.TestCase):
                                            wordlist_id=self.wordlist_id,
                                            _external=True)
 
-    # do nothing, just make sure that setUp and tearDown work
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
 
@@ -751,7 +751,7 @@ class APIWordlistGetWordIDs(unittest.TestCase):
     # there is no tearDown method (we do have tearDownClass).  addCleanup takes care of housekeeping.
     # ################################
 
-    # do nothing, just make sure that setUp and tearDown work
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
 

@@ -77,7 +77,7 @@ def get_all_tags(wordlist_id):
     # get all the tags across all the words in the wordlist.
     # the response will not indicate with tags go with which word.  it contains just the wordlist id and
     # the list of tags.
-    
+
     # perform the following checks:
     #
     # - wordlist exists
@@ -219,19 +219,40 @@ def add_tags(wordlist_id, word_id):
 
 @bp.route('/<string:tag>', methods=['DELETE'])
 def delete_tag(tag):
-    # delete this tag from every wordlist.
+    # delete this tag from the given wordlists, or from every wordlist if no wordlist ids are given.
+    # (query parameters in URLs is an acceptable practice)
+
+    wordlist_ids = request.args.getlist('wordlist_id')
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
-            cursor.execute('start transaction')
+            if wordlist_ids:
+                sql = """
+                delete from tag
+                where tag = %(tag)s
+                and wordlist_id = %(wordlist_id)s
+                """
 
-            sql = """
-            delete from tag
-            where tag = %(tag)s
-            """
+                cursor.execute('start transaction')
 
-            cursor.execute(sql, {'tag': tag})
-            cursor.execute('commit')
-            return "OK", 200
+                cursor.executemany(sql,
+                                   [
+                                       {'tag': tag, 'wordlist_id': x}
+                                       for x in wordlist_ids
+                                   ])
+                cursor.execute('commit')
+                return "OK", 200
+
+            else:
+                cursor.execute('start transaction')
+
+                sql = """
+                delete from tag
+                where tag = %(tag)s
+                """
+
+                cursor.execute(sql, {'tag': tag})
+                cursor.execute('commit')
+                return "OK", 200
 
         except mysql.connector.errors.ProgrammingError as e:
             cursor.execute('rollback')

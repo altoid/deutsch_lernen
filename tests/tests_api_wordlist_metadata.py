@@ -34,7 +34,7 @@ class APIWordListMetadataCreate(unittest.TestCase):
     def tearDownClass(cls):
         cls.app_context.pop()
 
-    # do nothing, just make sure that setUp and tearDown work
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
 
@@ -178,7 +178,7 @@ class APIWordListMetadataUpdate(unittest.TestCase):
         self.metadata_update_url = url_for('api_wordlist.update_wordlist_metadata', wordlist_id=self.wordlist_id,
                                            _external=True)
 
-    # do nothing, just make sure that setUp and tearDown work
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
 

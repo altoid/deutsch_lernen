@@ -95,7 +95,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
                                     _external=True),
                             json=payload)
 
-    # do nothing, just make sure that setUp and tearDown work
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
 
@@ -284,7 +284,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
                              json=['tag1'])
         self.assertEqual(200, r.status_code)
 
-    # do nothing, just make sure that setUp and tearDown work
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
 
@@ -447,7 +447,7 @@ class APIQuizTestGetAllAttrValuesForQuiz(unittest.TestCase):
 
         self.addCleanup(cleanupWordID, self.client, self.word_id)
 
-    # do nothing, just make sure that setUp and tearDown work
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
 

@@ -1,5 +1,5 @@
 import unittest
-from dlernen import create_app, dlernen_json_schema as js
+from dlernen import create_app
 from flask import url_for
 import json
 import random
@@ -8,11 +8,245 @@ from pprint import pprint
 
 
 def cleanupWordID(client, word_id):
-    client.delete(url_for('api_word.delete_word', word_id=word_id, _external=True))
+    client.delete(url_for('api_word.delete_word', word_id=word_id))
 
 
 def cleanupWordlistID(client, wordlist_id):
-    client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id, _external=True))
+    client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id))
+
+
+class APIWordlistTagMultiList(unittest.TestCase):
+    # tests for changes in the tagging api.  we can get words with a given tag from multiple lists,
+    # and delete a given tag from multiple lists.
+
+    app = None
+    app_context = None
+    client = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
+            TESTING=True,
+        )
+
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
+
+        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
+        cls.keyword_mappings = json.loads(r.data)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
+
+    def createWordlist(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
+        self.assertEqual(r.status_code, 201)
+        obj = json.loads(r.data)
+        wordlist_id = obj['wordlist_id']
+
+        return list_name, wordlist_id
+
+    def createWord(self):
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+
+        add_payload = {
+            "word": word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
+        }
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+
+        return word, word_id
+
+    def assignWordAndTags(self, wordlist_id, word_id, tags):
+        r = self.client.put(url_for('api_wordlist.add_words_by_id', wordlist_id=wordlist_id), json=[word_id])
+        self.assertEqual(200, r.status_code)
+
+        r = self.client.post(url_for('api_wordlist_tag.add_tags',
+                                     wordlist_id=wordlist_id,
+                                     word_id=word_id),
+                             json=tags)
+        self.assertEqual(200, r.status_code)
+
+    def setUp(self):
+        # create multiple word lists and dictionary entries.
+        #
+        # list0:  empty
+        # list1:  word1 (tag1)
+        # list2:  word2 (tag1)
+        # list3:  word3 (tag1), word1 (tag1, tag2)
+        #
+
+        ############################
+        #
+        # create the lists
+        #
+        ############################
+
+        list_name_0, self.wordlist0_id = self.createWordlist()  # we'll keep this empty
+        list_name_1, self.wordlist1_id = self.createWordlist()
+        list_name_2, self.wordlist2_id = self.createWordlist()
+        list_name_3, self.wordlist3_id = self.createWordlist()
+
+        self.addCleanup(cleanupWordlistID, self.client, self.wordlist0_id)
+        self.addCleanup(cleanupWordlistID, self.client, self.wordlist1_id)
+        self.addCleanup(cleanupWordlistID, self.client, self.wordlist2_id)
+        self.addCleanup(cleanupWordlistID, self.client, self.wordlist3_id)
+
+        ############################
+        #
+        # create the words
+        #
+        ############################
+
+        self.word1, self.word1_id = self.createWord()
+        self.word2, self.word2_id = self.createWord()
+        self.word3, self.word3_id = self.createWord()
+
+        self.addCleanup(cleanupWordID, self.client, self.word1_id)
+        self.addCleanup(cleanupWordID, self.client, self.word2_id)
+        self.addCleanup(cleanupWordID, self.client, self.word3_id)
+
+        ############################
+        #
+        # assign words to lists and tags to words
+        #
+        ############################
+
+        self.assignWordAndTags(self.wordlist1_id, self.word1_id, ['tag1'])
+        self.assignWordAndTags(self.wordlist2_id, self.word2_id, ['tag1'])
+        self.assignWordAndTags(self.wordlist3_id, self.word3_id, ['tag1'])
+        self.assignWordAndTags(self.wordlist3_id, self.word1_id, ['tag1', 'tag2'])
+
+    # do nothing, just make sure that setUp works
+    def test_nothing(self):
+        pass
+
+    # test cases:
+    #
+    # get_words with no filtering - retrieves whole dictionary.
+    def test1(self):
+        r = self.client.get(url_for('api_words.get_words'))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertGreater(len(obj), 1000)
+
+    # get_words, filter just by tags.
+    def test2(self):
+        r = self.client.get(url_for('api_words.get_words', tag=['tag1']))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        # should retrieve word1 and word3
+        control = [self.word1_id, self.word2_id, self.word3_id]
+        experiment = [x['word_id'] for x in obj]
+
+        self.assertCountEqual(control, experiment)
+
+    # filter with multiple tags
+    def test2_5(self):
+        r = self.client.get(url_for('api_words.get_words', tag=['tag1', 'tag2']))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        control = [self.word1_id, self.word2_id, self.word3_id]
+        experiment = [x['word_id'] for x in obj]
+
+        self.assertCountEqual(control, experiment)
+
+    # get_words, filter just by wordlist_ids
+    def test3(self):
+        r = self.client.get(url_for('api_words.get_words', wordlist_id=[self.wordlist1_id, self.wordlist3_id]))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        # should retrieve word1 and word3
+        control = [self.word1_id, self.word3_id]
+        experiment = [x['word_id'] for x in obj]
+
+        self.assertCountEqual(control, experiment)
+
+    # get_words, filter by both.  there should be a test that shows 0 results with the given parameters.
+    def test4(self):
+        r = self.client.get(url_for('api_words.get_words',
+                                    wordlist_id=[self.wordlist3_id],
+                                    tag=['tag2']))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        control = [self.word1_id]
+        experiment = [x['word_id'] for x in obj]
+
+        self.assertCountEqual(control, experiment)
+
+    def test4_5(self):
+        r = self.client.get(url_for('api_words.get_words',
+                                    wordlist_id=[self.wordlist3_id],
+                                    tag=['tag1', 'tag2']))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        control = [self.word1_id, self.word3_id]
+        experiment = [x['word_id'] for x in obj]
+
+        self.assertCountEqual(control, experiment)
+
+    def test4_6(self):
+        r = self.client.get(url_for('api_words.get_words',
+                                    wordlist_id=[self.wordlist2_id, self.wordlist3_id],
+                                    tag=['no_such_tag']))
+        self.assertEqual(404, r.status_code)
+
+    def test4_7(self):
+        r = self.client.get(url_for('api_words.get_words',
+                                    wordlist_id=[self.wordlist1_id],
+                                    tag=['tag2']))
+        self.assertEqual(404, r.status_code)
+
+    # delete a tag from all wordlists.  to verify, retrieve by the tag and ensure that it's not found
+    def test5(self):
+        r = self.client.get(url_for('api_words.get_words', tag=['tag1']))
+        self.assertEqual(200, r.status_code)
+
+        r = self.client.delete(url_for('api_wordlist_tag.delete_tag', tag='tag1'))
+        self.assertEqual(200, r.status_code)
+
+        r = self.client.get(url_for('api_words.get_words', tag=['tag1']))
+        self.assertEqual(404, r.status_code)
+
+    # delete a tag from specific word lists
+    def test6(self):
+        r = self.client.get(url_for('api_words.get_words',
+                                    wordlist_id=[self.wordlist1_id],
+                                    tag=['tag1']))
+        self.assertEqual(200, r.status_code)
+
+        r = self.client.delete(url_for('api_wordlist_tag.delete_tag',
+                                       wordlist_id=[self.wordlist1_id],
+                                       tag='tag1'))
+        self.assertEqual(200, r.status_code)
+
+        r = self.client.get(url_for('api_words.get_words',
+                                    wordlist_id=[self.wordlist1_id],
+                                    tag=['tag1']))
+        self.assertEqual(404, r.status_code)
+
+        r = self.client.get(url_for('api_words.get_words',
+                                    wordlist_id=[self.wordlist2_id],
+                                    tag=['tag1']))
+        self.assertEqual(200, r.status_code)
+
+    # TODO need tests for smart lists!
 
 
 class APIWordlistTagSmartList(unittest.TestCase):
@@ -32,7 +266,7 @@ class APIWordlistTagSmartList(unittest.TestCase):
         cls.app_context.push()
 
         with cls.app.test_request_context():
-            r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
+            r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
             cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
@@ -48,7 +282,7 @@ class APIWordlistTagSmartList(unittest.TestCase):
             "word": self.word1,
             "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
         }
-        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         self.word1_id = obj['word_id']
@@ -57,7 +291,7 @@ class APIWordlistTagSmartList(unittest.TestCase):
             "word": self.word2,
             "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
         }
-        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         self.word2_id = obj['word_id']
@@ -74,18 +308,17 @@ class APIWordlistTagSmartList(unittest.TestCase):
             'sqlcode': sql
         }
 
-        url = url_for('api_wordlist.create_wordlist_metadata', _external=True)
+        url = url_for('api_wordlist.create_wordlist_metadata')
 
         r = self.client.post(url, json=add_payload)
         obj = json.loads(r.data)
         self.wordlist_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
 
-    # do nothing, just make sure that setUp and tearDown work
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
         r = self.client.get(url_for('api_wordlist.get_wordlist',
-                                    wordlist_id=self.wordlist_id,
-                                    _external=True))
+                                    wordlist_id=self.wordlist_id))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
         self.assertEqual(1, len(obj['known_words']))
@@ -94,31 +327,27 @@ class APIWordlistTagSmartList(unittest.TestCase):
     def test_addTags(self):
         r = self.client.post(url_for('api_wordlist_tag.add_tags',
                                      wordlist_id=self.wordlist_id,
-                                     word_id=self.word1_id,
-                                     _external=True),
+                                     word_id=self.word1_id),
                              json=['tag1', 'tag2'])
         self.assertNotEqual(200, r.status_code)
 
     def test_deleteTags(self):
         r = self.client.delete(url_for('api_wordlist_tag.delete_tags_for_word_id',
                                        wordlist_id=self.wordlist_id,
-                                       word_id=self.word1_id,
-                                       _external=True),
+                                       word_id=self.word1_id),
                                json=['tag1', 'tag2'])
         self.assertNotEqual(200, r.status_code)
 
     def test_get_nonmember(self):
         r = self.client.get(url_for('api_wordlist_tag.get_tags',
                                     wordlist_id=self.wordlist_id,
-                                    word_id=self.word2_id,
-                                    _external=True))
+                                    word_id=self.word2_id))
         self.assertEqual(404, r.status_code)
 
     def test_get_member(self):
         r = self.client.get(url_for('api_wordlist_tag.get_tags',
                                     wordlist_id=self.wordlist_id,
-                                    word_id=self.word1_id,
-                                    _external=True))
+                                    word_id=self.word1_id))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
         self.assertEqual(0, len(obj['tags']))
@@ -141,7 +370,7 @@ class APIWordlistTag(unittest.TestCase):
         cls.app_context.push()
 
         with cls.app.test_request_context():
-            r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings', _external=True))
+            r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
             cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
@@ -155,7 +384,7 @@ class APIWordlistTag(unittest.TestCase):
             'name': self.list_name
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
         obj = json.loads(r.data)
         self.wordlist_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
@@ -174,7 +403,7 @@ class APIWordlistTag(unittest.TestCase):
             "word": self.word1,
             "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
         }
-        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         self.word1_id = obj['word_id']
@@ -183,7 +412,7 @@ class APIWordlistTag(unittest.TestCase):
             "word": self.word2,
             "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
         }
-        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         self.word2_id = obj['word_id']
@@ -192,7 +421,7 @@ class APIWordlistTag(unittest.TestCase):
             "word": self.word3,
             "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
         }
-        r = self.client.post(url_for('api_word.add_word', _external=True), json=add_payload)
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         self.word3_id = obj['word_id']
@@ -202,7 +431,7 @@ class APIWordlistTag(unittest.TestCase):
         self.addCleanup(cleanupWordID, self.client, self.word3_id)
 
         r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
-                                    wordlist_id=self.wordlist_id, _external=True),
+                                    wordlist_id=self.wordlist_id),
                             json={
                                 "words": [self.word1, self.word2, self.word3]
                             })
@@ -210,15 +439,13 @@ class APIWordlistTag(unittest.TestCase):
 
         r = self.client.post(url_for('api_wordlist_tag.add_tags',
                                      wordlist_id=self.wordlist_id,
-                                     word_id=self.word2_id,
-                                     _external=True),
+                                     word_id=self.word2_id),
                              json=['tag1', 'tag2'])
         self.assertEqual(200, r.status_code)
 
         r = self.client.post(url_for('api_wordlist_tag.add_tags',
                                      wordlist_id=self.wordlist_id,
-                                     word_id=self.word3_id,
-                                     _external=True),
+                                     word_id=self.word3_id),
                              json=['tag1'])
         self.assertEqual(200, r.status_code)
 
@@ -226,7 +453,7 @@ class APIWordlistTag(unittest.TestCase):
     # there is no tearDown method (we do have tearDownClass).  addCleanup takes care of housekeeping.
     # ################################
 
-    # do nothing, just make sure that setUp and tearDown work
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
 
@@ -241,7 +468,7 @@ class APIWordlistTag(unittest.TestCase):
 
     # 1. GET /api/wordlist/<int:wordlist_id>
     def test1(self):
-        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id, _external=True))
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -268,8 +495,7 @@ class APIWordlistTag(unittest.TestCase):
     def test2(self):
         r = self.client.get(url_for('api_wordlist.get_wordlist',
                                     wordlist_id=self.wordlist_id,
-                                    tag=['tag1'],
-                                    _external=True))
+                                    tag=['tag1']))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -294,8 +520,7 @@ class APIWordlistTag(unittest.TestCase):
     def test3(self):
         r = self.client.get(url_for('api_wordlist.get_wordlist',
                                     wordlist_id=self.wordlist_id,
-                                    tag=['tag2'],
-                                    _external=True))
+                                    tag=['tag2']))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -318,8 +543,7 @@ class APIWordlistTag(unittest.TestCase):
     def test4(self):
         r = self.client.get(url_for('api_wordlist.get_wordlist',
                                     wordlist_id=self.wordlist_id,
-                                    tag=['tag1', 'tag2'],
-                                    _external=True))
+                                    tag=['tag1', 'tag2']))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -343,8 +567,7 @@ class APIWordlistTag(unittest.TestCase):
     def test5(self):
         r = self.client.get(url_for('api_wordlist.get_wordlist',
                                     wordlist_id=self.wordlist_id,
-                                    tag=['tag2', 'tag2'],
-                                    _external=True))
+                                    tag=['tag2', 'tag2']))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -367,8 +590,7 @@ class APIWordlistTag(unittest.TestCase):
     def test6(self):
         r = self.client.get(url_for('api_wordlist.get_wordlist',
                                     wordlist_id=self.wordlist_id,
-                                    tag=['bullshit'],
-                                    _external=True))
+                                    tag=['bullshit']))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 

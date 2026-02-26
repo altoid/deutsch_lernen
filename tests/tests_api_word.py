@@ -37,7 +37,7 @@ class APITestsWordNotes(unittest.TestCase):
     def tearDownClass(cls):
         cls.app_context.pop()
 
-    # do nothing, just make sure that setUp and tearDown work
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
 
@@ -280,7 +280,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
     def tearDownClass(cls):
         cls.app_context.pop()
 
-    # do nothing, just make sure that setUp and tearDown work
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
 
@@ -713,7 +713,7 @@ class APITestsWordPOST(unittest.TestCase):
     def tearDownClass(cls):
         cls.app_context.pop()
 
-    # do nothing, just make sure that setUp and tearDown work
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
 
@@ -846,7 +846,7 @@ class APITestsWordPUT(unittest.TestCase):
         self.word_id = self.obj['word_id']
         self.addCleanup(cleanupWordID, self.client, self.word_id)
 
-    # do nothing, just make sure that setUp and tearDown work
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
 
@@ -1045,7 +1045,7 @@ class APIWordUpdate(unittest.TestCase):
         self.word_id = obj['word_id']
         self.addCleanup(cleanupWordID, self.client, self.word_id)
 
-    # do nothing, just make sure that setUp and tearDown work
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
 

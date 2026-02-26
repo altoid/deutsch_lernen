@@ -52,7 +52,7 @@ class TestWordlistRefresh(unittest.TestCase):
         self.wordlist_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
 
-    # do nothing, just make sure that setUp and tearDown work
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
 

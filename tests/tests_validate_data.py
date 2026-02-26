@@ -30,7 +30,7 @@ class ValidateData(unittest.TestCase):
     def tearDownClass(cls):
         cls.app_context.pop()
 
-    # do nothing, just make sure that setUp and tearDown work
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
 
