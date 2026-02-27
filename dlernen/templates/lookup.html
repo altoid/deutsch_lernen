@@ -56,7 +56,9 @@ word id.
 
     <form action="{{ url_for('dlernen.update_word_notes') }}" method="post">
         <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
+        {% if wordlist %}
         <input type="hidden" value="{{ wordlist.wordlist_id }}" name="wordlist_id"/>
+        {% endif %}
         <input type="hidden" value="{{ wordobject['word_id'] }}" name="word_id"/>
         <h2>Noten</h2>
         <input type="submit" value="Update Notes"/>

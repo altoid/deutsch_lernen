@@ -14,8 +14,6 @@ TODO - add-word field in the tag editor page.  redirect to word edit page if the
 TODO - autosave word list notes.
     https://www.google.com/search?q=html+textarea+auto+save&newwindow=1&sca_esv=d160e5e212cd680a&ei=6TYeafOSLJvE0PEPiJingAU&ved=0ahUKEwizq5_LlP-QAxUbIjQIHQjMCVAQ4dUDCBE&uact=5&oq=html+textarea+auto+save&gs_lp=Egxnd3Mtd2l6LXNlcnAiF2h0bWwgdGV4dGFyZWEgYXV0byBzYXZlMgUQIRigATIFECEYoAEyBRAhGKABMgUQIRigATIFECEYoAEyBRAhGJ8FMgUQIRifBUiyZlCcHFj2YXABeAGQAQCYAaACoAH7E6oBBzEyLjEwLjG4AQPIAQD4AQGYAhigAvwUwgIKEAAYsAMY1gQYR8ICERAuGIAEGLEDGNEDGIMBGMcBwgIOEAAYgAQYsQMYgwEYigXCAgoQABiABBhDGIoFwgIIEAAYgAQYsQPCAg4QLhiABBixAxjRAxjHAcICCxAAGIAEGLEDGIMBwgIQEAAYgAQYsQMYQxiDARiKBcICERAAGIAEGLEDGIMBGIoFGI0GwgINEAAYgAQYsQMYQxiKBcICBRAAGIAEwgIGEAAYFhgewgIIEAAYFhgKGB7CAgUQABjvBcICCBAAGIAEGKIEwgIIEAAYogQYiQXCAgUQIRirApgDAIgGAZAGCJIHBzEyLjExLjGgB76CAbIHBzExLjExLjG4B_UUwgcIMC4xLjIyLjHIB2E&sclient=gws-wiz-serp
 
-TODO - look for opportunities to use dictionary and set comprehensions.
-
 TODO - create word lists from api calls since wordlists from sql don't give us enough.  examples:
     words in 5 or more lists
     most easily done as scripts run by cron
@@ -26,21 +24,12 @@ TODO - parse definitions, and for each word in the definition that is in the dic
     lookup page.  this may cause hyperlinks to appear in english definitions, but too bad.  to do this, tokenize
     the definition including spaces, look up each token in the dictionary.
 
-TODO - show me the words in a word list that were new.  i.e. words added after the word list was created.
-    show in italics, bold, etc.
-
 TODO - for parts of speech and their attributes add a display name column distinct from the key.  quiz table
     already does this.
 
 TODO - dump out a smart wordlist as an ordinary word list.  this would effectively be a snapshot of the smart list.
 
-FIXME - make sure http DELETE is not used for batch delete.
-
-FIXME - when PUT or POST methods create something, send back a 201 not a 200.
-
 TODO - for definitions quiz app, can we just rewrite the whole thing as a class?
-
-TODO - in quiz app, tag words that were missed/hinted, and also remove these tags
 
 TODO - in quiz app, add options to k, l, and tags subcommands
 
@@ -48,14 +37,30 @@ FIXME - in quiz app, if you go to the main menu in the middle of a quiz where al
     state is lost and you lose your place.  should keep state until list is changed or app is reset.  this state
     should be saved to disk on program exit.
 
-TODO - api changes to support fetching words with the same tag from multiple wordlists
-    - augment GET /api/words to have tags in the URL
-    - delete tag from all wordlists
-
 TODO - in quiz app, imperfect query should prefetch all candidate words, not use the sql for one-at-a-time queries
 
 TODO - new feature - link words that have connections/differences.
+
+TODO - when the results page is displayed within the context of a wordlist, there should be a simple way to add
+    any of the search results to the list.
+
+FIXME - do not render tags field in the edit page if we get there through a smart list.
+
+FIXME - in the sidebar, show the name/id of the prevailing list
+
+FIXME - do we need 'unknown words' any more?  any time we add an unknown word to a list we are taken to the edit page
+    immediately.  if we look up an unknown word and there is no list context, we can add it then.
+
 ------
+best practices:
+
+- use addCleanup instead of tearDown in test classes
+- when PUT or POST methods create something, send back a 201 not a 200.
+- make sure http DELETE is not used for batch delete.
+- look for opportunities to use dictionary and set comprehensions.
+
+-----------
+
 
 tag api changes:
 

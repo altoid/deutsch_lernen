@@ -39,12 +39,12 @@ Lookup {{ word }}
     <h1>
         {% if wordlist %}
         <a name="{{ tuple[0]['word'] }}"
-           href="{{ url_for('dlernen.edit_word_form', wordlist_id=wordlist.wordlist_id, serialized_tag_state=serialized_tag_state, word=tuple[0]['word']) }}">
+           href="{{ url_for('dlernen.lookup_by_id', word_id=tuple[0]['word_id'], wordlist_id=wordlist.wordlist_id, serialized_tag_state=serialized_tag_state) }}">
             {{ tuple[0]['word'] }}
         </a>
         {% else %}
         <a name="{{ tuple[0]['word'] }}"
-           href="{{ url_for('dlernen.edit_word_form', word=tuple[0]['word']) }}">
+           href="{{ url_for('dlernen.lookup_by_id', word_id=tuple[0]['word_id']) }}">
             {{ tuple[0]['word'] }}
         </a>
         {% endif %}
