@@ -574,6 +574,14 @@ def edit_word_form(word):
 
     # get tags for any words that have them.  join them as a single space-separated string.
     if wordlist_id:
+        url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
+        r = requests.get(url)
+        if not r:
+            return render_template("error.html",
+                                   message=r.text,
+                                   status_code=r.status_code)
+        wordlist = r.json()
+
         for p in pos_structure:
             field_disabled = False
             if p['word_id']:
@@ -603,22 +611,16 @@ def edit_word_form(word):
 
             # tags aren't attributes, so they don't have a sort order per POS.  fake one by finding the max
             # sort order for this POS and adding 1 to it.
-            d = {
-                'field_name': field_name,
-                'field_value': tags,
-                'label': 'tags',
-                'sort_order': max([x['sort_order'] for x in p['attributes']]) + 1,
-                'disabled': field_disabled
-            }
-            form_data[p['pos_name']].append(d)
+            if wordlist['list_type'] != 'smart':
+                d = {
+                    'field_name': field_name,
+                    'field_value': tags,
+                    'label': 'tags',
+                    'sort_order': max([x['sort_order'] for x in p['attributes']]) + 1,
+                    'disabled': field_disabled
+                }
 
-        url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
-        r = requests.get(url)
-        if not r:
-            return render_template("error.html",
-                                   message=r.text,
-                                   status_code=r.status_code)
-        wordlist = r.json()
+                form_data[p['pos_name']].append(d)
 
         return render_template('word_editor.html',
                                word=word,
