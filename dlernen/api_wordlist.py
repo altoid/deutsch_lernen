@@ -67,9 +67,7 @@ def __get_wordlist_metadata(wordlist_id):
         # see if there are any known or unknown words in this wordlist
         sql = """
         select count(*) nwords from (
-            select wordlist_id from wordlist_known_word where wordlist_id = %(wordlist_id)s  
-            union all 
-            select wordlist_id from wordlist_unknown_word where wordlist_id = %(wordlist_id)s) a
+            select wordlist_id from wordlist_word where wordlist_id = %(wordlist_id)s) a  
         """ % {
             "wordlist_id": wordlist_id
         }
@@ -218,38 +216,26 @@ def update_wordlist_metadata(wordlist_id):
     return __get_wordlist_metadata(wordlist_id)
 
 
-def add_words_to_list(cursor, wordlist_id, words):
-    arglist = list(words)
-    format_list = ['%s'] * len(arglist)
-    format_list = ', '.join(format_list)
+def check_word_ids(word_ids):
+    # make sure these word ids exist in the word table; return set of word_ids that are NOT in the word table.
 
-    sql = """
-    select distinct id word_id, word
-    from word
-    where word in (%s)
-    """ % format_list
+    if not word_ids:
+        return set()
 
-    case_folded_to_as_is = {x.casefold(): x for x in arglist}
-    cursor.execute(sql, arglist)
-    rows = cursor.fetchall()
-    known_words = {x['word'].casefold() for x in rows}
-    given_words = {x.casefold() for x in arglist}
-    unknown_words = given_words - known_words
-    wkw_tuples = [(wordlist_id, r['word_id']) for r in rows]
-    if wkw_tuples:
-        ins_sql = """
-        insert ignore into wordlist_known_word (wordlist_id, word_id)
-        values (%s, %s)
-        """
-        cursor.executemany(ins_sql, wkw_tuples)
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        id_args = ', '.join(['%s'] * len(word_ids))
+        sql = """
+        select id word_id
+        from word
+        where id in (%(id_args)s)
+        """ % {'id_args': id_args}
 
-    if unknown_words:
-        ins_sql = """
-        insert ignore into wordlist_unknown_word (wordlist_id, word)
-        values (%s, %s)
-        """
-        wuw_tuples = [(wordlist_id, case_folded_to_as_is[x]) for x in unknown_words]
-        cursor.executemany(ins_sql, wuw_tuples)
+        cursor.execute(sql, word_ids)
+        rows = cursor.fetchall()
+        known_ids = {x['word_id'] for x in rows}
+        unknown_ids = set(word_ids) - known_ids
+
+        return unknown_ids
 
 
 def __get_wordlist(wordlist_id, tags=None):
@@ -278,11 +264,11 @@ def __get_wordlist(wordlist_id, tags=None):
         result['source_is_url'] = citation.startswith('http') if citation else False
 
         if sqlcode:
-            known_words_sql = SQL_FOR_WORDLIST_FROM_SQLCODE % sqlcode
+            words_sql = SQL_FOR_WORDLIST_FROM_SQLCODE % sqlcode
 
-            cursor.execute(known_words_sql)
+            cursor.execute(words_sql)
             rows = cursor.fetchall()
-            result['known_words'] = [
+            result['words'] = [
                 {
                     'article': r['article'],
                     'definition': r['definition'],
@@ -297,14 +283,14 @@ def __get_wordlist(wordlist_id, tags=None):
             if tags:
                 tags = set(tags)  # remove any dups
                 tag_args = ', '.join(["%s"] * len(tags))
-                known_words_sql = """
+                words_sql = """
                 select
                     m.word,
                     m.word_id,
                     m.attrvalue definition,
                     ifnull(m2.attrvalue, '') article,
                     tag.tag
-                from wordlist_known_word ww
+                from wordlist_word ww
                 left join mashup_v m
                 on   ww.word_id = m.word_id
                 and  m.attrkey = 'definition'
@@ -320,17 +306,17 @@ def __get_wordlist(wordlist_id, tags=None):
                 """ % {
                     "tag_args": tag_args
                 }
-                cursor.execute(known_words_sql, (wordlist_id, *tags))
-                known_words = cursor.fetchall()
+                cursor.execute(words_sql, (wordlist_id, *tags))
+                words = cursor.fetchall()
             else:
-                known_words_sql = """
+                words_sql = """
                 select
                     m.word,
                     m.word_id,
                     m.attrvalue definition,
                     ifnull(m2.attrvalue, '') article,
                     ifnull(tag.tag, '') tag
-                from wordlist_known_word ww
+                from wordlist_word ww
                 
                 left join mashup_v m
                 on   ww.word_id = m.word_id
@@ -348,8 +334,8 @@ def __get_wordlist(wordlist_id, tags=None):
                 order by m.word
                 """
 
-                cursor.execute(known_words_sql, (wordlist_id,))
-                known_words = cursor.fetchall()
+                cursor.execute(words_sql, (wordlist_id,))
+                words = cursor.fetchall()
 
             word_data = {(r['word'], r['word_id']): {
                 'article': r['article'],
@@ -358,30 +344,16 @@ def __get_wordlist(wordlist_id, tags=None):
                 'word_id': r['word_id'],
                 'tags': []
             }
-                for r in known_words}
-            for r in known_words:
+                for r in words}
+            for r in words:
                 if r['tag']:
                     word_data[(r['word'], r['word_id'])]['tags'].append(r['tag'])
 
-            result['known_words'] = list(word_data.values())
-
-        unknown_words_sql = """
-        select
-        ww.word word
-        from wordlist_unknown_word ww
-        where ww.wordlist_id = %s
-        order by ww.word
-        """
-
-        cursor.execute(unknown_words_sql, (wordlist_id,))
-        unknown_words = cursor.fetchall()
-        unknown_words = [x['word'] for x in unknown_words]
-
-        result['unknown_words'] = unknown_words
+            result['words'] = list(word_data.values())
 
         if sqlcode:
             result['list_type'] = "smart"
-        elif unknown_words or known_words:
+        elif words:
             result['list_type'] = "standard"
         else:
             result['list_type'] = "empty"
@@ -409,41 +381,6 @@ def get_wordlist(wordlist_id):
         return str(f), 500
 
 
-@bp.route('/<int:wordlist_id>/wordids', methods=['PUT'])
-def add_words_by_id(wordlist_id):
-    try:
-        word_ids = request.get_json()
-        jsonschema.validate(word_ids, dlernen_json_schema.WORDLIST_WORDIDS_PAYLOAD_SCHEMA)
-    except jsonschema.ValidationError as e:
-        return "bad payload: %s" % e.message, 400
-
-    if not word_ids:
-        return "OK", 200
-
-    wordlist = __get_wordlist(wordlist_id)
-    if wordlist['list_type'] == 'smart':
-        return "can't add words to smart list", 400
-
-    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        try:
-            cursor.execute('start transaction')
-
-            wkw_tuples = [(wordlist_id, word_id) for word_id in word_ids]
-            if wkw_tuples:
-                ins_sql = """
-                insert ignore into wordlist_known_word (wordlist_id, word_id)
-                values (%s, %s)
-                """
-                cursor.executemany(ins_sql, wkw_tuples)
-
-            cursor.execute('commit')
-
-            return "OK", 200
-        except Exception as e:
-            cursor.execute('rollback')
-            return "update list failed", 500
-
-
 @bp.route('/<int:wordlist_id>/contents', methods=['PUT'])
 def update_wordlist_contents(wordlist_id):
     try:
@@ -458,14 +395,17 @@ def update_wordlist_contents(wordlist_id):
         notes = payload.get('notes')
         update_args['notes'] = notes
 
-    words = None
-    if 'words' in payload:
-        words = payload.get('words')
-        if words is not None:
-            words = set([w.strip() for w in words])
+    word_ids = None
+    if 'word_ids' in payload:
+        word_ids = payload.get('word_ids')
+
+    unknown_word_ids = check_word_ids(word_ids)
+    if unknown_word_ids:
+        message = "unknown_word_ids:  %s" % unknown_word_ids
+        return message, 400
 
     wordlist = __get_wordlist(wordlist_id)
-    if wordlist['list_type'] == 'smart' and words:
+    if wordlist['list_type'] == 'smart' and word_ids:
         return "can't add words to smart list", 400
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
@@ -488,8 +428,13 @@ def update_wordlist_contents(wordlist_id):
 
                 cursor.execute(sql, update_args)
 
-            if words:
-                add_words_to_list(cursor, wordlist_id, words)
+            if word_ids:
+                wkw_tuples = [(wordlist_id, x) for x in word_ids]
+                ins_sql = """
+                insert ignore into wordlist_word (wordlist_id, word_id)
+                values (%s, %s)
+                """
+                cursor.executemany(ins_sql, wkw_tuples)
 
             cursor.execute('commit')
 
@@ -533,30 +478,15 @@ def delete_from_wordlist(wordlist_id):
                 return "can't delete words from smart list", 400
 
             word_ids = payload.get('word_ids', [])
-            unknown_words = payload.get('unknown_words', [])
-
-            if unknown_words:
-                sql = """
-                delete from wordlist_unknown_word 
-                where wordlist_id = %(wordlist_id)s and word = %(word)s
-                """
-                args = [
-                    {
-                        "wordlist_id": wordlist_id,
-                        "word": word
-                    }
-                    for word in unknown_words
-                ]
-                cursor.executemany(sql, args)
 
             # TODO - if a word_id is not in the wordlist, no harm done.  but to be thorough, we should
             #   check for this and return a 404.
 
             if word_ids:
                 # note:  any tags that exist for this word in this wordlist will be automatically removed.
-                # the foreign keys in the tag table point to wordlist_known_word, so no code need for this.
+                # the foreign keys in the tag table point to wordlist_word, so no code needed for this.
                 sql = """
-                delete from wordlist_known_word 
+                delete from wordlist_word 
                 where wordlist_id = %(wordlist_id)s and word_id = %(word_id)s
                 """
                 args = [

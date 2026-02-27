@@ -33,7 +33,7 @@ Manage List:  {{ wordlist.name }}
                 <th>Add Tags</th>
                 <th>Word ID</th>
             </tr>
-            {% for w in wordlist['known_words'] %}
+            {% for w in wordlist.words %}
             <tr>
                 <td>
                     <input type="checkbox" name="removing" value="{{ w['word_id'] }}">

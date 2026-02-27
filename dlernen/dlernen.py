@@ -254,24 +254,21 @@ def wordlist_page(wordlist_id):
         wordlist['notes'] = ''
 
     nchunks = request.args.get('nchunks', current_app.config['NCHUNKS'], type=int)
-    known_words = chunkify(wordlist['known_words'], nchunks)
-    unknown_words = chunkify(wordlist['unknown_words'], nchunks)
+    words = chunkify(wordlist['words'], nchunks)
     tag_chunks = chunkify(tag_state_object.tag_state(), 4)
 
     if wordlist['list_type'] == 'smart':
         return render_template('wordlist.html',
                                wordlist=wordlist,
                                tag_state=tag_state_object.tag_state(),
-                               known_words=known_words,
-                               unknown_words=unknown_words)
+                               words=words)
 
     return render_template('wordlist.html',
                            wordlist=wordlist,
                            tag_state=tag_state_object.tag_state(),
                            serialized_tag_state=serialized_tag_state,
                            tag_chunks=tag_chunks,
-                           known_words=known_words,
-                           unknown_words=unknown_words)
+                           words=words)
 
 
 @bp.route('/addlist', methods=['POST'])
@@ -511,25 +508,6 @@ def update_word_notes():
                      serialized_tag_state=serialized_tag_state,
                      wordlist_id=wordlist_id)
 
-    return redirect(target)
-
-
-@bp.route('/delete_from_list', methods=['POST'])
-def delete_from_list():
-    wordlist_id = request.form['wordlist_id']
-
-    url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=wordlist_id, _external=True)
-    r = requests.post(url, json={
-        "unknown_words": request.form.getlist('unknown_wordlist')
-    })
-    if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
-
-    target = url_for('dlernen.wordlist_page',
-                     serialized_tag_state=request.form.get('serialized_tag_state', ''),
-                     wordlist_id=wordlist_id)
     return redirect(target)
 
 
@@ -778,8 +756,10 @@ def update_dict():
             obj = r.json()
             # if we have a wordlist_id, add the newly-minted word to the wordlist.
             if wordlist_id:
-                payload = [obj['word_id']]
-                url = url_for('api_wordlist.add_words_by_id', wordlist_id=wordlist_id, _external=True)
+                payload = {
+                    'word_ids': [obj['word_id']]
+                }
+                url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True)
                 r = requests.put(url, json=payload)
                 if not r:
                     message = "could not add word to wordlist:  word %s, word_id = %s [%s]" % (
@@ -931,8 +911,8 @@ def study_guide(wordlist_id):
     # tags that appears in the wordlist.
 
     tags_to_words = {}
-    untagged_words = list(filter(lambda x: not x['tags'], wordlist['known_words']))
-    for word in wordlist['known_words']:
+    untagged_words = list(filter(lambda x: not x['tags'], wordlist['words']))
+    for word in wordlist['words']:
         for t in word['tags']:
             if t not in tags_to_words:
                 tags_to_words[t] = []
@@ -957,8 +937,6 @@ def update_via_editor():
     # and reload the editor page.  if it is not, go to the word_edit page.
     # on submit from the word_edit page, come back here.
 
-    pprint(request.form)
-
     wordlist_id = request.form.get('wordlist_id')
     word = request.form.get('add_word').strip()
     serialized_tag_state = request.form.get('serialized_tag_state')
@@ -968,8 +946,10 @@ def update_via_editor():
         url = url_for('api_word.get_word', word=word, _external=True)
         r = requests.get(url)
         if r:
+            obj = r.json()
+            word_ids = [x['word_id'] for x in obj]
             payload = {
-                "words": [word]
+                "word_ids": word_ids
             }
 
             url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True)

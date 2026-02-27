@@ -99,87 +99,109 @@ class APIWordlist(unittest.TestCase):
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
 
+        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
+        cls.keyword_mappings = json.loads(r.data)
+
     @classmethod
     def tearDownClass(cls):
         cls.app_context.pop()
 
-    # the setup for this class creates a list with just a name.
-    # no tearDown method is needed thanks to our friend addCleanup
-    def setUp(self):
-        self.list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+    def createWordlist(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
         add_payload = {
-            'name': self.list_name
+            'name': list_name
         }
 
         r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
+        self.assertEqual(r.status_code, 201)
         obj = json.loads(r.data)
-        self.wordlist_id = obj['wordlist_id']
+        wordlist_id = obj['wordlist_id']
+
+        return list_name, wordlist_id
+
+    def createWord(self):
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+
+        add_payload = {
+            "word": word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
+        }
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+
+        return word, word_id
+
+    # the setup for this class creates a list with just a name.
+    # no tearDown method is needed thanks to our friend addCleanup
+    def setUp(self):
+        self.list_name, self.wordlist_id = self.createWordlist()
         self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
+
+        self.word1, self.word1_id = self.createWord()
+        self.addCleanup(cleanupWordID, self.client, self.word1_id)
+
+        self.word2, self.word2_id = self.createWord()
+        self.addCleanup(cleanupWordID, self.client, self.word2_id)
 
         self.contents_update_url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=self.wordlist_id)
         self.wordlist_get_url = url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id)
         self.metadata_update_url = url_for('api_wordlist.update_wordlist_metadata', wordlist_id=self.wordlist_id)
 
-    # do nothing, just make sure that setUp works
+    # do nothing, just make sure that setUp works (by creating an empty list)
     def test_nothing(self):
-        pass
+        r = self.client.get(self.wordlist_get_url)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
 
-    # add list with everything, incl. known and unknown words
+        self.assertEqual('empty', obj['list_type'])
+
+    # test basic add - in one request, add everything we can add in a single request
     def test_create_dumb_list(self):
         payload = {
-            'words': [
-                'werfen',  # known
-                'natehdnaoehu'  # unknown, hopefully
+            'word_ids': [
+                self.word1_id
             ],
             'notes': 'important notes'
         }
 
         r = self.client.put(self.contents_update_url, json=payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(200, r.status_code)
 
         r = self.client.get(self.wordlist_get_url)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
-        self.assertEqual(1, len(obj['known_words']))
-        self.assertEqual(1, len(obj['unknown_words']))
+        self.assertEqual(1, len(obj['words']))
         self.assertEqual('standard', obj['list_type'])
 
     # add word to list
     def test_add_words_to_list(self):
-        gibberish = 'aoeunhatedu'
         payload = {
-            'words': [
-                'werfen',
-                'geben',
-                gibberish
+            'word_ids': [
+                self.word1_id
             ]
         }
 
         r = self.client.put(self.contents_update_url, json=payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(200, r.status_code)
 
         payload = {
-            'words': [
-                'wecken',
-                'werfen',  # already there, should be a noop
-                'nachgebend',
-                gibberish
+            'word_ids': [
+                self.word1_id,  # already there, should be a noop
+                self.word2_id
             ]
         }
 
         r = self.client.put(self.contents_update_url, json=payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
-        known_words = {x['word'] for x in obj['known_words']}
-        unknown_words = {x for x in obj['unknown_words']}
+        control = {self.word1, self.word2}
+        experiment = {x['word'] for x in obj['words']}
 
-        self.assertEqual(4, len(obj['known_words']))
-        self.assertEqual(1, len(obj['unknown_words']))
-
-        self.assertEqual({'wecken', 'nachgebend', 'geben', 'werfen'}, known_words)
-        self.assertEqual({gibberish}, unknown_words)
+        self.assertCountEqual(control, experiment)
 
     # update list with empty payload --> noop
     def test_update_contents_empty_payload(self):
@@ -188,104 +210,58 @@ class APIWordlist(unittest.TestCase):
         }
 
         r = self.client.put(self.metadata_update_url, json=metadata_payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(200, r.status_code)
 
         update_payload = {
         }
 
         r = self.client.put(self.contents_update_url, json=update_payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(200, r.status_code)
 
         r = self.client.get(self.wordlist_get_url)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
         for k in metadata_payload.keys():
             self.assertEqual(metadata_payload[k], obj[k])
 
-        self.assertTrue(len(obj['known_words']) > 0)
+        self.assertTrue(len(obj['words']) > 0)
 
-    # remove word by word from list -> removes from unknown
-    def test_remove_word_by_word(self):
-        gibberish = ''.join(random.choices(string.ascii_lowercase, k=10))
+    def test_add_bad_word_id(self):
         payload = {
-            'words': [
-                'werfen',  # known
-                gibberish  # unknown, hopefully
-            ],
-            'notes': 'important notes'
+            'word_ids': self.word1_id * 2
         }
 
         r = self.client.put(self.contents_update_url, json=payload)
-        self.assertEqual(r.status_code, 200)
-        obj = json.loads(r.data)
-
-        self.assertTrue(len(obj['unknown_words']) > 0)
-        word = obj['unknown_words'][0]
-        url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id)
-        r = self.client.post(url, json={
-            "unknown_words": [word]
-        })
-
-        self.assertEqual(r.status_code, 200)
-
-        r = self.client.get(self.wordlist_get_url)
-        self.assertEqual(r.status_code, 200)
-        obj = json.loads(r.data)
-
-        self.assertEqual(1, len(obj['known_words']))
-        self.assertEqual(0, len(obj['unknown_words']))
-        self.assertEqual('standard', obj['list_type'])
-
-    # add an unknown word containing whitespace - should not succeed.  this case broke the UI
-    def test_bad_unknown_word(self):
-        garbage = 'bad dog %s' % ''.join(random.choices(string.ascii_lowercase, k=10))
-        payload = {
-            'words': [
-                garbage
-            ]
-        }
-
-        r_put = self.client.put(self.contents_update_url, json=payload)
-        # should be a 400, which means that the payload did not pass validation.  anything else is a problem.
-        self.assertEqual(r_put.status_code, 400)
-
-        # make sure the garbage word didn't get added
-        r_get = self.client.get(self.wordlist_get_url)
-        self.assertEqual(r_get.status_code, 200)
-        obj = json.loads(r_get.data)
-        self.assertEqual('empty', obj['list_type'])
+        self.assertEqual(400, r.status_code)
 
     # remove word by id from list
     def test_remove_word_by_id(self):
-        gibberish = ''.join(random.choices(string.ascii_lowercase, k=10))
         payload = {
-            'words': [
-                'werfen',  # known
-                gibberish  # unknown, hopefully
+            'word_ids': [
+                self.word1_id
             ]
         }
 
         r = self.client.put(self.contents_update_url, json=payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
-        self.assertTrue(len(obj['known_words']) > 0)
-        word_id = obj['known_words'][0]['word_id']
+        self.assertEqual(1, len(obj['words']))
+
         payload = {
-            "word_ids": [word_id]
+            "word_ids": [self.word1_id]
         }
         url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id)
         r = self.client.post(url, json=payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(200, r.status_code)
 
         r = self.client.get(self.wordlist_get_url)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
-        self.assertEqual(0, len(obj['known_words']))
-        self.assertEqual(1, len(obj['unknown_words']))
-        self.assertEqual('standard', obj['list_type'])
+        self.assertEqual(0, len(obj['words']))
+        self.assertEqual('empty', obj['list_type'])
 
     # update list with notes as empty string
     def test_update_notes_to_empty_string(self):
@@ -293,7 +269,7 @@ class APIWordlist(unittest.TestCase):
             'notes': ''
         }
         r = self.client.put(self.contents_update_url, json=payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(200, r.status_code)
 
         # make sure the notes were cleared
 
@@ -320,7 +296,7 @@ class APIWordlist(unittest.TestCase):
             'notes': None
         }
         r = self.client.put(self.contents_update_url, json=payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(200, r.status_code)
 
         # make sure the notes were cleared
 
@@ -340,14 +316,13 @@ class APIWordlist(unittest.TestCase):
         # add some words then check the notes
 
         payload = {
-            'words': [
-                'one',
-                'two',
-                'aoeuao'
+            'word_ids': [
+                self.word1_id,
+                self.word2_id
             ]
         }
         r = self.client.put(self.contents_update_url, json=payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(200, r.status_code)
 
         # make sure the notes were unaffected
 
@@ -359,9 +334,9 @@ class APIWordlist(unittest.TestCase):
     def test_add_code_to_dumb_list(self):
         # not allowed
         add_payload = {
-            'words': [
-                'werfen',
-                'aoeuaoeu'
+            'word_ids': [
+                self.word1_id,
+                self.word2_id
             ]
         }
 
@@ -388,9 +363,9 @@ class APIWordlist(unittest.TestCase):
         self.assertEqual('smart', obj['list_type'])
 
         payload = {
-            'words': [
-                'werfen',
-                'aoeuaoeu'
+            'word_ids': [
+                self.word1_id,
+                self.word2_id
             ]
         }
 
@@ -407,12 +382,11 @@ class APIWordlist(unittest.TestCase):
 
     # change list type: create empty, change to standard
     def test_change_list_type_empty_to_standard(self):
-        gibberish = ''.join(random.choices(string.ascii_lowercase, k=10))
 
         update_payload = {
-            'words': [
-                'werfen',
-                gibberish
+            'word_ids': [
+                self.word1_id,
+                self.word2_id
             ]
         }
 
@@ -448,11 +422,10 @@ class APIWordlist(unittest.TestCase):
 
     # change list type: create standard, change to empty
     def test_change_list_type_standard_to_empty(self):
-        gibberish = ''.join(random.choices(string.ascii_lowercase, k=10))
         payload = {
-            'words': [
-                'werfen',
-                gibberish
+            'word_ids': [
+                self.word1_id,
+                self.word2_id
             ]
         }
 
@@ -461,26 +434,24 @@ class APIWordlist(unittest.TestCase):
         obj = json.loads(r.data)
 
         self.assertEqual('standard', obj['list_type'])
-        self.assertEqual(1, len(obj['unknown_words']))
-        self.assertEqual(1, len(obj['known_words']))
+        self.assertEqual(2, len(obj['words']))
 
         # remove the words
-        word = obj['unknown_words'][0]
-        word_id = obj['known_words'][0]['word_id']
         payload = {
-            "word_ids": [word_id],
-            "unknown_words": [word]
+            'word_ids': [
+                self.word1_id,
+                self.word2_id
+            ]
         }
         url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id)
         r = self.client.post(url, json=payload)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(200, r.status_code)
 
         r = self.client.get(self.wordlist_get_url)
         obj = json.loads(r.data)
 
         self.assertEqual('empty', obj['list_type'])
-        self.assertEqual(0, len(obj['unknown_words']))
-        self.assertEqual(0, len(obj['known_words']))
+        self.assertEqual(0, len(obj['words']))
 
     # removing words from a smart list should not be possible.  let's verify that.
     def test_remove_words_from_smart_list(self):
@@ -497,146 +468,10 @@ class APIWordlist(unittest.TestCase):
         url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id)
 
         r = self.client.post(url, json={
-            "word_ids": [66666],
+            "word_ids": [self.word1_id],
         })
 
         self.assertNotEqual(200, r.status_code)
-
-        r = self.client.post(url, json={
-            "unknown_words": [66666],
-        })
-
-        self.assertNotEqual(200, r.status_code)
-
-
-# tests for adding words by id
-class APIWordlistAddByID(unittest.TestCase):
-    app = None
-    app_context = None
-    client = None
-
-    @classmethod
-    def setUpClass(cls):
-        cls.app = create_app()
-        cls.app.config.update(
-            TESTING=True,
-        )
-
-        cls.client = cls.app.test_client()
-        cls.app_context = cls.app.app_context()
-        cls.app_context.push()
-
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
-        cls.keyword_mappings = json.loads(r.data)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.app_context.pop()
-
-    # the setup for this class creates a list with just a name.
-    def setUp(self):
-        self.list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
-        add_payload = {
-            'name': self.list_name
-        }
-
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
-        obj = json.loads(r.data)
-        self.wordlist_id = obj['wordlist_id']
-        self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
-
-        # create a word
-        word = ''.join(random.choices(string.ascii_lowercase, k=10))
-        add_payload = {
-            "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids']['noun'],
-        }
-        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
-        obj = json.loads(r.data)
-        self.word_id = obj['word_id']
-        self.addCleanup(cleanupWordID, self.client, self.word_id)
-
-        self.metadata_update_url = url_for('api_wordlist.update_wordlist_metadata',
-                                           wordlist_id=self.wordlist_id)
-
-    # do nothing, just make sure that setUp works
-    def test_nothing(self):
-        pass
-
-    # base case, add word ids to a list.
-    def test_add_by_word_id(self):
-        # make sure the list is empty
-        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
-        self.assertEqual(200, r.status_code)
-        obj = json.loads(r.data)
-        self.assertEqual(0, len(obj['known_words']))
-
-        # add the word by id
-        r = self.client.put(url_for('api_wordlist.add_words_by_id',
-                                    wordlist_id=self.wordlist_id),
-                            json=[self.word_id])
-        self.assertEqual(200, r.status_code)
-
-        # make sure the list now has our word in it.
-        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
-        self.assertEqual(200, r.status_code)
-        obj = json.loads(r.data)
-        self.assertEqual(1, len(obj['known_words']))
-
-    # add the same ids multiple times, should do no harm
-    def test_add_by_word_id_repeat(self):
-        # add the word by id
-        r = self.client.put(url_for('api_wordlist.add_words_by_id',
-                                    wordlist_id=self.wordlist_id),
-                            json=[self.word_id])
-        self.assertEqual(200, r.status_code)
-
-        # add it again.
-        r = self.client.put(url_for('api_wordlist.add_words_by_id',
-                                    wordlist_id=self.wordlist_id),
-                            json=[self.word_id])
-        self.assertEqual(200, r.status_code)
-
-        # make sure the list now has our word in it exactly once.
-        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
-        self.assertEqual(200, r.status_code)
-        obj = json.loads(r.data)
-        self.assertEqual(1, len(obj['known_words']))
-
-    # add with empty payload
-    def test_add_by_word_id_empty_payload(self):
-        r = self.client.put(url_for('api_wordlist.add_words_by_id',
-                                    wordlist_id=self.wordlist_id),
-                            json=[])
-        self.assertEqual(200, r.status_code)
-
-    # add to smart list - should fail
-    def test_add_by_word_id_smart_list(self):
-        payload = {
-            'sqlcode': 'select id word_id from word where id = 555'
-        }
-
-        r = self.client.put(self.metadata_update_url, json=payload)
-        self.assertEqual(200, r.status_code)
-        obj = json.loads(r.data)
-        self.assertEqual('smart', obj['list_type'])
-
-        # add the word by id - should not succeed
-        r = self.client.put(url_for('api_wordlist.add_words_by_id',
-                                    wordlist_id=self.wordlist_id),
-                            json=[self.word_id])
-        self.assertEqual(400, r.status_code)
-
-    # # add with bullshit wordlist_id - won't work because view function uses insert ignore
-    # def test_add_by_word_id_bullshit_wordlist(self):
-    #     r = self.client.put(url_for('api_wordlist.add_words_by_id',
-    #                                 wordlist_id=self.wordlist_id),
-    #                         json=[6666666])
-    #     self.assertNotEqual(200, r.status_code)
-    #
-    # # add with bullshit word_id - won't work because view function uses insert ignore
-    # def test_add_by_word_id_bullshit_word_id(self):
-    #     raise NotImplementedError(self.id())
 
 
 class APIWordlistGetWordIDs(unittest.TestCase):
@@ -729,14 +564,14 @@ class APIWordlistGetWordIDs(unittest.TestCase):
         r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
                                     wordlist_id=self.wordlist1_id),
                             json={
-                                "words": [self.word1, self.word2]
+                                "word_ids": [self.word1_id, self.word2_id]
                             })
         self.assertEqual(200, r.status_code)
 
         r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
                                     wordlist_id=self.wordlist2_id),
                             json={
-                                "words": [self.word2, self.word3]
+                                "word_ids": [self.word2_id, self.word3_id]
                             })
         self.assertEqual(200, r.status_code)
 
@@ -766,7 +601,7 @@ class APIWordlistGetWordIDs(unittest.TestCase):
                                      wordlist_id=self.wordlist1_id,
                                      word_id=self.word1_id),
                              json=['tag1', 'tag2'])
-        self.assertEqual(200, r.status_code)
+        self.assertEqual(201, r.status_code)
 
         r = self.client.get(url_for('api_wordlist.get_word_ids_from_wordlists',
                                     wordlist_id=[self.wordlist1_id],

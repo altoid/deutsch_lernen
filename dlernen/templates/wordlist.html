@@ -19,45 +19,6 @@ Wordlist:  {{ wordlist.name }}
         </tr>
         {% endif %}
     </table>
-    {% if wordlist.unknown_words|length > 0 %}
-    <h2>Unbekannte Worte ({{ wordlist['unknown_words']|length }})</h2>
-    <table>
-        {########################### unknown words #######################}
-        <tr>
-            <td>
-                <form action="{{ url_for('dlernen.delete_from_list') }}" method="post">
-                    <input type="hidden" value="{{serialized_tag_state}}" name="serialized_tag_state"/>
-                    <input type="hidden" value="{{wordlist.wordlist_id}}" name="wordlist_id"/>
-                    <table class="tableau">
-                        <tr>
-                            {% for column in unknown_words %}
-                            <td>
-                                <table>
-                                    {% for r in column %}
-                                    <tr>
-                                        <td><input type="checkbox" name="unknown_wordlist" value="{{ r }}"></td>
-                                        <td>
-                                            <a href="{{ url_for('dlernen.edit_word_form', serialized_tag_state=serialized_tag_state, wordlist_id=wordlist.wordlist_id, word=r) }}">
-                                                {{ r }}
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </table>
-                            </td>
-                            {% endfor %}
-                        </tr>
-                        <tr>
-                            <td>
-                                <input type="submit" value="Delete Selected Words"/>
-                            </td>
-                        </tr>
-                    </table>
-                </form>
-            </td>
-        </tr>
-    </table>
-    {% endif %}
     {% if serialized_tag_state %}
     {% if tag_state|length > 0 %}
     <h2>Tags</h2>
@@ -96,14 +57,13 @@ Wordlist:  {{ wordlist.name }}
     </form>
     {% endif %}
     {% endif %}
-    <h2>Bekannte Worte ({{ wordlist.known_words|length }})</h2>
+    <h2>Worte ({{ wordlist.words|length }})</h2>
     <table>
-        {########################### known words #######################}
         <tr>
             <td>
                 <table class="tableau">
                     <tr>
-                        {% for column in known_words %}
+                        {% for column in words %}
                         <td>
                             <table>
                                 {% for r in column %}

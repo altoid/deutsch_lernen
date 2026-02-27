@@ -124,7 +124,7 @@ WORD_UPDATE_PAYLOAD_SCHEMA = {
     }
 }
 
-# wordlist contents are notes and a list of words.
+# wordlist contents are notes and a list of word ids.
 
 WORDLIST_CONTENTS_PAYLOAD_SCHEMA = {
     # can be used for add or update of a list.
@@ -140,26 +140,13 @@ WORDLIST_CONTENTS_PAYLOAD_SCHEMA = {
         "notes": {
             "type": ["string", 'null']
         },
-        "words": {
+        "words": False,
+        "word_ids": {
             "type": "array",
             "items": {
-                "type": "string",
-                "pattern": WORD_PATTERN
+                "type": "integer"
             }
         }
-    }
-}
-
-WORDLIST_WORDIDS_PAYLOAD_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/wordlist_wordids_payload",
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "WORDLIST_WORDIDS_PAYLOAD_SCHEMA",
-    "description": """
-    payload for adding multiple wordids to a wordlist.
-    """,
-    "type": "array",
-    "items": {
-        "type": "integer"
     }
 }
 
@@ -174,13 +161,7 @@ WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA = {
         # none are required
     ],
     "properties": {
-        "unknown_words": {
-            "type": "array",
-            "items": {
-                "type": "string",
-                "pattern": WORD_PATTERN
-            }
-        },
+        "words": False,
         "word_ids": {
             "type": "array",
             "items": {
@@ -662,7 +643,7 @@ WORDLIST_RESPONSE_SCHEMA = {
     - word list metadata
     - the notes
     - list type (smart, standard, empty)
-    - all the words, known and unknown.
+    - all the words.
     note that we do not return the sqlcode if the list is a smart list.  we return the words fetched
     by the sql code.  which is the point of a smart list.
     """,
@@ -672,12 +653,13 @@ WORDLIST_RESPONSE_SCHEMA = {
         "wordlist_id",
         "list_type",
         "citation",
-        "known_words",
-        "unknown_words",
+        "words",
         "notes",
         "source_is_url"
     ],
     "properties": {
+        "unknown_words": False,
+        "known_words": False,
         "name": {
             "type": "string"
         },
@@ -702,7 +684,7 @@ WORDLIST_RESPONSE_SCHEMA = {
         "source_is_url": {
             "type": "boolean"
         },
-        "known_words": {
+        "words": {
             "type": "array",
             "items": {
                 "type": "object",
@@ -732,12 +714,6 @@ WORDLIST_RESPONSE_SCHEMA = {
                         }
                     }
                 }
-            }
-        },
-        "unknown_words": {
-            "type": "array",
-            "items": {
-                "type": "string"
             }
         }
     }

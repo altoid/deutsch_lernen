@@ -85,8 +85,8 @@ class APIQuizGetWordToTest(unittest.TestCase):
 
         # add the word to the list
         payload = {
-            'words': [
-                self.word
+            'word_ids': [
+                self.word_id
             ]
         }
 
@@ -257,9 +257,9 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
 
         # add the words to the list
         payload = {
-            'words': [
-                self.word_1,
-                self.word_2
+            'word_ids': [
+                self.word_id_1,
+                self.word_id_2
             ]
         }
 
@@ -272,7 +272,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
                                      wordlist_id=self.wordlist_id,
                                      word_id=self.word_id_1),
                              json=['tag1'])
-        self.assertEqual(200, r.status_code)
+        self.assertEqual(201, r.status_code)
 
     # do nothing, just make sure that setUp works
     def test_nothing(self):

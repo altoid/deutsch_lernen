@@ -47,11 +47,7 @@ with wordlist_counts as
     select wordlist_id, sum(c) lcount from
     (
         select wordlist_id, count(*) c
-        from wordlist_unknown_word
-        group by wordlist_id
-        union all
-        select wordlist_id, count(*) c
-        from wordlist_known_word
+        from wordlist_word
         group by wordlist_id
     ) a
     group by wordlist_id
@@ -106,8 +102,8 @@ def get_wordlists_by_word_id(word_id):
         select
         wl.id wordlist_id
         from wordlist wl
-        inner join wordlist_known_word wkw
-        on wkw.wordlist_id = wl.id
+        inner join wordlist_word ww
+        on ww.wordlist_id = wl.id
         where word_id = %s
         order by wl.name
         """

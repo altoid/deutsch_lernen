@@ -173,7 +173,7 @@ def add_tags(wordlist_id, word_id):
             # the word_id must be present in this list
             sql = """
             select wordlist_id, word_id
-            from wordlist_known_word
+            from wordlist_word
             where wordlist_id=%(wordlist_id)s and word_id=%(word_id)s
             """
             cursor.execute(sql, {
@@ -304,7 +304,7 @@ def delete_tags_for_word_id(wordlist_id, word_id):
             # the word_id must be present in this list
             sql = """
             select wordlist_id, word_id
-            from wordlist_known_word
+            from wordlist_word
             where wordlist_id=%(wordlist_id)s and word_id=%(word_id)s
             """
             cursor.execute(sql, {

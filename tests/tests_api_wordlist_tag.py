@@ -69,7 +69,13 @@ class APIWordlistTagMultiList(unittest.TestCase):
         return word, word_id
 
     def assignWordAndTags(self, wordlist_id, word_id, tags):
-        r = self.client.put(url_for('api_wordlist.add_words_by_id', wordlist_id=wordlist_id), json=[word_id])
+        payload = {
+            'word_ids': [
+                word_id
+            ]
+        }
+
+        r = self.client.put(url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id), json=payload)
         self.assertEqual(200, r.status_code)
 
         r = self.client.post(url_for('api_wordlist_tag.add_tags',
@@ -321,8 +327,8 @@ class APIWordlistTagSmartList(unittest.TestCase):
                                     wordlist_id=self.wordlist_id))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
-        self.assertEqual(1, len(obj['known_words']))
-        self.assertEqual(self.word1_id, obj['known_words'][0]['word_id'])
+        self.assertEqual(1, len(obj['words']))
+        self.assertEqual(self.word1_id, obj['words'][0]['word_id'])
 
     def test_addTags(self):
         r = self.client.post(url_for('api_wordlist_tag.add_tags',
@@ -433,7 +439,7 @@ class APIWordlistTag(unittest.TestCase):
         r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
                                     wordlist_id=self.wordlist_id),
                             json={
-                                "words": [self.word1, self.word2, self.word3]
+                                "word_ids": [self.word1_id, self.word2_id, self.word3_id]
                             })
         self.assertEqual(200, r.status_code)
 
@@ -472,15 +478,15 @@ class APIWordlistTag(unittest.TestCase):
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
-        self.assertEqual(3, len(obj['known_words']))
+        self.assertEqual(3, len(obj['words']))
 
         # check that the word ids in the result are what we think they are
         control_word_ids = [self.word1_id, self.word2_id, self.word3_id]
-        test_word_ids = [x['word_id'] for x in obj['known_words']]
+        test_word_ids = [x['word_id'] for x in obj['words']]
         self.assertCountEqual(control_word_ids, test_word_ids)
 
         # check that the words have the correct tags
-        test_dict = {x['word']: x['tags'] for x in obj['known_words']}
+        test_dict = {x['word']: x['tags'] for x in obj['words']}
         control_dict = {
             self.word1: [],
             self.word2: ['tag2', 'tag1'],
@@ -499,15 +505,15 @@ class APIWordlistTag(unittest.TestCase):
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
-        self.assertEqual(2, len(obj['known_words']))
+        self.assertEqual(2, len(obj['words']))
 
         # check that the word ids in the result are what we think they are
         control_word_ids = [self.word2_id, self.word3_id]
-        test_word_ids = [x['word_id'] for x in obj['known_words']]
+        test_word_ids = [x['word_id'] for x in obj['words']]
         self.assertCountEqual(control_word_ids, test_word_ids)
 
         # check that the words have the correct tags
-        test_dict = {x['word']: x['tags'] for x in obj['known_words']}
+        test_dict = {x['word']: x['tags'] for x in obj['words']}
         control_dict = {
             self.word2: ['tag1'],
             self.word3: ['tag1']
@@ -524,15 +530,15 @@ class APIWordlistTag(unittest.TestCase):
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
-        self.assertEqual(1, len(obj['known_words']))
+        self.assertEqual(1, len(obj['words']))
 
         # check that the word ids in the result are what we think they are
         control_word_ids = [self.word2_id]
-        test_word_ids = [x['word_id'] for x in obj['known_words']]
+        test_word_ids = [x['word_id'] for x in obj['words']]
         self.assertCountEqual(control_word_ids, test_word_ids)
 
         # check that the words have the correct tags
-        test_dict = {x['word']: x['tags'] for x in obj['known_words']}
+        test_dict = {x['word']: x['tags'] for x in obj['words']}
         control_dict = {
             self.word2: ['tag2']
         }
@@ -547,15 +553,15 @@ class APIWordlistTag(unittest.TestCase):
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
-        self.assertEqual(2, len(obj['known_words']))
+        self.assertEqual(2, len(obj['words']))
 
         # check that the word ids in the result are what we think they are
         control_word_ids = [self.word3_id, self.word2_id]
-        test_word_ids = [x['word_id'] for x in obj['known_words']]
+        test_word_ids = [x['word_id'] for x in obj['words']]
         self.assertCountEqual(control_word_ids, test_word_ids)
 
         # check that the words have the correct tags
-        test_dict = {x['word']: x['tags'] for x in obj['known_words']}
+        test_dict = {x['word']: x['tags'] for x in obj['words']}
         control_dict = {
             self.word2: ['tag2', 'tag1'],
             self.word3: ['tag1']
@@ -571,15 +577,15 @@ class APIWordlistTag(unittest.TestCase):
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
-        self.assertEqual(1, len(obj['known_words']))
+        self.assertEqual(1, len(obj['words']))
 
         # check that the word ids in the result are what we think they are
         control_word_ids = [self.word2_id]
-        test_word_ids = [x['word_id'] for x in obj['known_words']]
+        test_word_ids = [x['word_id'] for x in obj['words']]
         self.assertCountEqual(control_word_ids, test_word_ids)
 
         # check that the words have the correct tags
-        test_dict = {x['word']: x['tags'] for x in obj['known_words']}
+        test_dict = {x['word']: x['tags'] for x in obj['words']}
         control_dict = {
             self.word2: ['tag2']
         }
@@ -594,4 +600,4 @@ class APIWordlistTag(unittest.TestCase):
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
-        self.assertEqual(0, len(obj['known_words']))
+        self.assertEqual(0, len(obj['words']))

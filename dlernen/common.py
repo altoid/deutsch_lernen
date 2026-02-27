@@ -77,7 +77,7 @@ def get_word_ids_from_wordlists(wordlist_ids, cursor):
     sql_for_standard_lists = [
         """
     select distinct word_id
-    from wordlist_known_word
+    from wordlist_word
     where wordlist_id in (""" + wordlist_args + """)
     """
     ]

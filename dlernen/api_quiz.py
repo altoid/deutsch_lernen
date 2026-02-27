@@ -248,7 +248,7 @@ def get_word_to_test_single_wordlist(quiz_key, wordlist_id):
             return r.text, r.status_code
 
         wordlist = r.json()
-        word_ids = [x['word_id'] for x in wordlist['known_words']]
+        word_ids = [x['word_id'] for x in wordlist['words']]
 
         if word_ids:
             word_id_args = ['%s'] * len(word_ids)

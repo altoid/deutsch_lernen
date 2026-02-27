@@ -48,8 +48,7 @@ FIXME - do not render tags field in the edit page if we get there through a smar
 
 FIXME - in the sidebar, show the name/id of the prevailing list
 
-FIXME - do we need 'unknown words' any more?  any time we add an unknown word to a list we are taken to the edit page
-    immediately.  if we look up an unknown word and there is no list context, we can add it then.
+FIXME - attempting to add a word with no POS info (via editor page) should flash a message
 
 ------
 best practices:

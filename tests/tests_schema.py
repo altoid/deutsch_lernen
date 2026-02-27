@@ -1177,20 +1177,20 @@ class Test_WORDLIST_CONTENTS_PAYLOAD_SCHEMA(unittest.TestCase):
             "notes": "whatevs"
         },
         {
-            "words": []
+            "word_ids": []  # empty list is valid
         },
         {
-            "words": [
-                "aoeu",
-                "nthdue",
-                "eoathudt"
+            "word_ids": [
+                123,
+                234,
+                345
             ]
         },
         {
             "notes": "whatevs",
-            "words": [
-                "aoeu",
-                "ioeuioeu"
+            "word_ids": [
+                11,
+                22
             ]
         }
     ]
@@ -1198,21 +1198,14 @@ class Test_WORDLIST_CONTENTS_PAYLOAD_SCHEMA(unittest.TestCase):
     invalid_docs = [
         {
             "words": [
-                ""
+                "words property is obsolete"
             ]
         },
         {
-            "words": [
-                "  "
+            "word_ids": [
+                "word_ids have to",
+                "be integers"
             ]
-        },
-        {
-            "words": [
-                "unknown words should not have spaces."
-            ]
-        },
-        {
-            "words": "value should be an array"
         }
     ]
 
@@ -1389,7 +1382,7 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
 
     valid_docs = [
         {'citation': None,
-         'known_words': [{'article': None,
+         'words': [{'article': None,
                           'definition': "it's an adjective",
                           'word': 'anohteduntaheoud',
                           'tags': [],
@@ -1419,13 +1412,12 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
          'notes': None,
          'source_is_url': False,
          'sqlcode': None,
-         'unknown_words': [],
          'wordlist_id': 4237},
         {
             "name": "sample_word_list",
             "wordlist_id": 1234,
             "list_type": "standard",
-            "known_words": [
+            "words": [
                 {
                     "word": "aoeuaeou",
                     "word_id": 123,
@@ -1442,119 +1434,117 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
             ],
             "citation": "where i got this",
             "source_is_url": False,
-            "unknown_words": [
-                "othuedtiu", "tehuidntuh", "tuehdinteuh"
-            ],
             "notes": "lots of stuff"
         },
         {
             "name": "no words",
             "wordlist_id": 1234,
             "list_type": "standard",
-            "known_words": [],
+            "words": [],
             "citation": "where i got this",
             "source_is_url": False,
-            "unknown_words": [],
             "notes": "lots of stuff"
         },
         {
             "name": "null citation and notes",
             "wordlist_id": 1234,
             "list_type": "standard",
-            "known_words": [],
+            "words": [],
             "citation": None,
             "source_is_url": False,
-            "unknown_words": [],
             "notes": None
         }
     ]
 
     invalid_docs = [
         {
+            "name": "known_words and unknown_words are obsolete",
+            "known_words": [],
+            "unknown_words": [],
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "words": [],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "notes": "lots of stuff"
+        },
+        {
             "name": "bullshit list type",
             "wordlist_id": 1234,
             "list_type": "bullshit",
-            "known_words": [],
+            "words": [],
             "citation": "where i got this",
             "source_is_url": False,
-            "unknown_words": [],
             "notes": "lots of stuff"
         },
         {
             # "name": "no words",
             "wordlist_id": 1234,
             "list_type": "standard",
-            "known_words": [],
+            "words": [],
             "citation": "where i got this",
             "source_is_url": False,
-            "unknown_words": [],
             "notes": "lots of stuff"
         },
         {
             "name": "no words",
             # "wordlist_id": 1234,
             "list_type": "standard",
-            "known_words": [],
+            "words": [],
             "citation": "where i got this",
             "source_is_url": False,
-            "unknown_words": [],
             "notes": "lots of stuff"
         },
         {
             "name": "no words",
             "wordlist_id": 1234,
             # "list_type": "standard",
-            "known_words": [],
+            "words": [],
             "citation": "where i got this",
             "source_is_url": False,
-            "unknown_words": [],
             "notes": "lots of stuff"
         },
         {
             "name": "no words",
             "wordlist_id": 1234,
             "list_type": "standard",
-            "known_words": [],
+            # "words": [],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "notes": "lots of stuff"
+        },
+        {
+            "name": "no words",
+            "wordlist_id": 1234,
+            "list_type": "standard",
+            "words": [],
             # "citation": "where i got this",
             "source_is_url": False,
-            "unknown_words": [],
             "notes": "lots of stuff"
         },
         {
             "name": "no words",
             "wordlist_id": 1234,
             "list_type": "standard",
-            "known_words": [],
+            "words": [],
             "citation": "where i got this",
             # "source_is_url": False,
-            "unknown_words": [],
             "notes": "lots of stuff"
         },
         {
             "name": "no words",
             "wordlist_id": 1234,
             "list_type": "standard",
-            "known_words": [],
+            "words": [],
             "citation": "where i got this",
             "source_is_url": False,
-            # "unknown_words": [],
-            "notes": "lots of stuff"
-        },
-        {
-            "name": "no words",
-            "wordlist_id": 1234,
-            "list_type": "standard",
-            "known_words": [],
-            "citation": "where i got this",
-            "source_is_url": False,
-            "unknown_words": [],
             # "notes": "lots of stuff"
         },
         {
             "name": "messin with words",
             "wordlist_id": 1234,
             "list_type": "standard",
-            "known_words": [
+            "words": [
                 {
                     # "word": "werrd",
                     "word_id": 1234,
@@ -1563,14 +1553,13 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
             ],
             "citation": "where i got this",
             "source_is_url": False,
-            "unknown_words": [],
             "notes": "lots of stuff"
         },
         {
             "name": "messin with words",
             "wordlist_id": 1234,
             "list_type": "standard",
-            "known_words": [
+            "words": [
                 {
                     "word": "werrd",
                     # "word_id": 1234,
@@ -1579,14 +1568,13 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
             ],
             "citation": "where i got this",
             "source_is_url": False,
-            "unknown_words": [],
             "notes": "lots of stuff"
         },
         {
             "name": "messin with words",
             "wordlist_id": 1234,
             "list_type": "standard",
-            "known_words": [
+            "words": [
                 {
                     "word": "werrd",
                     "word_id": 1234,
@@ -1595,7 +1583,6 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
             ],
             "citation": "where i got this",
             "source_is_url": False,
-            "unknown_words": [],
             "notes": "lots of stuff"
         },
         {
