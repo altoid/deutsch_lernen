@@ -221,7 +221,13 @@ def update_tag_state(wordlist_id):
 
 @bp.route('/wordlist/<int:wordlist_id>')
 def wordlist_page(wordlist_id):
-    tag_state_object = TagState(wordlist_id)
+    serialized_tag_state = request.args.get('serialized_tag_state')
+    if serialized_tag_state:
+        tag_state_object = TagState.deserialize(serialized_tag_state)
+        tag_state_object.update()  # you never know
+    else:
+        tag_state_object = TagState(wordlist_id)
+
     serialized_tag_state = tag_state_object.serialize()
 
     r = requests.get(url_for('api_wordlist.get_wordlist',
