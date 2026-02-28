@@ -136,35 +136,58 @@ table.study_guide {
     padding: 1px;
 }
 
+/* padding property order is
+
+4:  top, right, bottom, left
+2:  top+bottom, right+left
+3:  top, right+left, bottom
+
+when two classes define different values for the same style, the browser resolves this
+in SOURCE order, i.e. the order in which they are defined here.  last one wins.
+
+the order of the classes inside the HTML attribute DOES NOT matter.
+*/
+
 td.study_guide_tag {
     border: 1px solid;
     min-height: 1px;
-    padding: 1px;
+    padding: 5px;
 }
 
 td.study_guide_single {
     border-top: 1px solid;
     border-bottom: 1px solid;
     min-height: 1px;
-    padding: 1px;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
 
 td.study_guide_top {
     border-top: 1px solid;
     min-height: 1px;
-    padding: 1px;
+    padding-top: 5px;
 }
 
 td.study_guide_middle {
     border: none;
     min-height: 1px;
-    padding: 1px;
+    padding-top: 1px;
+    padding-bottom: 1px;
 }
 
 td.study_guide_bottom {
     border-bottom: 1px solid;
     min-height: 1px;
-    padding: 1px;
+    padding-bottom: 5px;
+}
+
+td.sg_article {
+    text-align:  right;
+    padding-right: 5px;
+}
+
+td.sg_word {
+    padding-right: 10px;
 }
 
 .quiz_report {
