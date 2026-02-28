@@ -1197,11 +1197,6 @@ class Test_WORDLIST_CONTENTS_PAYLOAD_SCHEMA(unittest.TestCase):
 
     invalid_docs = [
         {
-            "words": [
-                "words property is obsolete"
-            ]
-        },
-        {
             "word_ids": [
                 "word_ids have to",
                 "be integers"
@@ -1457,17 +1452,6 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
     ]
 
     invalid_docs = [
-        {
-            "name": "known_words and unknown_words are obsolete",
-            "known_words": [],
-            "unknown_words": [],
-            "wordlist_id": 1234,
-            "list_type": "standard",
-            "words": [],
-            "citation": "where i got this",
-            "source_is_url": False,
-            "notes": "lots of stuff"
-        },
         {
             "name": "bullshit list type",
             "wordlist_id": 1234,

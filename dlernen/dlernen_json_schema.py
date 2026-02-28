@@ -140,7 +140,6 @@ WORDLIST_CONTENTS_PAYLOAD_SCHEMA = {
         "notes": {
             "type": ["string", 'null']
         },
-        "words": False,
         "word_ids": {
             "type": "array",
             "items": {
@@ -161,7 +160,6 @@ WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA = {
         # none are required
     ],
     "properties": {
-        "words": False,
         "word_ids": {
             "type": "array",
             "items": {
@@ -658,8 +656,6 @@ WORDLIST_RESPONSE_SCHEMA = {
         "source_is_url"
     ],
     "properties": {
-        "unknown_words": False,
-        "known_words": False,
         "name": {
             "type": "string"
         },
