@@ -34,12 +34,12 @@ Study Guide:  {{ wordlist.name }}
         {% if tags_to_words[t]|length == 1 %}
         <tr>
             <td class="study_guide_tag" rowspan="{{ tags_to_words[t]|length }}">{{ t }}</td>
-            <td class="study_guide_single sg_article">{{ tags_to_words[t][0]['article'] }}</td>
+            <td class="study_guide_single sg_article">{{ tags_to_words[t][0].article }}</td>
             <td class="study_guide_single sg_word">
                 <div class="tooltip">
-                    {{ tags_to_words[t][0]['word'] }}
+                    {{ tags_to_words[t][0].word }}
                     <span class="tooltiptext">
-                        {{ tags_to_words[t][0]['definition'] if tags_to_words[t][0]['definition'] else '(no definition)' }}
+                        {{ tags_to_words[t][0].definition if tags_to_words[t][0].definition else '(no definition)' }}
                     </span>
                 </div>
             </td>
@@ -47,36 +47,37 @@ Study Guide:  {{ wordlist.name }}
         {% else %}
         <tr>
             <td class="study_guide_tag" rowspan="{{ tags_to_words[t]|length }}">{{ t }}</td>
-            <td class="study_guide_top sg_article">{{ tags_to_words[t][0]['article'] }}</td>
+            <td class="study_guide_top sg_article">{{ tags_to_words[t][0].article }}</td>
             <td class="study_guide_top sg_word">
                 <div class="tooltip">
-                    {{ tags_to_words[t][0]['word'] }}
+                    {{ tags_to_words[t][0].word }}
                     <span class="tooltiptext">
-                        {{ tags_to_words[t][0]['definition'] if tags_to_words[t][0]['definition'] else '(no definition)' }}
+                        {{ tags_to_words[t][0].definition if tags_to_words[t][0].definition else '(no definition)' }}
                     </span>
                 </div>
             </td>
         </tr>
         {% for w in tags_to_words[t][1:-1] %}
         <tr>
-            <td class="study_guide_middle sg_article">{{ w['article'] }}</td>
+            <td class="study_guide_middle sg_article">{{ w.article }}</td>
             <td class="study_guide_middle sg_word">
                 <div class="tooltip">
-                    {{ w['word'] }}
+                    {{ w.word }}
                     <span class="tooltiptext">
-                        {{ w['definition'] if w['definition'] else '(no definition)' }}
+                        {{ w.definition if w.definition else '(no definition)' }}
                     </span>
                 </div>
             </td>
         </tr>
         {% endfor %}
         <tr>
-            <td class="study_guide_bottom sg_article">{{ tags_to_words[t][-1]['article'] }}</td>
+            <td class="study_guide_bottom sg_article">{{ tags_to_words[t][-1].article }}</td>
             <td class="study_guide_bottom sg_word">
                 <div class="tooltip">
-                    {{ tags_to_words[t][-1]['word'] }}
+                    {{ tags_to_words[t][-1].word }}
                     <span class="tooltiptext">
-                        {{ tags_to_words[t][-1]['definition'] if tags_to_words[t][-1]['definition'] else '(no definition)' }}
+                        {{ tags_to_words[t][-1].definition if tags_to_words[t][-1].definition else '(no 
+                        definition)' }}
                     </span>
                 </div>
             </td>
@@ -88,12 +89,12 @@ Study Guide:  {{ wordlist.name }}
         {% if untagged_words|length == 1 %}
         <tr>
             <td class="study_guide_tag" rowspan="{{ untagged_words|length }}">(no tag)</td>
-            <td class="study_guide_single sg_article">{{ untagged_words[0]['article'] }}</td>
+            <td class="study_guide_single sg_article">{{ untagged_words[0].article }}</td>
             <td class="study_guide_single sg_word">
                 <div class="tooltip">
-                    {{ untagged_words[0]['word'] }}
+                    {{ untagged_words[0].word }}
                     <span class="tooltiptext">
-                        {{ untagged_words[0]['definition'] if untagged_words[0]['definition'] else '(no definition)' }}
+                        {{ untagged_words[0].definition if untagged_words[0].definition else '(no definition)' }}
                     </span>
                 </div>
             </td>
@@ -101,36 +102,36 @@ Study Guide:  {{ wordlist.name }}
         {% else %}
         <tr>
             <td class="study_guide_tag" rowspan="{{ untagged_words|length }}">(no tag)</td>
-            <td class="study_guide_top sg_article">{{ untagged_words[0]['article'] }}</td>
+            <td class="study_guide_top sg_article">{{ untagged_words[0].article }}</td>
             <td class="study_guide_top sg_word">
                 <div class="tooltip">
-                    {{ untagged_words[0]['word'] }}
+                    {{ untagged_words[0].word }}
                     <span class="tooltiptext">
-                        {{ untagged_words[0]['definition'] if untagged_words[0]['definition'] else '(no definition)' }}
+                        {{ untagged_words[0].definition if untagged_words[0].definition else '(no definition)' }}
                     </span>
                 </div>
             </td>
         </tr>
         {% for w in untagged_words[1:-1] %}
         <tr>
-            <td class="study_guide_middle sg_article">{{ w['article'] }}</td>
+            <td class="study_guide_middle sg_article">{{ w.article }}</td>
             <td class="study_guide_middle sg_word">
                 <div class="tooltip">
-                    {{ w['word'] }}
+                    {{ w.word }}
                     <span class="tooltiptext">
-                        {{ w['definition'] if w['definition'] else '(no definition)' }}
+                        {{ w.definition if w.definition else '(no definition)' }}
                     </span>
                 </div>
             </td>
         </tr>
         {% endfor %}
         <tr>
-            <td class="study_guide_bottom sg_article">{{ untagged_words[-1]['article'] }}</td>
+            <td class="study_guide_bottom sg_article">{{ untagged_words[-1].article }}</td>
             <td class="study_guide_bottom sg_word">
                 <div class="tooltip">
-                    {{ untagged_words[-1]['word'] }}
+                    {{ untagged_words[-1].word }}
                     <span class="tooltiptext">
-                        {{ untagged_words[-1]['definition'] if untagged_words[-1]['definition'] else '(no definition)' }}
+                        {{ untagged_words[-1].definition if untagged_words[-1].definition else '(no definition)' }}
                     </span>
                 </div>
             </td>
