@@ -107,6 +107,11 @@ td {
     min-height: 100vh;
 }
 
+.wordlists td.sqlerror {
+    color: red;
+    font-weight: bold;
+}
+
 .listattributes {
     background-color: var(--background-color);
     padding: 10px;

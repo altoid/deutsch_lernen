@@ -28,6 +28,11 @@ Manage Word Lists
         <table>
             {% for r in rows %}
             <tr>
+                <td class="sqlerror">
+                    {% if r.count < 0 %}
+                    INVALID SQL
+                    {% endif %}
+                </td>
                 <td>
                     <input type="checkbox" name="deletelist" value="{{ r.wordlist_id }}">
                 </td>
@@ -36,21 +41,14 @@ Manage Word Lists
                     (*)
                     {% endif %}
                 </td>
-                {% if r.count < 0 %}
                 <td>
                     <a href="{{ url_for('dlernen.wordlist_page', wordlist_id=r.wordlist_id) }}">
                         {{ r.name }}
                     </a>
-                    (INVALID SQL)
-                </td>
-                {% else %}
-                <td>
-                    <a href="{{ url_for('dlernen.wordlist_page', wordlist_id=r.wordlist_id) }}">
-                        {{ r.name }}
-                    </a>
+                    {% if r.count >= 0 %}
                     ({{ r.count }})
+                    {% endif %}
                 </td>
-                {% endif %}
                 <td>
                     [{{ r.wordlist_id }}]
                 </td>
