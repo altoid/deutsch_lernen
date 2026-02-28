@@ -129,10 +129,42 @@ input[type="text"].list_editor_text {
     min-height: 100vh;
 }
 
-table.study_guide, td.study_guide {
+table.study_guide {
     border: 1px solid;
     border-collapse: collapse;
     min-height: 1px;
+    padding: 1px;
+}
+
+td.study_guide_tag {
+    border: 1px solid;
+    min-height: 1px;
+    padding: 1px;
+}
+
+td.study_guide_single {
+    border-top: 1px solid;
+    border-bottom: 1px solid;
+    min-height: 1px;
+    padding: 1px;
+}
+
+td.study_guide_top {
+    border-top: 1px solid;
+    min-height: 1px;
+    padding: 1px;
+}
+
+td.study_guide_middle {
+    border: none;
+    min-height: 1px;
+    padding: 1px;
+}
+
+td.study_guide_bottom {
+    border-bottom: 1px solid;
+    min-height: 1px;
+    padding: 1px;
 }
 
 .quiz_report {

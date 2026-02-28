@@ -19,49 +19,123 @@ Study Guide:  {{ wordlist.name }}
                 Words
             </th>
         </tr>
+
+        {#
+        border issues plague every aspect of society. here we have to consider the number of words a given tag
+        has in order to decide what styles to use to render the borders in the cells for the articles and words.
+        if there is exactly one word, we have to use styles that render top and bottom borders both. otherwise
+        we have to different styles for the members of the list of words:
+
+        the 0th element renders top only.
+        the last element renders bottom only.
+        the interstitial ones ( 1:-1 ) have no borders.
+        #}
         {% for t in tags %}
+        {% if tags_to_words[t]|length == 1 %}
         <tr>
-            <td class="study_guide">{{ t }}</td>
-            <td class="study_guide">
-                <table>
-                    {% for w in tags_to_words[t] %}
-                    <tr>
-                        <td>{{ w['article'] }}</td>
-                        <td>
-                            <div class="tooltip">
-                                {{ w['word'] }}
-                                <span class="tooltiptext">
-                                    {{ w['definition'] if w['definition'] else '(no definition)' }}
-                                </span>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </table>
+            <td class="study_guide_tag" rowspan="{{ tags_to_words[t]|length }}">{{ t }}</td>
+            <td class="study_guide_single">{{ tags_to_words[t][0]['article'] }}</td>
+            <td class="study_guide_single">
+                <div class="tooltip">
+                    {{ tags_to_words[t][0]['word'] }}
+                    <span class="tooltiptext">
+                        {{ tags_to_words[t][0]['definition'] if tags_to_words[t][0]['definition'] else '(no definition)' }}
+                    </span>
+                </div>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td class="study_guide_tag" rowspan="{{ tags_to_words[t]|length }}">{{ t }}</td>
+            <td class="study_guide_top">{{ tags_to_words[t][0]['article'] }}</td>
+            <td class="study_guide_top">
+                <div class="tooltip">
+                    {{ tags_to_words[t][0]['word'] }}
+                    <span class="tooltiptext">
+                        {{ tags_to_words[t][0]['definition'] if tags_to_words[t][0]['definition'] else '(no definition)' }}
+                    </span>
+                </div>
+            </td>
+        </tr>
+        {% for w in tags_to_words[t][1:-1] %}
+        <tr>
+            <td class="study_guide_middle">{{ w['article'] }}</td>
+            <td class="study_guide_middle">
+                <div class="tooltip">
+                    {{ w['word'] }}
+                    <span class="tooltiptext">
+                        {{ w['definition'] if w['definition'] else '(no definition)' }}
+                    </span>
+                </div>
             </td>
         </tr>
         {% endfor %}
-        {% if untagged_words|length %}
         <tr>
-            <td class="study_guide">(no tag)</td>
-            <td class="study_guide">
-                <table>
-                    {% for w in untagged_words %}
-                    <tr>
-                        <td>{{ w['article'] }}</td>
-                        <td>
-                            <div class="tooltip">
-                                {{ w['word'] }}
-                                <span class="tooltiptext">
-                                    {{ w['definition'] if w['definition'] else '(no definition)' }}
-                                </span>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </table>
+            <td class="study_guide_bottom">{{ tags_to_words[t][-1]['article'] }}</td>
+            <td class="study_guide_bottom">
+                <div class="tooltip">
+                    {{ tags_to_words[t][-1]['word'] }}
+                    <span class="tooltiptext">
+                        {{ tags_to_words[t][-1]['definition'] if tags_to_words[t][-1]['definition'] else '(no definition)' }}
+                    </span>
+                </div>
             </td>
         </tr>
+        {% endif %}
+        {% endfor %}
+        {% if untagged_words|length %}
+
+        {% if untagged_words|length == 1 %}
+        <tr>
+            <td class="study_guide_tag" rowspan="{{ untagged_words|length }}">(no tag)</td>
+            <td class="study_guide_single">{{ untagged_words[0]['article'] }}</td>
+            <td class="study_guide_single">
+                <div class="tooltip">
+                    {{ untagged_words[0]['word'] }}
+                    <span class="tooltiptext">
+                        {{ untagged_words[0]['definition'] if untagged_words[0]['definition'] else '(no definition)' }}
+                    </span>
+                </div>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td class="study_guide_tag" rowspan="{{ untagged_words|length }}">(no tag)</td>
+            <td class="study_guide_top">{{ untagged_words[0]['article'] }}</td>
+            <td class="study_guide_top">
+                <div class="tooltip">
+                    {{ untagged_words[0]['word'] }}
+                    <span class="tooltiptext">
+                        {{ untagged_words[0]['definition'] if untagged_words[0]['definition'] else '(no definition)' }}
+                    </span>
+                </div>
+            </td>
+        </tr>
+        {% for w in untagged_words[1:-1] %}
+        <tr>
+            <td class="study_guide_middle">{{ w['article'] }}</td>
+            <td class="study_guide_middle">
+                <div class="tooltip">
+                    {{ w['word'] }}
+                    <span class="tooltiptext">
+                        {{ w['definition'] if w['definition'] else '(no definition)' }}
+                    </span>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <td class="study_guide_bottom">{{ untagged_words[-1]['article'] }}</td>
+            <td class="study_guide_bottom">
+                <div class="tooltip">
+                    {{ untagged_words[-1]['word'] }}
+                    <span class="tooltiptext">
+                        {{ untagged_words[-1]['definition'] if untagged_words[-1]['definition'] else '(no definition)' }}
+                    </span>
+                </div>
+            </td>
+        </tr>
+        {% endif %}
         {% endif %}
     </table>
 </div>
