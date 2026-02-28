@@ -377,7 +377,7 @@ def edit_list_attributes():
         flash("invalid sqlcode")
         return render_template('list_attributes.html',
                                serialized_tag_state=request.form.get('serialized_tag_state'),
-                               wordlist_metadata=metadata)
+                               wordlist=metadata)
 
     if not r:
         return render_template("error.html",

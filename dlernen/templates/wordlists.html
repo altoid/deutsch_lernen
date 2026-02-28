@@ -36,11 +36,21 @@ Manage Word Lists
                     (*)
                     {% endif %}
                 </td>
+                {% if r.count < 0 %}
                 <td>
                     <a href="{{ url_for('dlernen.wordlist_page', wordlist_id=r.wordlist_id) }}">
                         {{ r.name }}
-                    </a> ({{ r.count }})
+                    </a>
+                    (INVALID SQL)
                 </td>
+                {% else %}
+                <td>
+                    <a href="{{ url_for('dlernen.wordlist_page', wordlist_id=r.wordlist_id) }}">
+                        {{ r.name }}
+                    </a>
+                    ({{ r.count }})
+                </td>
+                {% endif %}
                 <td>
                     [{{ r.wordlist_id }}]
                 </td>

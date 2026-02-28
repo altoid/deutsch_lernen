@@ -1,6 +1,7 @@
 from flask import Blueprint, request, url_for, current_app
 from pprint import pprint
 from mysql.connector import connect
+import mysql.connector.errors
 from dlernen import dlernen_json_schema
 
 import requests
@@ -84,9 +85,14 @@ order by name
             }
 
             if r['sqlcode']:
-                cursor.execute(r['sqlcode'])
-                smartlist_rows = cursor.fetchall()
-                dict_result[r['wordlist_id']]['count'] = len(smartlist_rows)
+                try:
+                    cursor.execute(r['sqlcode'])
+                    smartlist_rows = cursor.fetchall()
+                    dict_result[r['wordlist_id']]['count'] = len(smartlist_rows)
+                except mysql.connector.errors.ProgrammingError as f:
+                    # this will happen if the sqlcode is invalid.
+                    # set the count to -1 and let the client deal with it.
+                    dict_result[r['wordlist_id']]['count'] = -1
 
         result = list(dict_result.values())
         jsonschema.validate(result, dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)

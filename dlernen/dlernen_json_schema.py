@@ -738,8 +738,7 @@ WORDLISTS_RESPONSE_SCHEMA = {
                 "minimum": 1
             },
             "count": {
-                "type": "integer",
-                "minimum": 0,
+                "type": "integer"
             },
             "list_type": {
                 "type": "string",
