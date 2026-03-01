@@ -158,6 +158,8 @@ def toggle_posting_scores():
     APPSTATE.post_scores = not APPSTATE.post_scores
 
     print("posting scores is now %s" % ("ON" if APPSTATE.post_scores else "OFF"))
+    if not APPSTATE.post_scores and APPSTATE.query == 'oldest_first':
+        APPSTATE.query = 'random'
 
 
 def select_lists():
