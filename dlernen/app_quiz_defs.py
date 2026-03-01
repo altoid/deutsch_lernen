@@ -58,10 +58,11 @@ class AppState(object):
         self.wordlists.clear()
         self.query = 'random'
         self.tags.clear()
-        self.hints_requested.clear()
-        self.missed.clear()
-        self.cache.clear()
+        # self.cache.clear()  # no need to flush the cache on reset
         self.post_scores = False
+
+        self.clear_hinted_and_missed_tags()
+        self.load_hinted_and_missed_tags()
 
     def get_word_info(self, word_id):
         if word_id not in self.cache:
@@ -69,6 +70,29 @@ class AppState(object):
             obj = r.json()
             self.cache[word_id] = obj
         return self.cache[word_id]
+
+    def clear_hinted_and_missed_tags(self):
+        # clear the missed and hinted word id sets, but do not mess with the hinted and missed tags.
+
+        self.missed.clear()
+        self.hints_requested.clear()
+
+    def load_hinted_and_missed_tags(self):
+        # client should clear hinted and missed sets first.
+
+        ids = list(self.wordlists.keys())
+        if ids:
+            r = requests.get(url_for('api_words.get_words', tag=[MISSED_TAG], wordlist_id=ids))
+            obj = r.json()
+            for w in obj:
+                self.cache[w['word_id']] = w
+                self.missed.add(w['word_id'])
+
+            r = requests.get(url_for('api_words.get_words', tag=[HINTED_TAG], wordlist_id=ids))
+            obj = r.json()
+            for w in obj:
+                self.cache[w['word_id']] = w
+                self.hints_requested.add(w['word_id'])
 
 
 APPSTATE = AppState()
@@ -189,7 +213,7 @@ or enter list of wordlist_ids, space separated
         if answer == 'c':
             APPSTATE.wordlists.clear()
             APPSTATE.tags.clear()
-            APPSTATE.hints_requested.clear()
+            APPSTATE.clear_hinted_and_missed_tags()
             print("selection cleared")
             continue
 
@@ -219,9 +243,15 @@ or enter list of wordlist_ids, space separated
             print("unknown wordlist_ids:  ", end=' ')
             pprint(set(unknown_wordlist_ids))
 
+    APPSTATE.load_hinted_and_missed_tags()
+
 
 def status():
     global APPSTATE
+
+    pprint(APPSTATE.cache)
+    pprint(APPSTATE.missed)
+    pprint(APPSTATE.hints_requested)
 
     print("""
 ****************************************
@@ -284,7 +314,7 @@ Words where hints requested:
         print("    %s (%s)" % (w['word'], w['pos_name']))
 
 
-def clear_tags():
+def clear_hinted_and_missed_tags():
     global APPSTATE
 
     ids = list(APPSTATE.wordlists.keys())
@@ -297,6 +327,8 @@ def clear_tags():
     r = requests.delete(url_for('api_wordlist_tag.delete_tag',
                                 wordlist_id=ids,
                                 tag=HINTED_TAG))
+
+    APPSTATE.clear_hinted_and_missed_tags()
 
 
 def select_tags():
@@ -756,7 +788,7 @@ CALLBACKS = {
     'e': {
         'tagline': 'clear missed and hinted tags',
         'display_order': 6,
-        'callback': clear_tags,
+        'callback': clear_hinted_and_missed_tags,
     },
     'k': {
         'tagline': 'select query',

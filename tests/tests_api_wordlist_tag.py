@@ -211,13 +211,17 @@ class APIWordlistTagMultiList(unittest.TestCase):
         r = self.client.get(url_for('api_words.get_words',
                                     wordlist_id=[self.wordlist2_id, self.wordlist3_id],
                                     tag=['no_such_tag']))
-        self.assertEqual(404, r.status_code)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual(0, len(obj))
 
     def test4_7(self):
         r = self.client.get(url_for('api_words.get_words',
                                     wordlist_id=[self.wordlist1_id],
                                     tag=['tag2']))
-        self.assertEqual(404, r.status_code)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual(0, len(obj))
 
     # delete a tag from all wordlists.  to verify, retrieve by the tag and ensure that it's not found
     def test5(self):
@@ -228,7 +232,9 @@ class APIWordlistTagMultiList(unittest.TestCase):
         self.assertEqual(200, r.status_code)
 
         r = self.client.get(url_for('api_words.get_words', tag=['tag1']))
-        self.assertEqual(404, r.status_code)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual(0, len(obj))
 
     # delete a tag from specific word lists
     def test6(self):
@@ -245,7 +251,9 @@ class APIWordlistTagMultiList(unittest.TestCase):
         r = self.client.get(url_for('api_words.get_words',
                                     wordlist_id=[self.wordlist1_id],
                                     tag=['tag1']))
-        self.assertEqual(404, r.status_code)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual(0, len(obj))
 
         r = self.client.get(url_for('api_words.get_words',
                                     wordlist_id=[self.wordlist2_id],

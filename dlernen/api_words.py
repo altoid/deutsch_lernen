@@ -75,8 +75,8 @@ def get_words():
     # NB  the word response does not have any tag info in it.
     jsonschema.validate(result, js.WORDS_RESPONSE_SCHEMA)
 
-    if not result:
-        return 'Not found', 404
+    # result may be empty.  the only valid case for a 404 is if a wordlist_id is not found,
+    # but we aren't checking for that.
 
     return result
 
