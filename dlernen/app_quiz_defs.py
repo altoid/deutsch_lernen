@@ -54,6 +54,9 @@ class AppState(object):
         # if false, do not write quiz results to database.
         self.post_scores = False
 
+    def flush_cache(self):
+        self.cache.clear()
+
     def reset(self):
         self.wordlists.clear()
         self.query = 'random'
@@ -174,6 +177,12 @@ def reset():
     global APPSTATE
 
     APPSTATE.reset()
+
+
+def flush_cache():
+    global APPSTATE
+
+    APPSTATE.flush_cache()
 
 
 def toggle_posting_scores():
@@ -300,7 +309,7 @@ Word count:  %s""" % len(obj['word_ids']))
         print("could not retrieve word count:  [%s - %s]" % (r.text, r.status_code))
 
     print("""
-Words missed this session:
+Words missed:
 """)
     for w_id in APPSTATE.missed:
         w = APPSTATE.get_word_info(w_id)
@@ -637,9 +646,8 @@ def quiz_definitions():
 def quiz_hinted_words():
     global APPSTATE
 
-    hinted_word_ids = list(APPSTATE.hints_requested)
     word_ids_to_attrs = {}
-    for word_id in hinted_word_ids:
+    for word_id in APPSTATE.hints_requested:
         url = url_for('api_quiz.get_all_attr_values_for_quiz',
                       quiz_key=APPSTATE.quiz_key,
                       word_id=word_id)
@@ -647,7 +655,7 @@ def quiz_hinted_words():
         obj = r.json()
         word_ids_to_attrs[word_id] = decorate_if_noun(obj[0])
 
-    function_and_args = make_triple(get_next_saved_word, hinted_word_ids, word_ids_to_attrs)
+    function_and_args = make_triple(get_next_saved_word, list(APPSTATE.hints_requested), word_ids_to_attrs)
 
     quiz_loop(function_and_args)
 
@@ -664,7 +672,7 @@ def quiz_missed_words():
         obj = r.json()
         word_ids_to_attrs[word_id] = decorate_if_noun(obj[0])
 
-    function_and_args = make_triple(get_next_saved_word, APPSTATE.missed, word_ids_to_attrs)
+    function_and_args = make_triple(get_next_saved_word, list(APPSTATE.missed), word_ids_to_attrs)
 
     quiz_loop(function_and_args)
 
@@ -837,12 +845,17 @@ CALLBACKS = {
     },
     'reset': {
         'tagline': 'reset',
-        'display_order': 36,
+        'display_order': 40,
         'callback': reset
+    },
+    'flush': {
+        'tagline': 'flush the cache',
+        'display_order': 40,
+        'callback': flush_cache
     },
     'q': {
         'tagline': 'quit',
-        'display_order': 40,
+        'display_order': 45,
         'callback': quit_program
     },
 }
@@ -859,6 +872,7 @@ def quiz_words():
     except FileNotFoundError as e:
         APPSTATE = AppState()
 
+    APPSTATE.load_hinted_and_missed_tags()
     status()
 
     while True:
