@@ -27,11 +27,10 @@ Manage List:  {{ wordlist.name }}
         <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
         <table>
             <tr>
-                <th></th>
-                <th colspan="2">Word</th>
+                <th colspan="3">Word</th>
                 <th>Tags</th>
                 <th>Add Tags</th>
-                <th>Word ID</th>
+                <th class="wortart">Wortart</th>
             </tr>
             {% for w in wordlist.words %}
             <tr>
@@ -55,7 +54,7 @@ Manage List:  {{ wordlist.name }}
                            name="tag-{{ w['word_id'] }}"
                            placeholder="space-separated list of tags"/>
                 </td>
-                <td class="numeric">{{ w['word_id'] }}</td>
+                <td class="wortart">{{ w['pos_name'] }}</td>
             </tr>
             {% endfor %}
         </table>

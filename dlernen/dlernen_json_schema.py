@@ -687,10 +687,14 @@ WORDLIST_RESPONSE_SCHEMA = {
                 "required": [
                     "word",
                     "word_id",
-                    "tags"
+                    "tags",
+                    "pos_name"
                 ],
                 "properties": {
                     "word": {
+                        "type": "string"
+                    },
+                    "pos_name": {
                         "type": "string"
                     },
                     "word_id": {

@@ -124,6 +124,14 @@ td {
     min-height: 100vh;
 }
 
+.list_editor th {
+    text-align: left;
+}
+
+.list_editor .wortart {
+    padding-left: 44px;
+}
+
 input[type="text"].list_editor_text {
     width: 200px
 }

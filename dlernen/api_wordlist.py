@@ -15,6 +15,7 @@ SQL_FOR_WORDLIST_FROM_SQLCODE = """
     with matching as ( %s )
     select
           m.word word,
+          m.pos_name pos_name,
           matching.word_id,
           m.attrvalue definition,
           ifnull(m2.attrvalue, '') article
@@ -274,6 +275,7 @@ def __get_wordlist(wordlist_id, tags=None):
                     'definition': r['definition'],
                     'word': r['word'],
                     'word_id': r['word_id'],
+                    'pos_name': r['pos_name'],
                     'tags': []
                 }
                 for r in rows
@@ -286,6 +288,7 @@ def __get_wordlist(wordlist_id, tags=None):
                 words_sql = """
                 select
                     m.word,
+                    m.pos_name,
                     m.word_id,
                     m.attrvalue definition,
                     ifnull(m2.attrvalue, '') article,
@@ -312,6 +315,7 @@ def __get_wordlist(wordlist_id, tags=None):
                 words_sql = """
                 select
                     m.word,
+                    m.pos_name,
                     m.word_id,
                     m.attrvalue definition,
                     ifnull(m2.attrvalue, '') article,
@@ -342,6 +346,7 @@ def __get_wordlist(wordlist_id, tags=None):
                 'definition': r['definition'],
                 'word': r['word'],
                 'word_id': r['word_id'],
+                'pos_name': r['pos_name'],
                 'tags': []
             }
                 for r in words}
