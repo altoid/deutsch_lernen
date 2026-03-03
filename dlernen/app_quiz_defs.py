@@ -246,7 +246,6 @@ or enter list of wordlist_ids, space separated
         unknown_wordlist_ids = set_wordlists(wordlist_ids)
 
         print("list_ids:  ", end=' ')
-        pprint(set(APPSTATE.wordlists.keys()))
 
         if unknown_wordlist_ids:
             print("unknown wordlist_ids:  ", end=' ')
@@ -257,10 +256,6 @@ or enter list of wordlist_ids, space separated
 
 def status():
     global APPSTATE
-
-    pprint(APPSTATE.cache)
-    pprint(APPSTATE.missed)
-    pprint(APPSTATE.hints_requested)
 
     print("""
 ****************************************
