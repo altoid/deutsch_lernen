@@ -6,10 +6,6 @@ import json
 from pprint import pprint
 
 
-# FIXME - correcting the spelling of a word through the UI isn't working
-#   special case of correcting the spelling of an unknown word before it is added
-
-
 class APITests(unittest.TestCase):
     app = None
     app_context = None

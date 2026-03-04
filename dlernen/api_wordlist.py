@@ -484,8 +484,7 @@ def delete_from_wordlist(wordlist_id):
 
             word_ids = payload.get('word_ids', [])
 
-            # TODO - if a word_id is not in the wordlist, no harm done.  but to be thorough, we should
-            #   check for this and return a 404.
+            # if a word_id is not in the wordlist, no harm done.
 
             if word_ids:
                 # note:  any tags that exist for this word in this wordlist will be automatically removed.
