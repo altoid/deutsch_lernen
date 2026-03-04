@@ -244,14 +244,21 @@ or enter list of wordlist_ids, space separated
             continue
 
         unknown_wordlist_ids = set_wordlists(wordlist_ids)
-
-        print("list_ids:  ", end=' ')
-
         if unknown_wordlist_ids:
             print("unknown wordlist_ids:  ", end=' ')
             pprint(set(unknown_wordlist_ids))
 
-    APPSTATE.load_hinted_and_missed_tags()
+    if APPSTATE.wordlists:
+        print("""
+lists selected:
+""")
+        for v in APPSTATE.wordlists.values():
+            print(v)
+        APPSTATE.load_hinted_and_missed_tags()
+    else:
+        print("""
+** no lists selected; using entire dictionary **
+""")
 
 
 def status():
