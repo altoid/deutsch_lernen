@@ -529,8 +529,6 @@ def edit_word_form(word):
     # otherwise this form lets us add tags to new parts of speech that we are adding to the dictionary, or
     # modify tags for parts of speech that are already in the dictionary.
 
-    # FIXME - tags field should be disabled for smart lists
-
     wordlist_id = request.args.get('wordlist_id')
     serialized_tag_state = request.args.get('serialized_tag_state')
     redirect_to = request.args.get('redirect_to', 'dlernen.wordlist_page')
