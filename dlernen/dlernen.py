@@ -263,12 +263,6 @@ def wordlist_page(wordlist_id):
     words = chunkify(wordlist['words'], nchunks)
     tag_chunks = chunkify(tag_state_object.tag_state(), 4)
 
-    # if wordlist['list_type'] == 'smart':
-    #     return render_template('wordlist.html',
-    #                            wordlist=wordlist,
-    #                            tag_state=tag_state_object.tag_state(),
-    #                            words=words)
-
     return render_template('wordlist.html',
                            wordlist=wordlist,
                            tag_state=tag_state_object.tag_state(),
