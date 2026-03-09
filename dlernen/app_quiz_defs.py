@@ -1,7 +1,7 @@
 import random
 
 from flask import Blueprint, url_for
-from pprint import pprint
+from pprint import pprint, pformat
 import requests
 from dlernen import api_quiz
 import pickle
@@ -585,6 +585,10 @@ def get_random_next_word(wordlist_ids, tags):
                              tag=tags))
     obj = r.json()
     word_ids = obj['word_ids']
+    if not word_ids:
+        print("no matching words:  wordlists:  %s, tags:  %s" % (pformat(wordlist_ids), pformat(tags)))
+        return
+
     random.shuffle(word_ids)  # shuffle in place
 
     word_ids_to_attrs = {}
