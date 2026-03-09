@@ -245,8 +245,7 @@ or enter list of wordlist_ids, space separated
 
         unknown_wordlist_ids = set_wordlists(wordlist_ids)
         if unknown_wordlist_ids:
-            print("unknown wordlist_ids:  ", end=' ')
-            pprint(set(unknown_wordlist_ids))
+            print("unknown wordlist_ids:  %s" % pformat(set(unknown_wordlist_ids)))
 
     if APPSTATE.wordlists:
         print("""
@@ -291,8 +290,7 @@ Lists:""")
     print("""
 Tags:""")
     if APPSTATE.tags:
-        print("current tags:  ", end=' ')
-        pprint(APPSTATE.tags)
+        print("current tags:  %s" % pformat(APPSTATE.tags))
     else:
         print("** no tags")
 
@@ -368,8 +366,7 @@ or enter list of tags, space separated
             continue
 
         if answer == 's':
-            print("current tags:  ", end=' ')
-            pprint(APPSTATE.tags)
+            print("current tags:  %s" % pformat(APPSTATE.tags))
             continue
 
         if answer == 'm':
@@ -381,8 +378,7 @@ or enter list of tags, space separated
 
         tags = set(answer.split())
         APPSTATE.tags |= tags
-        print("current tags:  ", end=' ')
-        pprint(APPSTATE.tags)
+        print("current tags:  %s" % pformat(APPSTATE.tags))
 
 
 def select_query():
