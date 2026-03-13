@@ -11,6 +11,7 @@ setup(
         'mysql-connector-python',
         'jsonschema',
         'requests',
+        'referencing',
         'click',
         'nltk'
     ],
