@@ -704,6 +704,83 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
+class Test_RELATION_PAYLOAD_SCHEMA(unittest.TestCase):
+    # nothing to test
+    pass
+
+
+class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = js.RELATION_RESPONSE_SCHEMA
+
+    valid_docs = [
+        [
+            {
+                'relation_id': 234,
+                'word_ids': [1, 2, 3],
+                'notes': 'do re mi',
+                'description': 'what this relation is for'
+            }
+        ],
+        [
+            {
+                'relation_id': 234,
+                'word_ids': [],
+                'notes': None,
+                'description': None
+            }
+        ]
+    ]
+
+    invalid_docs = [
+        [
+            {
+                # 'relation_id': 234,
+                'word_ids': [1, 2, 3],
+                'notes': 'do re mi',
+                'description': 'what this relation is for'
+            },
+        ],
+        [
+            {
+                'relation_id': 234,
+                # 'word_ids': [1, 2, 3],
+                'notes': 'do re mi',
+                'description': 'what this relation is for'
+            },
+        ],
+        [
+            {
+                'relation_id': 234,
+                'word_ids': [1, 2, 3],
+                # 'notes': 'do re mi',
+                'description': 'what this relation is for'
+            },
+        ],
+        [
+            {
+                'relation_id': 234,
+                'word_ids': [1, 2, 3],
+                'notes': 'do re mi',
+                # 'description': 'what this relation is for'
+            }
+        ]
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                jsonschema.validate(jdoc, self.schema)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    jsonschema.validate(jdoc, self.schema)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
 class Test_SINGLE_WORD_RESPONSE_SCHEMA(unittest.TestCase):
     schema = js.SINGLE_WORD_RESPONSE_SCHEMA
 

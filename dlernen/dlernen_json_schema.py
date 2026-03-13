@@ -38,6 +38,37 @@ NULL_SCHEMA = {
 #
 ##########################################################
 
+RELATION_PAYLOAD_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/relation_payload",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "payload for creating/updating a relation",
+    "description": """
+    payload for creating/updating a relation
+    """,
+    "type": "object",
+    "required": [
+        # none of these is required.  creating a relation with an empty payload is ok.  we will have
+        # a relation with an id but no content.
+        # "word_ids",
+        # "notes",
+        # "description"
+    ],
+    "properties": {
+        "word_ids": {
+            "type": "array",
+            "items": {
+                "type": "integer"
+            }
+        },
+        "notes": {
+            "type": ["string", 'null']
+        },
+        "description": {
+            "type": ["string", 'null']
+        }
+    }
+}
+
 WORD_ADD_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/updateword_payload",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
@@ -512,6 +543,43 @@ QUIZ_RESPONSE_SCHEMA = {
             },
             "attrvalue": {
                 "type": ["string", "null"]
+            }
+        }
+    }
+}
+
+RELATION_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/relation_response",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Response for get relation",
+    "description": """
+    response for GET relation.
+    """,
+    "type": "array",
+    "items": {
+        "type": "object",
+        "required": [
+            "relation_id",
+            "word_ids",
+            "notes",
+            "description"
+        ],
+        "properties": {
+            "relation_id": {
+                "type": "integer",
+                "minimum": 1,
+            },
+            "word_ids": {
+                "type": "array",
+                "items": {
+                    "type": "integer"
+                }
+            },
+            "notes": {
+                "type": ["string", 'null']
+            },
+            "description": {
+                "type": ["string", 'null']
             }
         }
     }
