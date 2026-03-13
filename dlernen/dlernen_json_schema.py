@@ -556,33 +556,43 @@ RELATION_RESPONSE_SCHEMA = {
     "description": """
     response for GET relation.
     """,
+    "type": "object",
+    "required": [
+        "relation_id",
+        "word_ids",
+        "notes",
+        "description"
+    ],
+    "properties": {
+        "relation_id": {
+            "type": "integer",
+            "minimum": 1,
+        },
+        "word_ids": {
+            "type": "array",
+            "items": {
+                "type": "integer"
+            }
+        },
+        "notes": {
+            "type": ["string", 'null']
+        },
+        "description": {
+            "type": ["string", 'null']
+        }
+    }
+}
+
+RELATION_RESPONSE_ARRAY_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/relation_response_array.json",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Response for get relation",
+    "description": """
+    response for GET relation.
+    """,
     "type": "array",
     "items": {
-        "type": "object",
-        "required": [
-            "relation_id",
-            "word_ids",
-            "notes",
-            "description"
-        ],
-        "properties": {
-            "relation_id": {
-                "type": "integer",
-                "minimum": 1,
-            },
-            "word_ids": {
-                "type": "array",
-                "items": {
-                    "type": "integer"
-                }
-            },
-            "notes": {
-                "type": ["string", 'null']
-            },
-            "description": {
-                "type": ["string", 'null']
-            }
-        }
+        "$ref": RELATION_RESPONSE_SCHEMA["$id"]
     }
 }
 
