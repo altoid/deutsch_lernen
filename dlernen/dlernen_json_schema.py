@@ -1,4 +1,5 @@
 import jsonschema
+from referencing import Registry, Resource
 
 ##########################################################
 #
@@ -889,3 +890,38 @@ WORDS_RESPONSE_SCHEMA = {
     }
     # the attributes - article, definition, etc. - are all optional but the attributes keyword is not.
 }
+
+ALL_SCHEMAS = [
+    RELATION_PAYLOAD_SCHEMA,
+    WORD_ADD_PAYLOAD_SCHEMA,
+    WORD_UPDATE_PAYLOAD_SCHEMA,
+    WORDLIST_CONTENTS_PAYLOAD_SCHEMA,
+    WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA,
+    WORDLISTS_DELETE_PAYLOAD_SCHEMA,
+    WORDLIST_METADATA_PAYLOAD_SCHEMA,
+    WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA,
+    POS_STRUCTURE_RESPONSE_SCHEMA,
+    QUIZ_ANSWER_PAYLOAD_SCHEMA,
+    QUIZ_REPORT_RESPONSE_SCHEMA,
+    QUIZ_RESPONSE_SCHEMA,
+    RELATION_RESPONSE_SCHEMA,
+    RELATION_RESPONSE_ARRAY_SCHEMA,
+    SINGLE_WORD_RESPONSE_SCHEMA,
+    WORD_TAG_RESPONSE_SCHEMA,
+    WORDLIST_METADATA_RESPONSE_SCHEMA,
+    WORDLIST_RESPONSE_SCHEMA,
+    WORDLISTS_RESPONSE_SCHEMA,
+    WORDS_RESPONSE_SCHEMA,
+]
+
+# uild the registry ONCE at module level
+registry = Registry().with_resources([
+    (schema["$id"], Resource.from_contents(schema)) for schema in ALL_SCHEMAS
+])
+
+
+def get_validator(schema_dict):
+    """Utility to get a validator with the pre-built registry."""
+    from jsonschema.validators import validator_for
+    cls = validator_for(schema_dict)
+    return cls(schema_dict, registry=registry)

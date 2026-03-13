@@ -1,20 +1,81 @@
 import unittest
 import jsonschema
-from dlernen import dlernen_json_schema as js
+from dlernen.dlernen_json_schema import get_validator, ATTRIBUTES, \
+    NULL_SCHEMA, \
+    RELATION_PAYLOAD_SCHEMA, \
+    WORD_ADD_PAYLOAD_SCHEMA, \
+    WORD_UPDATE_PAYLOAD_SCHEMA, \
+    WORDLIST_CONTENTS_PAYLOAD_SCHEMA, \
+    WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA, \
+    WORDLISTS_DELETE_PAYLOAD_SCHEMA, \
+    WORDLIST_METADATA_PAYLOAD_SCHEMA, \
+    WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA, \
+    POS_STRUCTURE_RESPONSE_SCHEMA, \
+    QUIZ_ANSWER_PAYLOAD_SCHEMA, \
+    QUIZ_REPORT_RESPONSE_SCHEMA, \
+    QUIZ_RESPONSE_SCHEMA, \
+    RELATION_RESPONSE_SCHEMA, \
+    RELATION_RESPONSE_ARRAY_SCHEMA, \
+    SINGLE_WORD_RESPONSE_SCHEMA, \
+    WORD_TAG_RESPONSE_SCHEMA, \
+    WORDLIST_METADATA_RESPONSE_SCHEMA, \
+    WORDLIST_RESPONSE_SCHEMA, \
+    WORDLISTS_RESPONSE_SCHEMA, \
+    WORDS_RESPONSE_SCHEMA
+from pprint import pprint
 
 
 # none of the tests here uses the API or hits the database.  these tests make sure that the JSONSCHEMA documents
 # are defined correctly.
 
 
+class Test_fiddling_with_referencing_and_registry(unittest.TestCase):
+    def test1(self):
+        # meh.  nothing new here.  jsonschema.Draft202012Validator is just an instance
+        # of a validator.  validator_for will use a validator based on the $schema
+        # in the schema object.
+
+        validator_cls = get_validator(RELATION_RESPONSE_SCHEMA)
+        validator_cls.check_schema(RELATION_RESPONSE_SCHEMA)
+
+        # print(jsonschema.Draft202012Validator.META_SCHEMA["$id"])
+        # pprint(RELATION_RESPONSE_SCHEMA['items']['required'])
+
+        response = {
+            'relation_id': 234,
+            'word_ids': [1, 2, 3],
+            'notes': 'do re mi',
+            'description': 'what this relation is for'
+        }
+
+        v = get_validator(RELATION_RESPONSE_SCHEMA)
+        v.validate(response)
+
+        response_arr = [response]
+
+        v = get_validator(RELATION_RESPONSE_ARRAY_SCHEMA)
+        v.validate(response_arr)
+
+
 class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
-    schema = js.NULL_SCHEMA
+    schema = NULL_SCHEMA
 
     valid_docs = [
     ]
 
     invalid_docs = [
     ]
+
+    #############################################################
+    #
+    # the jsonschema.validate method needs a schema against which it
+    # can validate the data.  if you don't specify it via cls=
+    # then it will figure it out from the $schema in the schema object.
+    # more here:
+    #
+    # https://python-jsonschema.readthedocs.io/en/stable/api/#jsonschema.validate
+    #
+    #############################################################
 
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
@@ -32,7 +93,7 @@ class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
 
 
 class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = js.POS_STRUCTURE_RESPONSE_SCHEMA
+    schema = POS_STRUCTURE_RESPONSE_SCHEMA
 
     valid_docs = [
         [
@@ -314,7 +375,7 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
 
 
 class Test_QUIZ_ANSWER_PAYLOAD_SCHEMA(unittest.TestCase):
-    schema = js.QUIZ_ANSWER_PAYLOAD_SCHEMA
+    schema = QUIZ_ANSWER_PAYLOAD_SCHEMA
 
     valid_docs = [
         {
@@ -380,7 +441,7 @@ class Test_QUIZ_ANSWER_PAYLOAD_SCHEMA(unittest.TestCase):
 
 
 class Test_QUIZ_REPORT_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = js.QUIZ_REPORT_RESPONSE_SCHEMA
+    schema = QUIZ_REPORT_RESPONSE_SCHEMA
 
     valid_docs = [
         {
@@ -602,7 +663,7 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA(unittest.TestCase):
 
 
 class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = js.QUIZ_RESPONSE_SCHEMA
+    schema = QUIZ_RESPONSE_SCHEMA
 
     valid_docs = [
         [],
@@ -710,60 +771,50 @@ class Test_RELATION_PAYLOAD_SCHEMA(unittest.TestCase):
 
 
 class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = js.RELATION_RESPONSE_SCHEMA
+    schema = RELATION_RESPONSE_SCHEMA
 
     valid_docs = [
-        [
-            {
-                'relation_id': 234,
-                'word_ids': [1, 2, 3],
-                'notes': 'do re mi',
-                'description': 'what this relation is for'
-            }
-        ],
-        [
-            {
-                'relation_id': 234,
-                'word_ids': [],
-                'notes': None,
-                'description': None
-            }
-        ]
+
+        {
+            'relation_id': 234,
+            'word_ids': [1, 2, 3],
+            'notes': 'do re mi',
+            'description': 'what this relation is for'
+        },
+        {
+            'relation_id': 234,
+            'word_ids': [],
+            'notes': None,
+            'description': None
+        }
+
     ]
 
     invalid_docs = [
-        [
-            {
-                # 'relation_id': 234,
-                'word_ids': [1, 2, 3],
-                'notes': 'do re mi',
-                'description': 'what this relation is for'
-            },
-        ],
-        [
-            {
-                'relation_id': 234,
-                # 'word_ids': [1, 2, 3],
-                'notes': 'do re mi',
-                'description': 'what this relation is for'
-            },
-        ],
-        [
-            {
-                'relation_id': 234,
-                'word_ids': [1, 2, 3],
-                # 'notes': 'do re mi',
-                'description': 'what this relation is for'
-            },
-        ],
-        [
-            {
-                'relation_id': 234,
-                'word_ids': [1, 2, 3],
-                'notes': 'do re mi',
-                # 'description': 'what this relation is for'
-            }
-        ]
+        {
+            # 'relation_id': 234,
+            'word_ids': [1, 2, 3],
+            'notes': 'do re mi',
+            'description': 'what this relation is for'
+        },
+        {
+            'relation_id': 234,
+            # 'word_ids': [1, 2, 3],
+            'notes': 'do re mi',
+            'description': 'what this relation is for'
+        },
+        {
+            'relation_id': 234,
+            'word_ids': [1, 2, 3],
+            # 'notes': 'do re mi',
+            'description': 'what this relation is for'
+        },
+        {
+            'relation_id': 234,
+            'word_ids': [1, 2, 3],
+            'notes': 'do re mi',
+            # 'description': 'what this relation is for'
+        }
     ]
 
     def test_valid_docs(self):
@@ -782,7 +833,7 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
 
 
 class Test_SINGLE_WORD_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = js.SINGLE_WORD_RESPONSE_SCHEMA
+    schema = SINGLE_WORD_RESPONSE_SCHEMA
 
     valid_docs = [
         {
@@ -945,7 +996,7 @@ class Test_SINGLE_WORD_RESPONSE_SCHEMA(unittest.TestCase):
 
 
 class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
-    schema = js.WORD_ADD_PAYLOAD_SCHEMA
+    schema = WORD_ADD_PAYLOAD_SCHEMA
 
     valid_docs = [
         {
@@ -953,7 +1004,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
             "word": "werd",
             "pos_id": 1234,
             "notes": "do re mi",
-            js.ATTRIBUTES: [
+            ATTRIBUTES: [
                 {
                     "attribute_id": 1111,
                     "attrvalue": "value"
@@ -975,7 +1026,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
             "word": "valid",
             "pos_id": 23,
             "notes": "whatevs",
-            js.ATTRIBUTES: []
+            ATTRIBUTES: []
         }
     ]
 
@@ -1012,7 +1063,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
             "word": "aoeu",
             "pos_id": 234,
             "notes": "boo boo",
-            js.ATTRIBUTES: [
+            ATTRIBUTES: [
                 {
                     # has to have an attribute id
                 }
@@ -1022,7 +1073,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
             "word": "aoeu",
             "pos_id": 234,
             "notes": "boo boo",
-            js.ATTRIBUTES: [
+            ATTRIBUTES: [
                 {
                     "attribute_id": "id has to be a string"
                 }
@@ -1032,7 +1083,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
             "word": "aoeu",
             "pos_id": 234,
             "notes": "boo boo",
-            js.ATTRIBUTES: [
+            ATTRIBUTES: [
                 {
                     "attribute_id": 234,
                     "attrvalue": ""
@@ -1043,7 +1094,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
             "word": "aoeu",
             "pos_id": 234,
             "notes": "boo boo",
-            js.ATTRIBUTES: [
+            ATTRIBUTES: [
                 {
                     "attribute_id": 234,
                     "attrvalue": "  "
@@ -1054,7 +1105,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
             "word": "aoeu",
             "pos_id": 234,
             "notes": "boo boo",
-            js.ATTRIBUTES: [
+            ATTRIBUTES: [
                 {
                     "attribute_id": 234,
                     "attrvalue": None
@@ -1065,7 +1116,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
             "word": "aoeu",
             "pos_id": 234,
             "notes": "boo boo",
-            js.ATTRIBUTES: [
+            ATTRIBUTES: [
                 {
                     "attribute_id": 234,
                     "attrvalue": 1234
@@ -1090,7 +1141,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
 
 
 class Test_WORD_TAG_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = js.WORD_TAG_RESPONSE_SCHEMA
+    schema = WORD_TAG_RESPONSE_SCHEMA
 
     valid_docs = [
         {
@@ -1141,14 +1192,14 @@ class Test_WORD_TAG_RESPONSE_SCHEMA(unittest.TestCase):
 
 
 class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
-    schema = js.WORD_UPDATE_PAYLOAD_SCHEMA
+    schema = WORD_UPDATE_PAYLOAD_SCHEMA
 
     valid_docs = [
         {
             # fully specified payload
             "word": "werrrd",
             "notes": "boo boo",
-            js.ATTRIBUTES: [
+            ATTRIBUTES: [
                 {
                     "attribute_id": 1111,
                     "attrvalue": "value"
@@ -1164,7 +1215,7 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
         },
         {
             # empty attribute list is valid
-            js.ATTRIBUTES: []
+            ATTRIBUTES: []
         },
         {
             # empty notes is valid
@@ -1178,21 +1229,21 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
 
     invalid_docs = [
         {
-            js.ATTRIBUTES: [
+            ATTRIBUTES: [
                 {
                     # has to have an attribute id
                 }
             ]
         },
         {
-            js.ATTRIBUTES: [
+            ATTRIBUTES: [
                 {
                     "attribute_id": "id has to be a string"
                 }
             ]
         },
         {
-            js.ATTRIBUTES: [
+            ATTRIBUTES: [
                 {
                     "attribute_id": 234,
                     "attrvalue": ""
@@ -1200,7 +1251,7 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
             ]
         },
         {
-            js.ATTRIBUTES: [
+            ATTRIBUTES: [
                 {
                     "attribute_id": 234,
                     "attrvalue": "  "
@@ -1208,7 +1259,7 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
             ]
         },
         {
-            js.ATTRIBUTES: [
+            ATTRIBUTES: [
                 {
                     "attribute_id": 234,
                     "attrvalue": None
@@ -1216,7 +1267,7 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
             ]
         },
         {
-            js.ATTRIBUTES: [
+            ATTRIBUTES: [
                 {
                     # attrvalue has to be a string
                     "attribute_id": 234,
@@ -1242,7 +1293,7 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
 
 
 class Test_WORDLIST_CONTENTS_PAYLOAD_SCHEMA(unittest.TestCase):
-    schema = js.WORDLIST_CONTENTS_PAYLOAD_SCHEMA
+    schema = WORDLIST_CONTENTS_PAYLOAD_SCHEMA
 
     valid_docs = [
         {
@@ -1299,7 +1350,7 @@ class Test_WORDLIST_CONTENTS_PAYLOAD_SCHEMA(unittest.TestCase):
 class Test_WORDLIST_METADATA_PAYLOAD_SCHEMA(unittest.TestCase):
     # note:  these tests don't validate sqlcode.  that happens in the API tests.
 
-    schema = js.WORDLIST_METADATA_PAYLOAD_SCHEMA
+    schema = WORDLIST_METADATA_PAYLOAD_SCHEMA
 
     valid_docs = [
         {
@@ -1357,7 +1408,7 @@ class Test_WORDLIST_METADATA_PAYLOAD_SCHEMA(unittest.TestCase):
 
 
 class Test_WORDLIST_METADATA_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = js.WORDLIST_METADATA_RESPONSE_SCHEMA
+    schema = WORDLIST_METADATA_RESPONSE_SCHEMA
 
     valid_responses = [
         {
@@ -1450,7 +1501,7 @@ class Test_WORDLIST_METADATA_RESPONSE_SCHEMA(unittest.TestCase):
 
 
 class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = js.WORDLIST_RESPONSE_SCHEMA
+    schema = WORDLIST_RESPONSE_SCHEMA
 
     valid_docs = [
         {'citation': None,
@@ -1693,7 +1744,7 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
 
 
 class Test_WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA(unittest.TestCase):
-    schema = js.WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA
+    schema = WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA
 
     valid_docs = [
         ["bingo", "bango", "bongo", "irving"],
@@ -1721,7 +1772,7 @@ class Test_WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA(unittest.TestCase):
 
 
 class Test_WORDLISTS_DELETE_PAYLOAD_SCHEMA(unittest.TestCase):
-    schema = js.WORDLISTS_DELETE_PAYLOAD_SCHEMA
+    schema = WORDLISTS_DELETE_PAYLOAD_SCHEMA
 
     valid_docs = [
         [1, 2, 3],
@@ -1750,7 +1801,7 @@ class Test_WORDLISTS_DELETE_PAYLOAD_SCHEMA(unittest.TestCase):
 
 
 class Test_WORDLISTS_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = js.WORDLISTS_RESPONSE_SCHEMA
+    schema = WORDLISTS_RESPONSE_SCHEMA
 
     valid_docs = [
         [
@@ -1782,7 +1833,7 @@ class Test_WORDLISTS_RESPONSE_SCHEMA(unittest.TestCase):
 
 
 class Test_WORDS_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = js.WORDS_RESPONSE_SCHEMA
+    schema = WORDS_RESPONSE_SCHEMA
 
     valid_docs = [
         [
