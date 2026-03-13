@@ -39,7 +39,7 @@ NULL_SCHEMA = {
 ##########################################################
 
 RELATION_PAYLOAD_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/relation_payload",
+    "$id": "https://deutsch-lernen.doug/schemas/relation_payload.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "payload for creating/updating a relation",
     "description": """
@@ -70,7 +70,7 @@ RELATION_PAYLOAD_SCHEMA = {
 }
 
 WORD_ADD_PAYLOAD_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/updateword_payload",
+    "$id": "https://deutsch-lernen.doug/schemas/word_add_payload.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Payload for add word",
     "description": "Payload for add word",
@@ -115,7 +115,7 @@ WORD_ADD_PAYLOAD_SCHEMA = {
 }
 
 WORD_UPDATE_PAYLOAD_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/updateword_payload",
+    "$id": "https://deutsch-lernen.doug/schemas/word_update_payload.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Payload for update word",
     "description": "Payload for update word",
@@ -159,7 +159,7 @@ WORD_UPDATE_PAYLOAD_SCHEMA = {
 
 WORDLIST_CONTENTS_PAYLOAD_SCHEMA = {
     # can be used for add or update of a list.
-    "$id": "https://deutsch-lernen.doug/schemas/addwordlist_payload",
+    "$id": "https://deutsch-lernen.doug/schemas/wordlist_contents_payload.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "WORDLIST_CONTENTS_PAYLOAD_SCHEMA",
     "description": "Payload for adding content to a wordlist",
@@ -182,7 +182,7 @@ WORDLIST_CONTENTS_PAYLOAD_SCHEMA = {
 
 WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA = {
     # for batch deleting words from a wordlist.
-    "$id": "https://deutsch-lernen.doug/schemas/delete_words_payload",
+    "$id": "https://deutsch-lernen.doug/schemas/wordlist_delete_words_payload.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA",
     "description": "Payload for batch removing words from a wordlist",
@@ -201,7 +201,7 @@ WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA = {
 }
 
 WORDLISTS_DELETE_PAYLOAD_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/wordlists_delete_payload",
+    "$id": "https://deutsch-lernen.doug/schemas/wordlists_delete_payload.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "WORDLISTS_DELETE_PAYLOAD_SCHEMA",
     "description": "Payload for deleting multiple wordlists",
@@ -222,7 +222,7 @@ WORDLISTS_DELETE_PAYLOAD_SCHEMA = {
 
 WORDLIST_METADATA_PAYLOAD_SCHEMA = {
     # can be used for add or update of a list.
-    "$id": "https://deutsch-lernen.doug/schemas/addwordlist_payload",
+    "$id": "https://deutsch-lernen.doug/schemas/wordlist_metadata_payload.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Payload for add wordlist",
     "description": "Payload for add/update list",
@@ -251,7 +251,7 @@ WORDLIST_METADATA_PAYLOAD_SCHEMA = {
 }
 
 WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/wordlist_tag_add_delete",
+    "$id": "https://deutsch-lernen.doug/schemas/wordlist_tag_add_delete_payload.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Payload for add/delete tags",
     "description": """
@@ -272,6 +272,7 @@ WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA = {
 ##########################################################
 
 POS_STRUCTURE_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/pos_structure_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Part-of-Speech Structure",
     "description": """
@@ -407,7 +408,7 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
 }
 
 QUIZ_ANSWER_PAYLOAD_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/quiz_data",
+    "$id": "https://deutsch-lernen.doug/schemas/quiz_answer_payload.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Quiz Data List",
     "description": "payload for posting a quiz answer",
@@ -438,7 +439,7 @@ QUIZ_ANSWER_PAYLOAD_SCHEMA = {
 }
 
 QUIZ_REPORT_RESPONSE_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/quiz_data",
+    "$id": "https://deutsch-lernen.doug/schemas/quiz_report_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Quiz Report",
     "description": """
@@ -508,7 +509,7 @@ QUIZ_REPORT_RESPONSE_SCHEMA = {
 }
 
 QUIZ_RESPONSE_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/quiz_data",
+    "$id": "https://deutsch-lernen.doug/schemas/quiz_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Quiz Data List",
     "description": "word attribute value to be quizzed",
@@ -549,7 +550,7 @@ QUIZ_RESPONSE_SCHEMA = {
 }
 
 RELATION_RESPONSE_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/relation_response",
+    "$id": "https://deutsch-lernen.doug/schemas/relation_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Response for get relation",
     "description": """
@@ -586,6 +587,7 @@ RELATION_RESPONSE_SCHEMA = {
 }
 
 SINGLE_WORD_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/single_word_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Single Word Response",
     "description": """
@@ -633,6 +635,7 @@ SINGLE_WORD_RESPONSE_SCHEMA = {
 }
 
 WORD_TAG_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/word_tag_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
     "description": """
@@ -661,6 +664,7 @@ WORD_TAG_RESPONSE_SCHEMA = {
 }
 
 WORDLIST_METADATA_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/wordlist_metadata_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
     "description": """
@@ -700,6 +704,7 @@ WORDLIST_METADATA_RESPONSE_SCHEMA = {
 }
 
 WORDLIST_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/wordlist_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
     "description": """
@@ -788,6 +793,7 @@ WORDLIST_RESPONSE_SCHEMA = {
 }
 
 WORDLISTS_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/wordlists_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist",
     "description": """
@@ -831,6 +837,7 @@ WORDLISTS_RESPONSE_SCHEMA = {
 }
 
 WORDS_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/words_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Word",
     "description": "list of words with attributes",
