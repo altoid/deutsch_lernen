@@ -80,13 +80,13 @@ class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
+                get_validator(self.schema).validate(jdoc)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
+                    get_validator(self.schema).validate(jdoc)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
@@ -362,13 +362,13 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
+                get_validator(self.schema).validate(jdoc)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
+                    get_validator(self.schema).validate(jdoc)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
@@ -428,13 +428,13 @@ class Test_QUIZ_ANSWER_PAYLOAD_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
+                get_validator(self.schema).validate(jdoc)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
+                    get_validator(self.schema).validate(jdoc)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
@@ -650,13 +650,13 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
+                get_validator(self.schema).validate(jdoc)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
+                    get_validator(self.schema).validate(jdoc)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
@@ -753,13 +753,13 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
+                get_validator(self.schema).validate(jdoc)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
+                    get_validator(self.schema).validate(jdoc)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
@@ -820,13 +820,13 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
+                get_validator(self.schema).validate(jdoc)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
+                    get_validator(self.schema).validate(jdoc)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
@@ -983,13 +983,13 @@ class Test_SINGLE_WORD_RESPONSE_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
+                get_validator(self.schema).validate(jdoc)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
+                    get_validator(self.schema).validate(jdoc)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
@@ -1128,13 +1128,13 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
+                get_validator(self.schema).validate(jdoc)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
+                    get_validator(self.schema).validate(jdoc)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
@@ -1179,13 +1179,13 @@ class Test_WORD_TAG_RESPONSE_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
+                get_validator(self.schema).validate(jdoc)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
+                    get_validator(self.schema).validate(jdoc)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
@@ -1280,13 +1280,13 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
+                get_validator(self.schema).validate(jdoc)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
+                    get_validator(self.schema).validate(jdoc)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
@@ -1335,13 +1335,13 @@ class Test_WORDLIST_CONTENTS_PAYLOAD_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
+                get_validator(self.schema).validate(jdoc)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
+                    get_validator(self.schema).validate(jdoc)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
@@ -1395,13 +1395,13 @@ class Test_WORDLIST_METADATA_PAYLOAD_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
+                get_validator(self.schema).validate(jdoc)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
+                    get_validator(self.schema).validate(jdoc)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
@@ -1488,13 +1488,13 @@ class Test_WORDLIST_METADATA_RESPONSE_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_responses:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
+                get_validator(self.schema).validate(jdoc)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_responses:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
+                    get_validator(self.schema).validate(jdoc)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
@@ -1731,13 +1731,13 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
+                get_validator(self.schema).validate(jdoc)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
+                    get_validator(self.schema).validate(jdoc)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
@@ -1759,13 +1759,13 @@ class Test_WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
+                get_validator(self.schema).validate(jdoc)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
+                    get_validator(self.schema).validate(jdoc)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
@@ -1788,13 +1788,13 @@ class Test_WORDLISTS_DELETE_PAYLOAD_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
+                get_validator(self.schema).validate(jdoc)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
+                    get_validator(self.schema).validate(jdoc)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
@@ -1820,13 +1820,13 @@ class Test_WORDLISTS_RESPONSE_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
+                get_validator(self.schema).validate(jdoc)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
+                    get_validator(self.schema).validate(jdoc)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
@@ -1880,13 +1880,13 @@ class Test_WORDS_RESPONSE_SCHEMA(unittest.TestCase):
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
             with self.subTest(jdoc=jdoc):
-                jsonschema.validate(jdoc, self.schema)
+                get_validator(self.schema).validate(jdoc)
 
     def test_invalid_docs(self):
         for jdoc in self.invalid_docs:
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    jsonschema.validate(jdoc, self.schema)
+                    get_validator(self.schema).validate(jdoc)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
