@@ -2,7 +2,9 @@ from flask import Blueprint, request, url_for, current_app
 from pprint import pprint
 from mysql.connector import connect
 import mysql.connector.errors
-from dlernen import dlernen_json_schema
+from dlernen.dlernen_json_schema import get_validator, \
+    WORDLISTS_DELETE_PAYLOAD_SCHEMA, \
+    WORDLISTS_RESPONSE_SCHEMA
 
 import requests
 import json
@@ -18,7 +20,7 @@ bp = Blueprint('api_wordlists', __name__, url_prefix='/api/wordlists')
 def delete_wordlists():
     try:
         payload = request.get_json()  # comes in as an array of ints, not a dict.
-        jsonschema.validate(payload, dlernen_json_schema.WORDLISTS_DELETE_PAYLOAD_SCHEMA)
+        get_validator(WORDLISTS_DELETE_PAYLOAD_SCHEMA).validate(payload)
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 
@@ -95,7 +97,7 @@ order by name
                     dict_result[r['wordlist_id']]['count'] = -1
 
         result = list(dict_result.values())
-        jsonschema.validate(result, dlernen_json_schema.WORDLISTS_RESPONSE_SCHEMA)
+        get_validator(WORDLISTS_RESPONSE_SCHEMA).validate(result)
         return result
 
 

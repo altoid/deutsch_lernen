@@ -1,8 +1,14 @@
 from flask import Blueprint, request, current_app, url_for
 import requests
-from pprint import pprint
+from pprint import pprint, pformat
 from mysql.connector import connect
-from dlernen import dlernen_json_schema as js, common
+from dlernen import common
+from dlernen.dlernen_json_schema import get_validator, \
+    ATTRIBUTES,\
+    WORD_ADD_PAYLOAD_SCHEMA, \
+    WORD_RESPONSE_SCHEMA, \
+    WORD_ARRAY_RESPONSE_SCHEMA, \
+    WORD_UPDATE_PAYLOAD_SCHEMA
 from contextlib import closing
 import jsonschema
 
@@ -54,8 +60,7 @@ def get_word_by_id(word_id):
             result['notes'] = r['notes']
             result['attributes'].append(attr)
 
-        jsonschema.validate(result, js.SINGLE_WORD_RESPONSE_SCHEMA)
-
+        get_validator(WORD_RESPONSE_SCHEMA).validate(result)
         return result
 
 
@@ -102,7 +107,7 @@ def get_word(word):
         if not result:
             return "no match for %s" % word, 404
 
-        jsonschema.validate(result, js.WORDS_RESPONSE_SCHEMA)
+        get_validator(WORD_ARRAY_RESPONSE_SCHEMA).validate(result)
 
         return result
 
@@ -119,9 +124,9 @@ def save_attributes(word_id, attributes_adding, attributes_deleting, cursor):
         ]
 
         sql = """
-        insert into word_attribute (word_id, attribute_id, attrvalue)
+        insert into word_attribute (word_id, attribute_id, attrvalue) 
         values (%(word_id)s, %(attribute_id)s, %(attrvalue)s)
-        on duplicate key update attrvalue=%(attrvalue)s
+        on duplicate key update attrvalue=VALUES(attrvalue)
         """
         cursor.executemany(sql, args)
 
@@ -149,7 +154,7 @@ def add_word():
 
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, js.WORD_ADD_PAYLOAD_SCHEMA)
+        get_validator(WORD_ADD_PAYLOAD_SCHEMA).validate(payload)
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
     except Exception as e:
@@ -195,7 +200,7 @@ def add_word():
 
     defined_attribute_ids = {x['attribute_id'] for x in pos_structure['attributes']}
     attr_ids_to_keys = {x['attribute_id']: x['attrkey'] for x in pos_structure['attributes']}
-    attributes = payload.get(js.ATTRIBUTES)
+    attributes = payload.get(ATTRIBUTES)
     attributes_adding = None
     if attributes:
         request_attribute_ids = {a['attribute_id'] for a in attributes}
@@ -232,21 +237,20 @@ def add_word():
             word_id = result['word_id']
 
             save_attributes(word_id, attributes_adding, None, cursor)
-
             cursor.execute('commit')
 
             return get_word_by_id(word_id), 201  # this is already validated and jsonified
 
         except Exception as e:
             cursor.execute('rollback')
-            return "error, transaction rolled back", 500
+            return "error, transaction rolled back:  %s" % (str(e)), 500
 
 
 @bp.route('/<int:word_id>', methods=['PUT'])
 def update_word(word_id):
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, js.WORD_UPDATE_PAYLOAD_SCHEMA)
+        get_validator(WORD_UPDATE_PAYLOAD_SCHEMA).validate(payload)
     except jsonschema.ValidationError as e:
         message = "bad payload: %s" % e.message
         return message, 400
@@ -277,14 +281,14 @@ def update_word(word_id):
 
     defined_attribute_ids = {a['attribute_id'] for a in pos_structure['attributes']}
 
-    given_attribute_ids = {a['attribute_id'] for a in payload.get(js.ATTRIBUTES, set())}
+    given_attribute_ids = {a['attribute_id'] for a in payload.get(ATTRIBUTES, set())}
     undefined_attribute_ids = given_attribute_ids - defined_attribute_ids
     if len(undefined_attribute_ids) > 0:
         ids = list(map(str, undefined_attribute_ids))
         message = "attribute_ids not defined:  %s" % ', '.join(ids)
         return message, 400
 
-    attributes = payload.get(js.ATTRIBUTES, [])
+    attributes = payload.get(ATTRIBUTES, [])
     attributes_adding = []
     attributes_deleting = []
     for a in attributes:

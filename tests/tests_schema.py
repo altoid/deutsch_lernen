@@ -15,13 +15,14 @@ from dlernen.dlernen_json_schema import get_validator, ATTRIBUTES, \
     QUIZ_REPORT_RESPONSE_SCHEMA, \
     QUIZ_RESPONSE_SCHEMA, \
     RELATION_RESPONSE_SCHEMA, \
-    RELATION_RESPONSE_ARRAY_SCHEMA, \
-    SINGLE_WORD_RESPONSE_SCHEMA, \
+    RELATION_ARRAY_RESPONSE_SCHEMA, \
+    WORD_RESPONSE_SCHEMA, \
+    WORD_ARRAY_RESPONSE_SCHEMA, \
     WORD_TAG_RESPONSE_SCHEMA, \
     WORDLIST_METADATA_RESPONSE_SCHEMA, \
     WORDLIST_RESPONSE_SCHEMA, \
-    WORDLISTS_RESPONSE_SCHEMA, \
-    WORDS_RESPONSE_SCHEMA
+    WORDLISTS_RESPONSE_SCHEMA
+
 from pprint import pprint
 
 
@@ -53,7 +54,7 @@ class Test_fiddling_with_referencing_and_registry(unittest.TestCase):
 
         response_arr = [response]
 
-        v = get_validator(RELATION_RESPONSE_ARRAY_SCHEMA)
+        v = get_validator(RELATION_ARRAY_RESPONSE_SCHEMA)
         v.validate(response_arr)
 
 
@@ -774,7 +775,6 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
     schema = RELATION_RESPONSE_SCHEMA
 
     valid_docs = [
-
         {
             'relation_id': 234,
             'word_ids': [1, 2, 3],
@@ -787,7 +787,6 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
             'notes': None,
             'description': None
         }
-
     ]
 
     invalid_docs = [
@@ -832,8 +831,18 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
-class Test_SINGLE_WORD_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = SINGLE_WORD_RESPONSE_SCHEMA
+class Test_RELATION_ARRAY_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = RELATION_ARRAY_RESPONSE_SCHEMA
+
+    def test_valid_docs(self):
+        get_validator(self.schema).validate(Test_RELATION_RESPONSE_SCHEMA.valid_docs)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
+class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = WORD_RESPONSE_SCHEMA
 
     valid_docs = [
         {
@@ -990,6 +999,16 @@ class Test_SINGLE_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             with self.subTest(jdoc=jdoc):
                 with self.assertRaises(jsonschema.exceptions.ValidationError):
                     get_validator(self.schema).validate(jdoc)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
+class Test_WORD_ARRAY_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = WORD_ARRAY_RESPONSE_SCHEMA
+
+    def test_valid_docs(self):
+        get_validator(self.schema).validate(Test_WORD_RESPONSE_SCHEMA.valid_docs)
 
     def test_check_schema(self):
         jsonschema.Draft202012Validator.check_schema(self.schema)
@@ -1810,66 +1829,6 @@ class Test_WORDLISTS_RESPONSE_SCHEMA(unittest.TestCase):
                 "wordlist_id": 1234,
                 "count": 111,
                 "list_type": "standard"
-            }
-        ]
-    ]
-
-    invalid_docs = [
-    ]
-
-    def test_valid_docs(self):
-        for jdoc in self.valid_docs:
-            with self.subTest(jdoc=jdoc):
-                get_validator(self.schema).validate(jdoc)
-
-    def test_invalid_docs(self):
-        for jdoc in self.invalid_docs:
-            with self.subTest(jdoc=jdoc):
-                with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    get_validator(self.schema).validate(jdoc)
-
-    def test_check_schema(self):
-        jsonschema.Draft202012Validator.check_schema(self.schema)
-
-
-class Test_WORDS_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = WORDS_RESPONSE_SCHEMA
-
-    valid_docs = [
-        [
-            {
-                "attributes": [
-                    {'attrkey': 'definition',
-                     'sort_order': 5,
-                     'attrvalue': 'to spoil, deteriorate, go bad'},
-                    {'attrkey': 'first_person_singular',
-                     'sort_order': 6,
-                     'attrvalue': 'verderbe'},
-                    {'attrkey': 'second_person_singular',
-                     'sort_order': 7,
-                     'attrvalue': 'verdirbst'},
-                    {'attrkey': 'third_person_singular',
-                     'sort_order': 8,
-                     'attrvalue': 'verdirbt'},
-                    {'attrkey': 'first_person_plural',
-                     'sort_order': 9,
-                     'attrvalue': 'verderben'},
-                    {'attrkey': 'second_person_plural',
-                     'sort_order': 10,
-                     'attrvalue': 'verderbt'},
-                    {'attrkey': 'third_person_plural',
-                     'sort_order': 11,
-                     'attrvalue': 'verderben'},
-                    {'attrkey': 'third_person_past',
-                     'sort_order': 16,
-                     'attrvalue': 'verdarb'},
-                    {'attrkey': 'past_participle',
-                     'sort_order': 17,
-                     'attrvalue': 'verdorben'}
-                ],
-                "pos_name": "Verb",
-                "word": "verderben",
-                "word_id": 2267
             }
         ]
     ]

@@ -40,15 +40,19 @@ FIXME - in quiz app, if you go to the main menu in the middle of a quiz where al
 TODO - in quiz app, imperfect query should prefetch all candidate words, not use the sql for one-at-a-time queries
 
 TODO - new feature - link words that have connections/differences.
+    how different from a word list?  ==> in a word's lookup page, want to show connected words, which
+    is different from member wordlists.  but we also want a separate page for a set of connected words.
+
 
 TODO - when the results page is displayed within the context of a wordlist, there should be a simple way to add
     any of the search results to the list.
 
-FIXME - do not render tags field in the edit page if we get there through a smart list.
-
 FIXME - in the sidebar, show the name/id of the prevailing list
 
 FIXME - attempting to add a word with no POS info (via editor page) should flash a message
+
+FIXME - overhaul json schema
+    use decorators to do json validation
 
 ------
 best practices:

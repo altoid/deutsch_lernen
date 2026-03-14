@@ -2,7 +2,9 @@ import mysql.connector.errors
 from flask import Blueprint, request, url_for, current_app
 from pprint import pprint
 from mysql.connector import connect
-from dlernen import dlernen_json_schema as js
+from dlernen.dlernen_json_schema import get_validator, \
+    WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA, \
+    WORD_TAG_RESPONSE_SCHEMA
 from dlernen import common
 from contextlib import closing
 import jsonschema
@@ -60,7 +62,7 @@ def get_tags(wordlist_id, word_id):
             rows = cursor.fetchall()
 
             result['tags'] = [x['tag'] for x in rows]
-            jsonschema.validate(result, js.WORD_TAG_RESPONSE_SCHEMA)
+            get_validator(WORD_TAG_RESPONSE_SCHEMA).validate(result)
 
             return result, 200
 
@@ -116,7 +118,7 @@ def get_all_tags(wordlist_id):
             rows = cursor.fetchall()
 
             result['tags'] = [x['tag'] for x in rows]
-            jsonschema.validate(result, js.WORD_TAG_RESPONSE_SCHEMA)
+            get_validator(WORD_TAG_RESPONSE_SCHEMA).validate(result)
 
             return result, 200
 
@@ -146,7 +148,7 @@ def add_tags(wordlist_id, word_id):
 
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, js.WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA)
+        get_validator(WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA).validate(payload)
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 

@@ -1,6 +1,7 @@
 from flask import Blueprint, current_app
 from mysql.connector import connect
-from dlernen import dlernen_json_schema
+from dlernen.dlernen_json_schema import get_validator, \
+    POS_STRUCTURE_RESPONSE_SCHEMA
 from pprint import pprint
 from contextlib import closing
 import jsonschema
@@ -46,7 +47,7 @@ def __get_pos(sql, args):
                 }
             )
 
-        jsonschema.validate(result, dlernen_json_schema.POS_STRUCTURE_RESPONSE_SCHEMA)
+        get_validator(POS_STRUCTURE_RESPONSE_SCHEMA).validate(result)
 
         return result
 

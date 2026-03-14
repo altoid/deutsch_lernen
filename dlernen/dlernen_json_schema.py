@@ -584,7 +584,7 @@ RELATION_RESPONSE_SCHEMA = {
     }
 }
 
-RELATION_RESPONSE_ARRAY_SCHEMA = {
+RELATION_ARRAY_RESPONSE_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/relation_response_array.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Response for get relation",
@@ -595,54 +595,6 @@ RELATION_RESPONSE_ARRAY_SCHEMA = {
     "items": {
         "$ref": RELATION_RESPONSE_SCHEMA["$id"]
     }
-}
-
-SINGLE_WORD_RESPONSE_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/single_word_response.json",
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Single Word Response",
-    "description": """
-    returned by api_word.get_word_by_id.  i.e. this is used when fetching a single word by its id.  
-    this differs from WORDS_RESPONSE_SCHEMA in that it is a single object, not an array, and includes the
-    notes for the word.
-    """,
-    "type": "object",
-    "required": ["word", "word_id", "pos_name", "attributes", "notes"],
-    "properties": {
-        "word": {
-            "type": "string"
-        },
-        "word_id": {
-            "type": "integer",
-            "minimum": 1
-        },
-        "pos_name": {
-            "type": "string"
-        },
-        "notes": {
-            "type": ["string", "null"]
-        },
-        "attributes": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "required": ["attrkey", "sort_order", "attrvalue"],
-                "properties": {
-                    "attrkey": {
-                        "type": "string"
-                    },
-                    "sort_order": {
-                        "type": "integer",
-                        "minimum": 0
-                    },
-                    "attrvalue": {
-                        "type": ["string", "null"]
-                    }
-                }
-            }
-        }
-    }
-    # the attributes - article, definition, etc. - are all optional but the attributes keyword is not.
 }
 
 WORD_TAG_RESPONSE_SCHEMA = {
@@ -847,48 +799,62 @@ WORDLISTS_RESPONSE_SCHEMA = {
     }
 }
 
-WORDS_RESPONSE_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/words_response.json",
+WORD_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/word_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Word",
-    "description": "list of words with attributes",
-    "type": "array",
-    "items": {
-        "type": "object",
-        "required": ["word", "word_id", "pos_name", "attributes"],
-        "properties": {
-            "word": {
-                "type": "string"
-            },
-            "word_id": {
-                "type": "integer",
-                "minimum": 1
-            },
-            "pos_name": {
-                "type": "string"
-            },
-            "attributes": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "required": ["attrkey", "sort_order", "attrvalue"],
-                    "properties": {
-                        "attrkey": {
-                            "type": "string"
-                        },
-                        "sort_order": {
-                            "type": "integer",
-                            "minimum": 0
-                        },
-                        "attrvalue": {
-                            "type": ["string", "null"]
-                        }
+    "title": "Single Word Response",
+    "description": """
+    returned by api_word.get_word_by_id.
+    """,
+    "type": "object",
+    "required": ["word", "word_id", "pos_name", "attributes", "notes"],
+    "properties": {
+        "word": {
+            "type": "string"
+        },
+        "word_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "pos_name": {
+            "type": "string"
+        },
+        "notes": {
+            "type": ["string", "null"]
+        },
+        "attributes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["attrkey", "sort_order", "attrvalue"],
+                "properties": {
+                    "attrkey": {
+                        "type": "string"
+                    },
+                    "sort_order": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "attrvalue": {
+                        "type": ["string", "null"]
                     }
                 }
             }
         }
     }
     # the attributes - article, definition, etc. - are all optional but the attributes keyword is not.
+}
+
+
+WORD_ARRAY_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/word_array_response.json",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Word",
+    "description": "list of words with attributes",
+    "type": "array",
+    "items": {
+        "$ref": WORD_RESPONSE_SCHEMA["$id"]
+    }
 }
 
 ALL_SCHEMAS = [
@@ -905,16 +871,16 @@ ALL_SCHEMAS = [
     QUIZ_REPORT_RESPONSE_SCHEMA,
     QUIZ_RESPONSE_SCHEMA,
     RELATION_RESPONSE_SCHEMA,
-    RELATION_RESPONSE_ARRAY_SCHEMA,
-    SINGLE_WORD_RESPONSE_SCHEMA,
+    RELATION_ARRAY_RESPONSE_SCHEMA,
     WORD_TAG_RESPONSE_SCHEMA,
     WORDLIST_METADATA_RESPONSE_SCHEMA,
     WORDLIST_RESPONSE_SCHEMA,
     WORDLISTS_RESPONSE_SCHEMA,
-    WORDS_RESPONSE_SCHEMA,
+    WORD_RESPONSE_SCHEMA,
+    WORD_ARRAY_RESPONSE_SCHEMA,
 ]
 
-# uild the registry ONCE at module level
+# build the registry ONCE at module level
 registry = Registry().with_resources([
     (schema["$id"], Resource.from_contents(schema)) for schema in ALL_SCHEMAS
 ])

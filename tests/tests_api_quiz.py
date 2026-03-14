@@ -1,7 +1,9 @@
 import unittest
 import random
 import string
-from dlernen import dlernen_json_schema as js, create_app
+from dlernen import create_app
+from dlernen.dlernen_json_schema import get_validator, \
+    ATTRIBUTES
 from flask import url_for
 import json
 from pprint import pprint
@@ -74,7 +76,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
         add_payload = {
             "word": self.word,
             "pos_id": self.keyword_mappings['pos_names_to_ids']['verb'],
-            js.ATTRIBUTES: attributes
+            ATTRIBUTES: attributes
         }
 
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
@@ -235,7 +237,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
         add_payload = {
             "word": self.word_1,
             "pos_id": self.keyword_mappings['pos_names_to_ids']['verb'],
-            js.ATTRIBUTES: attributes
+            ATTRIBUTES: attributes
         }
 
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
@@ -247,7 +249,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
         add_payload = {
             "word": self.word_2,
             "pos_id": self.keyword_mappings['pos_names_to_ids']['verb'],
-            js.ATTRIBUTES: attributes
+            ATTRIBUTES: attributes
         }
 
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
@@ -420,7 +422,7 @@ class APIQuizTestGetAllAttrValuesForQuiz(unittest.TestCase):
         add_payload = {
             "word": self.word,
             "pos_id": self.keyword_mappings['pos_names_to_ids']['verb'],
-            js.ATTRIBUTES: attributes
+            ATTRIBUTES: attributes
         }
 
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)

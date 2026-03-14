@@ -8,7 +8,7 @@ from mysql.connector import connect
 def process_word_query_result(rows):
     """
     take the rows returned by the query in get_words_from_word_ids and morph them into the format specified
-    by WORDS_RESPONSE_SCHEMA.
+    by WORD_RESPONSE_SCHEMA.
     """
     dict_result = {}
     for r in rows:
@@ -23,6 +23,7 @@ def process_word_query_result(rows):
         dict_result[r['word_id']]['word'] = r['word']
         dict_result[r['word_id']]['word_id'] = r['word_id']
         dict_result[r['word_id']]['pos_name'] = r['pos_name']
+        dict_result[r['word_id']]['notes'] = r['notes']
         dict_result[r['word_id']]['attributes'].append(attr)
     result = list(dict_result.values())
     return result
@@ -41,6 +42,7 @@ def get_words_from_word_ids(word_ids):
         word_id,
         attrkey,
         attrvalue,
+        notes,
         sort_order
     from
         mashup_v

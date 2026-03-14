@@ -48,7 +48,7 @@ class APIWordlistTagMultiList(unittest.TestCase):
         }
 
         r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
-        self.assertEqual(r.status_code, 201)
+        self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         wordlist_id = obj['wordlist_id']
 

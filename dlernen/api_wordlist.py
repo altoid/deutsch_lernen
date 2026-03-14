@@ -2,7 +2,13 @@ import mysql.connector.errors
 from flask import Blueprint, request, current_app
 from pprint import pprint
 from mysql.connector import connect
-from dlernen import dlernen_json_schema, common
+from dlernen import common
+from dlernen.dlernen_json_schema import get_validator, \
+    WORDLIST_CONTENTS_PAYLOAD_SCHEMA, \
+    WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA, \
+    WORDLIST_METADATA_PAYLOAD_SCHEMA, \
+    WORDLIST_METADATA_RESPONSE_SCHEMA, \
+    WORDLIST_RESPONSE_SCHEMA
 
 from contextlib import closing
 import jsonschema
@@ -87,7 +93,7 @@ def __get_wordlist_metadata(wordlist_id):
             else:
                 wl_metadata['list_type'] = 'empty'
 
-            jsonschema.validate(wl_metadata, dlernen_json_schema.WORDLIST_METADATA_RESPONSE_SCHEMA)
+            get_validator(WORDLIST_METADATA_RESPONSE_SCHEMA).validate(wl_metadata)
 
         # could be None
         return wl_metadata
@@ -112,7 +118,7 @@ def get_wordlist_metadata(wordlist_id):
 def create_wordlist_metadata():
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
+        get_validator(WORDLIST_METADATA_PAYLOAD_SCHEMA).validate(payload)
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 
@@ -159,7 +165,7 @@ def create_wordlist_metadata():
 def update_wordlist_metadata(wordlist_id):
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, dlernen_json_schema.WORDLIST_METADATA_PAYLOAD_SCHEMA)
+        get_validator(WORDLIST_METADATA_PAYLOAD_SCHEMA).validate(payload)
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 
@@ -363,7 +369,7 @@ def __get_wordlist(wordlist_id, tags=None):
         else:
             result['list_type'] = "empty"
 
-        jsonschema.validate(result, dlernen_json_schema.WORDLIST_RESPONSE_SCHEMA)
+        get_validator(WORDLIST_RESPONSE_SCHEMA).validate(result)
 
         return result
 
@@ -390,7 +396,7 @@ def get_wordlist(wordlist_id):
 def update_wordlist_contents(wordlist_id):
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, dlernen_json_schema.WORDLIST_CONTENTS_PAYLOAD_SCHEMA)
+        get_validator(WORDLIST_CONTENTS_PAYLOAD_SCHEMA).validate(payload)
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 
@@ -467,7 +473,7 @@ def delete_wordlist(wordlist_id):
 def delete_from_wordlist(wordlist_id):
     try:
         payload = request.get_json()  # comes in as an array of ints, not a dict.
-        jsonschema.validate(payload, dlernen_json_schema.WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA)
+        get_validator(WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA).validate(payload)
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 

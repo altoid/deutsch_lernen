@@ -1,6 +1,10 @@
 import unittest
 import jsonschema
-from dlernen import dlernen_json_schema, create_app
+from dlernen import create_app
+from dlernen.dlernen_json_schema import get_validator, \
+    QUIZ_RESPONSE_SCHEMA, \
+    WORD_RESPONSE_SCHEMA, \
+    WORD_ARRAY_RESPONSE_SCHEMA
 from flask import url_for
 import json
 from pprint import pprint
@@ -32,7 +36,7 @@ class APITests(unittest.TestCase):
         self.assertEqual(200, r.status_code)
         quiz_data = json.loads(r.data)
 
-        jsonschema.validate(quiz_data, dlernen_json_schema.QUIZ_RESPONSE_SCHEMA)
+        get_validator(QUIZ_RESPONSE_SCHEMA).validate(quiz_data)
 
     def test_get_word_by_word_exact(self):
         url = url_for('api_word.get_word', word='verderben')
@@ -40,7 +44,7 @@ class APITests(unittest.TestCase):
         self.assertEqual(200, r.status_code)
         results = json.loads(r.data)
         self.assertGreater(len(results), 0)
-        jsonschema.validate(results, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
+        get_validator(WORD_ARRAY_RESPONSE_SCHEMA).validate(results)
 
     def test_get_word_no_match(self):
         url = url_for('api_word.get_word', word='anehuintaoedhunateohdu')
@@ -53,7 +57,7 @@ class APITests(unittest.TestCase):
         self.assertEqual(200, r.status_code)
         results = json.loads(r.data)
         self.assertGreater(len(results), 0)
-        jsonschema.validate(results, dlernen_json_schema.WORDS_RESPONSE_SCHEMA)
+        get_validator(WORD_ARRAY_RESPONSE_SCHEMA).validate(results)
 
     def test_get_words_empty_list_1(self):
         url = url_for('api_words.get_words_from_word_ids')

@@ -3,7 +3,11 @@ import requests
 from mysql.connector import connect
 from contextlib import closing
 import jsonschema
-from dlernen import dlernen_json_schema, common
+from dlernen import common
+from dlernen.dlernen_json_schema import get_validator, \
+    QUIZ_ANSWER_PAYLOAD_SCHEMA, \
+    QUIZ_REPORT_RESPONSE_SCHEMA, \
+    QUIZ_RESPONSE_SCHEMA
 from pprint import pprint
 
 # /api/quiz and quiz_metadata endpoints are here.
@@ -214,7 +218,7 @@ def get_all_attr_values_for_quiz(quiz_key, word_id):
         rows = cursor.fetchall()
 
         # rows may be empty.  that's ok.
-        jsonschema.validate(rows, dlernen_json_schema.QUIZ_RESPONSE_SCHEMA)
+        get_validator(QUIZ_RESPONSE_SCHEMA).validate(rows)
 
         return rows
 
@@ -272,7 +276,7 @@ def get_word_to_test_single_wordlist(quiz_key, wordlist_id):
                     word_chosen['article'] = article[0]['attrvalue']
 
                 result = [word_chosen]
-                jsonschema.validate(result, dlernen_json_schema.QUIZ_RESPONSE_SCHEMA)
+                get_validator(QUIZ_RESPONSE_SCHEMA).validate(result)
 
                 return result
 
@@ -360,7 +364,7 @@ def get_word_to_test(quiz_key):
                 word_chosen['article'] = article[0]['attrvalue']
 
             result = [word_chosen]
-            jsonschema.validate(result, dlernen_json_schema.QUIZ_RESPONSE_SCHEMA)
+            get_validator(QUIZ_RESPONSE_SCHEMA).validate(result)
 
             return result
 
@@ -371,7 +375,7 @@ def get_word_to_test(quiz_key):
 def post_quiz_answer():
     try:
         payload = request.get_json()
-        jsonschema.validate(payload, dlernen_json_schema.QUIZ_ANSWER_PAYLOAD_SCHEMA)
+        get_validator(QUIZ_ANSWER_PAYLOAD_SCHEMA).validate(payload)
     except jsonschema.ValidationError as e:
         message = "bad payload: %s" % e.message
         return message, 400
@@ -459,6 +463,6 @@ def get_report(quiz_key, wordlist_id):
             "scores": rows
         }
 
-        jsonschema.validate(result, dlernen_json_schema.QUIZ_REPORT_RESPONSE_SCHEMA)
+        get_validator(QUIZ_REPORT_RESPONSE_SCHEMA).validate(result)
 
         return result
