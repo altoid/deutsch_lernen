@@ -103,6 +103,31 @@ RELATION_PAYLOAD_SCHEMA = {
     }
 }
 
+WORD_ATTRIBUTES_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/word_attributes.json",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Schema for word attributes in a payload",
+    "description": """describes the structure of word attributes in an add or update
+    payload.  this is not intended to be used by itself in requests, it just describes the
+    structure of word attributes common to both word add and update payloads.
+    """,
+    "type": "object",
+    "required": [
+        "attribute_id"
+        # attrvalue is not required.  if not provided, the attribute is deleted.
+    ],
+    "properties": {
+        "attribute_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "attrvalue": {
+            "type": "string",
+            "pattern": STRING_PATTERN
+        }
+    }
+}
+
 WORD_ADD_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/word_add_payload.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
@@ -128,21 +153,7 @@ WORD_ADD_PAYLOAD_SCHEMA = {
         ATTRIBUTES: {
             "type": "array",
             "items": {
-                "type": "object",
-                "required": [
-                    "attribute_id"
-                    # attrvalue is not required.  if not provided, the attribute is deleted.
-                ],
-                "properties": {
-                    "attribute_id": {
-                        "type": "integer",
-                        "minimum": 1
-                    },
-                    "attrvalue": {
-                        "type": "string",
-                        "pattern": STRING_PATTERN
-                    }
-                }
+                "$ref": WORD_ATTRIBUTES_SCHEMA["$id"]
             }
         }
     }
@@ -169,21 +180,7 @@ WORD_UPDATE_PAYLOAD_SCHEMA = {
         ATTRIBUTES: {
             "type": "array",
             "items": {
-                "type": "object",
-                "required": [
-                    "attribute_id"
-                    # attrvalue is not required.  if not provided, the attribute is deleted.
-                ],
-                "properties": {
-                    "attribute_id": {
-                        "type": "integer",
-                        "minimum": 1
-                    },
-                    "attrvalue": {
-                        "type": "string",
-                        "pattern": STRING_PATTERN
-                    }
-                }
+                "$ref": WORD_ATTRIBUTES_SCHEMA["$id"]
             }
         }
     }
@@ -855,7 +852,7 @@ WORD_RESPONSE_SCHEMA = {
         "notes": {
             "type": ["string", "null"]
         },
-        "attributes": {
+        ATTRIBUTES: {
             "type": "array",
             "items": {
                 "type": "object",
@@ -909,6 +906,7 @@ ALL_SCHEMAS = [
     WORDLIST_METADATA_RESPONSE_SCHEMA,
     WORDLIST_RESPONSE_SCHEMA,
     WORDLISTS_RESPONSE_SCHEMA,
+    WORD_ATTRIBUTES_SCHEMA,
     WORD_RESPONSE_SCHEMA,
     WORD_ARRAY_RESPONSE_SCHEMA,
 ]
