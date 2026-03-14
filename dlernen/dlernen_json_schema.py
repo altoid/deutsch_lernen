@@ -1,6 +1,39 @@
 import jsonschema
 from referencing import Registry, Resource
 
+#
+#
+#
+#                       hhhhhhh
+#                       h:::::h
+#                       h:::::h
+#                       h:::::h
+#                        h::::h hhhhh           eeeeeeeeeeee  yyyyyyy           yyyyyyy
+#                        h::::hh:::::hhh      ee::::::::::::ee y:::::y         y:::::y
+#                        h::::::::::::::hh   e::::::eeeee:::::eey:::::y       y:::::y
+#                        h:::::::hhh::::::h e::::::e     e:::::e y:::::y     y:::::y
+#                        h::::::h   h::::::he:::::::eeeee::::::e  y:::::y   y:::::y
+#                        h:::::h     h:::::he:::::::::::::::::e    y:::::y y:::::y
+#                        h:::::h     h:::::he::::::eeeeeeeeeee      y:::::y:::::y
+#                        h:::::h     h:::::he:::::::e                y:::::::::y
+#                        h:::::h     h:::::he::::::::e                y:::::::y
+#                        h:::::h     h:::::h e::::::::eeeeeeee         y:::::y
+#                        h:::::h     h:::::h  ee:::::::::::::e        y:::::y
+#                        hhhhhhh     hhhhhhh    eeeeeeeeeeeeee       y:::::y
+#                                                                   y:::::y
+#                                                                  y:::::y
+#                                                                 y:::::y
+#                                                                y:::::y
+#                                                               yyyyyyy
+#
+#
+# whenever you add/remove a json schema object, you have to do the following:
+#
+# - modify the registry, which is at the end of this file.
+# - add a test case to tests_schema.py
+#
+#
+
 ##########################################################
 #
 #                   Patterns
