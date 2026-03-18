@@ -386,3 +386,8 @@ def delete_word(word_id):
         except Exception as e:
             cursor.execute('rollback')
             return 'error deleting word_id %s' % word_id, 500
+
+
+@bp.route('/<int:word_id>/relations')
+def get_relations(word_id):
+    return "unimplemented", 501
