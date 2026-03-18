@@ -211,26 +211,6 @@ WORDLIST_CONTENTS_PAYLOAD_SCHEMA = {
     }
 }
 
-WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA = {
-    # for batch deleting words from a wordlist.
-    "$id": "https://deutsch-lernen.doug/schemas/wordlist_delete_words_payload.json",
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA",
-    "description": "Payload for batch removing words from a wordlist",
-    "type": "object",
-    "required": [
-        # none are required
-    ],
-    "properties": {
-        "word_ids": {
-            "type": "array",
-            "items": {
-                "type": "integer",
-            }
-        },
-    }
-}
-
 WORDLISTS_DELETE_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/wordlists_delete_payload.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
@@ -892,7 +872,6 @@ ALL_SCHEMAS = [
     WORD_ADD_PAYLOAD_SCHEMA,
     WORD_UPDATE_PAYLOAD_SCHEMA,
     WORDLIST_CONTENTS_PAYLOAD_SCHEMA,
-    WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA,
     WORDLISTS_DELETE_PAYLOAD_SCHEMA,
     WORDLIST_METADATA_PAYLOAD_SCHEMA,
     WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA,

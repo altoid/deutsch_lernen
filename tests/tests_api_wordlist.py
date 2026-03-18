@@ -253,7 +253,7 @@ class APIWordlist(unittest.TestCase):
             "word_ids": [self.word1_id]
         }
         url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id)
-        r = self.client.post(url, json=payload)
+        r = self.client.put(url, json=payload)
         self.assertEqual(200, r.status_code)
 
         r = self.client.get(self.wordlist_get_url)
@@ -444,7 +444,7 @@ class APIWordlist(unittest.TestCase):
             ]
         }
         url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id)
-        r = self.client.post(url, json=payload)
+        r = self.client.put(url, json=payload)
         self.assertEqual(200, r.status_code)
 
         r = self.client.get(self.wordlist_get_url)
@@ -467,7 +467,7 @@ class APIWordlist(unittest.TestCase):
 
         url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id)
 
-        r = self.client.post(url, json={
+        r = self.client.put(url, json={
             "word_ids": [self.word1_id],
         })
 

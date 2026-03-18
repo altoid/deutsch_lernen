@@ -5,7 +5,6 @@ from mysql.connector import connect
 from dlernen import common
 from dlernen.dlernen_json_schema import get_validator, \
     WORDLIST_CONTENTS_PAYLOAD_SCHEMA, \
-    WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA, \
     WORDLIST_METADATA_PAYLOAD_SCHEMA, \
     WORDLIST_METADATA_RESPONSE_SCHEMA, \
     WORDLIST_RESPONSE_SCHEMA
@@ -392,7 +391,7 @@ def get_wordlist(wordlist_id):
         return str(f), 500
 
 
-@bp.route('/<int:wordlist_id>/contents', methods=['PUT'])
+@bp.route('/<int:wordlist_id>', methods=['PUT'])
 def update_wordlist_contents(wordlist_id):
     try:
         payload = request.get_json()
@@ -455,11 +454,11 @@ def update_wordlist_contents(wordlist_id):
             return "update list failed", 500
 
 
-@bp.route('/<int:wordlist_id>/batch_delete', methods=['POST'])
+@bp.route('/<int:wordlist_id>/batch_delete', methods=['PUT'])
 def delete_from_wordlist(wordlist_id):
     try:
         payload = request.get_json()  # comes in as an array of ints, not a dict.
-        get_validator(WORDLIST_DELETE_WORDS_PAYLOAD_SCHEMA).validate(payload)
+        get_validator(WORDLIST_CONTENTS_PAYLOAD_SCHEMA).validate(payload)
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 

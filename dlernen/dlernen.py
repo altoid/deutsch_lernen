@@ -394,7 +394,7 @@ def edit_list_contents():
 
         url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=wordlist_id, _external=True)
         word_ids = list(map(int, request.form.getlist('removing')))
-        r = requests.post(url, json={
+        r = requests.put(url, json={
             "word_ids": word_ids
         })
         if not r:

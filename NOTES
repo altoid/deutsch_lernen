@@ -53,6 +53,10 @@ FIXME - attempting to add a word with no POS info (via editor page) should flash
 
 FIXME - overhaul json schema
     use decorators to do json validation
+    crawl schema to make sure $ref links are not broken.
+
+FIXME - missed/hinted words don't seem to be getting tagged.
+
 
 ------
 best practices:
