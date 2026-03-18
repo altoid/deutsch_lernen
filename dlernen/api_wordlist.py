@@ -455,20 +455,6 @@ def update_wordlist_contents(wordlist_id):
             return "update list failed", 500
 
 
-@bp.route('/<int:wordlist_id>', methods=['DELETE'])
-def delete_wordlist(wordlist_id):
-    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        try:
-            cursor.execute('start transaction')
-            sql = "delete from wordlist where id = %s"
-            cursor.execute(sql, (wordlist_id,))
-            cursor.execute('commit')
-            return "OK"
-        except Exception as e:
-            cursor.execute('rollback')
-            return "delete list failed", 500
-
-
 @bp.route('/<int:wordlist_id>/batch_delete', methods=['POST'])
 def delete_from_wordlist(wordlist_id):
     try:
@@ -513,6 +499,20 @@ def delete_from_wordlist(wordlist_id):
         except Exception as e:
             cursor.execute('rollback')
             return str(e), 500
+
+
+@bp.route('/<int:wordlist_id>', methods=['DELETE'])
+def delete_wordlist(wordlist_id):
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        try:
+            cursor.execute('start transaction')
+            sql = "delete from wordlist where id = %s"
+            cursor.execute(sql, (wordlist_id,))
+            cursor.execute('commit')
+            return "OK"
+        except Exception as e:
+            cursor.execute('rollback')
+            return "delete list failed", 500
 
 
 @bp.route('/word_ids')
