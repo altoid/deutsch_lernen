@@ -43,7 +43,7 @@ class Test_fiddling_with_referencing_and_registry(unittest.TestCase):
 
         response = {
             'relation_id': 234,
-            'word_ids': [1, 2, 3],
+            'words': [],
             'notes': 'do re mi',
             'description': 'what this relation is for'
         }
@@ -776,13 +776,26 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
     valid_docs = [
         {
             'relation_id': 234,
-            'word_ids': [1, 2, 3],
+            'words': [
+                {
+                    'word': 'aoeu',
+                    'word_id': 234,
+                    'pos_name': 'aoeu',
+                    'tags': ['bingo', 'bango', 'bongo', 'irving']
+                },
+                {
+                    'word': 'aoeu',
+                    'word_id': 234,
+                    'pos_name': 'aoeu',
+                    'tags': []
+                }
+            ],
             'notes': 'do re mi',
             'description': 'what this relation is for'
         },
         {
             'relation_id': 234,
-            'word_ids': [],
+            'words': [],
             'notes': None,
             'description': None
         }
@@ -791,28 +804,108 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
     invalid_docs = [
         {
             # 'relation_id': 234,
-            'word_ids': [1, 2, 3],
+            'words': [
+                {
+                    'word': 'aoeu',
+                    'word_id': 234,
+                    'pos_name': 'aoeu',
+                    'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
+                },
+            ],
             'notes': 'do re mi',
             'description': 'what this relation is for'
         },
         {
             'relation_id': 234,
-            # 'word_ids': [1, 2, 3],
+            # 'words': [
+            #     {
+            #         'word': 'aoeu',
+            #         'word_id': 234,
+            #         'pos_name': 'aoeu',
+            #         'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
+            #     },
+            # ],
             'notes': 'do re mi',
             'description': 'what this relation is for'
         },
         {
             'relation_id': 234,
-            'word_ids': [1, 2, 3],
+            'words': [
+                {
+                    'word': 'aoeu',
+                    'word_id': 234,
+                    'pos_name': 'aoeu',
+                    'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
+                },
+            ],
             # 'notes': 'do re mi',
             'description': 'what this relation is for'
         },
         {
             'relation_id': 234,
-            'word_ids': [1, 2, 3],
+            'words': [
+                {
+                    'word': 'aoeu',
+                    'word_id': 234,
+                    'pos_name': 'aoeu',
+                    'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
+                },
+            ],
             'notes': 'do re mi',
             # 'description': 'what this relation is for'
-        }
+        },
+        {
+            'relation_id': 234,
+            'words': [
+                {
+                    # 'word': 'aoeu',
+                    'word_id': 234,
+                    'pos_name': 'aoeu',
+                    'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
+                },
+            ],
+            'notes': 'do re mi',
+            'description': 'what this relation is for'
+        },
+        {
+            'relation_id': 234,
+            'words': [
+                {
+                    'word': 'aoeu',
+                    # 'word_id': 234,
+                    'pos_name': 'aoeu',
+                    'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
+                },
+            ],
+            'notes': 'do re mi',
+            'description': 'what this relation is for'
+        },
+        {
+            'relation_id': 234,
+            'words': [
+                {
+                    'word': 'aoeu',
+                    'word_id': 234,
+                    # 'pos_name': 'aoeu',
+                    'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
+                },
+            ],
+            'notes': 'do re mi',
+            'description': 'what this relation is for'
+        },
+        {
+            'relation_id': 234,
+            'words': [
+                {
+                    'word': 'aoeu',
+                    'word_id': 234,
+                    'pos_name': 'aoeu',
+                    # 'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
+                },
+            ],
+            'notes': 'do re mi',
+            'description': 'what this relation is for'
+        },
     ]
 
     def test_valid_docs(self):
