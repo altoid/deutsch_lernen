@@ -68,6 +68,54 @@ NULL_SCHEMA = {
 
 ##########################################################
 #
+#                   helper schemata
+#
+##########################################################
+
+WORDLIST_WORD_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/wordlist_word.json",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Wordlist Word",
+    "description": """
+    everything about a wordlist member word that we need to render it in a page.
+
+    this is not used as a payload or as a response, but is referred to by WORDLIST_RESPONSE_SCHEMA.
+    """,
+    "type": "object",
+    "required": [
+        "word",
+        "word_id",
+        "tags",
+        "pos_name"
+    ],
+    "properties": {
+        "word": {
+            "type": "string"
+        },
+        "pos_name": {
+            "type": "string"
+        },
+        "word_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "article": {
+            "type": ["string", "null"]
+        },
+        "definition": {
+            "type": ["string", "null"]
+        },
+        "tags": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    }
+}
+
+##########################################################
+#
 #                   Payloads
 #
 ##########################################################
@@ -566,11 +614,15 @@ RELATION_RESPONSE_SCHEMA = {
     "title": "Response for get relation",
     "description": """
     response for GET relation.
+    
+    note that the WORDLIST_WORD_SCHEMA has tags in it.  relations and tags have nothing to do with each other.
+    oh well.  in a response that will simply not be populated.  it was either do it that way or replicate that
+    structure here without the tags.
     """,
     "type": "object",
     "required": [
         "relation_id",
-        "word_ids",
+        "words",
         "notes",
         "description"
     ],
@@ -579,10 +631,10 @@ RELATION_RESPONSE_SCHEMA = {
             "type": "integer",
             "minimum": 1,
         },
-        "word_ids": {
+        "words": {
             "type": "array",
             "items": {
-                "type": "integer"
+                "$ref": WORDLIST_WORD_SCHEMA["$id"],
             }
         },
         "notes": {
@@ -672,48 +724,6 @@ WORDLIST_METADATA_RESPONSE_SCHEMA = {
                 "standard",
                 "empty"  # no code or words
             ]
-        }
-    }
-}
-
-WORDLIST_WORD_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/wordlist_word.json",
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Wordlist Word",
-    "description": """
-    everything about a wordlist member word that we need to render it in a page.
-    
-    this is not used as a payload or as a response, but is referred to by WORDLIST_RESPONSE_SCHEMA.
-    """,
-    "type": "object",
-    "required": [
-        "word",
-        "word_id",
-        "tags",
-        "pos_name"
-    ],
-    "properties": {
-        "word": {
-            "type": "string"
-        },
-        "pos_name": {
-            "type": "string"
-        },
-        "word_id": {
-            "type": "integer",
-            "minimum": 1
-        },
-        "article": {
-            "type": ["string", "null"]
-        },
-        "definition": {
-            "type": ["string", "null"]
-        },
-        "tags": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
         }
     }
 }
