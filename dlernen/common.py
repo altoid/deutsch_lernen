@@ -5,16 +5,19 @@ from mysql.connector import connect
 # no view functions here, just utilities needed by more than one blueprint.
 
 
+# returns two lists:  the word_ids that exist in the database and those that don't.
+# it is guaranteed that:
+#
+# - the lists are disjoint
+# - no word id appears more than once in either list.
 def check_word_ids(word_ids):
-    # make sure these word ids exist in the word table; return set of word_ids that are NOT in the word table.
-
     if not word_ids:
-        return set()
+        return [], []
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         id_args = ', '.join(['%s'] * len(word_ids))
         sql = """
-        select id word_id
+        select distinct id word_id
         from word
         where id in (%(id_args)s)
         """ % {'id_args': id_args}
@@ -24,7 +27,7 @@ def check_word_ids(word_ids):
         known_ids = {x['word_id'] for x in rows}
         unknown_ids = set(word_ids) - known_ids
 
-        return unknown_ids
+        return list(known_ids), list(unknown_ids)
 
 
 def process_word_query_result(rows):

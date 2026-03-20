@@ -387,7 +387,7 @@ def update_wordlist_contents(wordlist_id):
     if 'word_ids' in payload:
         word_ids = payload.get('word_ids')
 
-    unknown_word_ids = common.check_word_ids(word_ids)
+    word_ids, unknown_word_ids = common.check_word_ids(word_ids)
     if unknown_word_ids:
         message = "unknown_word_ids:  %s" % unknown_word_ids
         return message, 400
