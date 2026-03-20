@@ -438,8 +438,50 @@ class TestAPIRelationUpdateWords(TestAPIRelation):
     def test_nothing(self):
         pass
 
-    # create a relation and put a word in it.  retrieve the relation and
-    # make sure the word is there.  remove the word.  make sure it's gone.
+    ###  AAAGH parameterize the number of update/delete operations and the lengths of wordlist ids.
+
+    # the classes to test create and update operations on member words should cover the correctness of those
+    # operations on the member words of relations.  this class covers cases with redundant update operations,
+    # word_ids that don't exist, and batch delete.
+
+    # create a relation with a word that doesn't exist.  relation should be created
+    # but have no words.  verify on create.
+
+    # create a relation with a word that doesn't exist.  relation should be created
+    # but have no words.  verify on retrieval.
+
+    # create a relation and add a word id that doesn't exist.  shouldn't do anything.  verify on update.
+
+    # create a relation and add a word id that doesn't exist.  shouldn't do anything.  verify on retrieval.
+
+    # create a relation and remove a word id that doesn't exist.  shouldn't do anything.  verify on batch_delete.
+
+    # create a relation and remove a word id that doesn't exist.  shouldn't do anything.  verify on retrieval.
+
+    # create a relation with one word.  remove the word.  verify on batch_delete.
+
+    # create a relation with one word.  remove the word.  verify on retrieval.
+
+    # create a relation with two words.  remove one.  verify on batch_delete.
+
+    # create a relation with two words.  remove one.  verify on retrieval.
+
+    # create a relation with one word.  remove the word and another that exists but is not in the list.  verify on
+    # batch_delete.
+
+    # create a relation with one word.  remove the word and another that exists but is not in the list.  verify on
+    # retrieval.
+
+    # create a relation with one word.  remove the word and another that does not exist.  verify on update.
+
+    # create a relation with one word.  remove the word and another that does not exist.  verify on retrieval.
+
+    #########
+
+    # do all of the tests above ###### but with each update/batch_delete done twice.
+
+    # do all of the tests above ###### but with each word_id appearing twice in the request.
+
     def test4(self):
         raise NotImplementedError
 
@@ -448,7 +490,7 @@ class TestAPIRelationUpdateWords(TestAPIRelation):
     def test5(self):
         raise NotImplementedError
 
-    # create a relation and put a word A in it.  then add word B.  make sure
+    # create a relation with one word in it.  then add word B.  make sure
     # both are there.
     def test6(self):
         raise NotImplementedError
@@ -458,7 +500,9 @@ class TestAPIRelationUpdateWords(TestAPIRelation):
     def test7(self):
         raise NotImplementedError
 
-    # create a relation with a word in it and delete a word that is NOT in the relation.  should do nothing.
+    # create a relation with a word in it and delete a word that exists but is NOT in the relation.
+    # shouldn't do anything.
+
     def test17(self):
         raise NotImplementedError
 
