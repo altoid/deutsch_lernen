@@ -222,28 +222,6 @@ def update_wordlist_metadata(wordlist_id):
     return __get_wordlist_metadata(wordlist_id)
 
 
-def check_word_ids(word_ids):
-    # make sure these word ids exist in the word table; return set of word_ids that are NOT in the word table.
-
-    if not word_ids:
-        return set()
-
-    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        id_args = ', '.join(['%s'] * len(word_ids))
-        sql = """
-        select id word_id
-        from word
-        where id in (%(id_args)s)
-        """ % {'id_args': id_args}
-
-        cursor.execute(sql, word_ids)
-        rows = cursor.fetchall()
-        known_ids = {x['word_id'] for x in rows}
-        unknown_ids = set(word_ids) - known_ids
-
-        return unknown_ids
-
-
 def __get_wordlist(wordlist_id, tags=None):
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
@@ -409,7 +387,7 @@ def update_wordlist_contents(wordlist_id):
     if 'word_ids' in payload:
         word_ids = payload.get('word_ids')
 
-    unknown_word_ids = check_word_ids(word_ids)
+    unknown_word_ids = common.check_word_ids(word_ids)
     if unknown_word_ids:
         message = "unknown_word_ids:  %s" % unknown_word_ids
         return message, 400
