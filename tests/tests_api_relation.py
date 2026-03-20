@@ -30,7 +30,7 @@ def cleanupRelationID(client, relation_id):
     client.delete(url_for('api_relation.delete_relation', relation_id=relation_id))
 
 
-class TestAPIRelationCreate(unittest.TestCase):
+class TestAPIRelation(unittest.TestCase):
     app = None
     app_context = None
     client = None
@@ -80,6 +80,8 @@ class TestAPIRelationCreate(unittest.TestCase):
         self.word3, self.word3_id = self.createWord()
         self.addCleanup(cleanupWordID, self.client, self.word3_id)
 
+
+class TestAPIRelationCreate(TestAPIRelation):
     # null test.  do nothing, just make sure setup works.
     def test_nothing(self):
         pass
@@ -231,56 +233,7 @@ class TestAPIRelationCreate(unittest.TestCase):
         raise NotImplementedError
 
 
-class TestAPIRelationUpdate(unittest.TestCase):
-    app = None
-    app_context = None
-    client = None
-
-    @classmethod
-    def setUpClass(cls):
-        cls.app = create_app()
-        cls.app.config.update(
-            TESTING=True,
-        )
-
-        cls.client = cls.app.test_client()
-        cls.app_context = cls.app.app_context()
-        cls.app_context.push()
-
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
-        cls.keyword_mappings = json.loads(r.data)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.app_context.pop()
-
-    def createWord(self):
-        word = ''.join(random.choices(string.ascii_lowercase, k=10))
-
-        add_payload = {
-            "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
-        }
-        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
-        self.assertEqual(201, r.status_code)
-        obj = json.loads(r.data)
-        word_id = obj['word_id']
-
-        return word, word_id
-
-    #
-    # setup:  create 3 dictionary entries.
-    #
-    def setUp(self):
-        self.word1, self.word1_id = self.createWord()
-        self.addCleanup(cleanupWordID, self.client, self.word1_id)
-
-        self.word2, self.word2_id = self.createWord()
-        self.addCleanup(cleanupWordID, self.client, self.word2_id)
-
-        self.word3, self.word3_id = self.createWord()
-        self.addCleanup(cleanupWordID, self.client, self.word3_id)
-
+class TestAPIRelationUpdate(TestAPIRelation):
     # null test.  do nothing, just make sure setup works.
     def test_nothing(self):
         pass
@@ -480,56 +433,7 @@ class TestAPIRelationUpdate(unittest.TestCase):
         self.assertEqual(0, len(obj['words']))
 
 
-class TestAPIRelationUpdateWords(unittest.TestCase):
-    app = None
-    app_context = None
-    client = None
-
-    @classmethod
-    def setUpClass(cls):
-        cls.app = create_app()
-        cls.app.config.update(
-            TESTING=True,
-        )
-
-        cls.client = cls.app.test_client()
-        cls.app_context = cls.app.app_context()
-        cls.app_context.push()
-
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
-        cls.keyword_mappings = json.loads(r.data)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.app_context.pop()
-
-    def createWord(self):
-        word = ''.join(random.choices(string.ascii_lowercase, k=10))
-
-        add_payload = {
-            "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
-        }
-        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
-        self.assertEqual(201, r.status_code)
-        obj = json.loads(r.data)
-        word_id = obj['word_id']
-
-        return word, word_id
-
-    #
-    # setup:  create 3 dictionary entries.
-    #
-    def setUp(self):
-        self.word1, self.word1_id = self.createWord()
-        self.addCleanup(cleanupWordID, self.client, self.word1_id)
-
-        self.word2, self.word2_id = self.createWord()
-        self.addCleanup(cleanupWordID, self.client, self.word2_id)
-
-        self.word3, self.word3_id = self.createWord()
-        self.addCleanup(cleanupWordID, self.client, self.word3_id)
-
+class TestAPIRelationUpdateWords(TestAPIRelation):
     # null test.  do nothing, just make sure setup works.
     def test_nothing(self):
         pass
@@ -559,56 +463,7 @@ class TestAPIRelationUpdateWords(unittest.TestCase):
         raise NotImplementedError
 
 
-class TestAPIRelationWordlist(unittest.TestCase):
-    app = None
-    app_context = None
-    client = None
-
-    @classmethod
-    def setUpClass(cls):
-        cls.app = create_app()
-        cls.app.config.update(
-            TESTING=True,
-        )
-
-        cls.client = cls.app.test_client()
-        cls.app_context = cls.app.app_context()
-        cls.app_context.push()
-
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
-        cls.keyword_mappings = json.loads(r.data)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.app_context.pop()
-
-    def createWord(self):
-        word = ''.join(random.choices(string.ascii_lowercase, k=10))
-
-        add_payload = {
-            "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
-        }
-        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
-        self.assertEqual(201, r.status_code)
-        obj = json.loads(r.data)
-        word_id = obj['word_id']
-
-        return word, word_id
-
-    #
-    # setup:  create 3 dictionary entries.
-    #
-    def setUp(self):
-        self.word1, self.word1_id = self.createWord()
-        self.addCleanup(cleanupWordID, self.client, self.word1_id)
-
-        self.word2, self.word2_id = self.createWord()
-        self.addCleanup(cleanupWordID, self.client, self.word2_id)
-
-        self.word3, self.word3_id = self.createWord()
-        self.addCleanup(cleanupWordID, self.client, self.word3_id)
-
+class TestAPIRelationWordlist(TestAPIRelation):
     # null test.  do nothing, just make sure setup works.
     def test_nothing(self):
         pass
