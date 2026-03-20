@@ -1,5 +1,5 @@
 import unittest
-from dlernen import create_app, dlernen_json_schema as js
+from dlernen import create_app
 from flask import url_for
 import json
 import random
@@ -48,7 +48,7 @@ class APIWordlistBatchDelete(unittest.TestCase):
         }
 
         r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
-        self.assertEqual(r.status_code, 201)
+        self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         wordlist_id_1 = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, wordlist_id_1)
@@ -59,7 +59,7 @@ class APIWordlistBatchDelete(unittest.TestCase):
         }
 
         r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
-        self.assertEqual(r.status_code, 201)
+        self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         wordlist_id_2 = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, wordlist_id_2)
@@ -67,7 +67,7 @@ class APIWordlistBatchDelete(unittest.TestCase):
         delete_these = [wordlist_id_1, wordlist_id_2]
 
         r = self.client.put(url_for('api_wordlists.delete_wordlists'), json=delete_these)
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(200, r.status_code)
 
         # make sure they are gone
         url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id_1)
@@ -80,7 +80,7 @@ class APIWordlistBatchDelete(unittest.TestCase):
 
     def test_batch_delete_nothing(self):
         r = self.client.put(url_for('api_wordlists.delete_wordlists'), json=[])
-        self.assertEqual(r.status_code, 200)
+        self.assertEqual(200, r.status_code)
 
 
 class APIWordlist(unittest.TestCase):
@@ -113,7 +113,7 @@ class APIWordlist(unittest.TestCase):
         }
 
         r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
-        self.assertEqual(r.status_code, 201)
+        self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         wordlist_id = obj['wordlist_id']
 
