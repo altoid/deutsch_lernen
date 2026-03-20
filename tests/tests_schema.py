@@ -803,6 +803,32 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
 
     invalid_docs = [
         {
+            'relation_id': 0,  # has to be > 0
+            'words': [
+                {
+                    'word': 'aoeu',
+                    'word_id': 234,
+                    'pos_name': 'aoeu',
+                    'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
+                },
+            ],
+            'notes': 'do re mi',
+            'description': 'what this relation is for'
+        },
+        {
+            'relation_id': 11,
+            'words': [
+                {
+                    'word': 'aoeu',
+                    'word_id': 0,  # has to be > 0
+                    'pos_name': 'aoeu',
+                    'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
+                },
+            ],
+            'notes': 'do re mi',
+            'description': 'what this relation is for'
+        },
+        {
             # 'relation_id': 234,
             'words': [
                 {
