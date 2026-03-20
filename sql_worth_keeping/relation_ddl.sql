@@ -7,7 +7,7 @@ create table relation
 (
     id int not null auto_increment primary key,
     added timestamp not null default current_timestamp,
-    notes text,
+    notes text default null,
     description varchar(512)
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_german2_ci
 ;
