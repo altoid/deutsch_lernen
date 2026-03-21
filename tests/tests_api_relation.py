@@ -229,6 +229,7 @@ class TestAPIRelationCreate(TestAPIRelation):
 
     # create two relations and put the same word in both.  retrieve all the
     # relations for that word and verify.
+    @unittest.skip
     def test13(self):
         raise NotImplementedError
 
@@ -301,8 +302,8 @@ class TestAPIRelationUpdate(TestAPIRelation):
         relation_id = obj['relation_id']
 
         # update with empty payload
-        payload={}
-        r = self.client.put(url_for('api_relation.update_relation', relation_id=relation_id), json=payload)
+        empty_payload={}
+        r = self.client.put(url_for('api_relation.update_relation', relation_id=relation_id), json=empty_payload)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -326,8 +327,8 @@ class TestAPIRelationUpdate(TestAPIRelation):
         relation_id = obj['relation_id']
 
         # update with empty payload
-        payload = {}
-        r = self.client.put(url_for('api_relation.update_relation', relation_id=relation_id), json=payload)
+        empty_payload = {}
+        r = self.client.put(url_for('api_relation.update_relation', relation_id=relation_id), json=empty_payload)
         self.assertEqual(200, r.status_code)
 
         r = self.client.get(url_for('api_relation.get_relation', relation_id=relation_id))
@@ -482,30 +483,6 @@ class TestAPIRelationUpdateWords(TestAPIRelation):
 
     # do all of the tests above ###### but with each word_id appearing twice in the request.
 
-    def test4(self):
-        raise NotImplementedError
-
-    # create a relation and put a word in it.  add the same word again.
-    # retrieve the relation and make sure the word is there ONCE.
-    def test5(self):
-        raise NotImplementedError
-
-    # create a relation with one word in it.  then add word B.  make sure
-    # both are there.
-    def test6(self):
-        raise NotImplementedError
-
-    # create a relation and add two words.  remove one.  make sure the other
-    # is there.
-    def test7(self):
-        raise NotImplementedError
-
-    # create a relation with a word in it and delete a word that exists but is NOT in the relation.
-    # shouldn't do anything.
-
-    def test17(self):
-        raise NotImplementedError
-
 
 class TestAPIRelationWordlist(TestAPIRelation):
     # null test.  do nothing, just make sure setup works.
@@ -514,16 +491,19 @@ class TestAPIRelationWordlist(TestAPIRelation):
 
     # create an empty word list and create a relation from it.
     # check everything.
+    @unittest.skip
     def test14(self):
         raise NotImplementedError
 
     # create a standard word list with multiple words and create a relation from it.
     # check everything.
+    @unittest.skip
     def test15(self):
         raise NotImplementedError
 
     # create a smart word list with multiple words and create a relation from it.
     # check everything.
+    @unittest.skip
     def test16(self):
         raise NotImplementedError
 

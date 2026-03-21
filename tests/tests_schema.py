@@ -781,13 +781,11 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
                     'word': 'aoeu',
                     'word_id': 234,
                     'pos_name': 'aoeu',
-                    'tags': ['bingo', 'bango', 'bongo', 'irving']
                 },
                 {
                     'word': 'aoeu',
                     'word_id': 234,
                     'pos_name': 'aoeu',
-                    'tags': []
                 }
             ],
             'notes': 'do re mi',
@@ -809,7 +807,6 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
                     'word': 'aoeu',
                     'word_id': 234,
                     'pos_name': 'aoeu',
-                    'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
                 },
             ],
             'notes': 'do re mi',
@@ -822,7 +819,6 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
                     'word': 'aoeu',
                     'word_id': 0,  # has to be > 0
                     'pos_name': 'aoeu',
-                    'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
                 },
             ],
             'notes': 'do re mi',
@@ -835,7 +831,6 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
                     'word': 'aoeu',
                     'word_id': 234,
                     'pos_name': 'aoeu',
-                    'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
                 },
             ],
             'notes': 'do re mi',
@@ -848,7 +843,6 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
             #         'word': 'aoeu',
             #         'word_id': 234,
             #         'pos_name': 'aoeu',
-            #         'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
             #     },
             # ],
             'notes': 'do re mi',
@@ -861,7 +855,6 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
                     'word': 'aoeu',
                     'word_id': 234,
                     'pos_name': 'aoeu',
-                    'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
                 },
             ],
             # 'notes': 'do re mi',
@@ -874,7 +867,6 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
                     'word': 'aoeu',
                     'word_id': 234,
                     'pos_name': 'aoeu',
-                    'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
                 },
             ],
             'notes': 'do re mi',
@@ -887,7 +879,6 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
                     # 'word': 'aoeu',
                     'word_id': 234,
                     'pos_name': 'aoeu',
-                    'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
                 },
             ],
             'notes': 'do re mi',
@@ -900,7 +891,6 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
                     'word': 'aoeu',
                     # 'word_id': 234,
                     'pos_name': 'aoeu',
-                    'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
                 },
             ],
             'notes': 'do re mi',
@@ -913,20 +903,6 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
                     'word': 'aoeu',
                     'word_id': 234,
                     # 'pos_name': 'aoeu',
-                    'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
-                },
-            ],
-            'notes': 'do re mi',
-            'description': 'what this relation is for'
-        },
-        {
-            'relation_id': 234,
-            'words': [
-                {
-                    'word': 'aoeu',
-                    'word_id': 234,
-                    'pos_name': 'aoeu',
-                    # 'tags': ['fleegle', 'bingo', 'drooper', 'snorky']
                 },
             ],
             'notes': 'do re mi',

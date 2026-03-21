@@ -114,6 +114,42 @@ WORDLIST_WORD_SCHEMA = {
     }
 }
 
+RELATION_WORD_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/relation_word.json",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Wordlist Word",
+    "description": """
+    everything about a wordlist member word that we need to render it in a page.
+
+    this is not used as a payload or as a response, but is referred to by RELATION_RESPONSE_SCHEMA.
+    just like WORDLIST_WORD_SCHEMA but without a tags property.
+    """,
+    "type": "object",
+    "required": [
+        "word",
+        "word_id",
+        "pos_name"
+    ],
+    "properties": {
+        "word": {
+            "type": "string"
+        },
+        "pos_name": {
+            "type": "string"
+        },
+        "word_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "article": {
+            "type": ["string", "null"]
+        },
+        "definition": {
+            "type": ["string", "null"]
+        }
+    }
+}
+
 ##########################################################
 #
 #                   Payloads
@@ -634,7 +670,7 @@ RELATION_RESPONSE_SCHEMA = {
         "words": {
             "type": "array",
             "items": {
-                "$ref": WORDLIST_WORD_SCHEMA["$id"],
+                "$ref": RELATION_WORD_SCHEMA["$id"],
             }
         },
         "notes": {
@@ -874,7 +910,6 @@ WORD_RESPONSE_SCHEMA = {
             }
         }
     }
-    # the attributes - article, definition, etc. - are all optional but the attributes keyword is not.
 }
 
 
@@ -901,6 +936,7 @@ ALL_SCHEMAS = [
     QUIZ_ANSWER_PAYLOAD_SCHEMA,
     QUIZ_REPORT_RESPONSE_SCHEMA,
     QUIZ_RESPONSE_SCHEMA,
+    RELATION_WORD_SCHEMA,
     RELATION_RESPONSE_SCHEMA,
     RELATION_ARRAY_RESPONSE_SCHEMA,
     WORD_TAG_RESPONSE_SCHEMA,
