@@ -108,6 +108,7 @@ class TestAPIRelationCreate(TestAPIRelation):
         r = self.client.post(url_for('api_relation.create_relation'), json=payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
+        self.addCleanup(cleanupRelationID, self.client, obj['relation_id'])
 
         self.assertIsNone(obj['notes'])
         self.assertIsNone(obj['description'])
@@ -121,6 +122,7 @@ class TestAPIRelationCreate(TestAPIRelation):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         relation_id = obj['relation_id']
+        self.addCleanup(cleanupRelationID, self.client, relation_id)
 
         r = self.client.get(url_for('api_relation.get_relation', relation_id=relation_id))
         self.assertEqual(200, r.status_code)
@@ -145,6 +147,7 @@ class TestAPIRelationCreate(TestAPIRelation):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         relation_id = obj['relation_id']
+        self.addCleanup(cleanupRelationID, self.client, relation_id)
 
         self.assertIsNone(obj['notes'])
         self.assertIsNone(obj['description'])
@@ -172,6 +175,7 @@ class TestAPIRelationCreate(TestAPIRelation):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         relation_id = obj['relation_id']
+        self.addCleanup(cleanupRelationID, self.client, relation_id)
 
         self.assertIsNone(obj['notes'])
         self.assertIsNone(obj['description'])
@@ -197,6 +201,7 @@ class TestAPIRelationCreate(TestAPIRelation):
         r = self.client.post(url_for('api_relation.create_relation'), json=payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
+        self.addCleanup(cleanupRelationID, self.client, obj['relation_id'])
 
         word_ids = [x['word_id'] for x in obj['words']]
         self.assertEqual(payload['notes'], obj['notes'])
@@ -216,6 +221,7 @@ class TestAPIRelationCreate(TestAPIRelation):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         relation_id = obj['relation_id']
+        self.addCleanup(cleanupRelationID, self.client, relation_id)
 
         r = self.client.get(url_for('api_relation.get_relation', relation_id=relation_id))
         self.assertEqual(200, r.status_code)
@@ -246,6 +252,7 @@ class TestAPIRelationUpdate(TestAPIRelation):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         relation_id = obj['relation_id']
+        self.addCleanup(cleanupRelationID, self.client, relation_id)
 
         payload = {
             'word_ids': [self.word1_id, self.word2_id],
@@ -269,6 +276,7 @@ class TestAPIRelationUpdate(TestAPIRelation):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         relation_id = obj['relation_id']
+        self.addCleanup(cleanupRelationID, self.client, relation_id)
 
         payload = {
             'word_ids': [self.word1_id, self.word2_id],
@@ -300,6 +308,7 @@ class TestAPIRelationUpdate(TestAPIRelation):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         relation_id = obj['relation_id']
+        self.addCleanup(cleanupRelationID, self.client, relation_id)
 
         # update with empty payload
         empty_payload={}
@@ -325,6 +334,7 @@ class TestAPIRelationUpdate(TestAPIRelation):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         relation_id = obj['relation_id']
+        self.addCleanup(cleanupRelationID, self.client, relation_id)
 
         # update with empty payload
         empty_payload = {}
@@ -353,6 +363,7 @@ class TestAPIRelationUpdate(TestAPIRelation):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         relation_id = obj['relation_id']
+        self.addCleanup(cleanupRelationID, self.client, relation_id)
 
         update_payload = {
             'word_ids': [self.word3_id],
@@ -380,6 +391,7 @@ class TestAPIRelationUpdate(TestAPIRelation):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         relation_id = obj['relation_id']
+        self.addCleanup(cleanupRelationID, self.client, relation_id)
 
         update_payload = {
             'word_ids': [self.word3_id],
@@ -410,6 +422,7 @@ class TestAPIRelationUpdate(TestAPIRelation):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         relation_id = obj['relation_id']
+        self.addCleanup(cleanupRelationID, self.client, relation_id)
 
         payload = {
             'notes': None,
