@@ -169,19 +169,11 @@ def update_wordlist_metadata(wordlist_id):
         return "bad payload: %s" % e.message, 400
 
     # don't update anything that isn't in the payload.
-    update_args = {}
-
-    if 'name' in payload:
-        update_args['name'] = payload.get('name')
-
-    if 'citation' in payload:
-        update_args['citation'] = payload.get('citation')
-
-    if 'sqlcode' in payload:
-        update_args['sqlcode'] = payload.get('sqlcode')
+    keys_to_check = ['name', 'citation', 'sqlcode']
+    do_update = any(key in payload for key in keys_to_check)
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        if update_args:
+        if do_update:
             try:
                 # this is well-behaved if citation and sqlcode are not given.
 
@@ -189,34 +181,46 @@ def update_wordlist_metadata(wordlist_id):
                 if not wordlist_metadata:
                     return "wordlist %s not found" % wordlist_id, 404
 
-                if 'sqlcode' in update_args:
-                    if wordlist_metadata['list_type'] == 'standard' and update_args['sqlcode']:
+                if 'sqlcode' in payload:
+                    if wordlist_metadata['list_type'] == 'standard' and payload['sqlcode']:
                         return "can't add sqlcode to a nonempty list", 400
 
-                    validate_sqlcode(cursor, update_args['sqlcode'])
+                    validate_sqlcode(cursor, payload['sqlcode'])
 
                 cursor.execute('start transaction')
-                update_args['wordlist_id'] = wordlist_id
 
-                keez = ['name', 'citation', 'sqlcode']
-                clauses = []
-                for k in keez:
-                    if k in update_args:
-                        clauses.append('`%(key)s` = %%(%(key)s)s' % {'key': k})
+                if 'sqlcode' in payload:
+                    sql = """
+                    update wordlist
+                    set sqlcode = %(sqlcode)s
+                    where id = %(wordlist_id)s
+                    """
+                    cursor.execute(sql, {'sqlcode': payload['sqlcode'], 'wordlist_id': wordlist_id})
 
-                sql = """
-                update wordlist
-                set %(clauses)s
-                where id = %%(wordlist_id)s
-                """ % {'clauses': ', '.join(clauses)}
+                if 'citation' in payload:
+                    sql = """
+                    update wordlist
+                    set citation = %(citation)s
+                    where id = %(wordlist_id)s
+                    """
+                    cursor.execute(sql, {'citation': payload['citation'], 'wordlist_id': wordlist_id})
 
-                cursor.execute(sql, update_args)
+                if 'name' in payload:
+                    sql = """
+                    update wordlist
+                    set name = %(name)s
+                    where id = %(wordlist_id)s
+                    """
+                    cursor.execute(sql, {'name': payload['name'], 'wordlist_id': wordlist_id})
+
                 cursor.execute('commit')
 
             except mysql.connector.errors.ProgrammingError as e:
                 # this will happen if validate_sqlcode throws exception
                 return str(e), 422
             except Exception as e:
+                print(cursor.statement)
+                print(str(e))
                 cursor.execute('rollback')
                 return "update list failed", 500
 
@@ -379,12 +383,6 @@ def update_wordlist_contents(wordlist_id):
     except jsonschema.ValidationError as e:
         return "bad payload: %s" % e.message, 400
 
-    update_args = {}
-
-    if 'notes' in payload:
-        notes = payload.get('notes')
-        update_args['notes'] = notes
-
     word_ids = None
     if 'word_ids' in payload:
         word_ids = payload.get('word_ids')
@@ -401,22 +399,13 @@ def update_wordlist_contents(wordlist_id):
                 return "can't add words to smart list", 400
 
             cursor.execute('start transaction')
-            if update_args:
-                update_args['wordlist_id'] = wordlist_id
-
-                keez = ['notes']
-                clauses = []
-                for k in keez:
-                    if k in update_args:
-                        clauses.append('`%(key)s` = %%(%(key)s)s' % {'key': k})
-
+            if 'notes' in payload:
                 sql = """
                 update wordlist
-                set %(clauses)s
-                where id = %%(wordlist_id)s
-                """ % {'clauses': ', '.join(clauses)}
-
-                cursor.execute(sql, update_args)
+                set notes = %(notes)s
+                where id = %(wordlist_id)s
+                """
+                cursor.execute(sql, {'notes': payload['notes'], 'wordlist_id': wordlist_id})
 
             if word_ids:
                 wkw_tuples = [(wordlist_id, x) for x in word_ids]
