@@ -118,6 +118,12 @@ td {
     min-height: 100vh;
 }
 
+.relation_editor {
+    background-color: var(--background-color);
+    padding: 10px;
+    min-height: 100vh;
+}
+
 .list_editor {
     background-color: var(--background-color);
     padding: 10px;

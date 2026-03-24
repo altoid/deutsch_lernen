@@ -148,14 +148,14 @@ def lookup_by_post():
                                    status_code=r.status_code)
         wordlist = r.json()
 
-        return render_template('results.html',
+        return render_template('search_results.html',
                                word=word,
                                wordlist=wordlist,
                                exact_match_found=exact_match_found,
                                serialized_tag_state=serialized_tag_state,
                                template_args=template_args)
 
-    return render_template('results.html',
+    return render_template('search_results.html',
                            word=word,
                            exact_match_found=exact_match_found,
                            template_args=template_args)
@@ -967,3 +967,34 @@ def update_via_editor():
     return redirect(url_for('dlernen.list_editor',
                             wordlist_id=wordlist_id,
                             serialized_tag_state=tag_state_object.serialize()))
+
+
+@bp.route('/relation_editor/<int:relation_id>')
+def relation_editor(relation_id):
+    wordlist_id = request.args.get('wordlist_id')
+    url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
+    r = requests.get(url)
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+
+    wordlist = r.json()
+    return render_template('relation_editor.html',
+                           serialized_tag_state=request.args.get('serialized_tag_state'),
+                           wordlist=wordlist,
+                           relation_id=relation_id)
+
+
+@bp.route('/relation', methods=['POST'])
+def create_relation():
+    wordlist_id = request.form.get('wordlist_id')
+    word_id = request.form.get('word_id')
+    serialized_tag_state = request.form.get('serialized_tag_state')
+
+    return redirect(url_for('dlernen.relation_editor',
+                            word_id=word_id,
+                            wordlist_id=wordlist_id,
+                            relation_id=0,
+                            serialized_tag_state=serialized_tag_state))
+

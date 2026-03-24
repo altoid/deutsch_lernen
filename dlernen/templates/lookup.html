@@ -66,5 +66,14 @@ word id.
         <input type="submit" value="Update Notes"/>
     </form>
 
+    <h2>Relationen</h2>
+    <form action="{{ url_for('dlernen.create_relation') }}" method="post">
+        <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
+        {% if wordlist %}
+        <input type="hidden" value="{{ wordlist.wordlist_id }}" name="wordlist_id"/>
+        {% endif %}
+        <input type="hidden" value="{{ wordobject['word_id'] }}" name="word_id"/>
+        <input type="submit" value="Neue Relation"/>
+    </form>
 </div>
 {% endblock %}
