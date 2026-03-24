@@ -222,109 +222,37 @@ def update_wordlist_metadata(wordlist_id):
     return __get_wordlist_metadata(wordlist_id)
 
 
-def __get_wordlist(wordlist_id, tags=None):
-    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        sql = """
-        select
-            id wordlist_id,
-            name,
-            citation,
-            notes,
-            sqlcode
-        from wordlist
-        where id = %s
-        """
-        cursor.execute(sql, (wordlist_id,))
-        wl_row = cursor.fetchone()
-        if not wl_row:
-            return None
+def __get_wordlist(wordlist_id, cursor, tags=None):
+    sql = """
+    select
+        id wordlist_id,
+        name,
+        citation,
+        notes,
+        sqlcode
+    from wordlist
+    where id = %s
+    """
+    cursor.execute(sql, (wordlist_id,))
+    wl_row = cursor.fetchone()
+    if not wl_row:
+        return None
 
-        sqlcode = wl_row['sqlcode']
-        citation = wl_row['citation']
-        if citation is not None:
-            citation = citation.strip()
+    sqlcode = wl_row['sqlcode']
+    citation = wl_row['citation']
+    if citation is not None:
+        citation = citation.strip()
 
-        result = dict(wl_row)
-        result['source_is_url'] = citation.startswith('http') if citation else False
+    result = dict(wl_row)
+    result['source_is_url'] = citation.startswith('http') if citation else False
+    words = None
+    if sqlcode:
+        words_sql = SQL_FOR_WORDLIST_FROM_SQLCODE % sqlcode
 
-        if sqlcode:
-            words_sql = SQL_FOR_WORDLIST_FROM_SQLCODE % sqlcode
-
-            cursor.execute(words_sql)
-            rows = cursor.fetchall()
-            result['words'] = [
-                {
-                    'article': r['article'],
-                    'definition': r['definition'],
-                    'word': r['word'],
-                    'word_id': r['word_id'],
-                    'pos_name': r['pos_name'],
-                    'tags': []
-                }
-                for r in rows
-            ]
-
-        else:
-            if tags:
-                tags = set(tags)  # remove any dups
-                tag_args = ', '.join(["%s"] * len(tags))
-                words_sql = """
-                select
-                    m.word,
-                    m.pos_name,
-                    m.word_id,
-                    m.attrvalue definition,
-                    ifnull(m2.attrvalue, '') article,
-                    tag.tag
-                from wordlist_word ww
-                left join mashup_v m
-                on   ww.word_id = m.word_id
-                and  m.attrkey = 'definition'
-                left join mashup_v m2
-                on   ww.word_id = m2.word_id
-                and  m2.attrkey = 'article'
-                
-                inner join tag on ww.wordlist_id = tag.wordlist_id and ww.word_id = tag.word_id
-                
-                where ww.wordlist_id = %%s
-                and tag.tag in (%(tag_args)s)
-                order by m.word
-                """ % {
-                    "tag_args": tag_args
-                }
-                cursor.execute(words_sql, (wordlist_id, *tags))
-                words = cursor.fetchall()
-            else:
-                words_sql = """
-                select
-                    m.word,
-                    m.pos_name,
-                    m.word_id,
-                    m.attrvalue definition,
-                    ifnull(m2.attrvalue, '') article,
-                    ifnull(tag.tag, '') tag
-                from wordlist_word ww
-                
-                left join mashup_v m
-                on   ww.word_id = m.word_id
-                and  m.attrkey = 'definition'
-                
-                left join mashup_v m2
-                on   ww.word_id = m2.word_id
-                and  m2.attrkey = 'article'
-    
-                left join tag 
-                on ww.wordlist_id = tag.wordlist_id 
-                and ww.word_id = tag.word_id
-    
-                where ww.wordlist_id = %s
-                order by m.word
-                """
-
-                cursor.execute(words_sql, (wordlist_id,))
-                words = cursor.fetchall()
-
-            word_data = {(r['word'], r['word_id']): {
+        cursor.execute(words_sql)
+        rows = cursor.fetchall()
+        result['words'] = [
+            {
                 'article': r['article'],
                 'definition': r['definition'],
                 'word': r['word'],
@@ -332,34 +260,106 @@ def __get_wordlist(wordlist_id, tags=None):
                 'pos_name': r['pos_name'],
                 'tags': []
             }
-                for r in words}
-            for r in words:
-                if r['tag']:
-                    word_data[(r['word'], r['word_id'])]['tags'].append(r['tag'])
+            for r in rows
+        ]
 
-            result['words'] = list(word_data.values())
-
-        if sqlcode:
-            result['list_type'] = "smart"
-        elif words:
-            result['list_type'] = "standard"
+    else:
+        if tags:
+            tags = set(tags)  # remove any dups
+            tag_args = ', '.join(["%s"] * len(tags))
+            words_sql = """
+            select
+                m.word,
+                m.pos_name,
+                m.word_id,
+                m.attrvalue definition,
+                ifnull(m2.attrvalue, '') article,
+                tag.tag
+            from wordlist_word ww
+            left join mashup_v m
+            on   ww.word_id = m.word_id
+            and  m.attrkey = 'definition'
+            left join mashup_v m2
+            on   ww.word_id = m2.word_id
+            and  m2.attrkey = 'article'
+            
+            inner join tag on ww.wordlist_id = tag.wordlist_id and ww.word_id = tag.word_id
+            
+            where ww.wordlist_id = %%s
+            and tag.tag in (%(tag_args)s)
+            order by m.word
+            """ % {
+                "tag_args": tag_args
+            }
+            cursor.execute(words_sql, (wordlist_id, *tags))
+            words = cursor.fetchall()
         else:
-            result['list_type'] = "empty"
+            words_sql = """
+            select
+                m.word,
+                m.pos_name,
+                m.word_id,
+                m.attrvalue definition,
+                ifnull(m2.attrvalue, '') article,
+                ifnull(tag.tag, '') tag
+            from wordlist_word ww
+            
+            left join mashup_v m
+            on   ww.word_id = m.word_id
+            and  m.attrkey = 'definition'
+            
+            left join mashup_v m2
+            on   ww.word_id = m2.word_id
+            and  m2.attrkey = 'article'
 
-        get_validator(WORDLIST_RESPONSE_SCHEMA).validate(result)
+            left join tag 
+            on ww.wordlist_id = tag.wordlist_id 
+            and ww.word_id = tag.word_id
 
-        return result
+            where ww.wordlist_id = %s
+            order by m.word
+            """
+
+            cursor.execute(words_sql, (wordlist_id,))
+            words = cursor.fetchall()
+
+        word_data = {(r['word'], r['word_id']): {
+            'article': r['article'],
+            'definition': r['definition'],
+            'word': r['word'],
+            'word_id': r['word_id'],
+            'pos_name': r['pos_name'],
+            'tags': []
+        }
+            for r in words}
+        for r in words:
+            if r['tag']:
+                word_data[(r['word'], r['word_id'])]['tags'].append(r['tag'])
+
+        result['words'] = list(word_data.values())
+
+    if sqlcode:
+        result['list_type'] = "smart"
+    elif words:
+        result['list_type'] = "standard"
+    else:
+        result['list_type'] = "empty"
+
+    get_validator(WORDLIST_RESPONSE_SCHEMA).validate(result)
+
+    return result
 
 
 @bp.route('/<int:wordlist_id>')
 def get_wordlist(wordlist_id):
     try:
         tags = request.args.getlist('tag')
-        result = __get_wordlist(wordlist_id, tags)
-        if result:
-            return result
+        with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            result = __get_wordlist(wordlist_id, cursor, tags)
+            if result:
+                return result
 
-        return "wordlist %s not found" % wordlist_id, 404
+            return "wordlist %s not found" % wordlist_id, 404
     except mysql.connector.errors.ProgrammingError as f:
         # this will happen if the sqlcode is invalid.
         # treat it as unprocessable content.
@@ -392,12 +392,12 @@ def update_wordlist_contents(wordlist_id):
         message = "unknown_word_ids:  %s" % unknown_word_ids
         return message, 400
 
-    wordlist = __get_wordlist(wordlist_id)
-    if wordlist['list_type'] == 'smart' and word_ids:
-        return "can't add words to smart list", 400
-
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
+            wordlist = __get_wordlist(wordlist_id, cursor)
+            if wordlist['list_type'] == 'smart' and word_ids:
+                return "can't add words to smart list", 400
+
             cursor.execute('start transaction')
             if update_args:
                 update_args['wordlist_id'] = wordlist_id
@@ -426,7 +426,7 @@ def update_wordlist_contents(wordlist_id):
 
             cursor.execute('commit')
 
-            return __get_wordlist(wordlist_id)
+            return __get_wordlist(wordlist_id, cursor)
         except Exception as e:
             cursor.execute('rollback')
             return "update list failed", 500
@@ -536,3 +536,10 @@ def get_word_ids_from_wordlists():
 
         rows = cursor.fetchall()
         return {'word_ids': [x['word_id'] for x in rows]}
+
+
+@bp.route('/<int:wordlist_id>/relations')
+def get_relations():
+    # fetch all the relations for this wordlist's member words.
+    pass
+
