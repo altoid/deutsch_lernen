@@ -56,58 +56,58 @@ def validate_sqlcode(cursor, sqlcode):
         cursor.fetchall()
 
 
-def __get_wordlist_metadata(wordlist_id):
+def __get_wordlist_metadata(wordlist_id, cursor):
     """
     returns the metadata for a given wordlist:  name, sqlcode, citation, list_type, and id.
     """
-    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        sql = """
-        select
-        id wordlist_id, name, citation, sqlcode
-        from wordlist
-        where id = %s
-        """
-        cursor.execute(sql, (wordlist_id,))
-        wl_metadata = cursor.fetchone()
+    sql = """
+    select
+    id wordlist_id, name, citation, sqlcode
+    from wordlist
+    where id = %s
+    """
+    cursor.execute(sql, (wordlist_id,))
+    wl_metadata = cursor.fetchone()
 
-        # see if there are any known or unknown words in this wordlist
-        sql = """
-        select count(*) nwords from (
-            select wordlist_id from wordlist_word where wordlist_id = %(wordlist_id)s) a  
-        """ % {
-            "wordlist_id": wordlist_id
-        }
-        cursor.execute(sql)
-        row = cursor.fetchone()
-        nwords = row['nwords']
+    # see if there are any known or unknown words in this wordlist
+    sql = """
+    select count(*) nwords from (
+        select wordlist_id from wordlist_word where wordlist_id = %(wordlist_id)s) a  
+    """ % {
+        "wordlist_id": wordlist_id
+    }
+    cursor.execute(sql)
+    row = cursor.fetchone()
+    nwords = row['nwords']
 
-        # don't validate sqlcode.  callers and wrapper functions should do that.
-        # sqlcode may not be valid, but we don't validate on read, so it's out of our hands here.  we need to be
-        # able to return list metadata even if it has broken sqlcode, so that clients may fix it.
-        if wl_metadata:
-            if wl_metadata['sqlcode']:
-                wl_metadata['list_type'] = 'smart'
-            elif nwords > 0:
-                wl_metadata['list_type'] = 'standard'
-            else:
-                wl_metadata['list_type'] = 'empty'
+    # don't validate sqlcode.  callers and wrapper functions should do that.
+    # sqlcode may not be valid, but we don't validate on read, so it's out of our hands here.  we need to be
+    # able to return list metadata even if it has broken sqlcode, so that clients may fix it.
+    if wl_metadata:
+        if wl_metadata['sqlcode']:
+            wl_metadata['list_type'] = 'smart'
+        elif nwords > 0:
+            wl_metadata['list_type'] = 'standard'
+        else:
+            wl_metadata['list_type'] = 'empty'
 
-            get_validator(WORDLIST_METADATA_RESPONSE_SCHEMA).validate(wl_metadata)
+        get_validator(WORDLIST_METADATA_RESPONSE_SCHEMA).validate(wl_metadata)
 
-        # could be None
-        return wl_metadata
+    # could be None
+    return wl_metadata
 
 
 @bp.route('/<int:wordlist_id>/metadata')
 def get_wordlist_metadata(wordlist_id):
     try:
-        result = __get_wordlist_metadata(wordlist_id)
-        if not result:
-            return "wordlist %s not found" % wordlist_id, 404
+        with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            result = __get_wordlist_metadata(wordlist_id, cursor)
+            if not result:
+                return "wordlist %s not found" % wordlist_id, 404
 
-        # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
+            # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
 
-        return result
+            return result
     except jsonschema.ValidationError as f:
         # responses that don't validate are a server implementation problem.
         return str(f), 500
@@ -145,7 +145,7 @@ def create_wordlist_metadata():
             result = cursor.fetchone()
             wordlist_id = result['wordlist_id']
             cursor.execute('commit')
-            result = __get_wordlist_metadata(wordlist_id)
+            result = __get_wordlist_metadata(wordlist_id, cursor)
 
             # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
 
@@ -180,12 +180,14 @@ def update_wordlist_metadata(wordlist_id):
     if 'sqlcode' in payload:
         update_args['sqlcode'] = payload.get('sqlcode')
 
-    if update_args:
-        try:
-            wordlist_metadata = __get_wordlist_metadata(wordlist_id)
-
-            with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        if update_args:
+            try:
                 # this is well-behaved if citation and sqlcode are not given.
+
+                wordlist_metadata = __get_wordlist_metadata(wordlist_id, cursor)
+                if not wordlist_metadata:
+                    return "wordlist %s not found" % wordlist_id, 404
 
                 if 'sqlcode' in update_args:
                     if wordlist_metadata['list_type'] == 'standard' and update_args['sqlcode']:
@@ -211,15 +213,15 @@ def update_wordlist_metadata(wordlist_id):
                 cursor.execute(sql, update_args)
                 cursor.execute('commit')
 
-        except mysql.connector.errors.ProgrammingError as e:
-            # this will happen if validate_sqlcode throws exception
-            return str(e), 422
-        except Exception as e:
-            cursor.execute('rollback')
-            return "update list failed", 500
+            except mysql.connector.errors.ProgrammingError as e:
+                # this will happen if validate_sqlcode throws exception
+                return str(e), 422
+            except Exception as e:
+                cursor.execute('rollback')
+                return "update list failed", 500
 
-    # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
-    return __get_wordlist_metadata(wordlist_id)
+        # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
+        return __get_wordlist_metadata(wordlist_id, cursor)
 
 
 def __get_wordlist(wordlist_id, cursor, tags=None):
