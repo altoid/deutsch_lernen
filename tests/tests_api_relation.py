@@ -676,3 +676,6 @@ class TestAPIRelationWordlist(TestAPIRelation):
         experiment = [x['relation_id'] for x in relation_arr]
 
         self.assertCountEqual(control, experiment)
+        self.assertEqual(3, len(relation_arr[0]['words']))
+        self.assertEqual(3, len(relation_arr[1]['words']))
+        self.assertEqual(3, len(relation_arr[2]['words']))
