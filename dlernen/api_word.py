@@ -5,6 +5,7 @@ from mysql.connector import connect
 from dlernen import common
 from dlernen.dlernen_json_schema import get_validator, \
     ATTRIBUTES,\
+    RELATION_ARRAY_RESPONSE_SCHEMA, \
     WORD_ADD_PAYLOAD_SCHEMA, \
     WORD_RESPONSE_SCHEMA, \
     WORD_ARRAY_RESPONSE_SCHEMA, \
@@ -405,33 +406,30 @@ def get_relations(word_id):
     # fetch all the relations that contain this word.
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        result = __get_wordlist(wordlist_id, cursor)
+        result = __get_word(word_id, cursor)
         if not result:
-            return "wordlist %s not found" % wordlist_id, 404
-
-        word_ids = [x['word_id'] for x in result['words']]
+            return "word %s not found" % word_id, 404
 
         result = []
-        if word_ids:
-            args = ','.join(['%s'] * len(word_ids))
-            sql = """
-            select distinct relation_id
-            from word_id_relation
-            where word_id in (%(args)s)
-            """ % {'args': args}
 
-            cursor.execute(sql, word_ids)
-            rows = cursor.fetchall()
-            if rows:
-                relation_ids = [x['relation_id'] for x in rows]
-                for r_id in relation_ids:
-                    url = url_for('api_relation.get_relation', relation_id=r_id, _external=True)
-                    r = requests.get(url)
-                    if not r:
-                        return r.text, r.status_code
+        sql = """
+        select distinct relation_id
+        from word_id_relation
+        where word_id = %(word_id)s
+        """
 
-                    obj = r.json()
-                    result.append(obj)
+        cursor.execute(sql, {'word_id': word_id})
+        rows = cursor.fetchall()
+        if rows:
+            relation_ids = [x['relation_id'] for x in rows]
+            for r_id in relation_ids:
+                url = url_for('api_relation.get_relation', relation_id=r_id, _external=True)
+                r = requests.get(url)
+                if not r:
+                    return r.text, r.status_code
+
+                obj = r.json()
+                result.append(obj)
 
         get_validator(RELATION_ARRAY_RESPONSE_SCHEMA).validate(result)
 

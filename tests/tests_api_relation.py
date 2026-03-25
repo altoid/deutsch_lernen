@@ -68,6 +68,18 @@ class TestAPIRelation(unittest.TestCase):
 
         return word, word_id
 
+    def createRelation(self, word_ids):
+        payload = {
+            'word_ids': word_ids
+        }
+
+        r = self.client.post(url_for('api_relation.create_relation'), json=payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        relation_id = obj['relation_id']
+
+        return relation_id
+
     #
     # setup:  create 3 dictionary entries.
     #
@@ -540,21 +552,14 @@ class TestAPIRelationUpdateWords(TestAPIRelation):
 
 
 class TestAPIRelationWordlist(TestAPIRelation):
-    def createRelation(self, word_ids):
-        payload = {
-            'word_ids': word_ids
-        }
-
-        r = self.client.post(url_for('api_relation.create_relation'), json=payload)
-        self.assertEqual(201, r.status_code)
-        obj = json.loads(r.data)
-        relation_id = obj['relation_id']
-
-        return relation_id
-
     # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
+
+    # non-existent wordlist
+    def test0(self):
+        r = self.client.get(url_for('api_wordlist.get_relations', wordlist_id=666666))
+        self.assertEqual(404, r.status_code)
 
     # create an empty wordlist and verify that api_wordlist.get_relations is well-behaved.
     def test1(self):
@@ -569,7 +574,7 @@ class TestAPIRelationWordlist(TestAPIRelation):
         wordlist_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, wordlist_id)
 
-        r = self.client.get(url_for('api_wordlist.get_relations', wordlist_id=wordlist_id), json=payload)
+        r = self.client.get(url_for('api_wordlist.get_relations', wordlist_id=wordlist_id))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -618,7 +623,7 @@ class TestAPIRelationWordlist(TestAPIRelation):
         self.addCleanup(cleanupRelationID, self.client, relation3_id)
 
         # do the stuff
-        r = self.client.get(url_for('api_wordlist.get_relations', wordlist_id=wordlist_id), json=payload)
+        r = self.client.get(url_for('api_wordlist.get_relations', wordlist_id=wordlist_id))
         self.assertEqual(200, r.status_code)
         relation_arr = json.loads(r.data)
 
@@ -668,7 +673,7 @@ class TestAPIRelationWordlist(TestAPIRelation):
         self.addCleanup(cleanupRelationID, self.client, relation3_id)
 
         # do the stuff
-        r = self.client.get(url_for('api_wordlist.get_relations', wordlist_id=wordlist_id), json=payload)
+        r = self.client.get(url_for('api_wordlist.get_relations', wordlist_id=wordlist_id))
         self.assertEqual(200, r.status_code)
         relation_arr = json.loads(r.data)
 
@@ -679,3 +684,36 @@ class TestAPIRelationWordlist(TestAPIRelation):
         self.assertEqual(3, len(relation_arr[0]['words']))
         self.assertEqual(3, len(relation_arr[1]['words']))
         self.assertEqual(3, len(relation_arr[2]['words']))
+
+
+class TestAPIRelationWord(TestAPIRelation):
+    # tests for api_word.get_relations
+
+    # do nothing, just make sure that setUp works
+    def test_nothing(self):
+        pass
+
+    # non-existent word
+    def test1(self):
+        r = self.client.get(url_for('api_word.get_relations', word_id=666666))
+        self.assertEqual(404, r.status_code)
+
+    # unaffiliated word
+    def test2(self):
+        r = self.client.get(url_for('api_word.get_relations', word_id=self.word1_id))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual(0, len(obj))
+
+    def test3(self):
+        relation1_id = self.createRelation([self.word1_id])
+        relation2_id = self.createRelation([self.word1_id])
+
+        r = self.client.get(url_for('api_word.get_relations', word_id=self.word1_id))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        control = [relation1_id, relation2_id]
+        experiment = [x['relation_id'] for x in obj]
+
+        self.assertCountEqual(control, experiment)
