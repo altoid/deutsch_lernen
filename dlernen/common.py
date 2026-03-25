@@ -54,33 +54,31 @@ def process_word_query_result(rows):
     return result
 
 
-def get_words_from_word_ids(word_ids):
+def get_words_from_word_ids(word_ids, cursor):
     """
     returns word object for every valid word id.  returns empty list if no word_id was found.
     """
-    format_args = ['%s'] * len(word_ids)
-    format_args = ', '.join(format_args)
-    sql = """
-    select
-        pos_name,
-        word,
-        word_id,
-        attrkey,
-        attrvalue,
-        notes,
-        sort_order
-    from
-        mashup_v
-    where word_id in (%s)
-    order by sort_order
-    """ % format_args
-
     result = []
     if word_ids:
-        with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            cursor.execute(sql, word_ids)
-            rows = cursor.fetchall()
-            result = process_word_query_result(rows)
+        format_args = ', '.join(['%s'] * len(word_ids))
+        sql = """
+        select
+            pos_name,
+            word,
+            word_id,
+            attrkey,
+            attrvalue,
+            notes,
+            sort_order
+        from
+            mashup_v
+        where word_id in (%s)
+        order by sort_order
+        """ % format_args
+
+        cursor.execute(sql, word_ids)
+        rows = cursor.fetchall()
+        result = process_word_query_result(rows)
 
     return result
 

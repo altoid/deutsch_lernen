@@ -116,7 +116,7 @@ def get_word(word):
         rows = cursor.fetchall()
         word_ids = list(map(lambda x: x['word_id'], rows))
 
-        result = common.get_words_from_word_ids(word_ids)
+        result = common.get_words_from_word_ids(word_ids, cursor)
         if not result:
             return "no match for %s" % word, 404
 

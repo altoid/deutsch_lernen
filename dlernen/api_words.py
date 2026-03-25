@@ -71,15 +71,15 @@ def get_words():
 
             word_ids = list(map(lambda x: x['word_id'], rows))
 
-    result = common.get_words_from_word_ids(word_ids)
+        result = common.get_words_from_word_ids(word_ids, cursor)
 
-    # NB  the word response does not have any tag info in it.
-    get_validator(WORD_ARRAY_RESPONSE_SCHEMA).validate(result)
+        # NB  the word response does not have any tag info in it.
+        get_validator(WORD_ARRAY_RESPONSE_SCHEMA).validate(result)
 
-    # result may be empty.  the only valid case for a 404 is if a wordlist_id is not found,
-    # but we aren't checking for that.
+        # result may be empty.  the only valid case for a 404 is if a wordlist_id is not found,
+        # but we aren't checking for that.
 
-    return result
+        return result
 
 
 @bp.route('', methods=['PUT'])
@@ -93,8 +93,9 @@ def get_words_from_word_ids():
     payload = request.get_json()
 
     word_ids = payload.get('word_ids', [])
-    result = common.get_words_from_word_ids(word_ids)
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        result = common.get_words_from_word_ids(word_ids, cursor)
 
-    get_validator(WORD_ARRAY_RESPONSE_SCHEMA).validate(result)
+        get_validator(WORD_ARRAY_RESPONSE_SCHEMA).validate(result)
 
-    return result
+        return result
