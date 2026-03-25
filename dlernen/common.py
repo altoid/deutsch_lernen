@@ -2,6 +2,7 @@ from contextlib import closing
 from flask import current_app
 from mysql.connector import connect
 
+
 # no view functions here, just utilities needed by more than one blueprint.
 
 
@@ -51,6 +52,53 @@ def process_word_query_result(rows):
         dict_result[r['word_id']]['notes'] = r['notes']
         dict_result[r['word_id']]['attributes'].append(attr)
     result = list(dict_result.values())
+    return result
+
+
+def get_displayable_words(word_ids, cursor):
+    # for each in a list of word_ids, get the word info needed in order to display each word in a page:
+    # definition, article (if noun), and the word itself.  the data structures must pass validation with
+    # DISPLAYABLE_WORD_SCHEMA, though it is up to the caller to do the validation.
+
+    result = []
+    if word_ids:
+        word_ids = list(set(word_ids))  # remove dups
+
+        args = ','.join(['%s'] * len(word_ids))
+
+        sql = """
+        select
+            m1.word word,
+            m1.pos_name pos_name,
+            m0.word_id,
+            m1.attrvalue definition,
+            ifnull(m2.attrvalue, '') article
+        from  mashup_v m0
+        left  join mashup_v m1
+        on    m0.word_id = m1.word_id
+        and   m1.attrkey = 'definition'
+        left  join mashup_v m2
+        on    m0.word_id = m2.word_id
+        and   m2.attrkey = 'article'
+        where m1.word_id in (%(args)s)
+        order by m1.word        
+        """ % {'args': args}
+
+        cursor.execute(sql, word_ids)
+        rows = cursor.fetchall()
+
+        word_data = {(r['word'], r['word_id']): {
+            'article': r['article'],
+            'definition': r['definition'],
+            'word': r['word'],
+            'word_id': r['word_id'],
+            'pos_name': r['pos_name'],
+            'tags': []
+        }
+            for r in rows}
+
+        result = list(word_data.values())
+
     return result
 
 
@@ -130,5 +178,3 @@ def get_word_ids_from_wordlists(wordlist_ids, cursor):
     result = list(map(lambda x: x['word_id'], rows))
 
     return result
-
-

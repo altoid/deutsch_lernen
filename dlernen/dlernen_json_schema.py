@@ -72,8 +72,8 @@ NULL_SCHEMA = {
 #
 ##########################################################
 
-WORDLIST_WORD_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/wordlist_word.json",
+DISPLAYABLE_WORD_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/displayable_word.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Wordlist Word",
     "description": """
@@ -85,9 +85,10 @@ WORDLIST_WORD_SCHEMA = {
     "required": [
         "word",
         "word_id",
-        "tags",
+        # "tags",
         "pos_name"
     ],
+    "additionalProperties": False,
     "properties": {
         "word": {
             "type": "string"
@@ -114,41 +115,17 @@ WORDLIST_WORD_SCHEMA = {
     }
 }
 
-RELATION_WORD_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/relation_word.json",
+DISPLAYABLE_WORD_ARRAY_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/displayable_word_array.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Wordlist Word",
-    "description": """
-    everything about a wordlist member word that we need to render it in a page.
-
-    this is not used as a payload or as a response, but is referred to by RELATION_RESPONSE_SCHEMA.
-    just like WORDLIST_WORD_SCHEMA but without a tags property.
-    """,
-    "type": "object",
-    "required": [
-        "word",
-        "word_id",
-        "pos_name"
-    ],
-    "properties": {
-        "word": {
-            "type": "string"
-        },
-        "pos_name": {
-            "type": "string"
-        },
-        "word_id": {
-            "type": "integer",
-            "minimum": 1
-        },
-        "article": {
-            "type": ["string", "null"]
-        },
-        "definition": {
-            "type": ["string", "null"]
-        }
+    "title": "Displayable Word",
+    "description": "array of DISPLAYABLE_WORD",
+    "type": "array",
+    "items": {
+        "$ref": DISPLAYABLE_WORD_SCHEMA["$id"]
     }
 }
+
 
 ##########################################################
 #
@@ -670,7 +647,7 @@ RELATION_RESPONSE_SCHEMA = {
         "words": {
             "type": "array",
             "items": {
-                "$ref": RELATION_WORD_SCHEMA["$id"],
+                "$ref": DISPLAYABLE_WORD_SCHEMA["$id"],
             }
         },
         "notes": {
@@ -817,7 +794,7 @@ WORDLIST_RESPONSE_SCHEMA = {
         "words": {
             "type": "array",
             "items": {
-                "$ref": WORDLIST_WORD_SCHEMA["$id"],
+                "$ref": DISPLAYABLE_WORD_SCHEMA["$id"],
             }
         }
     }
@@ -936,13 +913,12 @@ ALL_SCHEMAS = [
     QUIZ_ANSWER_PAYLOAD_SCHEMA,
     QUIZ_REPORT_RESPONSE_SCHEMA,
     QUIZ_RESPONSE_SCHEMA,
-    RELATION_WORD_SCHEMA,
     RELATION_RESPONSE_SCHEMA,
     RELATION_ARRAY_RESPONSE_SCHEMA,
     WORD_TAG_RESPONSE_SCHEMA,
     WORDLIST_METADATA_RESPONSE_SCHEMA,
     WORDLIST_RESPONSE_SCHEMA,
-    WORDLIST_WORD_SCHEMA,
+    DISPLAYABLE_WORD_SCHEMA,
     WORDLISTS_RESPONSE_SCHEMA,
     WORD_ATTRIBUTES_SCHEMA,
     WORD_RESPONSE_SCHEMA,
