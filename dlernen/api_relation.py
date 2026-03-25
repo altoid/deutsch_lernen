@@ -23,46 +23,42 @@ def relation_exists(relation_id, cursor):
 
 
 def __get_relation(relation_id, cursor):
-    try:
+    sql = """
+    select id as relation_id,
+        notes,
+        description
+    from relation
+    where id = %(relation_id)s
+    """
+
+    cursor.execute(sql, {'relation_id': relation_id})
+    row = cursor.fetchone()
+
+    if row:
         sql = """
-        select id as relation_id,
-            notes,
-            description
-        from relation
-        where id = %(relation_id)s
+        select word_id
+        from word_id_relation
+        where relation_id = %(relation_id)s
         """
 
         cursor.execute(sql, {'relation_id': relation_id})
-        row = cursor.fetchone()
+        rows = cursor.fetchall()
 
-        if row:
-            sql = """
-            select word_id
-            from word_id_relation
-            where relation_id = %(relation_id)s
-            """
+        word_ids = [x['word_id'] for x in rows]
+        words = common.get_words_from_word_ids(word_ids)
 
-            cursor.execute(sql, {'relation_id': relation_id})
-            rows = cursor.fetchall()
+        result = {
+            'relation_id': relation_id,
+            'notes': row['notes'],
+            'description': row['description'],
+            'words': words
+        }
 
-            word_ids = [x['word_id'] for x in rows]
-            words = common.get_words_from_word_ids(word_ids)
+        get_validator(RELATION_RESPONSE_SCHEMA).validate(result)
 
-            result = {
-                'relation_id': relation_id,
-                'notes': row['notes'],
-                'description': row['description'],
-                'words': words
-            }
+        return result
 
-            get_validator(RELATION_RESPONSE_SCHEMA).validate(result)
-
-            return result
-
-        return {}
-
-    except Exception as e:
-        return "error, transaction rolled back:  %s" % (str(e)), 500
+    return {}
 
 
 @bp.route('/<int:relation_id>')
