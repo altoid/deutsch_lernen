@@ -707,7 +707,10 @@ class TestAPIRelationWord(TestAPIRelation):
 
     def test3(self):
         relation1_id = self.createRelation([self.word1_id])
+        self.addCleanup(cleanupRelationID, self.client, relation1_id)
+
         relation2_id = self.createRelation([self.word1_id])
+        self.addCleanup(cleanupRelationID, self.client, relation2_id)
 
         r = self.client.get(url_for('api_word.get_relations', word_id=self.word1_id))
         self.assertEqual(200, r.status_code)
