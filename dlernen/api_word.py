@@ -17,50 +17,62 @@ import jsonschema
 bp = Blueprint('api_word', __name__, url_prefix='/api/word')
 
 
+def __get_word(word_id, cursor):
+    """
+    returns word object, or None if word_id not found.
+    """
+    sql = """
+    select
+        pos_name,
+        word,
+        word_id,
+        notes,
+        attrkey,
+        attrvalue,
+        sort_order
+    from
+        mashup_v
+    where word_id = %(word_id)s
+    order by sort_order
+    """
+
+    cursor.execute(sql, {"word_id": word_id} )
+    rows = cursor.fetchall()
+
+    if not rows:
+        return None
+
+    # take the rows returned by the query and morph them into a SINGLE_WORD_RESPONSE_SCHEMA object.
+    result = {
+        "attributes": []
+    }
+    for r in rows:
+        attr = {
+            "attrkey": r['attrkey'],
+            "attrvalue": r['attrvalue'],
+            "sort_order": r['sort_order']
+        }
+        result['word'] = r['word']
+        result['word_id'] = r['word_id']
+        result['pos_name'] = r['pos_name']
+        result['notes'] = r['notes']
+        result['attributes'].append(attr)
+
+    get_validator(WORD_RESPONSE_SCHEMA).validate(result)
+    return result
+
+
 @bp.route('/<int:word_id>')
 def get_word_by_id(word_id):
     """
     returns word object, or 404 if word_id not found.
     """
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        sql = """
-        select
-            pos_name,
-            word,
-            word_id,
-            notes,
-            attrkey,
-            attrvalue,
-            sort_order
-        from
-            mashup_v
-        where word_id = %(word_id)s
-        order by sort_order
-        """
-
-        cursor.execute(sql, {"word_id": word_id} )
-        rows = cursor.fetchall()
-
-        if not rows:
+        result = __get_word(word_id, cursor)
+        if not result:
             return "word id %s not found" % word_id, 404
 
-        # take the rows returned by the query and morph them into a SINGLE_WORD_RESPONSE_SCHEMA object.
-        result = {
-            "attributes": []
-        }
-        for r in rows:
-            attr = {
-                "attrkey": r['attrkey'],
-                "attrvalue": r['attrvalue'],
-                "sort_order": r['sort_order']
-            }
-            result['word'] = r['word']
-            result['word_id'] = r['word_id']
-            result['pos_name'] = r['pos_name']
-            result['notes'] = r['notes']
-            result['attributes'].append(attr)
-
-        get_validator(WORD_RESPONSE_SCHEMA).validate(result)
+        # result has already been validated in __get_word()
         return result
 
 
@@ -390,4 +402,37 @@ def delete_word(word_id):
 
 @bp.route('/<int:word_id>/relations')
 def get_relations(word_id):
-    return "unimplemented", 501
+    # fetch all the relations that contain this word.
+
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        result = __get_wordlist(wordlist_id, cursor)
+        if not result:
+            return "wordlist %s not found" % wordlist_id, 404
+
+        word_ids = [x['word_id'] for x in result['words']]
+
+        result = []
+        if word_ids:
+            args = ','.join(['%s'] * len(word_ids))
+            sql = """
+            select distinct relation_id
+            from word_id_relation
+            where word_id in (%(args)s)
+            """ % {'args': args}
+
+            cursor.execute(sql, word_ids)
+            rows = cursor.fetchall()
+            if rows:
+                relation_ids = [x['relation_id'] for x in rows]
+                for r_id in relation_ids:
+                    url = url_for('api_relation.get_relation', relation_id=r_id, _external=True)
+                    r = requests.get(url)
+                    if not r:
+                        return r.text, r.status_code
+
+                    obj = r.json()
+                    result.append(obj)
+
+        get_validator(RELATION_ARRAY_RESPONSE_SCHEMA).validate(result)
+
+        return result
