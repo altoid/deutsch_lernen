@@ -4,6 +4,7 @@ from flask import url_for
 import json
 import random
 import string
+from parameterized import parameterized
 from pprint import pprint
 
 
@@ -240,6 +241,37 @@ class TestAPIRelationCreate(TestAPIRelation):
         raise NotImplementedError
 
 
+class TestAPIRelationParameterized(TestAPIRelation):
+    def test_nothing(self):
+        pass
+
+    # create a relation with redundant word ids and see that everything is well-behaved.
+    # mostly an exercise in using parameterized.
+    @parameterized.expand(
+        [
+            (1, False),
+            (3, True)
+        ]
+    )
+    def test12(self, nrepeats, validate_on_retrieval):
+        payload = {
+            'word_ids': [self.word1_id] * nrepeats
+        }
+        r = self.client.post(url_for('api_relation.create_relation'), json=payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        relation_id = obj['relation_id']
+        self.addCleanup(cleanupRelationID, self.client, relation_id)
+
+        if validate_on_retrieval:
+            r = self.client.get(url_for('api_relation.get_relation', relation_id=relation_id))
+            self.assertEqual(200, r.status_code)
+            obj = json.loads(r.data)
+
+        word_ids = [x['word_id'] for x in obj['words']]
+        self.assertCountEqual([self.word1_id], word_ids)
+
+
 class TestAPIRelationUpdate(TestAPIRelation):
     # null test.  do nothing, just make sure setup works.
     def test_nothing(self):
@@ -452,71 +484,195 @@ class TestAPIRelationUpdateWords(TestAPIRelation):
     def test_nothing(self):
         pass
 
-    ###  AAAGH parameterize the number of update/delete operations and the lengths of wordlist ids.
+    # AAAGH parameterize the number of update/delete operations and the lengths of wordlist ids.
 
     # the classes to test create and update operations on member words should cover the correctness of those
-    # operations on the member words of relations.  this class covers cases with redundant update operations,
-    # word_ids that don't exist, and batch delete.
+    # operations on the member words of relations.  this class covers cases with redundant update and delete
+    # operations, redundant word_ids, and word_ids that don't exist.
+
+    # perform the following tests.  for each, verify the result of the tested operation and on a subsequent retrieval
+    # of the relation.
 
     # create a relation with a word that doesn't exist.  relation should be created
-    # but have no words.  verify on create.
+    # but have no words.
 
-    # create a relation with a word that doesn't exist.  relation should be created
-    # but have no words.  verify on retrieval.
+    # create a relation and add a word id that doesn't exist.  shouldn't do anything.
 
-    # create a relation and add a word id that doesn't exist.  shouldn't do anything.  verify on update.
+    # create a relation and remove a word id that doesn't exist.  shouldn't do anything.
 
-    # create a relation and add a word id that doesn't exist.  shouldn't do anything.  verify on retrieval.
+    # create a relation with one word.  remove the word.
+    @parameterized.expand(
+        [
+            (1, False),
+            (2, True)
+        ]
+    )
+    def test12(self, remove_n_times, validate_on_retrieval):
+        payload = {
+            'word_ids': [self.word1_id]
+        }
+        r = self.client.post(url_for('api_relation.create_relation'), json=payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        relation_id = obj['relation_id']
+        self.addCleanup(cleanupRelationID, self.client, relation_id)
 
-    # create a relation and remove a word id that doesn't exist.  shouldn't do anything.  verify on batch_delete.
+        for _ in range(remove_n_times):
+            payload = {
+                'word_ids': [self.word1_id]
+            }
+            r = self.client.put(url_for('api_relation.delete_from_relation', relation_id=relation_id), json=payload)
+            self.assertEqual(200, r.status_code)
+            obj = json.loads(r.data)
 
-    # create a relation and remove a word id that doesn't exist.  shouldn't do anything.  verify on retrieval.
+        if validate_on_retrieval:
+            r = self.client.get(url_for('api_relation.get_relation', relation_id=relation_id))
+            self.assertEqual(200, r.status_code)
+            obj = json.loads(r.data)
 
-    # create a relation with one word.  remove the word.  verify on batch_delete.
+        self.assertEqual(0, len([x['word_id'] for x in obj['words']]))
 
-    # create a relation with one word.  remove the word.  verify on retrieval.
+    # create a relation with two words.  remove one.
 
-    # create a relation with two words.  remove one.  verify on batch_delete.
+    # create a relation with one word.  remove the word and another that exists but is not in the list.
 
-    # create a relation with two words.  remove one.  verify on retrieval.
-
-    # create a relation with one word.  remove the word and another that exists but is not in the list.  verify on
-    # batch_delete.
-
-    # create a relation with one word.  remove the word and another that exists but is not in the list.  verify on
-    # retrieval.
-
-    # create a relation with one word.  remove the word and another that does not exist.  verify on update.
-
-    # create a relation with one word.  remove the word and another that does not exist.  verify on retrieval.
-
-    #########
-
-    # do all of the tests above ###### but with each update/batch_delete done twice.
-
-    # do all of the tests above ###### but with each word_id appearing twice in the request.
+    # create a relation with one word.  remove the word and another that does not exist.
 
 
 class TestAPIRelationWordlist(TestAPIRelation):
-    # null test.  do nothing, just make sure setup works.
+    def createRelation(self, word_ids):
+        payload = {
+            'word_ids': word_ids
+        }
+
+        r = self.client.post(url_for('api_relation.create_relation'), json=payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        relation_id = obj['relation_id']
+
+        return relation_id
+
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
 
-    # create an empty word list and create a relation from it.
-    # check everything.
-    @unittest.skip
-    def test14(self):
-        raise NotImplementedError
+    # create an empty wordlist and verify that api_wordlist.get_relations is well-behaved.
+    def test1(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        payload = {
+            'name': list_name
+        }
 
-    # create a standard word list with multiple words and create a relation from it.
-    # check everything.
-    @unittest.skip
-    def test15(self):
-        raise NotImplementedError
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        wordlist_id = obj['wordlist_id']
+        self.addCleanup(cleanupWordlistID, self.client, wordlist_id)
 
-    # create a smart word list with multiple words and create a relation from it.
-    # check everything.
-    @unittest.skip
-    def test16(self):
-        raise NotImplementedError
+        r = self.client.get(url_for('api_wordlist.get_relations', wordlist_id=wordlist_id), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
 
+        self.assertIsNotNone(obj)
+        self.assertEqual(0, len(obj))
+
+    # create 10 words.  put 0-5 into a STANDARD wordlist and 7-10 are free-floating.
+    # create a relation with 0 1 2, another with 4 5 6, another with 5 6 7.
+    # retrieve them all with api_wordlist.get_relations and verify.
+    def test2(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        payload = {
+            'name': list_name
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        wordlist_id = obj['wordlist_id']
+        self.addCleanup(cleanupWordlistID, self.client, wordlist_id)
+
+        # create the words
+        word_ids = [self.word1_id, self.word2_id, self.word3_id]
+        for _ in range(7):
+            _, word_id = self.createWord()
+            word_ids.append(word_id)
+
+        # add the words to the word list
+        payload = {
+            'word_ids': word_ids[0:6]
+        }
+
+        r = self.client.put(url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id),
+                            json=payload)
+        self.assertEqual(200, r.status_code)
+        wordlist = json.loads(r.data)
+
+        # create the relations
+        relation1_id = self.createRelation(word_ids[0:3])
+        self.addCleanup(cleanupRelationID, self.client, relation1_id)
+
+        relation2_id = self.createRelation(word_ids[4:7])
+        self.addCleanup(cleanupRelationID, self.client, relation2_id)
+
+        relation3_id = self.createRelation(word_ids[5:8])
+        self.addCleanup(cleanupRelationID, self.client, relation3_id)
+
+        # do the stuff
+        r = self.client.get(url_for('api_wordlist.get_relations', wordlist_id=wordlist_id), json=payload)
+        self.assertEqual(200, r.status_code)
+        relation_arr = json.loads(r.data)
+
+        control = [relation1_id, relation2_id, relation3_id]
+        experiment = [x['relation_id'] for x in relation_arr]
+
+        self.assertCountEqual(control, experiment)
+
+    # create 10 words.  put 1-6 into a SMART wordlist and 7-10 are free-floating.
+    # create a relation with 1 2 3, another with 5 6 7, another with 6 7 8.
+    # retrieve them all with api_wordlist.get_relations and verify.
+    def test3(self):
+        # create the words
+        word_ids = [self.word1_id, self.word2_id, self.word3_id]
+        for _ in range(7):
+            _, word_id = self.createWord()
+            word_ids.append(word_id)
+
+        # create the (smart) list
+        word_id_args = word_ids[0:6]
+        args = ','.join(list(map(str, word_id_args)))
+        sqlcode = """
+        select id word_id from word
+        where id in (%(args)s)
+        """ % {'args': args}
+
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        payload = {
+            'name': list_name,
+            'sqlcode': sqlcode
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        wordlist_id = obj['wordlist_id']
+        self.addCleanup(cleanupWordlistID, self.client, wordlist_id)
+
+        # create the relations
+        relation1_id = self.createRelation(word_ids[0:3])
+        self.addCleanup(cleanupRelationID, self.client, relation1_id)
+
+        relation2_id = self.createRelation(word_ids[4:7])
+        self.addCleanup(cleanupRelationID, self.client, relation2_id)
+
+        relation3_id = self.createRelation(word_ids[5:8])
+        self.addCleanup(cleanupRelationID, self.client, relation3_id)
+
+        # do the stuff
+        r = self.client.get(url_for('api_wordlist.get_relations', wordlist_id=wordlist_id), json=payload)
+        self.assertEqual(200, r.status_code)
+        relation_arr = json.loads(r.data)
+
+        control = [relation1_id, relation2_id, relation3_id]
+        experiment = [x['relation_id'] for x in relation_arr]
+
+        self.assertCountEqual(control, experiment)

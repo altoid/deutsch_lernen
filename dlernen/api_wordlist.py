@@ -1,9 +1,11 @@
 import mysql.connector.errors
-from flask import Blueprint, request, current_app
+from flask import Blueprint, request, current_app, url_for
 from pprint import pprint
+import requests
 from mysql.connector import connect
 from dlernen import common
 from dlernen.dlernen_json_schema import get_validator, \
+    RELATION_ARRAY_RESPONSE_SCHEMA, \
     WORDLIST_CONTENTS_PAYLOAD_SCHEMA, \
     WORDLIST_METADATA_PAYLOAD_SCHEMA, \
     WORDLIST_METADATA_RESPONSE_SCHEMA, \
@@ -530,7 +532,42 @@ def get_word_ids_from_wordlists():
 
 
 @bp.route('/<int:wordlist_id>/relations')
-def get_relations():
+def get_relations(wordlist_id):
     # fetch all the relations for this wordlist's member words.
-    pass
+
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        result = __get_wordlist(wordlist_id, cursor)
+        if not result:
+            return "wordlist %s not found" % wordlist_id, 404
+
+        word_ids = [x['word_id'] for x in result['words']]
+
+        result = []
+        if word_ids:
+            args = ','.join(['%s'] * len(word_ids))
+            sql = """
+            select distinct relation_id
+            from word_id_relation
+            where word_id in (%(args)s)
+            """ % {'args': args}
+
+            cursor.execute(sql, word_ids)
+            rows = cursor.fetchall()
+            if rows:
+                relation_ids = [x['relation_id'] for x in rows]
+                for r_id in relation_ids:
+                    url = url_for('api_relation.get_relation', relation_id=r_id, _external=True)
+                    r = requests.get(url)
+                    if not r:
+                        return r.text, r.status_code
+
+                    obj = r.json()
+                    result.append(obj)
+
+        get_validator(RELATION_ARRAY_RESPONSE_SCHEMA).validate(result)
+
+        return result
+
+
+
 
