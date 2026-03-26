@@ -77,3 +77,26 @@ def update_description():
                             serialized_tag_state=serialized_tag_state,
                             _external=True))
 
+
+@bp.route('/update_notes', methods=['POST'])
+def update_notes():
+    wordlist_id = request.form.get('wordlist_id', type=int)
+    relation_id = request.form.get('relation_id', type=int)
+    serialized_tag_state = request.form.get('serialized_tag_state')
+    notes = request.form.get('notes')
+
+    payload = {
+        'notes': notes
+    }
+    r = requests.put(url_for('api_relation.update_relation', relation_id=relation_id, _external=True), json=payload)
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+
+    return redirect(url_for('dlernen_relation.relation_editor',
+                            wordlist_id=wordlist_id,
+                            relation_id=relation_id,
+                            serialized_tag_state=serialized_tag_state,
+                            _external=True))
+
