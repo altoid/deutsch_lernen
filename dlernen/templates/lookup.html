@@ -18,9 +18,9 @@ word id.
     {% include 'header.html' %}
 
     <h1>
-        {% if wordlist %}
+        {% if wordlist_id %}
         <a name="{{ wordobject['word'] }}"
-           href="{{ url_for('dlernen.edit_word_form', wordlist_id=wordlist.wordlist_id, serialized_tag_state=serialized_tag_state, word=wordobject['word']) }}">
+           href="{{ url_for('dlernen.edit_word_form', wordlist_id=wordlist_id, serialized_tag_state=serialized_tag_state, word=wordobject['word']) }}">
             {{ wordobject['word'] }}
         </a>
         {% else %}
@@ -56,8 +56,8 @@ word id.
 
     <form action="{{ url_for('dlernen.update_word_notes') }}" method="post">
         <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
-        {% if wordlist %}
-        <input type="hidden" value="{{ wordlist.wordlist_id }}" name="wordlist_id"/>
+        {% if wordlist_id %}
+        <input type="hidden" value="{{ wordlist_id }}" name="wordlist_id"/>
         {% endif %}
         <input type="hidden" value="{{ wordobject['word_id'] }}" name="word_id"/>
         <h2>Noten</h2>
@@ -67,12 +67,29 @@ word id.
     </form>
 
     <h2>Relationen</h2>
-    <form action="{{ url_for('dlernen.create_relation') }}" method="post">
+    <form action="{{ url_for('dlernen_relation.create_relation') }}" method="post">
         <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
-        {% if wordlist %}
-        <input type="hidden" value="{{ wordlist.wordlist_id }}" name="wordlist_id"/>
+        {% if wordlist_id %}
+        <input type="hidden" value="{{ wordlist_id }}" name="wordlist_id"/>
         {% endif %}
         <input type="hidden" value="{{ wordobject['word_id'] }}" name="word_id"/>
+        <table>
+            {% for r in relations %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('dlernen_relation.relation_editor', wordlist_id=wordlist_id, relation_id=r.relation_id)}}">
+                    {{ r.words[0].article }}
+                    {{ r.words[0].word }}
+                    {% for w in r.words[1:] %}
+                    |
+                    {{ w.article }}
+                    {{ w.word }}
+                    {% endfor %}
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
         <input type="submit" value="Neue Relation"/>
     </form>
 </div>

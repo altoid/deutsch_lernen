@@ -38,15 +38,6 @@ def home():
 def lookup_by_id(word_id):
     # for when a word appears as a hyperlink in a page.
     wordlist_id = request.args.get('wordlist_id')
-    wordlist = None
-    if wordlist_id:
-        url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
-        r = requests.get(url)
-        if not r:
-            return render_template("error.html",
-                                   message=r.text,
-                                   status_code=r.status_code)
-        wordlist = r.json()
 
     r = requests.get(url_for('api_word.get_word_by_id', word_id=word_id, _external=True))
     if not r:
@@ -64,16 +55,26 @@ def lookup_by_id(word_id):
 
     member_wordlists = r.json()
 
-    if wordlist:
+    r = requests.get(url_for('api_word.get_relations', word_id=word_id, _external=True))
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+
+    relations = r.json()
+
+    if wordlist_id:
         return render_template('lookup.html',
                                wordobject=wordobject,
                                member_wordlists=member_wordlists,
-                               wordlist=wordlist,
+                               wordlist_id=wordlist_id,
+                               relations=relations,
                                serialized_tag_state=request.args.get('serialized_tag_state'))
 
     return render_template('lookup.html',
                            wordobject=wordobject,
                            member_wordlists=member_wordlists,
+                           relations=relations,
                            serialized_tag_state=request.args.get('serialized_tag_state'))
 
 

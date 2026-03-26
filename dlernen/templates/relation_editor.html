@@ -10,8 +10,76 @@ Manage Relation
 <div class="relation_editor">
     {% include 'header.html' %}
     <h1>
-        Relation Editor Page
+        Relation Editor Page ({{ relation.relation_id }})
     </h1>
-    It's going to be neat.
+    {{ relation.description if relation.description else '' }}
+    <div>
+        <h2>Wörter</h2>
+        <table>
+            {% for w in relation.words %}
+            <tr>
+                <td>{{ w['article'] }}</td>
+                <td>{{ w['word'] }}</td>
+                <td>{{ w['definition'] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div>
+        <form action="" method="post">
+            {% if serialized_tag_state %}
+            <input type="hidden" value="{{serialized_tag_state}}" name="serialized_tag_state"/>
+            {% endif %}
+            <h2>Noten</h2>
+            <input type="submit" value="Update Notes"/>
+            <br>
+            <textarea class="" name="notes"></textarea>
+            <br>
+            <input type="hidden" value="" name="relation_id"/>
+            <input type="submit" value="Update Notes"/>
+        </form>
+    </div>
+    <div>
+        <h2>Relation Editor</h2>
+        <form action="" method="post">
+            <table>
+                <tr>
+                    <th colspan="3">Word</th>
+                    <th class="wortart">Wortart</th>
+                </tr>
+                {% for w in relation.words %}
+                <tr>
+                    <td>
+                        <input type="checkbox" name="removing" value="{{ w['word_id'] }}">
+                    </td>
+                    <td>{{ w['article'] }}</td>
+                    <td>{{ w['word'] }}</td>
+                    <td>{{ w['pos_name'] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            <input type="submit" name="submit" value="Delete Selected Words"/>
+        </form>
+    </div>
+    <div>
+        <form action="" method="post">
+            <input type="hidden" value="{{ wordlist_id }}" name="wordlist_id"/>
+            <input type="hidden" value="dlernen.list_editor" name="redirect_to"/>
+            <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
+            <input type="text" id="add_word" name="add_word"/>
+            <input type="submit" name="submit" value="Add Word"/>
+        </form>
+    </div>
+    <div>
+        <form action="{{ url_for('dlernen_relation.update_description') }}" method="post">
+            {% if wordlist %}
+            <input type="hidden" value="{{ wordlist_id }}" name="wordlist_id"/>
+            {% endif %}
+            <input type="hidden" value="{{ relation.relation_id }}" name="relation_id"/>
+            <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
+            <input type="text" id="description" name="description"/>
+            <input type="submit" name="submit" value="Update Description"/>
+        </form>
+    </div>
 </div>
 {% endblock %}
