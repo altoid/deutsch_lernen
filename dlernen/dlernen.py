@@ -581,10 +581,10 @@ def edit_word_form(word):
                 else:
                     tags_result = r.json()
                     tags = ' '.join(tags_result['tags'])
-                field_name_parts = ['tag', str(p['pos_id']), str(p['word_id'])]  # convert to str to join won't choke
+                field_name_parts = ['tag', str(p['pos_id']), str(p['word_id'])]  # convert to str so join won't choke
             else:
                 tags = ''
-                field_name_parts = ['tag', str(p['pos_id'])]  # convert to str to join won't choke
+                field_name_parts = ['tag', str(p['pos_id'])]  # convert to str so join won't choke
 
             field_name = '-'.join(field_name_parts)
             field_values_before[field_name] = tags
@@ -919,7 +919,7 @@ def study_guide(wordlist_id):
 
 @bp.route('/update_via_editor', methods=['POST'])
 def update_via_editor():
-    # if the word that is entered is is the dictionary, add it (all parts of speech)
+    # if the word that is entered is in the dictionary, add it (all parts of speech)
     # and reload the editor page.  if it is not, go to the word_edit page.
     # on submit from the word_edit page, come back here.
 
