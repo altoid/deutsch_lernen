@@ -189,11 +189,11 @@ def list_editor(wordlist_id):
         return render_template("error.html",
                                message=r.text,
                                status_code=r.status_code)
-    wordlist = r.json()
+    wordlist_obj = r.json()
 
     return render_template('list_editor.html',
                            tag_state=tag_state,
-                           wordlist=wordlist)
+                           wordlist=wordlist_obj)
 
 
 @bp.route('/wordlist/update_tags/<int:wordlist_id>', methods=['POST'])
@@ -243,17 +243,17 @@ def wordlist(wordlist_id):
                                message=r.text,
                                status_code=r.status_code)
 
-    wordlist = r.json()
-    if wordlist['notes'] is None:
+    wordlist_obj = r.json()
+    if wordlist_obj['notes'] is None:
         # otherwise the word 'None' is rendered in the form
-        wordlist['notes'] = ''
+        wordlist_obj['notes'] = ''
 
     nchunks = request.args.get('nchunks', current_app.config['NCHUNKS'], type=int)
-    words = chunkify(wordlist['words'], nchunks)
+    words = chunkify(wordlist_obj['words'], nchunks)
     tag_chunks = chunkify(tag_state_object.tag_state(), 4)
 
     return render_template('wordlist.html',
-                           wordlist=wordlist,
+                           wordlist=wordlist_obj,
                            tag_state=tag_state_object,
                            tag_chunks=tag_chunks,
                            words=words)
@@ -442,11 +442,11 @@ def edit_list_contents():
         return render_template("error.html",
                                message=r.text,
                                status_code=r.status_code)
-    wordlist = r.json()
+    wordlist_obj = r.json()
 
     return render_template('list_editor.html',
                            tag_state=tag_state_object,
-                           wordlist=wordlist)
+                           wordlist=wordlist_obj)
 
 
 @bp.route('/update_wordlist_notes', methods=['POST'])
@@ -560,7 +560,7 @@ def edit_word_form(word):
             return render_template("error.html",
                                    message=r.text,
                                    status_code=r.status_code)
-        wordlist = r.json()
+        wordlist_obj = r.json()
 
         for p in pos_structure:
             field_disabled = False
@@ -591,7 +591,7 @@ def edit_word_form(word):
 
             # tags aren't attributes, so they don't have a sort order per POS.  fake one by finding the max
             # sort order for this POS and adding 1 to it.
-            if wordlist['list_type'] != 'smart':
+            if wordlist_obj['list_type'] != 'smart':
                 d = {
                     'field_name': field_name,
                     'field_value': tags,
@@ -845,7 +845,9 @@ def update_dict():
 def quiz_report(quiz_key, wordlist_id):
     serialized_tag_state = request.args.get('serialized_tag_state')
     selected_tags = []
-    if serialized_tag_state:
+    if not serialized_tag_state:
+        tag_state = TagState(wordlist_id)
+    else:
         tag_state = TagState.deserialize(serialized_tag_state)
         selected_tags = tag_state.selected_tags()
 
@@ -855,7 +857,7 @@ def quiz_report(quiz_key, wordlist_id):
                                message=r.text,
                                status_code=r.status_code)
 
-    wordlist = r.json()
+    wordlist_obj = r.json()
 
     r = requests.get(url_for('api_quiz.get_report',
                              quiz_key=quiz_key,
@@ -870,7 +872,7 @@ def quiz_report(quiz_key, wordlist_id):
     report = r.json()
     return render_template("quiz_report.html",
                            quiz_key=report['quiz_key'],
-                           wordlist=wordlist,
+                           wordlist=wordlist_obj,
                            tag_state=tag_state,
                            scores=report['scores'])
 
@@ -879,9 +881,11 @@ def quiz_report(quiz_key, wordlist_id):
 def study_guide(wordlist_id):
     serialized_tag_state = request.args.get('serialized_tag_state')
     selected_tags = []
-    if serialized_tag_state:
-        tag_state_object = TagState.deserialize(serialized_tag_state)
-        selected_tags = tag_state_object.selected_tags()
+    if not serialized_tag_state:
+        tag_state = TagState(wordlist_id)
+    else:
+        tag_state = TagState.deserialize(serialized_tag_state)
+        selected_tags = tag_state.selected_tags()
 
     r = requests.get(url_for('api_wordlist.get_wordlist',
                              tag=selected_tags,
@@ -891,14 +895,14 @@ def study_guide(wordlist_id):
                                message=r.text,
                                status_code=r.status_code)
 
-    wordlist = r.json()
+    wordlist_obj = r.json()
 
     # go through the wordlist and organize everything by tag.  invert the mapping of words to
     # tags that appears in the wordlist.
 
     tags_to_words = {}
-    untagged_words = list(filter(lambda x: not x['tags'], wordlist['words']))
-    for word in wordlist['words']:
+    untagged_words = list(filter(lambda x: not x['tags'], wordlist_obj['words']))
+    for word in wordlist_obj['words']:
         for t in word['tags']:
             if t not in tags_to_words:
                 tags_to_words[t] = []
@@ -911,10 +915,10 @@ def study_guide(wordlist_id):
 
     return render_template("study_guide.html",
                            tags=tags,
-                           tag_state=tag_state_object,
+                           tag_state=tag_state,
                            untagged_words=untagged_words,
                            tags_to_words=tags_to_words,
-                           wordlist=wordlist)
+                           wordlist=wordlist_obj)
 
 
 @bp.route('/update_via_editor', methods=['POST'])
