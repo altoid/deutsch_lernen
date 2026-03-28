@@ -14,18 +14,23 @@ word id.
 
 {% block body %}
 {{ super() }}
+
+{% if tag_state %}
+{% set serialized_tag_state = tag_state.serialize() %}
+{% endif %}
+
 <div class="lookup">
     {% include 'header.html' %}
 
     <h1>
-        {% if wordlist_id %}
+        {% if serialized_tag_state %}
         <a name="{{ wordobject['word'] }}"
-           href="{{ url_for('dlernen.edit_word_form', wordlist_id=wordlist_id, serialized_tag_state=serialized_tag_state, word=wordobject['word']) }}">
+           href="{{ url_for('dlernen.edit_word_form', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state, word=wordobject['word']) }}">
             {{ wordobject['word'] }}
         </a>
         {% else %}
         <a name="{{ wordobject['word'] }}"
-           href="{{ url_for('dlernen.edit_word_form', serialized_tag_state=serialized_tag_state, word=wordobject['word']) }}">
+           href="{{ url_for('dlernen.edit_word_form', word=wordobject['word']) }}">
             {{ wordobject['word'] }}
         </a>
         {% endif %}
@@ -55,9 +60,9 @@ word id.
     {% endif %}
 
     <form action="{{ url_for('dlernen.update_word_notes') }}" method="post">
+        {% if serialized_tag_state %}
         <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
-        {% if wordlist_id %}
-        <input type="hidden" value="{{ wordlist_id }}" name="wordlist_id"/>
+        <input type="hidden" value="{{ tag_state.wordlist_id }}" name="wordlist_id"/>
         {% endif %}
         <input type="hidden" value="{{ wordobject['word_id'] }}" name="word_id"/>
         <h2>Noten</h2>
@@ -68,24 +73,30 @@ word id.
 
     <h2>Relationen</h2>
     <form action="{{ url_for('dlernen_relation.create_relation') }}" method="post">
+        {% if serialized_tag_state %}
         <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
-        {% if wordlist_id %}
-        <input type="hidden" value="{{ wordlist_id }}" name="wordlist_id"/>
+        <input type="hidden" value="{{ tag_state.wordlist_id }}" name="wordlist_id"/>
         {% endif %}
         <input type="hidden" value="{{ wordobject['word_id'] }}" name="word_id"/>
         <table>
             {% for r in relations %}
             <tr>
                 <td>
-                    <a href="{{ url_for('dlernen_relation.relation_editor', wordlist_id=wordlist_id, relation_id=r.relation_id)}}">
-                    {{ r.words[0].article }}
-                    {{ r.words[0].word }}
-                    {% for w in r.words[1:] %}
-                    |
-                    {{ w.article }}
-                    {{ w.word }}
-                    {% endfor %}
+                    {% if serialized_tag_state %}
+                    <a href="{{ url_for('dlernen_relation.relation_editor', serialized_tag_state=serialized_tag_state, relation_id=r.relation_id)}}">
+                        {{ r.words[0].article }} {{ r.words[0].word }}
+                        {% for w in r.words[1:] %}
+                        | {{ w.article }} {{ w.word }}
+                        {% endfor %}
                     </a>
+                    {% else %}
+                    <a href="{{ url_for('dlernen_relation.relation_editor', relation_id=r.relation_id)}}">
+                        {{ r.words[0].article }} {{ r.words[0].word }}
+                        {% for w in r.words[1:] %}
+                        | {{ w.article }} {{ w.word }}
+                        {% endfor %}
+                    </a>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}

@@ -7,6 +7,10 @@ Manage List:  {{ wordlist.name }}
 {% block body %}
 {{ super() }}
 
+{% if tag_state %}
+{% set serialized_tag_state = tag_state.serialize() %}
+{% endif %}
+
 <div class="list_editor">
     {% include 'header.html' %}
     <h1>

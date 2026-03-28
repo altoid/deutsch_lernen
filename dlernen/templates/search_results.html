@@ -16,11 +16,14 @@ Lookup {{ word }}
 <div class="results">
     {% include 'header.html' %}
 
+    {% if tag_state %}
+    {% set serialized_tag_state = tag_state.serialize() %}
+    {% endif %}
     {% if not exact_match_found %}
-    {% if wordlist %}
-    {{ word }} not found. Click <a href="{{ url_for('dlernen.edit_word_form', wordlist_id=wordlist.wordlist_id, serialized_tag_state=serialized_tag_state, word=word) }}">here</a> to define it.
+    {% if serialized_tag_state %}
+    {{ word }} not found. Click <a href="{{ url_for('dlernen.edit_word_form', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state, word=word) }}">here</a> to define it.
     {% else %}
-    {{ word }} not found. Click <a href="{{ url_for('dlernen.edit_word_form', serialized_tag_state=serialized_tag_state, word=word) }}">here</a> to define it.
+    {{ word }} not found. Click <a href="{{ url_for('dlernen.edit_word_form', word=word) }}">here</a> to define it.
     {% endif %}
     {% endif %}
 
@@ -37,9 +40,9 @@ Lookup {{ word }}
     {% endif %}
     {% for tuple in template_args %}
     <h1>
-        {% if wordlist %}
+        {% if serialized_tag_state %}
         <a name="{{ tuple[0]['word'] }}"
-           href="{{ url_for('dlernen.lookup_by_id', word_id=tuple[0]['word_id'], wordlist_id=wordlist.wordlist_id, serialized_tag_state=serialized_tag_state) }}">
+           href="{{ url_for('dlernen.lookup_by_id', word_id=tuple[0]['word_id'], wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state) }}">
             {{ tuple[0]['word'] }}
         </a>
         {% else %}

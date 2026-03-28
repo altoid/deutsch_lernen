@@ -7,6 +7,10 @@ Manage Relation
 {% block body %}
 {{ super() }}
 
+{% if tag_state %}
+{% set serialized_tag_state = tag_state.serialize() %}
+{% endif %}
+
 <div class="relation_editor">
     {% include 'header.html' %}
     <h1>
@@ -28,10 +32,9 @@ Manage Relation
     <div>
         <form action="{{ url_for('dlernen_relation.update_notes') }}" method="post">
             <h2>Noten</h2>
-            <input type="hidden" value="{{ wordlist_id }}" name="wordlist_id"/>
             <input type="hidden" value="{{ relation.relation_id }}" name="relation_id"/>
-            {% if serialized_tag_state %}
-            <input type="hidden" value="{{serialized_tag_state}}" name="serialized_tag_state"/>
+            {% if tag_state %}
+            <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
             {% endif %}
             <textarea class="" name="notes">{{ relation.notes if relation.notes else '' }}</textarea>
             <br>
@@ -62,19 +65,20 @@ Manage Relation
     </div>
     <div>
         <form action="" method="post">
-            <input type="hidden" value="{{ wordlist_id }}" name="wordlist_id"/>
+            {% if tag_state %}
             <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
+            {% endif %}
+            <input type="hidden" value="{{ relation.relation_id }}" name="relation_id"/>
             <input type="text" id="add_word" name="add_word"/>
             <input type="submit" name="submit" value="Add Word"/>
         </form>
     </div>
     <div>
         <form action="{{ url_for('dlernen_relation.update_description') }}" method="post">
-            {% if wordlist_id %}
-            <input type="hidden" value="{{ wordlist_id }}" name="wordlist_id"/>
+            {% if tag_state %}
+            <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
             {% endif %}
             <input type="hidden" value="{{ relation.relation_id }}" name="relation_id"/>
-            <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
             <input type="text" id="description" name="description"/>
             <input type="submit" name="submit" value="Update Description"/>
         </form>

@@ -7,6 +7,10 @@ Study Guide:  {{ wordlist.name }}
 {% block body %}
 {{ super() }}
 
+{#
+this doesn't use serialized_tag_state, but base.html does, so s.t.s. must be passed to the renderer.
+#}
+
 {% macro render_word(class, w) %}
 <td class="{{ class }} sg_article">{{ w.article }}</td>
 <td class="{{ class }} sg_word">

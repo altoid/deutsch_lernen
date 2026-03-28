@@ -10,8 +10,6 @@ bp = Blueprint('dlernen_relation', __name__, url_prefix='/dlernen/relation')
 
 @bp.route('/editor/<int:relation_id>')
 def relation_editor(relation_id):
-    wordlist_id = request.args.get('wordlist_id')
-
     url = url_for('api_relation.get_relation', relation_id=relation_id, _external=True)
     r = requests.get(url)
     if not r:
@@ -21,14 +19,13 @@ def relation_editor(relation_id):
 
     relation = r.json()
 
-    if wordlist_id:
+    serialized_tag_state = request.args.get('serialized_tag_state')
+    if serialized_tag_state:
         return render_template('relation_editor.html',
-                               serialized_tag_state=request.args.get('serialized_tag_state'),
-                               wordlist_id=wordlist_id,
+                               tag_state=TagState.deserialize(serialized_tag_state),
                                relation=relation)
 
     return render_template('relation_editor.html',
-                           serialized_tag_state=request.args.get('serialized_tag_state'),
                            relation=relation)
 
 

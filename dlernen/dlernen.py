@@ -64,18 +64,17 @@ def lookup_by_id(word_id):
     relations = r.json()
 
     if wordlist_id:
+        tag_state = TagState.deserialize(request.args.get('serialized_tag_state'))
         return render_template('lookup.html',
                                wordobject=wordobject,
                                member_wordlists=member_wordlists,
-                               wordlist_id=wordlist_id,
                                relations=relations,
-                               serialized_tag_state=request.args.get('serialized_tag_state'))
+                               tag_state=tag_state)
 
     return render_template('lookup.html',
                            wordobject=wordobject,
                            member_wordlists=member_wordlists,
-                           relations=relations,
-                           serialized_tag_state=request.args.get('serialized_tag_state'))
+                           relations=relations)
 
 
 @bp.route('/lookup', methods=['POST'])
@@ -139,22 +138,11 @@ def lookup_by_post():
 
     # get wordlist if appropriate
     if serialized_tag_state:
-        tag_state_object = TagState.deserialize(serialized_tag_state)
-
-        url = url_for('api_wordlist.get_wordlist', wordlist_id=tag_state_object.wordlist_id, _external=True)
-        r = requests.get(url)
-        if not r:
-            return render_template("error.html",
-                                   message=r.text,
-                                   status_code=r.status_code)
-        wordlist = r.json()
-
         return render_template('search_results.html',
                                word=word,
-                               wordlist=wordlist,
                                exact_match_found=exact_match_found,
-                               serialized_tag_state=serialized_tag_state,
-                               template_args=template_args)
+                               template_args=template_args,
+                               tag_state=TagState.deserialize(serialized_tag_state))
 
     return render_template('search_results.html',
                            word=word,
@@ -186,12 +174,15 @@ def list_attributes(wordlist_id):
     wordlist_metadata = {k: '' if v is None else v for k, v in r.json().items()}
 
     return render_template('list_attributes.html',
-                           serialized_tag_state=request.args.get('serialized_tag_state'),
-                           wordlist=wordlist_metadata)
+                           wordlist_metadata=wordlist_metadata,
+                           tag_state=TagState.deserialize(request.args.get('serialized_tag_state')))
 
 
 @bp.route('/list_editor/<int:wordlist_id>')
 def list_editor(wordlist_id):
+    serialized_tag_state = request.args.get('serialized_tag_state')
+    tag_state = TagState.deserialize(serialized_tag_state)
+
     url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
     if not r:
@@ -201,7 +192,7 @@ def list_editor(wordlist_id):
     wordlist = r.json()
 
     return render_template('list_editor.html',
-                           serialized_tag_state=request.args.get('serialized_tag_state'),
+                           tag_state=tag_state,
                            wordlist=wordlist)
 
 
@@ -229,8 +220,6 @@ def wordlist_page(wordlist_id):
     else:
         tag_state_object = TagState(wordlist_id)
 
-    serialized_tag_state = tag_state_object.serialize()
-
     r = requests.get(url_for('api_wordlist.get_wordlist',
                              tag=tag_state_object.selected_tags(),
                              wordlist_id=wordlist_id,
@@ -242,13 +231,12 @@ def wordlist_page(wordlist_id):
     if r.status_code == 422:
         # unprocessable content - the sqlcode is not valid.  redirect to the list attributes page to fix it.
         r2 = requests.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True))
-        metadata = {k: '' if v is None else v for k, v in r2.json().items()}
+        wordlist_metadata = {k: '' if v is None else v for k, v in r2.json().items()}
 
         flash("invalid sqlcode")
         return render_template('list_attributes.html',
-                               serialized_tag_state=serialized_tag_state,
-                               wordlist_id=metadata['wordlist_id'],
-                               wordlist=metadata)
+                               tag_state=TagState.deserialize(request.args.get('serialized_tag_state')),
+                               wordlist_metadata=wordlist_metadata)
 
     if not r:
         return render_template("error.html",
@@ -266,8 +254,7 @@ def wordlist_page(wordlist_id):
 
     return render_template('wordlist.html',
                            wordlist=wordlist,
-                           tag_state=tag_state_object.tag_state(),
-                           serialized_tag_state=serialized_tag_state,
+                           tag_state=tag_state_object,
                            tag_chunks=tag_chunks,
                            words=words)
 
@@ -347,8 +334,8 @@ def edit_list_attributes():
     if not name:
         flash("Die Liste muss einen Namen haben")
         return render_template('list_attributes.html',
-                               serialized_tag_state=request.form.get('serialized_tag_state'),
-                               wordlist=metadata)
+                               tag_state=TagState.deserialize(request.form.get('serialized_tag_state')),
+                               wordlist_metadata=metadata)
 
     x = sqlcode.strip()
     if not x:
@@ -371,8 +358,8 @@ def edit_list_attributes():
         # unprocessable content - the sqlcode is not valid.  redirect to the list attributes page to fix it.
         flash("invalid sqlcode")
         return render_template('list_attributes.html',
-                               serialized_tag_state=request.form.get('serialized_tag_state'),
-                               wordlist=metadata)
+                               tag_state=TagState.deserialize(request.form.get('serialized_tag_state')),
+                               wordlist_metadata=metadata)
 
     if not r:
         return render_template("error.html",
@@ -458,7 +445,7 @@ def edit_list_contents():
     wordlist = r.json()
 
     return render_template('list_editor.html',
-                           serialized_tag_state=tag_state_object.serialize(),
+                           tag_state=tag_state_object,
                            wordlist=wordlist)
 
 
@@ -617,17 +604,15 @@ def edit_word_form(word):
 
         return render_template('word_editor.html',
                                word=word,
-                               wordlist=wordlist,
                                form_data=form_data,
                                redirect_to=redirect_to,
-                               serialized_tag_state=serialized_tag_state,
-                               field_values_before=json.dumps(field_values_before))
+                               field_values_before=json.dumps(field_values_before),
+                               tag_state=TagState.deserialize(serialized_tag_state))
 
     return render_template('word_editor.html',
                            word=word,
                            form_data=form_data,
                            redirect_to=redirect_to,
-                           serialized_tag_state=serialized_tag_state,
                            field_values_before=json.dumps(field_values_before))
 
 
@@ -861,8 +846,8 @@ def quiz_report(quiz_key, wordlist_id):
     serialized_tag_state = request.args.get('serialized_tag_state')
     selected_tags = []
     if serialized_tag_state:
-        tag_state_object = TagState.deserialize(serialized_tag_state)
-        selected_tags = tag_state_object.selected_tags()
+        tag_state = TagState.deserialize(serialized_tag_state)
+        selected_tags = tag_state.selected_tags()
 
     r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True))
     if not r:
@@ -886,7 +871,7 @@ def quiz_report(quiz_key, wordlist_id):
     return render_template("quiz_report.html",
                            quiz_key=report['quiz_key'],
                            wordlist=wordlist,
-                           serialized_tag_state=serialized_tag_state,
+                           tag_state=tag_state,
                            scores=report['scores'])
 
 
@@ -926,7 +911,7 @@ def study_guide(wordlist_id):
 
     return render_template("study_guide.html",
                            tags=tags,
-                           serialized_tag_state=serialized_tag_state,
+                           tag_state=tag_state_object,
                            untagged_words=untagged_words,
                            tags_to_words=tags_to_words,
                            wordlist=wordlist)
@@ -954,19 +939,19 @@ def update_via_editor():
             }
 
             url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True)
-            r = requests.put(url, json=payload)
-            if not r:
-                flash(r.text)
+            r2 = requests.put(url, json=payload)
+            if not r2:
+                flash(r2.text)
         elif r.status_code == 404:
-            return redirect(url_for('dlernen.edit_word_form', word=word,
+            return redirect(url_for('dlernen.edit_word_form',
+                                    word=word,
                                     wordlist_id=wordlist_id,
-                                    serialized_tag_state=tag_state_object.serialize(),
-                                    redirect_to='dlernen.list_editor', _external=True))
+                                    serialized_tag_state=serialized_tag_state,
+                                    redirect_to='dlernen.list_editor',
+                                    _external=True))
         else:
             flash(r.text)
 
     return redirect(url_for('dlernen.list_editor',
                             wordlist_id=wordlist_id,
                             serialized_tag_state=tag_state_object.serialize()))
-
-
