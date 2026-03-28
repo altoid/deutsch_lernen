@@ -206,13 +206,13 @@ def update_tag_state(wordlist_id):
     tag_state_object.clear()
     tag_state_object.set_tags(tags)
 
-    return redirect(url_for('dlernen.wordlist_page',
+    return redirect(url_for('dlernen.wordlist',
                             wordlist_id=wordlist_id,
                             serialized_tag_state=tag_state_object.serialize()))
 
 
 @bp.route('/wordlist/<int:wordlist_id>')
-def wordlist_page(wordlist_id):
+def wordlist(wordlist_id):
     serialized_tag_state = request.args.get('serialized_tag_state')
     if serialized_tag_state:
         tag_state_object = TagState.deserialize(serialized_tag_state)
@@ -366,7 +366,7 @@ def edit_list_attributes():
                                message=r.text,
                                status_code=r.status_code)
 
-    return redirect(url_for('dlernen.wordlist_page',
+    return redirect(url_for('dlernen.wordlist',
                             serialized_tag_state=request.form.get('serialized_tag_state'),
                             wordlist_id=wordlist_id))
 
@@ -449,8 +449,8 @@ def edit_list_contents():
                            wordlist=wordlist)
 
 
-@bp.route('/update_notes', methods=['POST'])
-def update_notes():
+@bp.route('/update_wordlist_notes', methods=['POST'])
+def update_wordlist_notes():
     wordlist_id = request.form['wordlist_id']
 
     payload = {
@@ -464,9 +464,9 @@ def update_notes():
                                message=r.text,
                                status_code=r.status_code)
 
-    target = url_for('dlernen.wordlist_page',
+    target = url_for('dlernen.wordlist',
                      wordlist_id=wordlist_id,
-                     serialized_tag_state=request.form.get('serialized_tag_state', ''))
+                     serialized_tag_state=request.form.get('serialized_tag_state'))
 
     return redirect(target)
 
@@ -513,7 +513,7 @@ def edit_word_form(word):
 
     wordlist_id = request.args.get('wordlist_id')
     serialized_tag_state = request.args.get('serialized_tag_state')
-    redirect_to = request.args.get('redirect_to', 'dlernen.wordlist_page')
+    redirect_to = request.args.get('redirect_to', 'dlernen.wordlist')
 
     url = url_for('api_pos.get_pos_for_word', word=word, _external=True)
     r = requests.get(url)
@@ -668,7 +668,7 @@ def update_dict():
     word = request.form.get('word', '').strip()
     word_before = request.form.get('word_before')
     wordlist_id = request.form.get('wordlist_id')
-    redirect_to = request.form.get('redirect_to', 'dlernen.wordlist_page')
+    redirect_to = request.form.get('redirect_to', 'dlernen.wordlist')
     field_values_before = json.loads(request.form.get('field_values_before'))
     field_values_after = {k: request.form.get(k, '') for k in field_values_before.keys()}
 

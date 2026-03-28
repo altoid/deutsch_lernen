@@ -75,7 +75,7 @@ def update_description():
                             _external=True))
 
 
-@bp.route('/update_notes', methods=['POST'])
+@bp.route('/update_wordlist_notes', methods=['POST'])
 def update_notes():
     wordlist_id = request.form.get('wordlist_id', type=int)
     relation_id = request.form.get('relation_id', type=int)

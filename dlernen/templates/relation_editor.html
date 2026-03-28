@@ -30,7 +30,7 @@ Manage Relation
         </table>
     </div>
     <div>
-        <form action="{{ url_for('dlernen_relation.update_notes') }}" method="post">
+        <form action="{{ url_for('dlernen_relation.update_wordlist_notes') }}" method="post">
             <h2>Noten</h2>
             <input type="hidden" value="{{ relation.relation_id }}" name="relation_id"/>
             {% if tag_state %}

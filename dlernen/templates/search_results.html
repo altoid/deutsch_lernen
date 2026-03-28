@@ -69,7 +69,7 @@ Lookup {{ word }}
     <h2>Wortlisten, die dieses Wort enthalten</h2>
     <ul>
         {% for wl in tuple[1] %}
-        <li><a href="{{ url_for('dlernen.wordlist_page', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a></li>
+        <li><a href="{{ url_for('dlernen.wordlist', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a></li>
         {% endfor %}
     </ul>
     {% else %}

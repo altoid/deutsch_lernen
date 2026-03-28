@@ -14,7 +14,7 @@
     <a href="{{ url_for('dlernen.wordlists') }}">Word lists</a>
     {% if tag_state %}
     {% set serialized_tag_state = tag_state.serialize() %}
-    <a href="{{ url_for('dlernen.wordlist_page', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state) }}">
+    <a href="{{ url_for('dlernen.wordlist', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state) }}">
         List ({{ tag_state.wordlist_id }})
     </a>
 
