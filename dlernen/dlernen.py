@@ -946,8 +946,8 @@ def study_guide(wordlist_id):
 
 @bp.route('/update_words', methods=['POST'])
 def add_word_submit():
-    # submitting from the add word field will bring us here.  that field is not displayed unless we have a wordlist,
-    # so we will have a tag state in the request, which has the wordlist_id.
+    # submitting from the add word field in the sidebar will bring us here.  that field is not displayed unless we
+    # have a wordlist, so we will have a tag state in the request, which has the wordlist_id.
 
     # this will update the prevailing word list with the word in the request.  if that word isn't in the dictionary,
     # redirect to the word edit page.  on submit, go to <redirect_to>.
@@ -955,8 +955,6 @@ def add_word_submit():
     word = request.form.get('add_word').strip()
     serialized_tag_state = request.form.get('serialized_tag_state')
     redirect_to = request.form.get('redirect_to', 'dlernen.edit_word_form')
-    relation_id = request.form.get('relation_id')
-    pprint(request.form)
 
     tag_state = TagState.deserialize(serialized_tag_state)
     wordlist_id = tag_state.wordlist_id
@@ -984,12 +982,6 @@ def add_word_submit():
                                     _external=True))
         else:
             flash(r.text)
-
-    if relation_id:
-        return redirect(url_for(redirect_to,
-                                relation_id=relation_id,
-                                wordlist_id=wordlist_id,
-                                serialized_tag_state=serialized_tag_state))
 
     return redirect(url_for(redirect_to,
                             wordlist_id=wordlist_id,
