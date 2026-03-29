@@ -45,6 +45,9 @@ for the tags fields, the names are:
         <input type="hidden" name="wordlist_id" value="{{ tag_state.wordlist_id }}">
         <input type="hidden" name="serialized_tag_state" value="{{ serialized_tag_state }}">
         {% endif %}
+        {% if relation_id %}
+        <input type="hidden" name="relation_id" value="{{ relation_id }}">
+        {% endif %}
 
         <table class="wordedit">
             <tr>

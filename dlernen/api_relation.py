@@ -80,7 +80,7 @@ def get_relation(relation_id):
             return message, 500
 
 
-def save_word_ids(relation_id, word_ids, cursor):
+def __save_word_ids(relation_id, word_ids, cursor):
     if word_ids:
         args = [
             {
@@ -141,7 +141,7 @@ def create_relation():
             relation_id = result['relation_id']
 
             if word_ids:
-                save_word_ids(relation_id, word_ids, cursor)
+                __save_word_ids(relation_id, word_ids, cursor)
 
             cursor.execute('commit')
 
@@ -213,7 +213,7 @@ def update_relation(relation_id):
                 cursor.execute(sql, {'relation_id': relation_id, 'notes': notes})
 
             if word_ids:
-                save_word_ids(relation_id, word_ids, cursor)
+                __save_word_ids(relation_id, word_ids, cursor)
 
             cursor.execute('commit')
 

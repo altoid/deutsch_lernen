@@ -181,7 +181,10 @@ def list_attributes(wordlist_id):
 @bp.route('/list_editor/<int:wordlist_id>')
 def list_editor(wordlist_id):
     serialized_tag_state = request.args.get('serialized_tag_state')
-    tag_state = TagState.deserialize(serialized_tag_state)
+    if serialized_tag_state:
+        tag_state = TagState.deserialize(serialized_tag_state)
+    else:
+        tag_state = TagState(wordlist_id)
 
     url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
@@ -375,13 +378,14 @@ def edit_list_attributes():
 def edit_list_contents():
     wordlist_id = request.form.get('wordlist_id')
     button = request.form.get('submit')
-    tag_state_object = TagState.deserialize(request.form.get('serialized_tag_state'))
+    serialized_tag_state = request.form.get('serialized_tag_state')
+    tag_state_object = TagState.deserialize(serialized_tag_state)
 
     if button.startswith("Delete"):
         # the checkboxes are called 'removing'
 
-        url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=wordlist_id, _external=True)
         word_ids = list(map(int, request.form.getlist('removing')))
+        url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=wordlist_id, _external=True)
         r = requests.put(url, json={
             "word_ids": word_ids
         })
@@ -434,19 +438,12 @@ def edit_list_contents():
                                        status_code=r.status_code)
 
     tag_state_object.update()
+    serialized_tag_state = tag_state_object.serialize()
 
-    # fetch the wordlist so that its current state can be rendered
-    get_wordlist_url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
-    r = requests.get(get_wordlist_url)
-    if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
-    wordlist_obj = r.json()
-
-    return render_template('list_editor.html',
-                           tag_state=tag_state_object,
-                           wordlist=wordlist_obj)
+    return redirect(url_for('dlernen.list_editor',
+                            serialized_tag_state=serialized_tag_state,
+                            wordlist_id=wordlist_id,
+                            _external=True))
 
 
 @bp.route('/update_wordlist_notes', methods=['POST'])
@@ -514,6 +511,7 @@ def edit_word_form(word):
     wordlist_id = request.args.get('wordlist_id')
     serialized_tag_state = request.args.get('serialized_tag_state')
     redirect_to = request.args.get('redirect_to', 'dlernen.wordlist')
+    relation_id = request.args.get('relation_id')
 
     url = url_for('api_pos.get_pos_for_word', word=word, _external=True)
     r = requests.get(url)
@@ -606,6 +604,7 @@ def edit_word_form(word):
                                word=word,
                                form_data=form_data,
                                redirect_to=redirect_to,
+                               relation_id=relation_id,
                                field_values_before=json.dumps(field_values_before),
                                tag_state=TagState.deserialize(serialized_tag_state))
 
@@ -613,6 +612,7 @@ def edit_word_form(word):
                            word=word,
                            form_data=form_data,
                            redirect_to=redirect_to,
+                           relation_id=relation_id,
                            field_values_before=json.dumps(field_values_before))
 
 
@@ -665,10 +665,13 @@ def diff_attr_values(pos_id, attribute_id, word_id,
 
 @bp.route('/word_editor', methods=['POST'])
 def update_dict():
+    # hitting the submit button in the word editor brings us here.
+
     word = request.form.get('word', '').strip()
     word_before = request.form.get('word_before')
     wordlist_id = request.form.get('wordlist_id')
-    redirect_to = request.form.get('redirect_to', 'dlernen.wordlist')
+    relation_id = request.form.get('relation_id')
+    redirect_to = request.form.get('redirect_to', 'dlernen.edit_word_form')
     field_values_before = json.loads(request.form.get('field_values_before'))
     field_values_after = {k: request.form.get(k, '') for k in field_values_before.keys()}
 
@@ -754,6 +757,20 @@ def update_dict():
                                            message=message,
                                            status_code=r.status_code)
 
+            # if we have a relation_id, add the newly-minted word to the relation.
+            if relation_id:
+                payload = {
+                    'word_ids': [obj['word_id']]
+                }
+                url = url_for('api_relation.update_relation', relation_id=relation_id, _external=True)
+                r = requests.put(url, json=payload)
+                if not r:
+                    message = "could not add word to relation:  word %s, word_id = %s, relation_id = %s: %s" % (
+                        word, obj['word_id'], relation_id, r.text)
+                    return render_template("error.html",
+                                           message=message,
+                                           status_code=r.status_code)
+
     # now we deal with the tags.  at this point every POS in the edit form has a word_id.  get the POS info for
     # this word to get those word ids.  not all of them will be in the wordlist.
 
@@ -831,9 +848,15 @@ def update_dict():
         tag_state_object = TagState.deserialize(request.form.get('serialized_tag_state'))
         tag_state_object.update()
 
-        target = url_for(redirect_to,
-                         serialized_tag_state=tag_state_object.serialize(),
-                         wordlist_id=wordlist_id)
+        if relation_id:
+            target = url_for(redirect_to,
+                             relation_id=relation_id,
+                             serialized_tag_state=tag_state_object.serialize(),
+                             wordlist_id=wordlist_id)
+        else:
+            target = url_for(redirect_to,
+                             serialized_tag_state=tag_state_object.serialize(),
+                             wordlist_id=wordlist_id)
     else:
         # if we didn't add a word to any list, return to the editing form for this word.
         target = url_for('dlernen.edit_word_form', word=word)
@@ -921,16 +944,22 @@ def study_guide(wordlist_id):
                            wordlist=wordlist_obj)
 
 
-@bp.route('/update_via_editor', methods=['POST'])
-def update_via_editor():
-    # if the word that is entered is in the dictionary, add it (all parts of speech)
-    # and reload the editor page.  if it is not, go to the word_edit page.
-    # on submit from the word_edit page, come back here.
+@bp.route('/update_words', methods=['POST'])
+def add_word_submit():
+    # submitting from the add word field will bring us here.  that field is not displayed unless we have a wordlist,
+    # so we will have a tag state in the request, which has the wordlist_id.
 
-    wordlist_id = request.form.get('wordlist_id')
+    # this will update the prevailing word list with the word in the request.  if that word isn't in the dictionary,
+    # redirect to the word edit page.  on submit, go to <redirect_to>.
+
     word = request.form.get('add_word').strip()
     serialized_tag_state = request.form.get('serialized_tag_state')
-    tag_state_object = TagState.deserialize(serialized_tag_state)
+    redirect_to = request.form.get('redirect_to', 'dlernen.edit_word_form')
+    relation_id = request.form.get('relation_id')
+    pprint(request.form)
+
+    tag_state = TagState.deserialize(serialized_tag_state)
+    wordlist_id = tag_state.wordlist_id
 
     if word:
         url = url_for('api_word.get_word', word=word, _external=True)
@@ -951,11 +980,17 @@ def update_via_editor():
                                     word=word,
                                     wordlist_id=wordlist_id,
                                     serialized_tag_state=serialized_tag_state,
-                                    redirect_to='dlernen.list_editor',
+                                    redirect_to=redirect_to,
                                     _external=True))
         else:
             flash(r.text)
 
-    return redirect(url_for('dlernen.list_editor',
+    if relation_id:
+        return redirect(url_for(redirect_to,
+                                relation_id=relation_id,
+                                wordlist_id=wordlist_id,
+                                serialized_tag_state=serialized_tag_state))
+
+    return redirect(url_for(redirect_to,
                             wordlist_id=wordlist_id,
-                            serialized_tag_state=tag_state_object.serialize()))
+                            serialized_tag_state=serialized_tag_state))

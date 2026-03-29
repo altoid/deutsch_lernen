@@ -30,7 +30,7 @@ Manage Relation
         </table>
     </div>
     <div>
-        <form action="{{ url_for('dlernen_relation.update_wordlist_notes') }}" method="post">
+        <form action="{{ url_for('dlernen_relation.update_notes') }}" method="post">
             <h2>Noten</h2>
             <input type="hidden" value="{{ relation.relation_id }}" name="relation_id"/>
             {% if tag_state %}
@@ -43,7 +43,7 @@ Manage Relation
     </div>
     <div>
         <h2>Relation Editor</h2>
-        <form action="" method="post">
+        <form action="{{ url_for('dlernen_relation.update_words') }}" method="post">
             <table>
                 <tr>
                     <th colspan="3">Word</th>
@@ -60,11 +60,15 @@ Manage Relation
                 </tr>
                 {% endfor %}
             </table>
+            {% if tag_state %}
+            <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
+            {% endif %}
+            <input type="hidden" value="{{ relation.relation_id }}" name="relation_id"/>
             <input type="submit" name="submit" value="Delete Selected Words"/>
         </form>
     </div>
     <div>
-        <form action="" method="post">
+        <form action="{{ url_for('dlernen_relation.update_words') }}" method="post">
             {% if tag_state %}
             <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
             {% endif %}

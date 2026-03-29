@@ -36,9 +36,26 @@
         <label for="sidebar_search">Suche nach Wort</label>
         <input type="text" id="sidebar_search" name="lookup"/>
     </form>
+
+    {% if request.endpoint in ['dlernen.wordlists', 'dlernen.home', 'dlernen.wordlist', 'dlernen.list_editor'] %}
+    <div>
+        <form action="{{ url_for('dlernen.add_word_submit') }}" method="post">
+            <label for="add_word">ADD WORD</label>
+            {% if serialized_tag_state %}
+            <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
+            {% endif %}
+            <input type="hidden" value="{{ request.endpoint }}" name="redirect_to"/>
+            <input type="text" id="add_word" name="add_word"/>
+        </form>
+    </div>
+    {% endif %}
 </div>
 <div class="content">
     {% block body %}
+    {#
+    <h1>debugging land</h1>
+    {{ request.endpoint }}
+    #}
     {% endblock %}
 </div>
 </body>
