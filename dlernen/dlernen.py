@@ -34,7 +34,53 @@ def home():
     return render_template('home.html')
 
 
-@bp.route('/lookup/<int:word_id>', methods=['GET'])
+@bp.route('/word/<string:word>', methods=['GET'])
+def lookup_word(word):
+    partial_match = request.args.get('partial', 'false')
+    serialized_tag_state = request.args.get('serialized_tag_state')
+    partial = False
+    if partial_match.lower() == 'true':
+        partial = True
+
+    results = []
+    r = requests.get(url_for('api_word.get_word', word=word, partial=partial, _external=True))
+    if r.status_code == 404:
+        pass
+    elif r.status_code == 200:
+        results = r.json()
+    else:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+
+    results = sorted(results, key=lambda x: str.lower(x['word']))
+    exact_match_found = len(results) > 0
+    template_args = []
+    for result in results:
+        r = requests.get(url_for('api_wordlists.get_wordlists_by_word_id', word_id=result['word_id'], _external=True))
+        if not r:
+            return render_template("error.html",
+                                   message=r.text,
+                                   status_code=r.status_code)
+
+        member_wordlists = r.json()
+        template_args.append((result, member_wordlists))
+
+    # get wordlist if appropriate
+    if serialized_tag_state:
+        return render_template('search_results.html',
+                               word=word,
+                               exact_match_found=exact_match_found,
+                               template_args=template_args,
+                               tag_state=TagState.deserialize(serialized_tag_state))
+
+    return render_template('search_results.html',
+                           word=word,
+                           exact_match_found=exact_match_found,
+                           template_args=template_args)
+
+
+@bp.route('/word/<int:word_id>', methods=['GET'])
 def lookup_by_id(word_id):
     # for when a word appears as a hyperlink in a page.
     wordlist_id = request.args.get('wordlist_id')
@@ -101,53 +147,10 @@ def lookup_by_post():
     word = request.form.get('lookup')
     serialized_tag_state = request.form.get('serialized_tag_state')
 
-    exact_match_found = False
-    r = requests.get(url_for('api_word.get_word', word=word, _external=True))
-    if r.status_code == 404:
-        # we do not need to keep the results of the exact-match search, just need to know if it succeeded.
-        pass
-    elif r.status_code == 200:
-        exact_match_found = True
-    else:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
-
-    results = []
-    r = requests.get(url_for('api_word.get_word', word=word, partial=True, _external=True))
-    if r.status_code == 404:
-        pass
-    elif r.status_code == 200:
-        results = r.json()
-    else:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
-
-    results = sorted(results, key=lambda x: str.lower(x['word']))
-    template_args = []
-    for result in results:
-        r = requests.get(url_for('api_wordlists.get_wordlists_by_word_id', word_id=result['word_id'], _external=True))
-        if not r:
-            return render_template("error.html",
-                                   message=r.text,
-                                   status_code=r.status_code)
-
-        member_wordlists = r.json()
-        template_args.append((result, member_wordlists))
-
-    # get wordlist if appropriate
-    if serialized_tag_state:
-        return render_template('search_results.html',
-                               word=word,
-                               exact_match_found=exact_match_found,
-                               template_args=template_args,
-                               tag_state=TagState.deserialize(serialized_tag_state))
-
-    return render_template('search_results.html',
-                           word=word,
-                           exact_match_found=exact_match_found,
-                           template_args=template_args)
+    return redirect(url_for('dlernen.lookup_word',
+                            word=word,
+                            partial=True,
+                            serialized_tag_state=serialized_tag_state))
 
 
 @bp.route('/wordlists')
