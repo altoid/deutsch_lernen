@@ -35,9 +35,11 @@ def create_relation():
     serialized_tag_state = request.form.get('serialized_tag_state')
 
     # create a new relation with this word
-    payload = {
-        'word_ids': [word_id]
-    }
+    payload = {}
+
+    if word_id:
+        payload['word_ids'] = [word_id]
+
     r = requests.post(url_for('api_relation.create_relation', _external=True), json=payload)
     if not r:
         return render_template("error.html",
