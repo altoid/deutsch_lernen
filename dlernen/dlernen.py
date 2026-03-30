@@ -258,8 +258,19 @@ def wordlist(wordlist_id):
     words = chunkify(wordlist_obj['words'], nchunks)
     tag_chunks = chunkify(tag_state_object.tag_state(), 4)
 
+    r = requests.get(url_for('api_wordlist.get_relations',
+                             wordlist_id=wordlist_id,
+                             _external=True))
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+
+    relations = r.json()
+
     return render_template('wordlist.html',
                            wordlist=wordlist_obj,
+                           relations=relations,
                            tag_state=tag_state_object,
                            tag_chunks=tag_chunks,
                            words=words)

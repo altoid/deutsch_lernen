@@ -94,11 +94,42 @@ Wordlist:  {{ wordlist.name }}
             </td>
         </tr>
     </table>
+    <form action="{{ url_for('dlernen_relation.create_relation') }}" method="post">
+        <h2>Relationen</h2>
+        {% if serialized_tag_state %}
+        <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
+        <input type="hidden" value="{{ tag_state.wordlist_id }}" name="wordlist_id"/>
+        {% endif %}
+        <table>
+            {% for r in relations %}
+            <tr>
+                <td>
+                    {% if serialized_tag_state %}
+                    <a href="{{ url_for('dlernen_relation.relation_editor', serialized_tag_state=serialized_tag_state, relation_id=r.relation_id)}}">
+                        {{ r.words[0].article }} {{ r.words[0].word }}
+                        {% for w in r.words[1:] %}
+                        | {{ w.article }} {{ w.word }}
+                        {% endfor %}
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('dlernen_relation.relation_editor', relation_id=r.relation_id)}}">
+                        {{ r.words[0].article }} {{ r.words[0].word }}
+                        {% for w in r.words[1:] %}
+                        | {{ w.article }} {{ w.word }}
+                        {% endfor %}
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        <input type="submit" value="Neue Relation"/>
+    </form>
     <form action="{{ url_for('dlernen.update_wordlist_notes') }}" method="post">
+        <h2>Noten</h2>
         {% if serialized_tag_state %}
         <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
         {% endif %}
-        <h2>Noten</h2>
         <input type="submit" value="Update Notes"/>
         <br>
         <textarea class="notes" name="notes">{{ wordlist.notes }}</textarea>

@@ -36,7 +36,7 @@ Manage Relation
             {% if tag_state %}
             <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
             {% endif %}
-            <textarea class="" name="notes">{{ relation.notes if relation.notes else '' }}</textarea>
+            <textarea class="relation_notes" name="notes">{{ relation.notes if relation.notes else '' }}</textarea>
             <br>
             <input type="submit" value="Update Notes"/>
         </form>
