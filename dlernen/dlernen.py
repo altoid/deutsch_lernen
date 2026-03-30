@@ -968,35 +968,60 @@ def add_word_submit():
 
     word = request.form.get('add_word').strip()
     serialized_tag_state = request.form.get('serialized_tag_state')
-    redirect_to = request.form.get('redirect_to', 'dlernen.edit_word_form')
+    redirect_to = request.form.get('redirect_to')
+    wordlist_id = None
+    if serialized_tag_state:
+        tag_state = TagState.deserialize(serialized_tag_state)
+        wordlist_id = tag_state.wordlist_id
 
-    tag_state = TagState.deserialize(serialized_tag_state)
-    wordlist_id = tag_state.wordlist_id
+    if not word:
+        if serialized_tag_state:
+            return redirect(url_for(redirect_to,
+                                    wordlist_id=wordlist_id,
+                                    serialized_tag_state=serialized_tag_state,
+                                    _external=True))
+        return redirect(url_for(redirect_to, _external=True))
 
-    if word:
-        url = url_for('api_word.get_word', word=word, _external=True)
-        r = requests.get(url)
-        if r:
+    if not serialized_tag_state:
+        redirect_to = 'dlernen.lookup_word'
+
+    r = requests.get(url_for('api_word.get_word', word=word, _external=True))
+    if r:
+        if wordlist_id:
             obj = r.json()
             word_ids = [x['word_id'] for x in obj]
             payload = {
                 "word_ids": word_ids
             }
 
-            url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True)
-            r2 = requests.put(url, json=payload)
+            r2 = requests.put(url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True),
+                              json=payload)
             if not r2:
                 flash(r2.text)
-        elif r.status_code == 404:
+
+    elif r.status_code == 404:
+        if serialized_tag_state:
             return redirect(url_for('dlernen.edit_word_form',
                                     word=word,
                                     wordlist_id=wordlist_id,
                                     serialized_tag_state=serialized_tag_state,
                                     redirect_to=redirect_to,
                                     _external=True))
-        else:
-            flash(r.text)
+        return redirect(url_for('dlernen.edit_word_form',
+                                word=word,
+                                redirect_to=redirect_to,
+                                _external=True))
+
+    else:
+        flash(r.text)
+
+    if serialized_tag_state:
+        return redirect(url_for(redirect_to,
+                                word=word,
+                                wordlist_id=wordlist_id,
+                                serialized_tag_state=serialized_tag_state,
+                                _external=True))
 
     return redirect(url_for(redirect_to,
-                            wordlist_id=wordlist_id,
-                            serialized_tag_state=serialized_tag_state))
+                            word=word,
+                            _external=True))
