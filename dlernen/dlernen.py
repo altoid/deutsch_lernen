@@ -688,7 +688,7 @@ def update_dict():
     word_before = request.form.get('word_before')
     wordlist_id = request.form.get('wordlist_id')
     relation_id = request.form.get('relation_id')
-    redirect_to = request.form.get('redirect_to', 'dlernen.edit_word_form')
+    redirect_to = request.form.get('redirect_to', 'dlernen.lookup_word')
     field_values_before = json.loads(request.form.get('field_values_before'))
     field_values_after = {k: request.form.get(k, '') for k in field_values_before.keys()}
 
@@ -860,7 +860,7 @@ def update_dict():
                                                (wordlist_id, p['word_id'], r.text, r.status_code),
                                        status_code=r.status_code)
 
-    if wordlist_id:
+    # if wordlist_id:
         # in case we added a new tag while editing the word
         tag_state_object = TagState.deserialize(request.form.get('serialized_tag_state'))
         tag_state_object.update()
@@ -875,8 +875,7 @@ def update_dict():
                              serialized_tag_state=tag_state_object.serialize(),
                              wordlist_id=wordlist_id)
     else:
-        # if we didn't add a word to any list, return to the editing form for this word.
-        target = url_for('dlernen.edit_word_form', word=word)
+        target = url_for(redirect_to, word=word)
 
     return redirect(target)
 
