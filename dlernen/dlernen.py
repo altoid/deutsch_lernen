@@ -53,8 +53,11 @@ def lookup_word(word):
                                message=r.text,
                                status_code=r.status_code)
 
-    results = sorted(results, key=lambda x: str.lower(x['word']))
-    exact_match_found = len(results) > 0
+    words_found = {x['word'].casefold() for x in results}
+    exact_match_found = word.casefold() in words_found
+
+    results = sorted(results, key=lambda x: str.casefold(x['word']))
+
     template_args = []
     for result in results:
         r = requests.get(url_for('api_wordlists.get_wordlists_by_word_id', word_id=result['word_id'], _external=True))
@@ -992,10 +995,11 @@ def __submit_to_wordlist(serialized_tag_state, word, redirect_to):
     else:
         flash(r.text)
 
-    return redirect(url_for(redirect_to,
+    return redirect(url_for('dlernen.edit_word_form',
                             word=word,
                             wordlist_id=wordlist_id,
                             serialized_tag_state=serialized_tag_state,
+                            redirect_to=redirect_to,
                             _external=True))
 
 
@@ -1017,7 +1021,7 @@ def add_word_submit():
     if not word:
         return redirect(url_for(redirect_to, _external=True))
 
-    r = requests.get(url_for('api_word.get_word', word=word, _external=True))
+    r = requests.get(url_for('api_word.get_word', word=word, partial='true', _external=True))
 
     if r.status_code == 404:
         return redirect(url_for('dlernen.edit_word_form',
