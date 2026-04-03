@@ -527,7 +527,7 @@ def edit_word_form(word):
 
     wordlist_id = request.args.get('wordlist_id')
     serialized_tag_state = request.args.get('serialized_tag_state')
-    redirect_to = request.args.get('redirect_to', 'dlernen.wordlist')
+    redirect_to = request.args.get('redirect_to')
     relation_id = request.args.get('relation_id')
 
     url = url_for('api_pos.get_pos_for_word', word=word, _external=True)
@@ -688,7 +688,7 @@ def update_dict():
     word_before = request.form.get('word_before')
     wordlist_id = request.form.get('wordlist_id')
     relation_id = request.form.get('relation_id')
-    redirect_to = request.form.get('redirect_to', 'dlernen.lookup_word')
+    redirect_to = request.form.get('redirect_to')
     field_values_before = json.loads(request.form.get('field_values_before'))
     field_values_after = {k: request.form.get(k, '') for k in field_values_before.keys()}
 
@@ -860,18 +860,19 @@ def update_dict():
                                                (wordlist_id, p['word_id'], r.text, r.status_code),
                                        status_code=r.status_code)
 
-    # if wordlist_id:
         # in case we added a new tag while editing the word
         tag_state_object = TagState.deserialize(request.form.get('serialized_tag_state'))
         tag_state_object.update()
 
         if relation_id:
             target = url_for(redirect_to,
+                             word=word,
                              relation_id=relation_id,
                              serialized_tag_state=tag_state_object.serialize(),
                              wordlist_id=wordlist_id)
         else:
             target = url_for(redirect_to,
+                             word=word,
                              serialized_tag_state=tag_state_object.serialize(),
                              wordlist_id=wordlist_id)
     else:
@@ -1004,8 +1005,7 @@ def __submit_to_wordlist(serialized_tag_state, word, redirect_to):
 
 @bp.route('/update_words', methods=['POST'])
 def add_word_submit():
-    # submitting from the add word field in the sidebar will bring us here.  that field is not displayed unless we
-    # have a wordlist, so we will have a tag state in the request, which has the wordlist_id.
+    # submitting from the add word field in the sidebar will bring us here.
 
     # this will update the prevailing word list with the word in the request.  if that word isn't in the dictionary,
     # redirect to the word edit page.  on submit, go to <redirect_to>.
