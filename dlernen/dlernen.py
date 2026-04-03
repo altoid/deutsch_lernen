@@ -128,31 +128,15 @@ def lookup_by_id(word_id):
 
 @bp.route('/lookup', methods=['POST'])
 def lookup_by_post():
-    # for looking up a word entered into a form.  we want to render the results page with a link to add the word
-    # if we don't find an exact match for it.
+    # submitting from the search field in the sidebar will bring us here.
     #
-    # do an exact-match search
-    # if found
-    #     exact_match_found = true
-    # else
-    #     exact_match_found = false
-    #
-    # then do a partial-match search
-    #
-    # NB:  if exact_match_found is true, then the results of the partial-match search SHOULD contain the search string.
-    #      otherwise, it's not there and we need to display the add-word form in the results page.
-    #
-    # render the template with:
-    # - the partial-match results
-    # - the value of exact_match_found
-    # - the search string
 
     word = request.form.get('lookup')
     serialized_tag_state = request.form.get('serialized_tag_state')
 
     return redirect(url_for('dlernen.lookup_word',
                             word=word,
-                            partial=True,
+                            partial='true',
                             serialized_tag_state=serialized_tag_state))
 
 
@@ -527,9 +511,10 @@ def edit_word_form(word):
 
     wordlist_id = request.args.get('wordlist_id')
     serialized_tag_state = request.args.get('serialized_tag_state')
-    redirect_to = request.args.get('redirect_to')
+    redirect_to = request.args.get('redirect_to', 'dlernen.lookup_word')
     relation_id = request.args.get('relation_id')
-
+    print("edit_word_form:  redirect_to = %s" % redirect_to)
+    
     url = url_for('api_pos.get_pos_for_word', word=word, _external=True)
     r = requests.get(url)
     if not r:
@@ -688,7 +673,8 @@ def update_dict():
     word_before = request.form.get('word_before')
     wordlist_id = request.form.get('wordlist_id')
     relation_id = request.form.get('relation_id')
-    redirect_to = request.form.get('redirect_to')
+    redirect_to = request.form.get('redirect_to', 'dlernen.lookup_word')
+    print("update_dict:  redirect_to = %s" % redirect_to)
     field_values_before = json.loads(request.form.get('field_values_before'))
     field_values_after = {k: request.form.get(k, '') for k in field_values_before.keys()}
 
@@ -1013,7 +999,7 @@ def add_word_submit():
     word = request.form.get('add_word').strip()
     serialized_tag_state = request.form.get('serialized_tag_state')
     redirect_to = request.form.get('redirect_to')
-
+    # print("add_word_submit:  redirect_to = %s" % redirect_to)
     if serialized_tag_state:
         return __submit_to_wordlist(serialized_tag_state, word, redirect_to)
 
