@@ -109,8 +109,6 @@ def update_words():
     serialized_tag_state = request.form.get('serialized_tag_state')
     relation_id = request.form.get('relation_id')
     button = request.form.get('submit')
-
-    tag_state = TagState.deserialize(serialized_tag_state)
     redirect_to = 'dlernen_relation.relation_editor'
 
     if button.startswith('Delete'):
@@ -147,16 +145,28 @@ def update_words():
                 if not r2:
                     flash(r2.text)
             elif r.status_code == 404:
+                if serialized_tag_state:
+                    tag_state = TagState.deserialize(serialized_tag_state)
+                    return redirect(url_for('dlernen.edit_word_form',
+                                            word=word,
+                                            relation_id=relation_id,
+                                            wordlist_id=tag_state.wordlist_id,
+                                            serialized_tag_state=serialized_tag_state,
+                                            redirect_to=redirect_to,
+                                            _external=True))
+
                 return redirect(url_for('dlernen.edit_word_form',
                                         word=word,
                                         relation_id=relation_id,
-                                        wordlist_id=tag_state.wordlist_id,
-                                        serialized_tag_state=serialized_tag_state,
                                         redirect_to=redirect_to,
                                         _external=True))
             else:
                 flash(r.text)
 
+    if serialized_tag_state:
+        return redirect(url_for(redirect_to,
+                                relation_id=relation_id,
+                                serialized_tag_state=serialized_tag_state))
+
     return redirect(url_for(redirect_to,
-                            relation_id=relation_id,
-                            serialized_tag_state=serialized_tag_state))
+                            relation_id=relation_id))
