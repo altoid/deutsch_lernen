@@ -285,6 +285,11 @@ class APITestsWordEndToEnd(unittest.TestCase):
     def test_nothing(self):
         pass
 
+    def test_garbage_payload(self):
+        payload = "this here is some bullshit"
+        r = self.client.post(url_for('api_word.add_word'), json=payload)
+        self.assertEqual(400, r.status_code)
+
     # insert a word with 'ss' but look it up with 'ß'.  should succeed.
     def test_add_ss_lookup_with_eszet(self):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
@@ -1073,6 +1078,12 @@ class APIWordUpdate(unittest.TestCase):
     # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
+
+    def test_garbage_payload(self):
+        payload = "this here is some bullshit"
+
+        r = self.client.put(url_for('api_word.update_word', word_id=self.word_id), json=payload)
+        self.assertEqual(400, r.status_code)
 
     # this bit me in the aß.  a spell change of 'schoss' to 'schoß' was seen as no change and was not being updated
     # in the word table.

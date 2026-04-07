@@ -47,8 +47,6 @@ FIXME - in the sidebar, show the name/id of the prevailing list
 FIXME - attempting to add a word with no POS info (via editor page) should flash a message
 
 FIXME - overhaul json schema
-    use decorators to do json validation
-    --> we will be done when get_validator is removed from dlernen*.py.  it should only be used in the decorators.
     crawl schema to make sure $ref links are not broken.
 
 TODO - add interjections as a new part of speech
@@ -104,7 +102,9 @@ best practices:
 
 - if a hidden field is not defined or is not passed in to the template, it must be wrapped with an {% if %} block
   or else it will be rendered unconditionally, defined or not.  this will cause badness.
-
+- any endpoint that takes a payload must be decorated with @js_validate_payload() with the schema for
+  that payload.  there must be a unit test for that endpoint that passes an invalid payload to it.
+  the unit test must ensure that the reponse code is 400 for that case.
 
 
 -----------

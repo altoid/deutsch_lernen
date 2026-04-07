@@ -3,16 +3,14 @@ import requests
 from pprint import pprint, pformat
 from mysql.connector import connect
 from dlernen import common
-from dlernen.decorators import js_validate_result
-from dlernen.dlernen_json_schema import get_validator, \
+from dlernen.decorators import js_validate_result, js_validate_payload
+from dlernen.dlernen_json_schema import \
     ATTRIBUTES,\
     RELATION_ARRAY_RESPONSE_SCHEMA, \
     WORD_ADD_PAYLOAD_SCHEMA, \
     WORD_RESPONSE_SCHEMA, \
-    WORD_ARRAY_RESPONSE_SCHEMA, \
     WORD_UPDATE_PAYLOAD_SCHEMA
 from contextlib import closing
-import jsonschema
 
 # view functions for /api/word URLs are here.
 
@@ -162,17 +160,12 @@ def save_attributes(word_id, attributes_adding, attributes_deleting, cursor):
 
 
 @bp.route('', methods=['POST'])
+@js_validate_payload(WORD_ADD_PAYLOAD_SCHEMA)
 def add_word():
     # add a single word to the dictionary.  the word's part-of-speech must be specified.  if successful, this
     # operation creates a single word id.
 
-    try:
-        payload = request.get_json()
-        get_validator(WORD_ADD_PAYLOAD_SCHEMA).validate(payload)
-    except jsonschema.ValidationError as e:
-        return "bad payload: %s" % e.message, 400
-    except Exception as e:
-        return "bad payload: %s" % str(e), 400
+    payload = request.get_json()
 
     # word pos_id are required fields in the json schema.  so if the payload passes validation we know these
     # are present.  notes are optional.
@@ -261,13 +254,9 @@ def add_word():
 
 
 @bp.route('/<int:word_id>', methods=['PUT'])
+@js_validate_payload(WORD_UPDATE_PAYLOAD_SCHEMA)
 def update_word(word_id):
-    try:
-        payload = request.get_json()
-        get_validator(WORD_UPDATE_PAYLOAD_SCHEMA).validate(payload)
-    except jsonschema.ValidationError as e:
-        message = "bad payload: %s" % e.message
-        return message, 400
+    payload = request.get_json()
 
     # checks:
     # word_id exists
@@ -402,6 +391,32 @@ def delete_word(word_id):
             return 'error deleting word_id %s' % word_id, 500
 
 
+@js_validate_result(RELATION_ARRAY_RESPONSE_SCHEMA)
+def __get_relations(cursor, word_id):
+    result = []
+
+    sql = """
+    select distinct relation_id
+    from word_id_relation
+    where word_id = %(word_id)s
+    """
+
+    cursor.execute(sql, {'word_id': word_id})
+    rows = cursor.fetchall()
+    if rows:
+        relation_ids = [x['relation_id'] for x in rows]
+        for r_id in relation_ids:
+            url = url_for('api_relation.get_relation', relation_id=r_id, _external=True)
+            r = requests.get(url)
+            if not r:
+                return r.text, r.status_code
+
+            obj = r.json()
+            result.append(obj)
+
+    return result
+
+
 @bp.route('/<int:word_id>/relations')
 def get_relations(word_id):
     # fetch all the relations that contain this word.
@@ -411,27 +426,4 @@ def get_relations(word_id):
         if not result:
             return "word %s not found" % word_id, 404
 
-        result = []
-
-        sql = """
-        select distinct relation_id
-        from word_id_relation
-        where word_id = %(word_id)s
-        """
-
-        cursor.execute(sql, {'word_id': word_id})
-        rows = cursor.fetchall()
-        if rows:
-            relation_ids = [x['relation_id'] for x in rows]
-            for r_id in relation_ids:
-                url = url_for('api_relation.get_relation', relation_id=r_id, _external=True)
-                r = requests.get(url)
-                if not r:
-                    return r.text, r.status_code
-
-                obj = r.json()
-                result.append(obj)
-
-        get_validator(RELATION_ARRAY_RESPONSE_SCHEMA).validate(result)
-
-        return result
+        return __get_relations(cursor, word_id)

@@ -2,9 +2,10 @@ import mysql.connector.errors
 from flask import Blueprint, request, url_for, current_app
 from pprint import pprint
 from mysql.connector import connect
-from dlernen.dlernen_json_schema import get_validator, \
+from dlernen.dlernen_json_schema import \
     WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA, \
     WORD_TAG_RESPONSE_SCHEMA
+from dlernen.decorators import js_validate_result, js_validate_payload
 from dlernen import common
 from contextlib import closing
 import jsonschema
@@ -13,6 +14,30 @@ import requests
 # view functions for tags and word/tag linkages in wordlists
 
 bp = Blueprint('api_wordlist_tag', __name__, url_prefix='/api/wordlist/tags')
+
+
+@js_validate_result(WORD_TAG_RESPONSE_SCHEMA)
+def __get_tags(cursor, wordlist_id, word_id):
+    result = {
+        "wordlist_id": wordlist_id,
+        "word_id": word_id,
+        "tags": []
+    }
+
+    sql = """
+    select tag from tag
+    where wordlist_id=%(wordlist_id)s and word_id=%(word_id)s
+    """
+
+    cursor.execute(sql, {
+        "wordlist_id": wordlist_id,
+        "word_id": word_id
+    })
+    rows = cursor.fetchall()
+
+    result['tags'] = [x['tag'] for x in rows]
+
+    return result
 
 
 @bp.route('/<int:wordlist_id>/<int:word_id>', methods=['GET'])
@@ -33,14 +58,14 @@ def get_tags(wordlist_id, word_id):
 
     metadata = r.json()
 
+    result = {
+        "wordlist_id": wordlist_id,
+        "word_id": word_id,
+        "tags": []
+    }
+
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
-            result = {
-                "wordlist_id": wordlist_id,
-                "word_id": word_id,
-                "tags": []
-            }
-
             members = set(common.get_word_ids_from_wordlists([wordlist_id], cursor))
             if word_id not in members:
                 return "word %s not in list %s" % (word_id, wordlist_id), 404
@@ -50,21 +75,7 @@ def get_tags(wordlist_id, word_id):
                 return result
 
             # checks complete, let's do this.
-            sql = """
-            select tag from tag
-            where wordlist_id=%(wordlist_id)s and word_id=%(word_id)s
-            """
-
-            cursor.execute(sql, {
-                "wordlist_id": wordlist_id,
-                "word_id": word_id
-            })
-            rows = cursor.fetchall()
-
-            result['tags'] = [x['tag'] for x in rows]
-            get_validator(WORD_TAG_RESPONSE_SCHEMA).validate(result)
-
-            return result, 200
+            return __get_tags(cursor, wordlist_id, word_id)
 
         except mysql.connector.errors.ProgrammingError as e:
             print(e.msg)
@@ -72,6 +83,27 @@ def get_tags(wordlist_id, word_id):
         except Exception as e:
             print(e.__class__)
             return str(e), 500
+
+
+@js_validate_result(WORD_TAG_RESPONSE_SCHEMA)
+def __get_all_tags(cursor, wordlist_id):
+    sql = """
+    select distinct tag from tag
+    where wordlist_id=%(wordlist_id)s
+    order by tag
+    """
+
+    cursor.execute(sql, {
+        "wordlist_id": wordlist_id
+    })
+    rows = cursor.fetchall()
+
+    result = {
+        "wordlist_id": wordlist_id,
+        'tags': [x['tag'] for x in rows]
+    }
+
+    return result
 
 
 @bp.route('/<int:wordlist_id>', methods=['GET'])
@@ -106,21 +138,7 @@ def get_all_tags(wordlist_id):
                 return result
 
             # checks complete, let's do this.
-            sql = """
-            select distinct tag from tag
-            where wordlist_id=%(wordlist_id)s
-            order by tag
-            """
-
-            cursor.execute(sql, {
-                "wordlist_id": wordlist_id
-            })
-            rows = cursor.fetchall()
-
-            result['tags'] = [x['tag'] for x in rows]
-            get_validator(WORD_TAG_RESPONSE_SCHEMA).validate(result)
-
-            return result, 200
+            return __get_all_tags(cursor, wordlist_id)
 
         except mysql.connector.errors.ProgrammingError as e:
             print(e.msg)
@@ -131,6 +149,7 @@ def get_all_tags(wordlist_id):
 
 
 @bp.route('/<int:wordlist_id>/<int:word_id>', methods=['POST'])
+@js_validate_payload(WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA)
 def add_tags(wordlist_id, word_id):
     # returns a message and a status code, no object.
     # the payload is just a list of tags.
@@ -146,11 +165,7 @@ def add_tags(wordlist_id, word_id):
         message = "cannot add tags to words in a smart list:  %s" % wordlist_id
         return message, 400
 
-    try:
-        payload = request.get_json()
-        get_validator(WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA).validate(payload)
-    except jsonschema.ValidationError as e:
-        return "bad payload: %s" % e.message, 400
+    payload = request.get_json()
 
     new_tags = list(set(payload))  # ensure no redundant tags
     if not new_tags:

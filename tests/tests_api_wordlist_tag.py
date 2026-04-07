@@ -471,6 +471,14 @@ class APIWordlistTag(unittest.TestCase):
     def test_nothing(self):
         pass
 
+    def test_garbage_payload(self):
+        payload = "this here is some bullshit"
+        r = self.client.post(url_for('api_wordlist_tag.add_tags',
+                                     wordlist_id=self.wordlist_id,
+                                     word_id=self.word1_id),
+                             json=payload)
+        self.assertEqual(400, r.status_code)
+
     # test cases:
     #
     # 1. GET /api/wordlist/<int:wordlist_id>

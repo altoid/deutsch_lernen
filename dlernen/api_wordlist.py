@@ -4,7 +4,7 @@ from pprint import pprint
 import requests
 from mysql.connector import connect
 from dlernen import common
-from dlernen.dlernen_json_schema import get_validator, \
+from dlernen.dlernen_json_schema import \
     RELATION_ARRAY_RESPONSE_SCHEMA, \
     WORDLIST_CONTENTS_PAYLOAD_SCHEMA, \
     WORDLIST_METADATA_PAYLOAD_SCHEMA, \
@@ -516,6 +516,32 @@ def get_word_ids_from_wordlists():
         return {'word_ids': [x['word_id'] for x in rows]}
 
 
+@js_validate_result(RELATION_ARRAY_RESPONSE_SCHEMA)
+def __get_relations(cursor, word_ids):
+    args = ','.join(['%s'] * len(word_ids))
+    sql = """
+    select distinct relation_id
+    from word_id_relation
+    where word_id in (%(args)s)
+    """ % {'args': args}
+
+    result = []
+    cursor.execute(sql, word_ids)
+    rows = cursor.fetchall()
+    if rows:
+        relation_ids = [x['relation_id'] for x in rows]
+        for r_id in relation_ids:
+            url = url_for('api_relation.get_relation', relation_id=r_id, _external=True)
+            r = requests.get(url)
+            if not r:
+                return r.text, r.status_code
+
+            obj = r.json()
+            result.append(obj)
+
+    return result
+
+
 @bp.route('/<int:wordlist_id>/relations')
 def get_relations(wordlist_id):
     # fetch all the relations for this wordlist's member words.
@@ -529,26 +555,6 @@ def get_relations(wordlist_id):
 
         result = []
         if word_ids:
-            args = ','.join(['%s'] * len(word_ids))
-            sql = """
-            select distinct relation_id
-            from word_id_relation
-            where word_id in (%(args)s)
-            """ % {'args': args}
-
-            cursor.execute(sql, word_ids)
-            rows = cursor.fetchall()
-            if rows:
-                relation_ids = [x['relation_id'] for x in rows]
-                for r_id in relation_ids:
-                    url = url_for('api_relation.get_relation', relation_id=r_id, _external=True)
-                    r = requests.get(url)
-                    if not r:
-                        return r.text, r.status_code
-
-                    obj = r.json()
-                    result.append(obj)
-
-        get_validator(RELATION_ARRAY_RESPONSE_SCHEMA).validate(result)
+            result = __get_relations(cursor, word_ids)
 
         return result
