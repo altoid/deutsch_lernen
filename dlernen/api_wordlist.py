@@ -10,7 +10,7 @@ from dlernen.dlernen_json_schema import get_validator, \
     WORDLIST_METADATA_PAYLOAD_SCHEMA, \
     WORDLIST_METADATA_RESPONSE_SCHEMA, \
     WORDLIST_RESPONSE_SCHEMA
-
+from dlernen.decorators import js_validate_result
 from contextlib import closing
 import jsonschema
 
@@ -58,6 +58,7 @@ def validate_sqlcode(cursor, sqlcode):
         cursor.fetchall()
 
 
+@js_validate_result(WORDLIST_METADATA_RESPONSE_SCHEMA)
 def __get_wordlist_metadata(wordlist_id, cursor):
     """
     returns the metadata for a given wordlist:  name, sqlcode, citation, list_type, and id.
@@ -92,8 +93,6 @@ def __get_wordlist_metadata(wordlist_id, cursor):
             wl_metadata['list_type'] = 'standard'
         else:
             wl_metadata['list_type'] = 'empty'
-
-        get_validator(WORDLIST_METADATA_RESPONSE_SCHEMA).validate(wl_metadata)
 
     # could be None
     return wl_metadata
@@ -175,8 +174,8 @@ def update_wordlist_metadata(wordlist_id):
     do_update = any(key in payload for key in keys_to_check)
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        if do_update:
-            try:
+        try:
+            if do_update:
                 # this is well-behaved if citation and sqlcode are not given.
 
                 wordlist_metadata = __get_wordlist_metadata(wordlist_id, cursor)
@@ -193,43 +192,44 @@ def update_wordlist_metadata(wordlist_id):
 
                 if 'sqlcode' in payload:
                     sql = """
-                    update wordlist
-                    set sqlcode = %(sqlcode)s
-                    where id = %(wordlist_id)s
-                    """
+                        update wordlist
+                        set sqlcode = %(sqlcode)s
+                        where id = %(wordlist_id)s
+                        """
                     cursor.execute(sql, {'sqlcode': payload['sqlcode'], 'wordlist_id': wordlist_id})
 
                 if 'citation' in payload:
                     sql = """
-                    update wordlist
-                    set citation = %(citation)s
-                    where id = %(wordlist_id)s
-                    """
+                        update wordlist
+                        set citation = %(citation)s
+                        where id = %(wordlist_id)s
+                        """
                     cursor.execute(sql, {'citation': payload['citation'], 'wordlist_id': wordlist_id})
 
                 if 'name' in payload:
                     sql = """
-                    update wordlist
-                    set name = %(name)s
-                    where id = %(wordlist_id)s
-                    """
+                        update wordlist
+                        set name = %(name)s
+                        where id = %(wordlist_id)s
+                        """
                     cursor.execute(sql, {'name': payload['name'], 'wordlist_id': wordlist_id})
 
                 cursor.execute('commit')
 
-            except mysql.connector.errors.ProgrammingError as e:
-                # this will happen if validate_sqlcode throws exception
-                return str(e), 422
-            except Exception as e:
-                print(cursor.statement)
-                print(str(e))
-                cursor.execute('rollback')
-                return "update list failed", 500
+            # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
+            return __get_wordlist_metadata(wordlist_id, cursor)
 
-        # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
-        return __get_wordlist_metadata(wordlist_id, cursor)
+        except mysql.connector.errors.ProgrammingError as e:
+            # this will happen if validate_sqlcode throws exception
+            return str(e), 422
+        except Exception as e:
+            print(cursor.statement)
+            print(str(e))
+            cursor.execute('rollback')
+            return "update list failed", 500
 
 
+@js_validate_result(WORDLIST_RESPONSE_SCHEMA)
 def __get_wordlist(wordlist_id, cursor, tags=None):
     sql = """
     select
@@ -352,8 +352,6 @@ def __get_wordlist(wordlist_id, cursor, tags=None):
         result['list_type'] = "standard"
     else:
         result['list_type'] = "empty"
-
-    get_validator(WORDLIST_RESPONSE_SCHEMA).validate(result)
 
     return result
 
@@ -494,7 +492,7 @@ def get_word_ids_from_wordlists():
     tags = list(set(request.args.getlist('tag')))
 
     # not going to bother checking whether the wordlist_ids or tags exist.  i'm tired.
-    
+
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         if tags:
             if not wordlist_ids or len(wordlist_ids) != 1:
@@ -567,7 +565,3 @@ def get_relations(wordlist_id):
         get_validator(RELATION_ARRAY_RESPONSE_SCHEMA).validate(result)
 
         return result
-
-
-
-

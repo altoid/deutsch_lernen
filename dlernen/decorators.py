@@ -7,8 +7,8 @@ def js_validate_result(schema):
         @functools.wraps(func)
         def wrapper_js_validate_result(*args, **kwargs):
             result = func(*args, **kwargs)
-            # NB do not check for None or empty results.  trivial return values should pass validation.
-            get_validator(schema).validate(result)
+            if result is not None:
+                get_validator(schema).validate(result)
             return result
         return wrapper_js_validate_result
     return decorator_js_validate_result

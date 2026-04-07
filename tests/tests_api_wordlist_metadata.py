@@ -14,6 +14,58 @@ def cleanupWordlistID(client, wordlist_id):
     client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id))
 
 
+class APIWordListMetadataGet(unittest.TestCase):
+    # make sure get operations work
+    app = None
+    app_context = None
+    client = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
+            TESTING=True,
+        )
+
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
+
+        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
+        cls.keyword_mappings = json.loads(r.data)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
+
+    # the setup for this class creates a list with just a name.
+    def setUp(self):
+        self.list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': self.list_name
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
+        obj = json.loads(r.data)
+        self.wordlist_id = obj['wordlist_id']
+        self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
+        self.contents_update_url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=self.wordlist_id)
+        self.wordlist_get_url = url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id)
+        self.metadata_update_url = url_for('api_wordlist.update_wordlist_metadata', wordlist_id=self.wordlist_id)
+
+    # do nothing, just make sure that setUp works
+    def test_nothing(self):
+        pass
+
+    def test_get_extant(self):
+        r = self.client.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=self.wordlist_id))
+        self.assertEqual(200, r.status_code)
+
+    def test_get_nonexistent(self):
+        r = self.client.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=6666666))
+        self.assertEqual(404, r.status_code)
+
+
 class APIWordListMetadataCreate(unittest.TestCase):
     app = None
     app_context = None

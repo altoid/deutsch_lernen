@@ -149,13 +149,21 @@ class APIWordlist(unittest.TestCase):
         self.wordlist_get_url = url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id)
         self.metadata_update_url = url_for('api_wordlist.update_wordlist_metadata', wordlist_id=self.wordlist_id)
 
-    # do nothing, just make sure that setUp works (by creating an empty list)
+    # do nothing, just make sure that setUp works
     def test_nothing(self):
+        pass
+
+    # the list setUp creates should exist and be empty.
+    def test_get_extant(self):
         r = self.client.get(self.wordlist_get_url)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
         self.assertEqual('empty', obj['list_type'])
+
+    def test_get_nonexistent(self):
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=6666666))
+        self.assertEqual(404, r.status_code)
 
     # test basic add - in one request, add everything we can add in a single request
     def test_create_dumb_list(self):

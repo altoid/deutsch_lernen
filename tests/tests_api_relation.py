@@ -610,7 +610,6 @@ class TestAPIRelationWordlist(TestAPIRelation):
         r = self.client.put(url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id),
                             json=payload)
         self.assertEqual(200, r.status_code)
-        wordlist = json.loads(r.data)
 
         # create the relations
         relation1_id = self.createRelation(word_ids[0:3])
