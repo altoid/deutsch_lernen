@@ -1,15 +1,15 @@
 from flask import Blueprint, current_app
 from mysql.connector import connect
-from dlernen.dlernen_json_schema import get_validator, \
-    POS_STRUCTURE_RESPONSE_SCHEMA
+from dlernen.dlernen_json_schema import POS_STRUCTURE_RESPONSE_SCHEMA
+from dlernen.decorators import js_validate_result
 from pprint import pprint
 from contextlib import closing
-import jsonschema
 
 
 bp = Blueprint('api_pos', __name__, url_prefix='/api/pos')
 
 
+@js_validate_result(POS_STRUCTURE_RESPONSE_SCHEMA)
 def __get_pos(sql, args):
     """
     fetch the part-of-speech info from the database and format it
@@ -46,8 +46,6 @@ def __get_pos(sql, args):
                     "attributes": pos_name_to_attrs[k]
                 }
             )
-
-        get_validator(POS_STRUCTURE_RESPONSE_SCHEMA).validate(result)
 
         return result
 
