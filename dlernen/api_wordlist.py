@@ -10,7 +10,7 @@ from dlernen.dlernen_json_schema import get_validator, \
     WORDLIST_METADATA_PAYLOAD_SCHEMA, \
     WORDLIST_METADATA_RESPONSE_SCHEMA, \
     WORDLIST_RESPONSE_SCHEMA
-from dlernen.decorators import js_validate_result
+from dlernen.decorators import js_validate_result, js_validate_payload
 from contextlib import closing
 import jsonschema
 
@@ -115,13 +115,9 @@ def get_wordlist_metadata(wordlist_id):
 
 
 @bp.route('/metadata', methods=['POST'])
+@js_validate_payload(WORDLIST_METADATA_PAYLOAD_SCHEMA)
 def create_wordlist_metadata():
-    try:
-        payload = request.get_json()
-        get_validator(WORDLIST_METADATA_PAYLOAD_SCHEMA).validate(payload)
-    except jsonschema.ValidationError as e:
-        return "bad payload: %s" % e.message, 400
-
+    payload = request.get_json()
     name = payload.get('name')
     citation = payload.get('citation')
     sqlcode = payload.get('sqlcode')
@@ -162,12 +158,9 @@ def create_wordlist_metadata():
 
 
 @bp.route('/<int:wordlist_id>/metadata', methods=['PUT'])
+@js_validate_payload(WORDLIST_METADATA_PAYLOAD_SCHEMA)
 def update_wordlist_metadata(wordlist_id):
-    try:
-        payload = request.get_json()
-        get_validator(WORDLIST_METADATA_PAYLOAD_SCHEMA).validate(payload)
-    except jsonschema.ValidationError as e:
-        return "bad payload: %s" % e.message, 400
+    payload = request.get_json()
 
     # don't update anything that isn't in the payload.
     keys_to_check = ['name', 'citation', 'sqlcode']
@@ -376,12 +369,9 @@ def get_wordlist(wordlist_id):
 
 
 @bp.route('/<int:wordlist_id>', methods=['PUT'])
+@js_validate_payload(WORDLIST_CONTENTS_PAYLOAD_SCHEMA)
 def update_wordlist_contents(wordlist_id):
-    try:
-        payload = request.get_json()
-        get_validator(WORDLIST_CONTENTS_PAYLOAD_SCHEMA).validate(payload)
-    except jsonschema.ValidationError as e:
-        return "bad payload: %s" % e.message, 400
+    payload = request.get_json()
 
     word_ids = None
     if 'word_ids' in payload:
@@ -424,12 +414,9 @@ def update_wordlist_contents(wordlist_id):
 
 
 @bp.route('/<int:wordlist_id>/batch_delete', methods=['PUT'])
+@js_validate_payload(WORDLIST_CONTENTS_PAYLOAD_SCHEMA)
 def delete_from_wordlist(wordlist_id):
-    try:
-        payload = request.get_json()  # comes in as an array of ints, not a dict.
-        get_validator(WORDLIST_CONTENTS_PAYLOAD_SCHEMA).validate(payload)
-    except jsonschema.ValidationError as e:
-        return "bad payload: %s" % e.message, 400
+    payload = request.get_json()
 
     # batch delete from wordlist; can remove both known and unknown words.
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:

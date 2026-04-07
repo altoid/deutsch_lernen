@@ -259,6 +259,7 @@ WORDLIST_CONTENTS_PAYLOAD_SCHEMA = {
     "required": [
         # none are required.
     ],
+    "additionalProperties": False,
     "properties": {
         "notes": {
             "type": ["string", 'null']
@@ -306,6 +307,7 @@ WORDLIST_METADATA_PAYLOAD_SCHEMA = {
         #
         # we permit payloads with no name so that we can update a given list without having to specify a name.
     ],
+    "additionalProperties": False,
     "properties": {
         "name": {
             "type": "string",

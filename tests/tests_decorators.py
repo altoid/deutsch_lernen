@@ -1,5 +1,5 @@
 import unittest
-from dlernen.decorators import js_validate_result
+from dlernen.decorators import js_validate_result, js_validate_payload
 from dlernen.dlernen_json_schema import WORD_RESPONSE_SCHEMA, WORD_ADD_PAYLOAD_SCHEMA, ATTRIBUTES
 import jsonschema
 
@@ -64,6 +64,15 @@ def decorated_valid_out():
 @js_validate_result(WORD_RESPONSE_SCHEMA)
 def decorated_garbage_out():
     return INVALID_RESPONSE
+
+
+class PayloadDecoratorTests(unittest.TestCase):
+    def test_functools(self):
+        # decorated function should have its original name
+        decorator = js_validate_payload(WORD_ADD_PAYLOAD_SCHEMA)
+        decorated_function = decorator(valid_out)
+
+        self.assertEqual(valid_out.__name__, decorated_function.__name__)
 
 
 class ResultDecoratorTests(unittest.TestCase):

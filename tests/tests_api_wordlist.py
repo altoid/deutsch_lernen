@@ -271,6 +271,15 @@ class APIWordlist(unittest.TestCase):
         self.assertEqual(0, len(obj['words']))
         self.assertEqual('empty', obj['list_type'])
 
+    # make sure an invalid payload returns a 400
+    def test_garbage_payload(self):
+        payload = {
+            'bull': 'shit'
+        }
+        url = url_for('api_wordlist.delete_from_wordlist', wordlist_id=self.wordlist_id)
+        r = self.client.put(url, json=payload)
+        self.assertEqual(400, r.status_code)
+
     # update list with notes as empty string
     def test_update_notes_to_empty_string(self):
         payload = {
@@ -590,6 +599,15 @@ class APIWordlistGetWordIDs(unittest.TestCase):
     # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
+
+    # make sure an invalid payload returns a 400
+    def test_garbage_payload(self):
+        payload = {
+            'bull': 'shit'
+        }
+        r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
+                                    wordlist_id=self.wordlist2_id), json=payload)
+        self.assertEqual(400, r.status_code)
 
     # verify correctness of returned list of word ids.
     def test1(self):

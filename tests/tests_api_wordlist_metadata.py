@@ -90,6 +90,14 @@ class APIWordListMetadataCreate(unittest.TestCase):
     def test_nothing(self):
         pass
 
+    # make sure an invalid payload returns a 400
+    def test_garbage_payload(self):
+        add_payload = {
+            'bull': 'shit'
+        }
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
+        self.assertEqual(400, r.status_code)
+
     # create a list, name only. get it, verify that fields retrieved are correct.  delete it and make sure it's gone.
     def test_create_1(self):
         list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
@@ -247,6 +255,14 @@ class APIWordListMetadataUpdate(unittest.TestCase):
     # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
+
+    # make sure an invalid payload returns a 400
+    def test_garbage_payload(self):
+        payload = {
+            'bull': 'shit'
+        }
+        r = self.client.put(self.metadata_update_url, json=payload)
+        self.assertEqual(400, r.status_code)
 
     # update the name and set citation and sqlcode to nontrivial values, in a single request.
     # check everything, including list type.

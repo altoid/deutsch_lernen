@@ -39,11 +39,6 @@ FIXME - in quiz app, if you go to the main menu in the middle of a quiz where al
 
 TODO - in quiz app, imperfect query should prefetch all candidate words, not use the sql for one-at-a-time queries
 
-TODO - new feature - link words that have connections/differences.
-    how different from a word list?  ==> in a word's lookup page, want to show connected words, which
-    is different from member wordlists.  but we also want a separate page for a set of connected words.
-
-
 TODO - when the results page is displayed within the context of a wordlist, there should be a simple way to add
     any of the search results to the list.
 
@@ -53,21 +48,78 @@ FIXME - attempting to add a word with no POS info (via editor page) should flash
 
 FIXME - overhaul json schema
     use decorators to do json validation
+    --> we will be done when get_validator is removed from dlernen*.py.  it should only be used in the decorators.
     crawl schema to make sure $ref links are not broken.
 
-FIXME - missed/hinted words don't seem to be getting tagged.
+TODO - add interjections as a new part of speech
+
+TODO - home page should be placeholder (no forms) or drop it altogether.
+
+TODO - speed up lookup-by-word page:
+    1.  in looking up member wordlists, just get the metadata, not the whole damn thing
+    2.  new endpoint:  given a bunch of word ids, return a data structure mapping each word id to a
+        list of list headers
+    3.  new endpoint:  given a wordlist id and a list of word ids, return the word ids that are members of the list.
+
+FIXME - api_wordlists.get_wordlists_by_word_id should not be making an api call.  need to refactor this module.
+
+-------
+in a wordlist context, look up a word that doesn't exist
+click (here) to define it
+fill in something
+submit
+boom
+
+redirect_to is undefined
+------
+
+dlernen.edit_word_form takes a redirect_to argument
+
+currently dlernen.list_editor
+defaults to dlernen.wordlist
+
+putting the add-word field in the sidebar:  endpoints where we want the field to appear:
+
+submit button action is POST to dlernen.update_words
+
+for the following, display an add-word field in the sidebar:
+
+reviewed  endpoint                           args                      from word editor redirect to
+---------------------------------------------------------------------------------------------------
+yes    GET dlernen.wordlist               wordlist_id               dlernen.wordlist
+                                          ser tag state (opt.)
+
+yes    GET dlernen.list_editor            wordlist_id               dlernen.list_editor
+                                          ser tag state
+
+yes    dlernen_relation.relation_editor   relation_id               dlernen_relation.relation_editor
+                                          ser tag state (opt.)
+
+       dlernen.home                       none                      lookup page for the word
+
+yes    GET dlernen.wordlists              none                      (same)
+       (no prevailing wordlist)
 
 
 ------
 best practices:
 
 - use addCleanup instead of tearDown in test classes
-- when PUT or POST methods create something, send back a 201 not a 200.
+- when POST methods create something, send back a 201 not a 200.
 - make sure http DELETE is not used for batch delete.
 - look for opportunities to use dictionary and set comprehensions.
+- every page where we want to show list items in the sidebar has to have a tag state object passed to
+  the template.  that's because the sidebar (base.html) requires both wordlist_id and a list_type
+  in order to render list-specific menu items, and a tag state object has both.
+
+  note that WITHOUT a tag state object, we will be fine, but we won't have any wordlist context to render.
+
+- if a hidden field is not defined or is not passed in to the template, it must be wrapped with an {% if %} block
+  or else it will be rendered unconditionally, defined or not.  this will cause badness.
+
+
 
 -----------
-
 
 tag api changes:
 
@@ -75,8 +127,6 @@ relaxing the 'tags are per wordlist' restriction a bit.
 
 - we want to query the same tag from multiple wordlists (e.g. hinted and missed tags)
 - clear the same tag from multiple wordlists? ==> yes
-
-
 
 ------
 to show all routes in the app:
