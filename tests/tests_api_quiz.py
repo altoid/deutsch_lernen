@@ -58,7 +58,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
 
         self.word = ''.join(random.choices(string.ascii_lowercase, k=11))
         attrkeys = [
-            # some are comment out because we aren't providing values for all of them
+            # some are commented out because we aren't providing values for all of them
             'first_person_singular',
             'second_person_singular',
             # 'third_person_singular',
@@ -504,3 +504,34 @@ class APIQuizTestGetAllAttrValuesForQuiz(unittest.TestCase):
                       word_id=111111111)
         r = self.client.get(url)
         self.assertEqual(404, r.status_code)
+
+
+class APIPostQuizAnswer(unittest.TestCase):
+    app = None
+    app_context = None
+    client = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
+            TESTING=True,
+        )
+
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
+
+    # make sure garbage payload does not pass validation
+    def test_garbage_payload(self):
+        payload = {
+            'snaoteuh': 'bstaeohusa'
+        }
+        r = self.client.post(url_for('api_quiz.post_quiz_answer'), json=payload)
+        self.assertEqual(400, r.status_code)
+
+

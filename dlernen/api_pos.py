@@ -155,7 +155,7 @@ def get_pos_keyword_mappings():
     # from the comprehensive pos structure, create mappings of attribute and POS names to their respective ids,
     # and vice versa.
     #
-    # this is used for unit testing.  it is not intended for any client so its return value is not validated.
+    # this is used for unit testing.  it is not intended for any client.
 
     pos_structure = get_pos()
 

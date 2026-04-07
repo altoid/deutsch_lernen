@@ -2,12 +2,12 @@ from flask import Blueprint, request, current_app, url_for
 import requests
 from mysql.connector import connect
 from contextlib import closing
-import jsonschema
 from dlernen import common
-from dlernen.dlernen_json_schema import get_validator, \
+from dlernen.dlernen_json_schema import \
     QUIZ_ANSWER_PAYLOAD_SCHEMA, \
     QUIZ_REPORT_RESPONSE_SCHEMA, \
     QUIZ_RESPONSE_SCHEMA
+from dlernen.decorators import js_validate_result, js_validate_payload
 from pprint import pprint
 
 # /api/quiz and quiz_metadata endpoints are here.
@@ -162,6 +162,33 @@ def run_quiz_query(cursor, query, quiz_key, word_id_filter, word_ids):
             return rows[0]
 
 
+@js_validate_result(QUIZ_RESPONSE_SCHEMA)
+def __get_all_attr_values_for_quiz(cursor, word_id, quiz_key):
+    sql = """
+    select
+        q.id quiz_id,
+        m.attrvalue, 
+        m.word, 
+        m.word_id, 
+        m.attribute_id, 
+        m.attrkey
+    from quiz q
+    inner join quiz_structure qs on q.id = qs.quiz_id
+    inner join attribute a on a.id = qs.attribute_id
+    inner join mashup_v m on qs.attribute_id = m.attribute_id
+
+    where
+    q.quiz_key = %(quiz_key)s
+    and m.word_id = %(word_id)s
+    """
+
+    cursor.execute(sql, {'word_id': word_id, 'quiz_key': quiz_key})
+    rows = cursor.fetchall()
+
+    # rows may be empty.  that's ok.
+    return rows
+
+
 @bp.route('/<string:quiz_key>/word/<int:word_id>')
 def get_all_attr_values_for_quiz(quiz_key, word_id):
     # the route has the useless 'word' component to avoid a collision with the route for
@@ -195,42 +222,46 @@ def get_all_attr_values_for_quiz(quiz_key, word_id):
             return "word_id %s not found" % word_id, 404
 
         # checks complete, let's do this
+        return __get_all_attr_values_for_quiz(cursor, word_id, quiz_key)
 
-        sql = """
-        select
-            q.id quiz_id,
-            m.attrvalue, 
-            m.word, 
-            m.word_id, 
-            m.attribute_id, 
-            m.attrkey
-        from quiz q
-        inner join quiz_structure qs on q.id = qs.quiz_id
-        inner join attribute a on a.id = qs.attribute_id
-        inner join mashup_v m on qs.attribute_id = m.attribute_id
 
-        where
-        q.quiz_key = %(quiz_key)s
-        and m.word_id = %(word_id)s
-        """
+@js_validate_result(QUIZ_RESPONSE_SCHEMA)
+def __get_word_to_test_single_wordlist(cursor, quiz_key, word_ids, query):
+    result = []
+    if word_ids:
+        word_id_args = ['%s'] * len(word_ids)
+        word_id_args = ', '.join(word_id_args)
 
-        cursor.execute(sql, {'word_id': word_id, 'quiz_key': quiz_key})
-        rows = cursor.fetchall()
+        word_id_filter = " and word_id in (%(word_id_args)s) " % {'word_id_args': word_id_args}
 
-        # rows may be empty.  that's ok.
-        get_validator(QUIZ_RESPONSE_SCHEMA).validate(rows)
+        word_chosen = run_quiz_query(cursor, query, quiz_key, word_id_filter, word_ids)
 
-        return rows
+        if word_chosen:
+            # if this is a noun, add its article to the response.
+            url = url_for('api_word.get_word_by_id', word_id=word_chosen['word_id'], _external=True)
+
+            r = requests.get(url)
+            if not r:
+                return r.text, r.status_code
+
+            word_info = r.json()
+            if word_info['pos_name'].casefold() == 'noun':
+                article = list(filter(lambda x: x['attrkey'] == 'article', word_info['attributes']))
+                word_chosen['article'] = article[0]['attrvalue']
+
+            result = [word_chosen]
+
+    return result
 
 
 @bp.route('/<string:quiz_key>/<int:wordlist_id>')
 def get_word_to_test_single_wordlist(quiz_key, wordlist_id):
-    tags = request.args.getlist('tag')
-
     # possible values for query are keys in DEFINED_QUERIES above
     query = request.args.get('query', 'oldest_first')
     if query not in DEFINED_QUERIES.keys():
         return "unknown query: %s" % query, 400
+
+    tags = request.args.getlist('tag')
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
@@ -254,33 +285,50 @@ def get_word_to_test_single_wordlist(quiz_key, wordlist_id):
         wordlist = r.json()
         word_ids = [x['word_id'] for x in wordlist['words']]
 
+        return __get_word_to_test_single_wordlist(cursor, quiz_key, word_ids, query)
+
+
+@js_validate_result(QUIZ_RESPONSE_SCHEMA)
+def __get_word_to_test(cursor, quiz_key, wordlist_ids, query):
+    word_id_filter = ""
+    word_ids = []
+    if wordlist_ids:
+        word_ids = common.get_word_ids_from_wordlists(wordlist_ids, cursor)
         if word_ids:
             word_id_args = ['%s'] * len(word_ids)
             word_id_args = ', '.join(word_id_args)
-
             word_id_filter = " and word_id in (%(word_id_args)s) " % {'word_id_args': word_id_args}
 
-            word_chosen = run_quiz_query(cursor, query, quiz_key, word_id_filter, word_ids)
+    #     wordlist_ids and     word_ids  - we have nonempty wordlists, run the query
+    #     wordlist_ids and not word_ids  - wordlists are empty, don't run the query
+    # not wordlist_ids and     word_ids  - won't happen
+    # not wordlist_ids and not word_ids  - whole dictionary, this case is legit
 
-            if word_chosen:
-                # if this is a noun, add its article to the response.
-                url = url_for('api_word.get_word_by_id', word_id=word_chosen['word_id'], _external=True)
+    word_chosen = {}
 
-                r = requests.get(url)
-                if not r:
-                    return r.text, r.status_code
+    if wordlist_ids and word_ids:
+        word_chosen = run_quiz_query(cursor, query, quiz_key, word_id_filter, word_ids)
 
-                word_info = r.json()
-                if word_info['pos_name'].casefold() == 'noun':
-                    article = list(filter(lambda x: x['attrkey'] == 'article', word_info['attributes']))
-                    word_chosen['article'] = article[0]['attrvalue']
+    if not wordlist_ids and not word_ids:
+        word_chosen = run_quiz_query(cursor, query, quiz_key, word_id_filter, word_ids)
 
-                result = [word_chosen]
-                get_validator(QUIZ_RESPONSE_SCHEMA).validate(result)
+    result = []
+    if word_chosen:
+        # if this is a noun, add its article to the response.
+        url = url_for('api_word.get_word_by_id', word_id=word_chosen['word_id'], _external=True)
 
-                return result
+        r = requests.get(url)
+        if not r:
+            return r.text, r.status_code
 
-        return []
+        word_info = r.json()
+        if word_info['pos_name'].casefold() == 'noun':
+            article = list(filter(lambda x: x['attrkey'] == 'article', word_info['attributes']))
+            word_chosen['article'] = article[0]['attrvalue']
+
+        result = [word_chosen]
+
+    return result
 
 
 @bp.route('/<string:quiz_key>')
@@ -295,7 +343,6 @@ def get_word_to_test(quiz_key):
         return "unknown query: %s" % query, 400
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        # check that quiz_key exists
         sql = """
         select quiz_key
         from quiz
@@ -328,57 +375,13 @@ def get_word_to_test(quiz_key):
                 message = "undefined wordlist ids:  %s" % ', '.join(list(map(str, list(unknown_wordlist_ids))))
                 return message, 404
 
-        word_id_filter = ""
-        word_ids = []
-        if wordlist_ids:
-            word_ids = common.get_word_ids_from_wordlists(wordlist_ids, cursor)
-            if word_ids:
-                word_id_args = ['%s'] * len(word_ids)
-                word_id_args = ', '.join(word_id_args)
-                word_id_filter = " and word_id in (%(word_id_args)s) " % {'word_id_args': word_id_args}
-
-        #     wordlist_ids and     word_ids  - we have nonempty wordlists, run the query
-        #     wordlist_ids and not word_ids  - wordlists are empty, don't run the query
-        # not wordlist_ids and     word_ids  - won't happen
-        # not wordlist_ids and not word_ids  - whole dictionary, this case is legit
-
-        word_chosen = {}
-
-        if wordlist_ids and word_ids:
-            word_chosen = run_quiz_query(cursor, query, quiz_key, word_id_filter, word_ids)
-
-        if not wordlist_ids and not word_ids:
-            word_chosen = run_quiz_query(cursor, query, quiz_key, word_id_filter, word_ids)
-
-        if word_chosen:
-            # if this is a noun, add its article to the response.
-            url = url_for('api_word.get_word_by_id', word_id=word_chosen['word_id'], _external=True)
-
-            r = requests.get(url)
-            if not r:
-                return r.text, r.status_code
-
-            word_info = r.json()
-            if word_info['pos_name'].casefold() == 'noun':
-                article = list(filter(lambda x: x['attrkey'] == 'article', word_info['attributes']))
-                word_chosen['article'] = article[0]['attrvalue']
-
-            result = [word_chosen]
-            get_validator(QUIZ_RESPONSE_SCHEMA).validate(result)
-
-            return result
-
-        return []
+        return __get_word_to_test(cursor, quiz_key, wordlist_ids, query)
 
 
 @bp.route('/answer', methods=['POST'])
+@js_validate_payload(QUIZ_ANSWER_PAYLOAD_SCHEMA)
 def post_quiz_answer():
-    try:
-        payload = request.get_json()
-        get_validator(QUIZ_ANSWER_PAYLOAD_SCHEMA).validate(payload)
-    except jsonschema.ValidationError as e:
-        message = "bad payload: %s" % e.message
-        return message, 400
+    payload = request.get_json()
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         cursor.execute('start transaction')
@@ -396,6 +399,7 @@ def post_quiz_answer():
 
 
 @bp.route('/report/<string:quiz_key>/<int:wordlist_id>')   # url may have ?tag=x&tag=x& ...
+@js_validate_result(QUIZ_REPORT_RESPONSE_SCHEMA)
 def get_report(quiz_key, wordlist_id):
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
@@ -462,7 +466,5 @@ def get_report(quiz_key, wordlist_id):
             "quiz_id": quiz_id,
             "scores": rows
         }
-
-        get_validator(QUIZ_REPORT_RESPONSE_SCHEMA).validate(result)
 
         return result
