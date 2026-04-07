@@ -8,6 +8,7 @@ from dlernen.dlernen_json_schema import get_validator, \
     RELATION_PAYLOAD_SCHEMA
 from contextlib import closing
 import jsonschema
+from dlernen.decorators import js_validate_result
 
 bp = Blueprint('api_relation', __name__, url_prefix='/api/relation')
 
@@ -22,6 +23,7 @@ def relation_exists(relation_id, cursor):
     return row is not None
 
 
+@js_validate_result(RELATION_RESPONSE_SCHEMA)
 def __get_relation(relation_id, cursor):
     sql = """
     select id as relation_id,
@@ -53,11 +55,7 @@ def __get_relation(relation_id, cursor):
             'words': words
         }
 
-        get_validator(RELATION_RESPONSE_SCHEMA).validate(result)
-
         return result
-
-    return {}
 
 
 @bp.route('/<int:relation_id>')

@@ -1,7 +1,8 @@
 from contextlib import closing
 from flask import current_app
 from mysql.connector import connect
-
+from dlernen.decorators import js_validate_result
+from dlernen.dlernen_json_schema import WORD_ARRAY_RESPONSE_SCHEMA
 
 # no view functions here, just utilities needed by more than one blueprint.
 
@@ -102,6 +103,7 @@ def get_displayable_words(word_ids, cursor):
     return result
 
 
+@js_validate_result(WORD_ARRAY_RESPONSE_SCHEMA)
 def get_words_from_word_ids(word_ids, cursor):
     """
     returns word object for every valid word id.  returns empty list if no word_id was found.

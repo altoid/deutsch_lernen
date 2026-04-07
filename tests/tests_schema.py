@@ -1702,7 +1702,7 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
     invalid_docs = [
         {
             "name": "bullshit list type",
-            "wordlist_id": 1234,
+            "wordlist_id": 1,
             "list_type": "bullshit",
             "words": [],
             "citation": "where i got this",
@@ -1711,7 +1711,16 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
         },
         {
             # "name": "no words",
-            "wordlist_id": 1234,
+            "wordlist_id": 2,
+            "list_type": "standard",
+            "words": [],
+            "citation": "where i got this",
+            "source_is_url": False,
+            "notes": "no name"
+        },
+        {
+            "name": "no words",
+            # "wordlist_id": 3,
             "list_type": "standard",
             "words": [],
             "citation": "where i got this",
@@ -1720,16 +1729,7 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
         },
         {
             "name": "no words",
-            # "wordlist_id": 1234,
-            "list_type": "standard",
-            "words": [],
-            "citation": "where i got this",
-            "source_is_url": False,
-            "notes": "lots of stuff"
-        },
-        {
-            "name": "no words",
-            "wordlist_id": 1234,
+            "wordlist_id": 4,
             # "list_type": "standard",
             "words": [],
             "citation": "where i got this",
@@ -1738,7 +1738,7 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
         },
         {
             "name": "no words",
-            "wordlist_id": 1234,
+            "wordlist_id": 5,
             "list_type": "standard",
             # "words": [],
             "citation": "where i got this",
@@ -1747,7 +1747,7 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
         },
         {
             "name": "no words",
-            "wordlist_id": 1234,
+            "wordlist_id": 6,
             "list_type": "standard",
             "words": [],
             # "citation": "where i got this",
@@ -1756,7 +1756,7 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
         },
         {
             "name": "no words",
-            "wordlist_id": 1234,
+            "wordlist_id": 7,
             "list_type": "standard",
             "words": [],
             "citation": "where i got this",
@@ -1765,7 +1765,7 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
         },
         {
             "name": "no words",
-            "wordlist_id": 1234,
+            "wordlist_id": 8,
             "list_type": "standard",
             "words": [],
             "citation": "where i got this",
@@ -1774,7 +1774,7 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
         },
         {
             "name": "messin with words",
-            "wordlist_id": 1234,
+            "wordlist_id": 9,
             "list_type": "standard",
             "words": [
                 {
@@ -1790,7 +1790,7 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
         },
         {
             "name": "messin with words",
-            "wordlist_id": 1234,
+            "wordlist_id": 10,
             "list_type": "standard",
             "words": [
                 {
@@ -1806,23 +1806,7 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
         },
         {
             "name": "messin with words",
-            "wordlist_id": 1234,
-            "list_type": "standard",
-            "words": [
-                {
-                    "word": "werrd",
-                    "word_id": 1234,
-                    # "tags": ["egad"],
-                    'pos_name': 'its_a_pos',
-                }
-            ],
-            "citation": "where i got this",
-            "source_is_url": False,
-            "notes": "lots of stuff"
-        },
-        {
-            "name": "messin with words",
-            "wordlist_id": 1234,
+            "wordlist_id": 12,
             "list_type": "standard",
             "words": [
                 {

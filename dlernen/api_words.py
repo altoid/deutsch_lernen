@@ -2,8 +2,6 @@ from flask import Blueprint, request, current_app
 from pprint import pprint
 from mysql.connector import connect
 from dlernen import common
-from dlernen.dlernen_json_schema import get_validator, \
-    WORD_ARRAY_RESPONSE_SCHEMA
 from contextlib import closing
 
 
@@ -74,7 +72,7 @@ def get_words():
         result = common.get_words_from_word_ids(word_ids, cursor)
 
         # NB  the word response does not have any tag info in it.
-        get_validator(WORD_ARRAY_RESPONSE_SCHEMA).validate(result)
+        # common.get_words_from_word_ids validates its return value so we don't need to validate here.
 
         # result may be empty.  the only valid case for a 404 is if a wordlist_id is not found,
         # but we aren't checking for that.
@@ -96,6 +94,6 @@ def get_words_from_word_ids():
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         result = common.get_words_from_word_ids(word_ids, cursor)
 
-        get_validator(WORD_ARRAY_RESPONSE_SCHEMA).validate(result)
+        # common.get_words_from_word_ids validates its return value so we don't need to validate here.
 
         return result

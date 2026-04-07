@@ -3,6 +3,7 @@ import requests
 from pprint import pprint, pformat
 from mysql.connector import connect
 from dlernen import common
+from dlernen.decorators import js_validate_result
 from dlernen.dlernen_json_schema import get_validator, \
     ATTRIBUTES,\
     RELATION_ARRAY_RESPONSE_SCHEMA, \
@@ -18,6 +19,7 @@ import jsonschema
 bp = Blueprint('api_word', __name__, url_prefix='/api/word')
 
 
+@js_validate_result(WORD_RESPONSE_SCHEMA)
 def __get_word(word_id, cursor):
     """
     returns word object, or None if word_id not found.
@@ -59,7 +61,6 @@ def __get_word(word_id, cursor):
         result['notes'] = r['notes']
         result['attributes'].append(attr)
 
-    get_validator(WORD_RESPONSE_SCHEMA).validate(result)
     return result
 
 
@@ -120,7 +121,7 @@ def get_word(word):
         if not result:
             return "no match for %s" % word, 404
 
-        get_validator(WORD_ARRAY_RESPONSE_SCHEMA).validate(result)
+        # common.get_words_from_word_ids validates its return value so we don't need to validate here.
 
         return result
 
