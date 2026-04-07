@@ -15,7 +15,7 @@ def cleanupWordlistID(client, wordlist_id):
     client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id))
 
 
-class APIWordlistTagMultiList(unittest.TestCase):
+class TestAPIWordlistTagMultiList(unittest.TestCase):
     # tests for changes in the tagging api.  we can get words with a given tag from multiple lists,
     # and delete a given tag from multiple lists.
 
@@ -263,7 +263,7 @@ class APIWordlistTagMultiList(unittest.TestCase):
     # TODO need tests for smart lists!
 
 
-class APIWordlistTagSmartList(unittest.TestCase):
+class TestAPIWordlistTagSmartList(unittest.TestCase):
     app = None
     app_context = None
     client = None
@@ -367,7 +367,7 @@ class APIWordlistTagSmartList(unittest.TestCase):
         self.assertEqual(0, len(obj['tags']))
 
 
-class APIWordlistTag(unittest.TestCase):
+class TestAPIWordlistTag(unittest.TestCase):
     app = None
     app_context = None
     client = None

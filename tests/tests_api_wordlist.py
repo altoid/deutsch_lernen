@@ -15,7 +15,7 @@ def cleanupWordlistID(client, wordlist_id):
     client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id))
 
 
-class APIWordlistBatchDelete(unittest.TestCase):
+class TestAPIWordlistBatchDelete(unittest.TestCase):
     # need a separate class for this because we don't want setUp/tearDown methods here.
     app = None
     app_context = None
@@ -83,7 +83,7 @@ class APIWordlistBatchDelete(unittest.TestCase):
         self.assertEqual(200, r.status_code)
 
 
-class APIWordlist(unittest.TestCase):
+class TestAPIWordlist(unittest.TestCase):
     app = None
     app_context = None
     client = None
@@ -491,7 +491,7 @@ class APIWordlist(unittest.TestCase):
         self.assertNotEqual(200, r.status_code)
 
 
-class APIWordlistGetWordIDs(unittest.TestCase):
+class TestAPIWordlistGetWordIDs(unittest.TestCase):
     app = None
     app_context = None
     client = None

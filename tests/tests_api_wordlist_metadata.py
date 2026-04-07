@@ -14,7 +14,7 @@ def cleanupWordlistID(client, wordlist_id):
     client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id))
 
 
-class APIWordListMetadataGet(unittest.TestCase):
+class TestAPIWordlistMetadataGet(unittest.TestCase):
     # make sure get operations work
     app = None
     app_context = None
@@ -66,7 +66,7 @@ class APIWordListMetadataGet(unittest.TestCase):
         self.assertEqual(404, r.status_code)
 
 
-class APIWordListMetadataCreate(unittest.TestCase):
+class TestAPIWordlistMetadataCreate(unittest.TestCase):
     app = None
     app_context = None
     client = None
@@ -200,7 +200,7 @@ class APIWordListMetadataCreate(unittest.TestCase):
         self.assertEqual(400, r.status_code)
 
 
-class APIWordListMetadataUpdate(unittest.TestCase):
+class TestAPIWordlistMetadataUpdate(unittest.TestCase):
     app = None
     app_context = None
     client = None

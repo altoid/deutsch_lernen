@@ -12,7 +12,7 @@ def cleanupWordID(client, word_id):
     client.delete(url_for('api_word.delete_word', word_id=word_id))
 
 
-class APITestsWordNotes(unittest.TestCase):
+class TestAPIWordNotes(unittest.TestCase):
     # tests for operations on word notes.
 
     app = None
@@ -257,7 +257,7 @@ class APITestsWordNotes(unittest.TestCase):
         self.assertIsNone(obj['notes'])
 
 
-class APITestsWordEndToEnd(unittest.TestCase):
+class TestAPIWordEndToEnd(unittest.TestCase):
     app = None
     app_context = None
     keyword_mappings = None
@@ -716,7 +716,7 @@ class APITestsWordEndToEnd(unittest.TestCase):
         self.assertEqual(200, r.status_code)
 
 
-class APITestsWordPOST(unittest.TestCase):
+class TestAPIWordPOST(unittest.TestCase):
     # this class tests error conditions.  tests that the api works correctly with correct input are
     # in APITestsWordEndToEnd
 
@@ -840,7 +840,7 @@ class APITestsWordPOST(unittest.TestCase):
         self.assertNotEqual(r.status_code, 201)
 
 
-class APITestsWordPUT(unittest.TestCase):
+class TestAPIWordPUT(unittest.TestCase):
     app = None
     app_context = None
     client = None
@@ -1038,7 +1038,7 @@ class APITestsWordPUT(unittest.TestCase):
         self.assertEqual(self.word, obj['word'])
 
 
-class APIWordUpdate(unittest.TestCase):
+class TestAPIWordUpdate(unittest.TestCase):
     app = None
     app_context = None
     client = None
