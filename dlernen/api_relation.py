@@ -3,12 +3,11 @@ from pprint import pprint, pformat
 from mysql.connector import connect
 import mysql.connector.errors
 from dlernen import common
-from dlernen.dlernen_json_schema import get_validator, \
+from dlernen.dlernen_json_schema import \
     RELATION_RESPONSE_SCHEMA, \
     RELATION_PAYLOAD_SCHEMA
 from contextlib import closing
-import jsonschema
-from dlernen.decorators import js_validate_result
+from dlernen.decorators import js_validate_result, js_validate_payload
 
 bp = Blueprint('api_relation', __name__, url_prefix='/api/relation')
 
@@ -96,14 +95,9 @@ def __save_word_ids(relation_id, word_ids, cursor):
 
 
 @bp.route('', methods=['POST'])
+@js_validate_payload(RELATION_PAYLOAD_SCHEMA)
 def create_relation():
-    try:
-        payload = request.get_json()
-        get_validator(RELATION_PAYLOAD_SCHEMA).validate(payload)
-    except jsonschema.ValidationError as e:
-        return "bad payload: %s" % e.message, 400
-    except Exception as e:
-        return "bad payload: %s" % str(e), 400
+    payload = request.get_json()
 
     word_ids = payload.get('word_ids', [])
     if word_ids:
@@ -161,16 +155,11 @@ def create_relation():
 
 
 @bp.route('/<int:relation_id>', methods=['PUT'])
+@js_validate_payload(RELATION_PAYLOAD_SCHEMA)
 def update_relation(relation_id):
     # any words in the payload are added to the relation.
 
-    try:
-        payload = request.get_json()
-        get_validator(RELATION_PAYLOAD_SCHEMA).validate(payload)
-    except jsonschema.ValidationError as e:
-        return "bad payload: %s" % e.message, 400
-    except Exception as e:
-        return "bad payload: %s" % str(e), 400
+    payload = request.get_json()
 
     word_ids = payload.get('word_ids', [])
     if word_ids:
@@ -227,14 +216,9 @@ def update_relation(relation_id):
 
 
 @bp.route('/<int:relation_id>/batch_delete', methods=['PUT'])
+@js_validate_payload(RELATION_PAYLOAD_SCHEMA)
 def delete_from_relation(relation_id):
-    try:
-        payload = request.get_json()
-        get_validator(RELATION_PAYLOAD_SCHEMA).validate(payload)
-    except jsonschema.ValidationError as e:
-        return "bad payload: %s" % e.message, 400
-    except Exception as e:
-        return "bad payload: %s" % str(e), 400
+    payload = request.get_json()
 
     word_ids = payload.get('word_ids', [])
     if word_ids:

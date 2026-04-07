@@ -115,6 +115,14 @@ class TestAPIRelationCreate(TestAPIRelation):
         r = self.client.get(url_for('api_relation.get_relation', relation_id=relation_id))
         self.assertEqual(404, r.status_code)
 
+    # make sure an invalid payload returns a 400
+    def test_garbage_payload(self):
+        payload = {
+            'bull': 'shit'
+        }
+        r = self.client.post(url_for('api_relation.create_relation'), json=payload)
+        self.assertEqual(400, r.status_code)
+
     # create an empty relation and make sure its fields are correct.
     def test1_5(self):
         payload = {}
@@ -313,6 +321,21 @@ class TestAPIRelationUpdate(TestAPIRelation):
         self.assertCountEqual(payload['word_ids'], word_ids)
         self.assertGreater(obj['relation_id'], 0)
 
+    # create an empty relation attempt to update with an invalid payload.
+    def test_garbage_payload(self):
+        payload = {}
+        r = self.client.post(url_for('api_relation.create_relation'), json=payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        relation_id = obj['relation_id']
+        self.addCleanup(cleanupRelationID, self.client, relation_id)
+
+        payload = {
+            'crackers': 'wheat thins'
+        }
+        r = self.client.put(url_for('api_relation.update_relation', relation_id=relation_id), json=payload)
+        self.assertEqual(400, r.status_code)
+
     # create an empty relation and set all the fields via update.  verify on retrieval.
     def test8_5(self):
         payload = {}
@@ -489,6 +512,25 @@ class TestAPIRelationUpdate(TestAPIRelation):
         self.assertIsNone(obj['notes'])
         self.assertIsNone(obj['description'])
         self.assertEqual(0, len(obj['words']))
+
+    # attempt to delete from a relation by using a bad payload.
+    def test_garbage_delete_payload(self):
+        payload = {
+            'word_ids': [self.word1_id, self.word2_id],
+            'notes': 'cinnamon and cheese',
+            'description': 'smells funny'
+        }
+        r = self.client.post(url_for('api_relation.create_relation'), json=payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        relation_id = obj['relation_id']
+        self.addCleanup(cleanupRelationID, self.client, relation_id)
+
+        payload = {
+            'bovine': 'excrement'
+        }
+        r = self.client.put(url_for('api_relation.delete_from_relation', relation_id=relation_id), json=payload)
+        self.assertEqual(400, r.status_code)
 
 
 class TestAPIRelationUpdateWords(TestAPIRelation):

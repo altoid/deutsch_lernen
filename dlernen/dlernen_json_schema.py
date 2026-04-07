@@ -148,6 +148,7 @@ RELATION_PAYLOAD_SCHEMA = {
         # "notes",
         # "description"
     ],
+    "additionalProperties": False,
     "properties": {
         "word_ids": {
             "type": "array",
