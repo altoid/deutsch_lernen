@@ -1,4 +1,5 @@
 import unittest
+import json
 from dlernen import create_app
 from flask import url_for
 from mysql.connector import connect
@@ -33,29 +34,17 @@ class ValidateData(unittest.TestCase):
     def test_nothing(self):
         pass
 
-    def test_get_words(self):
-        limit = 1000
-        offset = 0
+    # get all of the wordlists
+    def test_get_wordlists(self):
+        r = self.client.get(url_for('api_wordlists.get_wordlists'))
+        self.assertEqual(r.status_code, 200)
+        results = json.loads(r.data)
+        self.assertGreater(len(results), 0)
 
-        with closing(connect(**self.app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            # fetch all the word ids 1000 at a time
-            sql = """
-            select id
-            from word
-            limit %(offset)s, %(limit)s
-            """
-
-            cursor.execute(sql, {'offset': offset, 'limit': limit})
-            rows = cursor.fetchall()
-
-            while len(rows) > 0:
-                payload = {
-                    'word_id': list(map(lambda x: x['id'], rows))
-                }
-                r = self.client.put(url_for('api_words.get_words_from_word_ids'), json=payload)
-                self.assertEqual(r.status_code, 200)
-
-                offset += limit
-                cursor.execute(sql, {'offset': offset, 'limit': limit})
-                rows = cursor.fetchall()
-
+    def test_garbage_payload(self):
+        payload = {
+            'bull': 'shit'
+        }
+        url = url_for('api_wordlists.delete_wordlists')
+        r = self.client.put(url, json=payload)
+        self.assertEqual(400, r.status_code)

@@ -56,22 +56,10 @@ TODO - add interjections as a new part of speech
 TODO - home page should be placeholder (no forms) or drop it altogether.
 
 TODO - speed up lookup-by-word page:
-    1.  in looking up member wordlists, just get the metadata, not the whole damn thing
-    2.  new endpoint:  given a bunch of word ids, return a data structure mapping each word id to a
-        list of list headers
-    3.  new endpoint:  given a wordlist id and a list of word ids, return the word ids that are members of the list.
+    1.  new endpoint:  given a wordlist id and a list of word ids, return the word ids that are members of the list.
 
-FIXME - api_wordlists.get_wordlists_by_word_id should not be making an api call.  need to refactor this module.
 
--------
-in a wordlist context, look up a word that doesn't exist
-click (here) to define it
-fill in something
-submit
-boom
-
-redirect_to is undefined
-------
+-----------
 
 dlernen.edit_word_form takes a redirect_to argument
 
