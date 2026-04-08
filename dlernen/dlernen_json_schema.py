@@ -200,6 +200,7 @@ WORD_ADD_PAYLOAD_SCHEMA = {
         "word",
         "pos_id"
     ],
+    "additionalProperties": False,
     "properties": {
         "word": {
             "type": "string",
@@ -230,6 +231,7 @@ WORD_UPDATE_PAYLOAD_SCHEMA = {
     "required": [
         # no required properties.
     ],
+    "additionalProperties": False,
     "properties": {
         "word": {
             # not required, but if present, we are making a spelling change
@@ -280,6 +282,7 @@ WORDLISTS_DELETE_PAYLOAD_SCHEMA = {
     "title": "WORDLISTS_DELETE_PAYLOAD_SCHEMA",
     "description": "Payload for deleting multiple wordlists",
     "type": "array",
+    "additionalProperties": False,
     "items": {
         "type": "integer"
     }
@@ -334,6 +337,7 @@ WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA = {
     wordlist_id must be in the url; they aren't here.
     """,
     "type": "array",
+    "additionalProperties": False,
     "items": {
         "type": "string",
         "pattern": WORD_PATTERN
@@ -494,6 +498,7 @@ QUIZ_ANSWER_PAYLOAD_SCHEMA = {
         "attribute_id",
         "correct"
     ],
+    "additionalProperties": False,
     "properties": {
         "quiz_id": {
             "type": "integer",
