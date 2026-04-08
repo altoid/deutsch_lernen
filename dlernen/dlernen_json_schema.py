@@ -707,7 +707,7 @@ WORD_TAG_RESPONSE_SCHEMA = {
 WORDLIST_METADATA_RESPONSE_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/wordlist_metadata_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Wordlist",
+    "title": "Wordlist Metadata",
     "description": """
     wordlist metadata is all the info about a list except its contents.
     """,
