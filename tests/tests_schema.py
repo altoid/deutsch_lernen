@@ -14,9 +14,9 @@ from dlernen.dlernen_json_schema import get_validator, ATTRIBUTES, \
     QUIZ_REPORT_RESPONSE_SCHEMA, \
     QUIZ_RESPONSE_SCHEMA, \
     RELATION_RESPONSE_SCHEMA, \
-    RELATION_ARRAY_RESPONSE_SCHEMA, \
+    RELATION_RESPONSE_ARRAY_SCHEMA, \
     WORD_RESPONSE_SCHEMA, \
-    WORD_ARRAY_RESPONSE_SCHEMA, \
+    WORD_RESPONSE_ARRAY_SCHEMA, \
     WORD_TAG_RESPONSE_SCHEMA, \
     WORDLIST_METADATA_RESPONSE_SCHEMA, \
     WORDLIST_RESPONSE_SCHEMA, \
@@ -53,7 +53,7 @@ class Test_fiddling_with_referencing_and_registry(unittest.TestCase):
 
         response_arr = [response]
 
-        v = get_validator(RELATION_ARRAY_RESPONSE_SCHEMA)
+        v = get_validator(RELATION_RESPONSE_ARRAY_SCHEMA)
         v.validate(response_arr)
 
 
@@ -926,7 +926,7 @@ class Test_RELATION_RESPONSE_SCHEMA(unittest.TestCase):
 
 
 class Test_RELATION_ARRAY_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = RELATION_ARRAY_RESPONSE_SCHEMA
+    schema = RELATION_RESPONSE_ARRAY_SCHEMA
 
     def test_valid_docs(self):
         get_validator(self.schema).validate(Test_RELATION_RESPONSE_SCHEMA.valid_docs)
@@ -1099,7 +1099,7 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
 
 
 class Test_WORD_ARRAY_RESPONSE_SCHEMA(unittest.TestCase):
-    schema = WORD_ARRAY_RESPONSE_SCHEMA
+    schema = WORD_RESPONSE_ARRAY_SCHEMA
 
     def test_valid_docs(self):
         get_validator(self.schema).validate(Test_WORD_RESPONSE_SCHEMA.valid_docs)

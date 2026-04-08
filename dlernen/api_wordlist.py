@@ -5,7 +5,7 @@ import requests
 from mysql.connector import connect
 from dlernen import common
 from dlernen.dlernen_json_schema import \
-    RELATION_ARRAY_RESPONSE_SCHEMA, \
+    RELATION_RESPONSE_ARRAY_SCHEMA, \
     WORDLIST_CONTENTS_PAYLOAD_SCHEMA, \
     WORDLIST_METADATA_PAYLOAD_SCHEMA, \
     WORDLIST_METADATA_RESPONSE_SCHEMA, \
@@ -516,7 +516,7 @@ def get_word_ids_from_wordlists():
         return {'word_ids': [x['word_id'] for x in rows]}
 
 
-@js_validate_result(RELATION_ARRAY_RESPONSE_SCHEMA)
+@js_validate_result(RELATION_RESPONSE_ARRAY_SCHEMA)
 def __get_relations(cursor, word_ids):
     args = ','.join(['%s'] * len(word_ids))
     sql = """

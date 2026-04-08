@@ -6,7 +6,7 @@ from dlernen import common
 from dlernen.decorators import js_validate_result, js_validate_payload
 from dlernen.dlernen_json_schema import \
     ATTRIBUTES,\
-    RELATION_ARRAY_RESPONSE_SCHEMA, \
+    RELATION_RESPONSE_ARRAY_SCHEMA, \
     WORD_ADD_PAYLOAD_SCHEMA, \
     WORD_RESPONSE_SCHEMA, \
     WORD_UPDATE_PAYLOAD_SCHEMA
@@ -391,7 +391,7 @@ def delete_word(word_id):
             return 'error deleting word_id %s' % word_id, 500
 
 
-@js_validate_result(RELATION_ARRAY_RESPONSE_SCHEMA)
+@js_validate_result(RELATION_RESPONSE_ARRAY_SCHEMA)
 def __get_relations(cursor, word_id):
     result = []
 

@@ -662,7 +662,7 @@ RELATION_RESPONSE_SCHEMA = {
     }
 }
 
-RELATION_ARRAY_RESPONSE_SCHEMA = {
+RELATION_RESPONSE_ARRAY_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/relation_response_array.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Response for get relation",
@@ -893,7 +893,7 @@ WORD_RESPONSE_SCHEMA = {
 }
 
 
-WORD_ARRAY_RESPONSE_SCHEMA = {
+WORD_RESPONSE_ARRAY_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/word_array_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Word",
@@ -917,7 +917,7 @@ ALL_SCHEMAS = [
     QUIZ_REPORT_RESPONSE_SCHEMA,
     QUIZ_RESPONSE_SCHEMA,
     RELATION_RESPONSE_SCHEMA,
-    RELATION_ARRAY_RESPONSE_SCHEMA,
+    RELATION_RESPONSE_ARRAY_SCHEMA,
     WORD_TAG_RESPONSE_SCHEMA,
     WORDLIST_METADATA_RESPONSE_SCHEMA,
     WORDLIST_RESPONSE_SCHEMA,
@@ -925,7 +925,7 @@ ALL_SCHEMAS = [
     WORDLISTS_RESPONSE_SCHEMA,
     WORD_ATTRIBUTES_SCHEMA,
     WORD_RESPONSE_SCHEMA,
-    WORD_ARRAY_RESPONSE_SCHEMA,
+    WORD_RESPONSE_ARRAY_SCHEMA,
 ]
 
 # build the registry ONCE at module level
