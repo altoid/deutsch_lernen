@@ -1529,61 +1529,77 @@ class Test_WORDLIST_METADATA_RESPONSE_SCHEMA(unittest.TestCase):
             "name": "fester",
             "sqlcode": "not really sql but what the hell",
             "citation": "  speeding  ",
-            "list_type": "empty"
+            "list_type": "empty",
+            "count": 42
         },
         {
             "wordlist_id": 1234,
             "name": "fester",
             "sqlcode": None,
             "citation": None,
-            "list_type": "empty"
+            "list_type": "empty",
+            "count": 0
         }
     ]
 
     invalid_responses = [
         # any required fields not present should cause validation error
         {
-            # "wordlist_id": 1234,
-            "name": "fester",
+            # "wordlist_id": 1,
+            "name": "missing id",
             "sqlcode": "not really sql but what the hell",
             "citation": "speeding",
-            "list_type": "empty"
+            "list_type": "empty",
+            "count": 0
         },
         {
-            "wordlist_id": 1234,
+            "wordlist_id": 2,
             # "name": "fester",
             "sqlcode": "not really sql but what the hell",
             "citation": "speeding",
-            "list_type": "empty"
+            "list_type": "empty",
+            "count": 0
         },
         {
-            "wordlist_id": 1234,
+            "wordlist_id": 3,
             "name": "fester",
             # "sqlcode": "not really sql but what the hell",
             "citation": "speeding",
-            "list_type": "empty"
+            "list_type": "empty",
+            "count": 0
         },
         {
-            "wordlist_id": 1234,
+            "wordlist_id": 4,
             "name": "fester",
             "sqlcode": "not really sql but what the hell",
             # "citation": "speeding",
-            "list_type": "empty"
+            "list_type": "empty",
+            "count": 0
         },
         {
-            "wordlist_id": 1234,
+            "wordlist_id": 5,
             "name": "fester",
             "sqlcode": "not really sql but what the hell",
-            "citation": "speeding"
+            "citation": "speeding",
             # "list_type": "empty",
+            "count": 0
+        },
+        {
+            "wordlist_id": 55,
+            "name": "fester",
+            "sqlcode": "not really sql but what the hell",
+            "citation": "speeding",
+            "list_type": "empty",
+            # "count": 0
         },
         {
             # bad list type
-            "wordlist_id": 1234,
+            "wordlist_id": 6,
             "name": "bad list type",
             "sqlcode": "not really sql but what the hell",
             "citation": "  speeding  ",
-            "list_type": "shopping"
+            "list_type": "shopping",
+            "count": 0
         },
         {
             # bad id
@@ -1591,10 +1607,8 @@ class Test_WORDLIST_METADATA_RESPONSE_SCHEMA(unittest.TestCase):
             "name": "bad id",
             "sqlcode": "not really sql but what the hell",
             "citation": "aoeuoea",
-            "list_type": "empty"
-        },
-        {
-
+            "list_type": "empty",
+            "count": 0
         }
     ]
 

@@ -55,6 +55,8 @@ TODO - home page should be placeholder (no forms) or drop it altogether.
 
 TODO - speed up lookup-by-word page:
     1.  new endpoint:  given a wordlist id and a list of word ids, return the word ids that are members of the list.
+    2.  new endpoint:  given a list of word ids, return a structure giving all the wordlists that each word is
+        a member of, in a single request.
 
 
 -----------
@@ -105,7 +107,7 @@ best practices:
 - any endpoint that takes a payload must be decorated with @js_validate_payload() with the schema for
   that payload.  there must be a unit test for that endpoint that passes an invalid payload to it.
   the unit test must ensure that the reponse code is 400 for that case.
-
+- PAYLOAD schemas should have additionalProperties set to False, so that testing payload validation is easier.
 
 -----------
 

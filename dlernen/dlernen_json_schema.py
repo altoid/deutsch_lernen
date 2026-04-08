@@ -722,12 +722,16 @@ WORDLIST_METADATA_RESPONSE_SCHEMA = {
         "name",
         "sqlcode",
         "citation",
-        "list_type"
+        "list_type",
+        "count",
     ],
     "properties": {
         "wordlist_id": {
             "type": "integer",
             "minimum": 1
+        },
+        "count": {
+            "type": "integer"
         },
         "name": {
             "type": "string"
