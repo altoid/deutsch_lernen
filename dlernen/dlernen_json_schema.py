@@ -264,52 +264,31 @@ WORDLIST_PAYLOAD_SCHEMA = {
         #
         # at most one of sqlcode/word_ids is permitted; can't specify both.
     ],
-    "oneOf": [
-        {
-            "additionalProperties": False,
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "pattern": NAME_PATTERN
-                },
-                "citation": {
-                    "type": ["string", "null"],
-                    "pattern": STRING_PATTERN
-                },
-                "notes": {
-                    "type": ["string", 'null']
-                },
-                "sqlcode": {
-                    "type": ["string", "null"],
-                    "pattern": MULTILINE_STRING_PATTERN
-                }
-            }
+    "additionalProperties": False,
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "pattern": NAME_PATTERN
         },
-        {
-            "additionalProperties": False,
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "pattern": NAME_PATTERN
-                },
-                "citation": {
-                    "type": ["string", "null"],
-                    "pattern": STRING_PATTERN
-                },
-                "notes": {
-                    "type": ["string", 'null']
-                },
-                "word_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                }
+        "citation": {
+            "type": ["string", "null"],
+            "pattern": STRING_PATTERN
+        },
+        "notes": {
+            "type": ["string", 'null']
+        },
+        "sqlcode": {
+            "type": ["string", "null"],
+            "pattern": MULTILINE_STRING_PATTERN
+        },
+        "word_ids": {
+            "type": "array",
+            "items": {
+                "type": "integer"
             }
         }
-    ]
+    }
 }
 
 # wordlist contents are notes and a list of word ids.
