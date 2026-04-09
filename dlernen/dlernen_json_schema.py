@@ -126,7 +126,6 @@ ARRAY_DISPLAYABLE_WORD_SCHEMA = {
     }
 }
 
-
 ##########################################################
 #
 #                   Payloads
@@ -248,6 +247,67 @@ WORD_UPDATE_PAYLOAD_SCHEMA = {
             }
         }
     }
+}
+
+WORDLIST_PAYLOAD_SCHEMA = {
+    # can be used for add or update of a list.
+    "$id": "https://deutsch-lernen.doug/schemas/wordlist_payload.json",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Payload for creating/updating wordlist",
+    "description": "Payload for creating/updating wordlist",
+    "type": "object",
+    "required": [
+        # haha, none are required.  string values must be at least 1 char if provided.
+        # for creating a word list a name is of course required, but we will check that
+        # in code, not here.
+        #
+        # we permit payloads with no name so that we can update a given list without having to specify a name.
+        #
+        # at most one of sqlcode/word_ids is permitted; can't specify both.
+    ],
+    "additionalProperties": False,
+    "oneOf": [
+        {
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "pattern": NAME_PATTERN
+                },
+                "citation": {
+                    "type": ["string", "null"],
+                    "pattern": STRING_PATTERN
+                },
+                "notes": {
+                    "type": ["string", 'null']
+                },
+                "sqlcode": {
+                    "type": ["string", "null"],
+                    "pattern": MULTILINE_STRING_PATTERN
+                }
+            }
+        },
+        {
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "pattern": NAME_PATTERN
+                },
+                "citation": {
+                    "type": ["string", "null"],
+                    "pattern": STRING_PATTERN
+                },
+                "notes": {
+                    "type": ["string", 'null']
+                },
+                "word_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        }
+    ]
 }
 
 # wordlist contents are notes and a list of word ids.
@@ -766,7 +826,6 @@ ARRAY_WORDLIST_METADATA_RESPONSE_SCHEMA = {
     }
 }
 
-
 WORDLIST_RESPONSE_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/wordlist_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
@@ -940,6 +999,7 @@ ALL_SCHEMAS = [
     ARRAY_WORD_RESPONSE_SCHEMA,
     WORD_WORDLIST_METADATA_MAP_SCHEMA,
     ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA,
+    WORDLIST_PAYLOAD_SCHEMA
 ]
 
 # build the registry ONCE at module level
