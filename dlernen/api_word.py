@@ -522,7 +522,7 @@ def __get_member_wordlists(cursor, word_ids):
         }
         for x in word_list_mapping.keys()
     ]
-
+    result = sorted(result, key=lambda x: x['word']['word'].casefold())
     return result
 
 
