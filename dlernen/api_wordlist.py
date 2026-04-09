@@ -5,11 +5,10 @@ import requests
 from mysql.connector import connect
 from dlernen import common
 from dlernen.dlernen_json_schema import \
-    RELATION_RESPONSE_ARRAY_SCHEMA, \
+    ARRAY_RELATION_RESPONSE_SCHEMA, \
     WORDLIST_CONTENTS_PAYLOAD_SCHEMA, \
     WORDLIST_METADATA_PAYLOAD_SCHEMA, \
-    WORDLIST_METADATA_RESPONSE_SCHEMA, \
-    WORDLIST_METADATA_RESPONSE_ARRAY_SCHEMA, \
+    WORDLISTS_DELETE_PAYLOAD_SCHEMA, \
     WORDLIST_RESPONSE_SCHEMA
 from dlernen.decorators import js_validate_result, js_validate_payload
 from contextlib import closing
@@ -59,119 +58,31 @@ def validate_sqlcode(cursor, sqlcode):
         cursor.fetchall()
 
 
-@js_validate_result(WORDLIST_METADATA_RESPONSE_ARRAY_SCHEMA)
-def __get_wordlist_metadata(cursor, wordlist_ids):
-    # empty wordlist_ids means GET ALL
-
-    sql = """
-        with wordlist_counts as
-        (
-            select wordlist_id, sum(c) lcount from
-            (
-                select wordlist_id, count(*) c
-                from wordlist_word
-                group by wordlist_id
-            ) a
-            group by wordlist_id
-        )
-        select name, id wordlist_id, ifnull(lcount, 0) count, sqlcode, citation
-        from wordlist
-        left join wordlist_counts wc on wc.wordlist_id = wordlist.id
-        """
-
-    if wordlist_ids:
-        sql = sql + """
-        where wordlist.id in (%(args)s)
-        """ % {'args': ','.join(['%s'] * len(wordlist_ids))}
-
-    cursor.execute(sql, wordlist_ids)
-    metadata_rows = cursor.fetchall()
-
-    if not metadata_rows:
-        return []
-
-    # the connector is returning the count as a Decimal, have to convert it to int
-    for r in metadata_rows:
-        r['count'] = int(r['count'])
-
-    smartlists = list(filter(lambda x: x['sqlcode'] is not None, metadata_rows))
-
-    # construct a single sql query from all of the sqlcodes, which will give the word counts by wordlist_id
-    # as fetched by the sqlcodes.  the query will look like this:
-    #
-    # sql = """
-    # with omg as (
-    # select 666 wordlist_id, word_id from
-    # (
-    # <sqlcode for wordlist 666>
-    # ) a666
-    # UNION
-    # select 555 wordlist_id, word_id from
-    # (
-    # <sqlcode for wordlist 555>
-    # ) a555
-    # UNION ...
-    # )
-    # select wordlist_id, count(*) count
-    # from omg
-    # group by wordlist_id
-    # """
-
-    wordlist_id_to_metadata = {x['wordlist_id']: x for x in metadata_rows}
-
-    if smartlists:
-        selectors = [
-            """
-            select %(wordlist_id)s wordlist_id, word_id from (
-            %(sqlcode)s
-            ) a%(wordlist_id)s 
-            """ % {
-                'wordlist_id': x['wordlist_id'],
-                'sqlcode': x['sqlcode']
-            }
-            for x in smartlists
-        ]
-
-        sql = ' UNION '.join(selectors)
-        sql = """
-            with omg as
-            (
-            %(sql)s
-            )
-            select wordlist_id, count(*) listcount
-            from omg
-            group by wordlist_id
-            """ % {'sql': sql}
-
-        cursor.execute(sql)
-        smartlist_counts = cursor.fetchall()
-
-        for x in smartlist_counts:
-            wordlist_id_to_metadata[x['wordlist_id']]['count'] = x['listcount']
-
-    result = list(wordlist_id_to_metadata.values())
-    for r in result:
-        if r['sqlcode']:
-            r['list_type'] = 'smart'
-        elif r['count'] > 0:
-            r['list_type'] = 'standard'
-        else:
-            r['list_type'] = 'empty'
-
-    return result
-
-
 @bp.route('/<int:wordlist_id>/metadata')
-def get_wordlist_metadata(wordlist_id):
+def get_metadata(wordlist_id):
     try:
         with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            result = __get_wordlist_metadata(cursor, [wordlist_id])
+            result = common.get_wordlist_metadata(cursor, [wordlist_id])
             if not result:
                 return "wordlist %s not found" % wordlist_id, 404
 
             # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
 
             return result[0]
+
+    except jsonschema.ValidationError as f:
+        # responses that don't validate are a server implementation problem.
+        return str(f), 500
+
+
+@bp.route('/metadata')
+def get_metadata_multiple():
+    wordlist_ids = request.args.getlist('wordlist_id')
+    # no wordlist ids means GET ALL
+
+    try:
+        with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            return common.get_wordlist_metadata(cursor, wordlist_ids)
 
     except jsonschema.ValidationError as f:
         # responses that don't validate are a server implementation problem.
@@ -206,9 +117,8 @@ def create_wordlist_metadata():
             result = cursor.fetchone()
             wordlist_id = result['wordlist_id']
             cursor.execute('commit')
-            result = __get_wordlist_metadata(cursor, [wordlist_id])
 
-            # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
+            result = common.get_wordlist_metadata(cursor, [wordlist_id])
 
             return result[0], 201
 
@@ -235,7 +145,7 @@ def update_wordlist_metadata(wordlist_id):
             if do_update:
                 # this is well-behaved if citation and sqlcode are not given.
 
-                wordlist_metadata = __get_wordlist_metadata(cursor, [wordlist_id])[0]
+                wordlist_metadata = common.get_wordlist_metadata(cursor, [wordlist_id])[0]
                 if not wordlist_metadata:
                     return "wordlist %s not found" % wordlist_id, 404
 
@@ -274,7 +184,7 @@ def update_wordlist_metadata(wordlist_id):
                 cursor.execute('commit')
 
             # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
-            return __get_wordlist_metadata(cursor, [wordlist_id])[0]
+            return common.get_wordlist_metadata(cursor, [wordlist_id])[0]
 
         except mysql.connector.errors.ProgrammingError as e:
             # this will happen if validate_sqlcode throws exception
@@ -482,7 +392,7 @@ def update_wordlist_contents(wordlist_id):
 def delete_from_wordlist(wordlist_id):
     payload = request.get_json()
 
-    # batch delete from wordlist; can remove both known and unknown words.
+    # batch delete from wordlist
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
@@ -534,6 +444,21 @@ def delete_wordlist(wordlist_id):
             return "delete list failed", 500
 
 
+@bp.route('/batch_delete', methods=['PUT'])
+@js_validate_payload(WORDLISTS_DELETE_PAYLOAD_SCHEMA)
+def delete_wordlists():
+    payload = request.get_json()
+
+    if payload:
+        with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            sql = "delete from wordlist where id = %s"
+            args = [[int(x)] for x in payload]
+            cursor.executemany(sql, args)
+            dbh.commit()
+
+    return 'OK'
+
+
 @bp.route('/word_ids')
 def get_word_ids_from_wordlists():
     # returns a list of the ids of the words in the given wordlists.  returns all the word ids
@@ -580,7 +505,7 @@ def get_word_ids_from_wordlists():
         return {'word_ids': [x['word_id'] for x in rows]}
 
 
-@js_validate_result(RELATION_RESPONSE_ARRAY_SCHEMA)
+@js_validate_result(ARRAY_RELATION_RESPONSE_SCHEMA)
 def __get_relations(cursor, word_ids):
     args = ','.join(['%s'] * len(word_ids))
     sql = """

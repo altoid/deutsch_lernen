@@ -58,11 +58,11 @@ class TestAPIWordlistMetadataGet(unittest.TestCase):
         pass
 
     def test_get_extant(self):
-        r = self.client.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=self.wordlist_id))
+        r = self.client.get(url_for('api_wordlist.get_metadata', wordlist_id=self.wordlist_id))
         self.assertEqual(200, r.status_code)
 
     def test_get_nonexistent(self):
-        r = self.client.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=6666666))
+        r = self.client.get(url_for('api_wordlist.get_metadata', wordlist_id=6666666))
         self.assertEqual(404, r.status_code)
 
 
@@ -128,7 +128,7 @@ class TestAPIWordlistMetadataCreate(unittest.TestCase):
         obj = json.loads(r.data)
         wordlist_id = obj['wordlist_id']
 
-        r = self.client.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id))
+        r = self.client.get(url_for('api_wordlist.get_metadata', wordlist_id=wordlist_id))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -142,7 +142,7 @@ class TestAPIWordlistMetadataCreate(unittest.TestCase):
         self.assertEqual(200, r.status_code)
 
         # make sure it's gone
-        r = self.client.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id))
+        r = self.client.get(url_for('api_wordlist.get_metadata', wordlist_id=wordlist_id))
         self.assertEqual(404, r.status_code)
 
     # create a smart list with citation.  construct the list so that it has one word.  verify the count.
@@ -166,7 +166,7 @@ class TestAPIWordlistMetadataCreate(unittest.TestCase):
         wordlist_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, wordlist_id)
 
-        r = self.client.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id))
+        r = self.client.get(url_for('api_wordlist.get_metadata', wordlist_id=wordlist_id))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 

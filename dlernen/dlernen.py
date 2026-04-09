@@ -142,7 +142,7 @@ def lookup_by_post():
 
 @bp.route('/wordlists')
 def wordlists():
-    url = url_for('api_wordlists.get_wordlists', _external=True)
+    url = url_for('api_wordlist.get_metadata_multiple', _external=True)
     r = requests.get(url)
     if r:
         result = json.loads(r.text)
@@ -155,7 +155,7 @@ def wordlists():
 
 @bp.route('/list_attributes/<int:wordlist_id>')
 def list_attributes(wordlist_id):
-    url = url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
+    url = url_for('api_wordlist.get_metadata', wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
     if not r:
         return render_template("error.html",
@@ -223,7 +223,7 @@ def wordlist(wordlist_id):
 
     if r.status_code == 422:
         # unprocessable content - the sqlcode is not valid.  redirect to the list attributes page to fix it.
-        r2 = requests.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True))
+        r2 = requests.get(url_for('api_wordlist.get_metadata', wordlist_id=wordlist_id, _external=True))
         wordlist_metadata = {k: '' if v is None else v for k, v in r2.json().items()}
 
         flash("invalid sqlcode")
@@ -514,7 +514,7 @@ def edit_word_form(word):
     redirect_to = request.args.get('redirect_to', 'dlernen.lookup_word')
     relation_id = request.args.get('relation_id')
     print("edit_word_form:  redirect_to = %s" % redirect_to)
-    
+
     url = url_for('api_pos.get_pos_for_word', word=word, _external=True)
     r = requests.get(url)
     if not r:

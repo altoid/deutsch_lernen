@@ -46,7 +46,7 @@ def __get_relation(relation_id, cursor):
         rows = cursor.fetchall()
 
         word_ids = [x['word_id'] for x in rows]
-        words = common.get_displayable_words(word_ids, cursor)
+        words = common.get_displayable_words(cursor, word_ids)
         result = {
             'relation_id': relation_id,
             'notes': row['notes'],

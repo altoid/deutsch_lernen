@@ -36,7 +36,7 @@ class ValidateData(unittest.TestCase):
 
     # get all of the wordlists
     def test_get_wordlists(self):
-        r = self.client.get(url_for('api_wordlists.get_wordlists'))
+        r = self.client.get(url_for('api_wordlist.get_metadata_multiple'))
         self.assertEqual(r.status_code, 200)
         results = json.loads(r.data)
         self.assertGreater(len(results), 0)
@@ -45,6 +45,6 @@ class ValidateData(unittest.TestCase):
         payload = {
             'bull': 'shit'
         }
-        url = url_for('api_wordlists.delete_wordlists')
+        url = url_for('api_wordlist.delete_wordlists')
         r = self.client.put(url, json=payload)
         self.assertEqual(400, r.status_code)

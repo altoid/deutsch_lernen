@@ -2,7 +2,10 @@ from contextlib import closing
 from flask import current_app
 from mysql.connector import connect
 from dlernen.decorators import js_validate_result
-from dlernen.dlernen_json_schema import WORD_RESPONSE_ARRAY_SCHEMA
+from dlernen.dlernen_json_schema import ARRAY_WORD_RESPONSE_SCHEMA, \
+    ARRAY_DISPLAYABLE_WORD_SCHEMA, \
+    ARRAY_WORDLIST_METADATA_RESPONSE_SCHEMA
+
 
 # no view functions here, just utilities needed by more than one blueprint.
 
@@ -56,7 +59,8 @@ def process_word_query_result(rows):
     return result
 
 
-def get_displayable_words(word_ids, cursor):
+@js_validate_result(ARRAY_DISPLAYABLE_WORD_SCHEMA)
+def get_displayable_words(cursor, word_ids):
     # for each in a list of word_ids, get the word info needed in order to display each word in a page:
     # definition, article (if noun), and the word itself.  the data structures must pass validation with
     # DISPLAYABLE_WORD_SCHEMA, though it is up to the caller to do the validation.
@@ -88,22 +92,24 @@ def get_displayable_words(word_ids, cursor):
         cursor.execute(sql, word_ids)
         rows = cursor.fetchall()
 
-        word_data = {(r['word'], r['word_id']): {
-            'article': r['article'],
-            'definition': r['definition'],
-            'word': r['word'],
-            'word_id': r['word_id'],
-            'pos_name': r['pos_name'],
-            'tags': []
+        word_data = {(r['word'], r['word_id']):
+            {
+                'article': r['article'],
+                'definition': r['definition'],
+                'word': r['word'],
+                'word_id': r['word_id'],
+                'pos_name': r['pos_name'],
+                'tags': []
+            }
+            for r in rows
         }
-            for r in rows}
 
         result = list(word_data.values())
 
     return result
 
 
-@js_validate_result(WORD_RESPONSE_ARRAY_SCHEMA)
+@js_validate_result(ARRAY_WORD_RESPONSE_SCHEMA)
 def get_words_from_word_ids(word_ids, cursor):
     """
     returns word object for every valid word id.  returns empty list if no word_id was found.
@@ -180,3 +186,107 @@ def get_word_ids_from_wordlists(wordlist_ids, cursor):
     result = list(map(lambda x: x['word_id'], rows))
 
     return result
+
+
+@js_validate_result(ARRAY_WORDLIST_METADATA_RESPONSE_SCHEMA)
+def get_wordlist_metadata(cursor, wordlist_ids):
+    # empty wordlist_ids means GET ALL
+
+    sql = """
+        with wordlist_counts as
+        (
+            select wordlist_id, sum(c) lcount from
+            (
+                select wordlist_id, count(*) c
+                from wordlist_word
+                group by wordlist_id
+            ) a
+            group by wordlist_id
+        )
+        select name, id wordlist_id, ifnull(lcount, 0) count, sqlcode, citation
+        from wordlist
+        left join wordlist_counts wc on wc.wordlist_id = wordlist.id
+        """
+
+    if wordlist_ids:
+        sql = sql + """
+        where wordlist.id in (%(args)s)
+        """ % {'args': ','.join(['%s'] * len(wordlist_ids))}
+
+    cursor.execute(sql, wordlist_ids)
+    metadata_rows = cursor.fetchall()
+
+    if not metadata_rows:
+        return []
+
+    # the connector is returning the count as a Decimal, have to convert it to int
+    for r in metadata_rows:
+        r['count'] = int(r['count'])
+
+    smartlists = list(filter(lambda x: x['sqlcode'] is not None, metadata_rows))
+
+    # construct a single sql query from all of the sqlcodes, which will give the word counts by wordlist_id
+    # as fetched by the sqlcodes.  the query will look like this:
+    #
+    # sql = """
+    # with omg as (
+    # select 666 wordlist_id, word_id from
+    # (
+    # <sqlcode for wordlist 666>
+    # ) a666
+    # UNION
+    # select 555 wordlist_id, word_id from
+    # (
+    # <sqlcode for wordlist 555>
+    # ) a555
+    # UNION ...
+    # )
+    # select wordlist_id, count(*) count
+    # from omg
+    # group by wordlist_id
+    # """
+
+    wordlist_id_to_metadata = {x['wordlist_id']: x for x in metadata_rows}
+
+    if smartlists:
+        selectors = [
+            """
+            select %(wordlist_id)s wordlist_id, word_id from (
+            %(sqlcode)s
+            ) a%(wordlist_id)s 
+            """ % {
+                'wordlist_id': x['wordlist_id'],
+                'sqlcode': x['sqlcode']
+            }
+            for x in smartlists
+        ]
+
+        sql = ' UNION '.join(selectors)
+        sql = """
+            with omg as
+            (
+            %(sql)s
+            )
+            select wordlist_id, count(*) listcount
+            from omg
+            group by wordlist_id
+            """ % {'sql': sql}
+
+        cursor.execute(sql)
+        smartlist_counts = cursor.fetchall()
+
+        for x in smartlist_counts:
+            wordlist_id_to_metadata[x['wordlist_id']]['count'] = x['listcount']
+
+    result = list(wordlist_id_to_metadata.values())
+    for r in result:
+        if r['sqlcode']:
+            r['list_type'] = 'smart'
+        elif r['count'] > 0:
+            r['list_type'] = 'standard'
+        else:
+            r['list_type'] = 'empty'
+
+    return result
+
+

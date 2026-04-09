@@ -51,7 +51,7 @@ def get_tags(wordlist_id, word_id):
     # - if not a smartlist, word is present in the list.
     #
 
-    url = url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
+    url = url_for('api_wordlist.get_metadata', wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
     if not r:
         return r.text, r.status_code
@@ -119,7 +119,7 @@ def get_all_tags(wordlist_id):
     # - if not a smartlist, word is present in the list.
     #
 
-    url = url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
+    url = url_for('api_wordlist.get_metadata', wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
     if not r:
         return r.text, r.status_code
@@ -155,7 +155,7 @@ def add_tags(wordlist_id, word_id):
     # the payload is just a list of tags.
 
     # operation is not allowed on smart lists.
-    url = url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
+    url = url_for('api_wordlist.get_metadata', wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
     if not r:
         return r.text, r.status_code
@@ -286,7 +286,7 @@ def delete_tags_for_word_id(wordlist_id, word_id):
     # returns a message and a status code, no object.
 
     # operation is not allowed on smart lists.
-    url = url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
+    url = url_for('api_wordlist.get_metadata', wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
     if not r:
         return r.text, r.status_code

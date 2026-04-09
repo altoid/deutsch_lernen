@@ -6,11 +6,13 @@ from dlernen import common
 from dlernen.decorators import js_validate_result, js_validate_payload
 from dlernen.dlernen_json_schema import \
     ATTRIBUTES,\
-    RELATION_RESPONSE_ARRAY_SCHEMA, \
+    ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA, \
+    ARRAY_RELATION_RESPONSE_SCHEMA, \
     WORD_ADD_PAYLOAD_SCHEMA, \
     WORD_RESPONSE_SCHEMA, \
     WORD_UPDATE_PAYLOAD_SCHEMA
 from contextlib import closing
+import jsonschema
 
 # view functions for /api/word URLs are here.
 
@@ -391,7 +393,7 @@ def delete_word(word_id):
             return 'error deleting word_id %s' % word_id, 500
 
 
-@js_validate_result(RELATION_RESPONSE_ARRAY_SCHEMA)
+@js_validate_result(ARRAY_RELATION_RESPONSE_SCHEMA)
 def __get_relations(cursor, word_id):
     result = []
 
@@ -427,3 +429,130 @@ def get_relations(word_id):
             return "word %s not found" % word_id, 404
 
         return __get_relations(cursor, word_id)
+
+
+@js_validate_result(ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA)
+def __get_member_wordlists(cursor, word_ids):
+    # for each of the given word ids, find the word lists of which the word is a member.
+    # return a list of "maps" (the best we can do with jsonschema) associating a displayable word object to a list of
+    # list metadata objects, for each word id.
+
+    if not word_ids:
+        return []
+
+    args = ','.join(['%s'] * len(word_ids))
+
+    # find standard lists that these words are in
+    sql = """
+    select wordlist_id, word_id
+    from wordlist_word
+    where word_id in (%(args)s)
+    """ % {'args': args}
+
+    cursor.execute(sql, word_ids)
+    standard_list_rows = cursor.fetchall()
+
+    # find the smart lists these words are in!  make a giant query out of all the sqlcode statements in the
+    # database and fetch the word and wordlist ids.
+
+    sql = """
+    select id wordlist_id, sqlcode
+    from wordlist
+    where sqlcode is not null
+    """
+
+    cursor.execute(sql)
+    sqlcode_rows = cursor.fetchall()
+
+    smartlist_rows = []
+    if sqlcode_rows:
+        selectors = [
+            """
+            select %(wordlist_id)s wordlist_id, word_id from (
+            %(sqlcode)s
+            ) a%(wordlist_id)s 
+            """ % {
+                'wordlist_id': x['wordlist_id'],
+                'sqlcode': x['sqlcode']
+            }
+            for x in sqlcode_rows
+        ]
+
+        sql = ' UNION '.join(selectors)
+        sql = """
+        with omg as
+        (
+        %(sql)s
+        )
+        select wordlist_id, word_id
+        from omg
+        where word_id in (%(args)s)
+        """ % {'sql': sql,
+               'args': args}
+
+        cursor.execute(sql, word_ids)
+        smartlist_rows = cursor.fetchall()
+
+    word_list_associations = smartlist_rows + standard_list_rows
+
+    # turn the query results into a map of word ids to lists of list ids
+
+    word_list_mapping = {}
+    for a in word_list_associations:
+        if a['word_id'] not in word_list_mapping:
+            word_list_mapping[a['word_id']] = []
+        word_list_mapping[a['word_id']].append(a['wordlist_id'])
+
+    wordlist_ids = [x['wordlist_id'] for x in word_list_associations]  # the api will filter dups
+
+    word_ids = [x['word_id'] for x in word_list_associations]  # the api will filter dups
+
+    metadata_list = common.get_wordlist_metadata(cursor, wordlist_ids)
+
+    displayable_words = common.get_displayable_words(cursor, word_ids)
+
+    # for the lists of complex objects, create dictionaries mapping the ids to the objects so that we can
+    # snag them while constructing the result.
+
+    displayable_word_map = {x['word_id']: x for x in displayable_words}
+    metadata_map = {x['wordlist_id']: x for x in metadata_list}
+
+    result = [
+        {
+            "word": displayable_word_map[x],
+            "wordlist_metadata_list": [metadata_map[y] for y in word_list_mapping[x]]
+        }
+        for x in word_list_mapping.keys()
+    ]
+
+    return result
+
+
+@bp.route('/<int:word_id>/list_metadata')
+def get_member_wordlists(word_id):
+    # this will return a WORD_WORDLIST_METADATA_MAP_SCHEMA object.
+    try:
+        with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            result = __get_member_wordlists(cursor, [word_id])
+            if not result:
+                return "word %s not found" % word_id, 404
+
+            return result[0]
+
+    except jsonschema.ValidationError as f:
+        # responses that don't validate are a server implementation problem.
+        return str(f), 500
+
+
+@bp.route('/list_metadata')
+def get_member_wordlists_multiple():
+    # word_ids are passed in via the URL.  empty list means do nothing.
+    word_ids = request.args.getlist('word_id')
+
+    try:
+        with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            return __get_member_wordlists(cursor, word_ids)
+
+    except jsonschema.ValidationError as f:
+        # responses that don't validate are a server implementation problem.
+        return str(f), 500

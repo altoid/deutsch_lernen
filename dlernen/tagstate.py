@@ -42,7 +42,7 @@ class TagState(object):
             self.tags_to_states[k] = False  # unchecked
 
         # set list_type
-        r = requests.get(url_for('api_wordlist.get_wordlist_metadata',
+        r = requests.get(url_for('api_wordlist.get_metadata',
                                  wordlist_id=self.wordlist_id,
                                  _external=True))
         obj = r.json()

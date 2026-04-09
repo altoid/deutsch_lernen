@@ -156,7 +156,7 @@ def set_wordlists(given_wordlist_ids):
 
     unknown_wordlist_ids = set()
     for wl_id in given_wordlist_ids:
-        r = requests.get(url_for('api_wordlist.get_wordlist_metadata',
+        r = requests.get(url_for('api_wordlist.get_metadata',
                                  wordlist_id=wl_id))
         if r.status_code == 404:
             unknown_wordlist_ids.add(wl_id)

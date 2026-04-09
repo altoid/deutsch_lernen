@@ -15,8 +15,52 @@ def cleanupWordlistID(client, wordlist_id):
     client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id))
 
 
+class TestAPIWordlistCreateDelete(unittest.TestCase):
+    app = None
+    app_context = None
+    client = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
+            TESTING=True,
+        )
+
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
+
+    # do nothing, just make sure that setUpClass and tearDownClaass work
+    def test_nothing(self):
+        pass
+
+    def test1(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        wordlist_id = obj['wordlist_id']
+
+        # delete it
+        r = self.client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id))
+        self.assertEqual(200, r.status_code)
+
+        # make sure it's gone
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id))
+        self.assertEqual(404, r.status_code)
+
+
+
 class TestAPIWordlistBatchDelete(unittest.TestCase):
-    # need a separate class for this because we don't want setUp/tearDown methods here.
     app = None
     app_context = None
     client = None
@@ -66,7 +110,7 @@ class TestAPIWordlistBatchDelete(unittest.TestCase):
 
         delete_these = [wordlist_id_1, wordlist_id_2]
 
-        r = self.client.put(url_for('api_wordlists.delete_wordlists'), json=delete_these)
+        r = self.client.put(url_for('api_wordlist.delete_wordlists'), json=delete_these)
         self.assertEqual(200, r.status_code)
 
         # make sure they are gone
@@ -79,7 +123,7 @@ class TestAPIWordlistBatchDelete(unittest.TestCase):
         self.assertEqual(404, r.status_code)
 
     def test_batch_delete_nothing(self):
-        r = self.client.put(url_for('api_wordlists.delete_wordlists'), json=[])
+        r = self.client.put(url_for('api_wordlist.delete_wordlists'), json=[])
         self.assertEqual(200, r.status_code)
 
 

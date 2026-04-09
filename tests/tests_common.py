@@ -1,8 +1,6 @@
 import unittest
 from flask import url_for
 from dlernen import create_app, common
-from dlernen.dlernen_json_schema import get_validator, \
-    DISPLAYABLE_WORD_ARRAY_SCHEMA
 import json
 import random
 import string
@@ -56,6 +54,7 @@ class TestCommon(unittest.TestCase):
     def test_nothing(self):
         pass
 
+    # test that validation happens on get_displayable_words.
     def test_get_displayable_words(self):
         word1, word1_id = self.createWord()
         self.addCleanup(cleanupWordID, self.client, word1_id)
@@ -64,5 +63,5 @@ class TestCommon(unittest.TestCase):
         self.addCleanup(cleanupWordID, self.client, word2_id)
 
         with closing(connect(**self.app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            result = common.get_displayable_words([word1_id, word2_id], cursor)
-            get_validator(DISPLAYABLE_WORD_ARRAY_SCHEMA).validate(result)
+            result = common.get_displayable_words(cursor, [word1_id, word2_id])
+

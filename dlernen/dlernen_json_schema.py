@@ -115,8 +115,8 @@ DISPLAYABLE_WORD_SCHEMA = {
     }
 }
 
-DISPLAYABLE_WORD_ARRAY_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/displayable_word_array.json",
+ARRAY_DISPLAYABLE_WORD_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/array_displayable_word.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Displayable Word",
     "description": "array of DISPLAYABLE_WORD",
@@ -667,8 +667,8 @@ RELATION_RESPONSE_SCHEMA = {
     }
 }
 
-RELATION_RESPONSE_ARRAY_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/relation_response_array.json",
+ARRAY_RELATION_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/array_relation_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Response for get relation",
     "description": """
@@ -753,8 +753,8 @@ WORDLIST_METADATA_RESPONSE_SCHEMA = {
     }
 }
 
-WORDLIST_METADATA_RESPONSE_ARRAY_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/wordlist_metadata_response_array.json",
+ARRAY_WORDLIST_METADATA_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/array_wordlist_metadata_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Array of Wordlist Metadata Objects",
     "description": """
@@ -826,50 +826,6 @@ WORDLIST_RESPONSE_SCHEMA = {
     }
 }
 
-WORDLISTS_RESPONSE_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/wordlists_response.json",
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Wordlist",
-    "description": """
-    used for the result returned by get_wordlists.  returns an array of the following, for all of the wordlists in
-    the database:
-    - name
-    - id
-    - count of known words
-    - list type (empty/smart/standard)
-    """,
-    "type": "array",
-    "items": {
-        "type": "object",
-        "properties": {
-            "name": {
-                "type": "string"
-            },
-            "wordlist_id": {
-                "type": "integer",
-                "minimum": 1
-            },
-            "count": {
-                "type": "integer"
-            },
-            "list_type": {
-                "type": "string",
-                "enum": [
-                    "smart",
-                    "standard",
-                    "empty"  # no code or words
-                ]
-            }
-        },
-        "required": [
-            "name",
-            "wordlist_id",
-            "count",
-            "list_type"
-        ]
-    }
-}
-
 WORD_RESPONSE_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/word_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
@@ -915,15 +871,48 @@ WORD_RESPONSE_SCHEMA = {
     }
 }
 
-
-WORD_RESPONSE_ARRAY_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/word_array_response.json",
+ARRAY_WORD_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/array_word_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Word",
     "description": "list of words with attributes",
     "type": "array",
     "items": {
         "$ref": WORD_RESPONSE_SCHEMA["$id"]
+    }
+}
+
+WORD_WORDLIST_METADATA_MAP_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/word_wordlist_metadata_map.json",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Word to Wordlist Metadata Map",
+    "description": """
+    associates a word object with a wordlist metadata object.  this is used for api calls that find the wordlists
+    that a word id is a member of.
+    """,
+    "type": "object",
+    "required": [
+        "word",
+        "wordlist_metadata_list"
+    ],
+    "properties": {
+        "word": {
+            "$ref": DISPLAYABLE_WORD_SCHEMA["$id"]
+        },
+        "wordlist_metadata_list": {
+            "$ref": ARRAY_WORDLIST_METADATA_RESPONSE_SCHEMA["$id"]
+        }
+    }
+}
+
+ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/array_word_wordlist_metadata_map.json",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Word",
+    "description": "list of words with attributes",
+    "type": "array",
+    "items": {
+        "$ref": WORD_WORDLIST_METADATA_MAP_SCHEMA["$id"]
     }
 }
 
@@ -940,16 +929,17 @@ ALL_SCHEMAS = [
     QUIZ_REPORT_RESPONSE_SCHEMA,
     QUIZ_RESPONSE_SCHEMA,
     RELATION_RESPONSE_SCHEMA,
-    RELATION_RESPONSE_ARRAY_SCHEMA,
+    ARRAY_RELATION_RESPONSE_SCHEMA,
     WORD_TAG_RESPONSE_SCHEMA,
     WORDLIST_METADATA_RESPONSE_SCHEMA,
-    WORDLIST_METADATA_RESPONSE_ARRAY_SCHEMA,
+    ARRAY_WORDLIST_METADATA_RESPONSE_SCHEMA,
     WORDLIST_RESPONSE_SCHEMA,
     DISPLAYABLE_WORD_SCHEMA,
-    WORDLISTS_RESPONSE_SCHEMA,
     WORD_ATTRIBUTES_SCHEMA,
     WORD_RESPONSE_SCHEMA,
-    WORD_RESPONSE_ARRAY_SCHEMA,
+    ARRAY_WORD_RESPONSE_SCHEMA,
+    WORD_WORDLIST_METADATA_MAP_SCHEMA,
+    ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA,
 ]
 
 # build the registry ONCE at module level
