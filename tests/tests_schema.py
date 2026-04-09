@@ -78,13 +78,75 @@ class Test_WORDLIST_PAYLOAD_SCHEMA(unittest.TestCase):
         },
         {
             # empty payload is ok.
+        },
+        {
+            "name": "saetuasasue",
+            "citation": "anteohusntaeo",
+            "sqlcode": "n;sercisr;cih"
+        },
+        {
+            "name": "saetuasasue",
+            "citation": None,
+            "sqlcode": None,
+            "notes": None
+        },
+        {
+            "name": "x"
+        },
+        {
+            "citation": "    xxx    "
+        },
+        {
+            "sqlcode": "  line1\r\nline2\r\nline3  "
+        },
+        {
+            "notes": None
+        },
+        {
+            "notes": "whatevs"
+        },
+        {
+            "word_ids": []  # empty list is valid
+        },
+        {
+            "word_ids": [
+                123,
+                234,
+                345
+            ]
+        },
+        {
+            "notes": "whatevs",
+            "word_ids": [
+                11,
+                22
+            ]
         }
     ]
 
     invalid_docs = [
         {
+            # sqlcode and word_ids can't both be present.
             "sqlcode": "whee",
             "word_ids": [1, 2, 3]
+        },
+        {
+            "name": "  leading and trailing whitespace not allowed  "
+        },
+        {
+            "name": None
+        },
+        {
+            "sqlcode": ""
+        },
+        {
+            "citation": ""
+        },
+        {
+            "word_ids": [
+                "word_ids have to",
+                "be integers"
+            ]
         }
     ]
 
