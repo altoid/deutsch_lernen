@@ -255,7 +255,6 @@ WORDLIST_PAYLOAD_SCHEMA = {
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Payload for creating/updating wordlist",
     "description": "Payload for creating/updating wordlist",
-    "type": "object",
     "required": [
         # haha, none are required.  string values must be at least 1 char if provided.
         # for creating a word list a name is of course required, but we will check that
@@ -265,9 +264,10 @@ WORDLIST_PAYLOAD_SCHEMA = {
         #
         # at most one of sqlcode/word_ids is permitted; can't specify both.
     ],
-    "additionalProperties": False,
     "oneOf": [
         {
+            "additionalProperties": False,
+            "type": "object",
             "properties": {
                 "name": {
                     "type": "string",
@@ -287,6 +287,8 @@ WORDLIST_PAYLOAD_SCHEMA = {
             }
         },
         {
+            "additionalProperties": False,
+            "type": "object",
             "properties": {
                 "name": {
                     "type": "string",

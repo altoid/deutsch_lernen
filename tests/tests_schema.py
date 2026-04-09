@@ -2,7 +2,7 @@ import unittest
 import jsonschema
 from dlernen.dlernen_json_schema import get_validator, ATTRIBUTES, \
     NULL_SCHEMA, \
-    RELATION_PAYLOAD_SCHEMA, \
+    WORDLIST_PAYLOAD_SCHEMA, \
     WORD_ADD_PAYLOAD_SCHEMA, \
     WORD_UPDATE_PAYLOAD_SCHEMA, \
     WORDLIST_CONTENTS_PAYLOAD_SCHEMA, \
@@ -28,34 +28,6 @@ from pprint import pprint
 # are defined correctly.
 
 
-class Test_fiddling_with_referencing_and_registry(unittest.TestCase):
-    def test1(self):
-        # meh.  nothing new here.  jsonschema.Draft202012Validator is just an instance
-        # of a validator.  validator_for will use a validator based on the $schema
-        # in the schema object.
-
-        validator_cls = get_validator(RELATION_RESPONSE_SCHEMA)
-        validator_cls.check_schema(RELATION_RESPONSE_SCHEMA)
-
-        # print(jsonschema.Draft202012Validator.META_SCHEMA["$id"])
-        # pprint(RELATION_RESPONSE_SCHEMA['items']['required'])
-
-        response = {
-            'relation_id': 234,
-            'words': [],
-            'notes': 'do re mi',
-            'description': 'what this relation is for'
-        }
-
-        v = get_validator(RELATION_RESPONSE_SCHEMA)
-        v.validate(response)
-
-        response_arr = [response]
-
-        v = get_validator(ARRAY_RELATION_RESPONSE_SCHEMA)
-        v.validate(response_arr)
-
-
 class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
     schema = NULL_SCHEMA
 
@@ -75,6 +47,43 @@ class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
     # https://python-jsonschema.readthedocs.io/en/stable/api/#jsonschema.validate
     #
     #############################################################
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                get_validator(self.schema).validate(jdoc)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    get_validator(self.schema).validate(jdoc)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
+class Test_WORDLIST_PAYLOAD_SCHEMA(unittest.TestCase):
+    schema = WORDLIST_PAYLOAD_SCHEMA
+
+    valid_docs = [
+        {
+            "sqlcode": "whee",
+        },
+        {
+            "word_ids": [1, 2, 3]
+        },
+    ]
+
+    invalid_docs = [
+        {
+            "sqlcode": "whee",
+            "word_ids": [1, 2, 3]
+        },
+        {
+            # empty payload is ok
+        }
+    ]
 
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
