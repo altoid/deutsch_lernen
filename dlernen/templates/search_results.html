@@ -27,48 +27,48 @@ Lookup {{ word }}
     {% endif %}
     {% endif %}
 
-    {% if template_args %}
-    {% if template_args|length > 1 %}
+    {% if search_results %}
+    {% if search_results|length > 1 %}
     <h1>Worte, die zu "{{ word }}" passen</h1>
     <ul>
-        {% for tuple in template_args %}
+        {% for r in search_results %}
         <li>
-            <a href="#{{ tuple[0]['word'] }}">{{ tuple[0]['word'] }}</a>
+            <a href="#{{ r.word.word }}">{{ r.word.word }}</a>
         </li>
         {% endfor %}
     </ul>
     {% endif %}
-    {% for tuple in template_args %}
+    {% for r in search_results %}
     <h1>
         {% if serialized_tag_state %}
-        <a name="{{ tuple[0]['word'] }}"
-           href="{{ url_for('dlernen.lookup_by_id', word_id=tuple[0]['word_id'], wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state) }}">
-            {{ tuple[0]['word'] }}
+        <a name="{{ r.word.word }}"
+           href="{{ url_for('dlernen.lookup_by_id', word_id=r.word.word_id, wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state) }}">
+            {{ r.word.word }}
         </a>
         {% else %}
-        <a name="{{ tuple[0]['word'] }}"
-           href="{{ url_for('dlernen.lookup_by_id', word_id=tuple[0]['word_id']) }}">
-            {{ tuple[0]['word'] }}
+        <a name="{{ r.word.word }}"
+           href="{{ url_for('dlernen.lookup_by_id', word_id=r.word.word_id) }}">
+            {{ r.word.word }}
         </a>
         {% endif %}
     </h1>
-    <h3>{{ tuple[0]['pos_name'] }}</h3>
+    <h3>{{ r.word.pos_name }}</h3>
     <table>
-        {% for attr in tuple[0]['attributes'] %}
+        {% for attr in r.word.attributes %}
         <tr>
-            <td class="word_attributes">{{ attr['attrkey'] }}</td>
+            <td class="word_attributes">{{ attr.attrkey }}</td>
             <td>
-                {% if attr['attrvalue'] != None %}
-                {{ attr['attrvalue'] }}
+                {% if attr.attrvalue != None %}
+                {{ attr.attrvalue }}
                 {% endif %}
             </td>
         </tr>
         {% endfor %}
     </table>
-    {% if tuple[1] %}
+    {% if r.wordlist_metadata_list %}
     <h2>Wortlisten, die dieses Wort enthalten</h2>
     <ul>
-        {% for wl in tuple[1] %}
+        {% for wl in r.wordlist_metadata_list %}
         <li><a href="{{ url_for('dlernen.wordlist', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a></li>
         {% endfor %}
     </ul>

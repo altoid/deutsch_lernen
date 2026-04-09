@@ -192,6 +192,9 @@ def get_word_ids_from_wordlists(wordlist_ids, cursor):
 def get_wordlist_metadata(cursor, wordlist_ids):
     # empty wordlist_ids means GET ALL
 
+    where_clause = """where wordlist.id in (%(args)s)""" % {'args': ','.join(['%s'] * len(wordlist_ids))} \
+        if wordlist_ids else ''
+
     sql = """
         with wordlist_counts as
         (
@@ -206,12 +209,9 @@ def get_wordlist_metadata(cursor, wordlist_ids):
         select name, id wordlist_id, ifnull(lcount, 0) count, sqlcode, citation
         from wordlist
         left join wordlist_counts wc on wc.wordlist_id = wordlist.id
-        """
-
-    if wordlist_ids:
-        sql = sql + """
-        where wordlist.id in (%(args)s)
-        """ % {'args': ','.join(['%s'] * len(wordlist_ids))}
+        %(where_clause)s
+        order by name
+        """ % {'where_clause': where_clause}
 
     cursor.execute(sql, wordlist_ids)
     metadata_rows = cursor.fetchall()

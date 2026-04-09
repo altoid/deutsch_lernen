@@ -897,7 +897,7 @@ WORD_WORDLIST_METADATA_MAP_SCHEMA = {
     ],
     "properties": {
         "word": {
-            "$ref": DISPLAYABLE_WORD_SCHEMA["$id"]
+            "$ref": WORD_RESPONSE_SCHEMA["$id"]
         },
         "wordlist_metadata_list": {
             "$ref": ARRAY_WORDLIST_METADATA_RESPONSE_SCHEMA["$id"]

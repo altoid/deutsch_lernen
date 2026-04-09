@@ -56,31 +56,28 @@ def lookup_word(word):
     words_found = {x['word'].casefold() for x in results}
     exact_match_found = word.casefold() in words_found
 
-    results = sorted(results, key=lambda x: str.casefold(x['word']))
+    word_ids = [x['word_id'] for x in results]
 
-    template_args = []
-    for result in results:
-        r = requests.get(url_for('api_wordlists.get_wordlists_by_word_id', word_id=result['word_id'], _external=True))
-        if not r:
-            return render_template("error.html",
-                                   message=r.text,
-                                   status_code=r.status_code)
+    r = requests.get(url_for('api_word.get_member_wordlists_multiple', word_id=word_ids, _external=True))
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
 
-        member_wordlists = r.json()
-        template_args.append((result, member_wordlists))
+    obj = r.json()
 
     # get wordlist if appropriate
     if serialized_tag_state:
         return render_template('search_results.html',
                                word=word,
                                exact_match_found=exact_match_found,
-                               template_args=template_args,
+                               search_results=obj,
                                tag_state=TagState.deserialize(serialized_tag_state))
 
     return render_template('search_results.html',
                            word=word,
                            exact_match_found=exact_match_found,
-                           template_args=template_args)
+                           search_results=obj)
 
 
 @bp.route('/word/<int:word_id>', methods=['GET'])
@@ -96,13 +93,14 @@ def lookup_by_id(word_id):
 
     wordobject = r.json()
 
-    r = requests.get(url_for('api_wordlists.get_wordlists_by_word_id', word_id=word_id, _external=True))
+    r = requests.get(url_for('api_word.get_member_wordlists', word_id=word_id, _external=True))
     if not r:
         return render_template("error.html",
                                message=r.text,
                                status_code=r.status_code)
 
-    member_wordlists = r.json()
+    obj = r.json()
+    member_wordlists = obj['wordlist_metadata_list']
 
     r = requests.get(url_for('api_word.get_relations', word_id=word_id, _external=True))
     if not r:
@@ -304,7 +302,7 @@ def deletelist():
     doomed = request.form.getlist('deletelist')
     doomed = list(map(int, doomed))
 
-    r = requests.put(url_for('api_wordlists.delete_wordlists', _external=True), json=doomed)
+    r = requests.put(url_for('api_wordlist.delete_wordlists', _external=True), json=doomed)
     if r:
         return redirect(url_for('dlernen.wordlists'))
 

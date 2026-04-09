@@ -20,7 +20,7 @@ bp = Blueprint('api_word', __name__, url_prefix='/api/word')
 
 
 @js_validate_result(WORD_RESPONSE_SCHEMA)
-def __get_word(word_id, cursor):
+def __get_word(cursor, word_id):
     """
     returns word object, or None if word_id not found.
     """
@@ -70,7 +70,7 @@ def get_word_by_id(word_id):
     returns word object, or 404 if word_id not found.
     """
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        result = __get_word(word_id, cursor)
+        result = __get_word(cursor, word_id)
         if not result:
             return "word id %s not found" % word_id, 404
 
@@ -424,7 +424,7 @@ def get_relations(word_id):
     # fetch all the relations that contain this word.
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        result = __get_word(word_id, cursor)
+        result = __get_word(cursor, word_id)
         if not result:
             return "word %s not found" % word_id, 404
 
@@ -509,17 +509,15 @@ def __get_member_wordlists(cursor, word_ids):
 
     metadata_list = common.get_wordlist_metadata(cursor, wordlist_ids)
 
-    displayable_words = common.get_displayable_words(cursor, word_ids)
-
     # for the lists of complex objects, create dictionaries mapping the ids to the objects so that we can
     # snag them while constructing the result.
 
-    displayable_word_map = {x['word_id']: x for x in displayable_words}
+    word_map = {x: __get_word(cursor, x) for x in word_ids}
     metadata_map = {x['wordlist_id']: x for x in metadata_list}
 
     result = [
         {
-            "word": displayable_word_map[x],
+            "word": word_map[x],
             "wordlist_metadata_list": [metadata_map[y] for y in word_list_mapping[x]]
         }
         for x in word_list_mapping.keys()
