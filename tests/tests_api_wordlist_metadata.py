@@ -82,9 +82,26 @@ class TestAPIWordlistMetadataCreate(unittest.TestCase):
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
 
+        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
+        cls.keyword_mappings = json.loads(r.data)
+
     @classmethod
     def tearDownClass(cls):
         cls.app_context.pop()
+
+    def createWord(self):
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+
+        add_payload = {
+            "word": word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
+        }
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+
+        return word, word_id
 
     # do nothing, just make sure that setUp works
     def test_nothing(self):
@@ -99,6 +116,7 @@ class TestAPIWordlistMetadataCreate(unittest.TestCase):
         self.assertEqual(400, r.status_code)
 
     # create a list, name only. get it, verify that fields retrieved are correct.  delete it and make sure it's gone.
+    # NB - this is the only test that explicitly tests and verifies delete.  the rest of the tests will use cleanup.
     def test_create_1(self):
         list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
         add_payload = {
@@ -116,6 +134,7 @@ class TestAPIWordlistMetadataCreate(unittest.TestCase):
 
         self.assertIsNone(obj['citation'])
         self.assertIsNone(obj['sqlcode'])
+        self.assertEqual(0, obj['count'])
         self.assertEqual('empty', obj['list_type'])
 
         # delete it
@@ -126,12 +145,15 @@ class TestAPIWordlistMetadataCreate(unittest.TestCase):
         r = self.client.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id))
         self.assertEqual(404, r.status_code)
 
-    # create a list with citation and sqlcode set (will be a smart list).  get it, verify that fields
-    # retrieved are correct.  delete it and make sure it's gone.
+    # create a smart list with citation.  construct the list so that it has one word.  verify the count.
     def test_create_2(self):
+        word, word_id = self.createWord()
+        self.addCleanup(cleanupWordID, self.client, word_id)
+
         list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
         citation = 'speeding'
-        sqlcode = 'select id as word_id from word where id = 111'
+        sqlcode = 'select id as word_id from word where id = %s' % word_id
+
         add_payload = {
             'name': list_name,
             'citation': citation,
@@ -142,6 +164,7 @@ class TestAPIWordlistMetadataCreate(unittest.TestCase):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         wordlist_id = obj['wordlist_id']
+        self.addCleanup(cleanupWordlistID, self.client, wordlist_id)
 
         r = self.client.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id))
         self.assertEqual(200, r.status_code)
@@ -149,15 +172,8 @@ class TestAPIWordlistMetadataCreate(unittest.TestCase):
 
         self.assertEqual(citation, obj['citation'])
         self.assertEqual(sqlcode, obj['sqlcode'])
+        self.assertEqual(1, obj['count'])
         self.assertEqual('smart', obj['list_type'])
-
-        # delete it
-        r = self.client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id))
-        self.assertEqual(200, r.status_code)
-
-        # make sure it's gone
-        r = self.client.get(url_for('api_wordlist.get_wordlist_metadata', wordlist_id=wordlist_id))
-        self.assertEqual(404, r.status_code)
 
     # create a list with no name.  should not succeed.
     def test_create_3(self):

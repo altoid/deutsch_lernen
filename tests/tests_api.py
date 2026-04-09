@@ -8,6 +8,8 @@ from dlernen.dlernen_json_schema import get_validator, \
 from flask import url_for
 import json
 from pprint import pprint
+from mysql.connector import connect
+from contextlib import closing
 
 
 class APITests(unittest.TestCase):
@@ -79,3 +81,124 @@ class APITests(unittest.TestCase):
         self.assertEqual(200, r.status_code)
         result = json.loads(r.data)
         self.assertEqual([], result)
+
+    def test_all_the_things(self):
+        from dlernen.dlernen_json_schema import get_validator, WORDLIST_METADATA_RESPONSE_ARRAY_SCHEMA
+
+        with closing(connect(**self.app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+            wordlist_ids = [
+                5528,  # smart
+                45,  # empty
+                85,  # standard
+                132,  # smart
+                126,  # smart
+            ]
+
+            args = ','.join(['%s'] * len(wordlist_ids))
+
+            sql = """
+            with wordlist_counts as
+            (
+            select wordlist_id, sum(c) lcount from
+            (
+                select wordlist_id, count(*) c
+                from wordlist_word
+                group by wordlist_id
+            ) a
+            group by wordlist_id
+            )
+            select name, id wordlist_id, ifnull(lcount, 0) count, sqlcode, citation
+            from wordlist
+            left join wordlist_counts wc on wc.wordlist_id = wordlist.id
+            where wordlist.id in (%(args)s)
+            """ % {'args': args}
+
+            cursor.execute(sql, wordlist_ids)
+            metadata_rows = cursor.fetchall()
+            # pprint(metadata_rows)
+
+            # the connector is returning the count as a Decimal, have to convert it to int
+            for r in metadata_rows:
+                r['count'] = int(r['count'])
+
+            smartlists = list(filter(lambda x: x['sqlcode'] is not None, metadata_rows))
+            pprint(smartlists)
+
+            # my_sqlcode_thing = [
+            #     {
+            #         'wordlist_id': 666,
+            #         'sqlcode': """select id word_id from word where word = 'phonyword'"""
+            #     },
+            #     {
+            #         'wordlist_id': 555,
+            #         'sqlcode': """select id word_id from word where word = 'fartface'"""
+            #     },
+            # ]
+
+            # construct a single sql query from all of the sqlcodes, which will give the word counts by wordlist_id
+            # as fetched by the sqlcodes.
+
+            selectors = [
+                """
+                select %(wordlist_id)s wordlist_id, word_id from (
+                %(sqlcode)s
+                ) a%(wordlist_id)s 
+                """ % {
+                    'wordlist_id': x['wordlist_id'],
+                    'sqlcode': x['sqlcode']
+                }
+                for x in smartlists
+            ]
+
+            # sql = """
+            # with omg as (
+            # select 666 wordlist_id, word_id from
+            # (
+            # select id word_id from word where word = 'phonyword'
+            # ) a666
+            # UNION
+            # select 555 wordlist_id, word_id from
+            # (
+            # select id word_id from word where word = 'fartface'
+            # ) a555
+            # )
+            # select wordlist_id, count(*) count
+            # from omg
+            # group by wordlist_id
+            # """
+
+            # pprint(selectors)
+
+            sql = ' UNION '.join(selectors)
+            sql = """
+            with omg as
+            (
+            %(sql)s
+            )
+            select wordlist_id, count(*) count
+            from omg
+            group by wordlist_id
+            """ % {'sql': sql}
+
+            cursor.execute(sql)
+            smartlist_counts = cursor.fetchall()
+            pprint(smartlist_counts)
+
+            wordlist_id_to_metadata = {x['wordlist_id']: x for x in metadata_rows}
+
+            for x in smartlist_counts:
+                wordlist_id_to_metadata[x['wordlist_id']]['count'] = x['count']
+
+            result = list(wordlist_id_to_metadata.values())
+            for r in result:
+                if r['sqlcode']:
+                    r['list_type'] = 'smart'
+                elif r['count'] > 0:
+                    r['list_type'] = 'standard'
+                else:
+                    r['list_type'] = 'empty'
+
+            pprint(result)
+
+            get_validator(WORDLIST_METADATA_RESPONSE_ARRAY_SCHEMA).validate(result)
+

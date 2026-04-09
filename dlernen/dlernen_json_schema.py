@@ -753,6 +753,20 @@ WORDLIST_METADATA_RESPONSE_SCHEMA = {
     }
 }
 
+WORDLIST_METADATA_RESPONSE_ARRAY_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/wordlist_metadata_response_array.json",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Array of Wordlist Metadata Objects",
+    "description": """
+    response for GET relation.
+    """,
+    "type": "array",
+    "items": {
+        "$ref": WORDLIST_METADATA_RESPONSE_SCHEMA["$id"]
+    }
+}
+
+
 WORDLIST_RESPONSE_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/wordlist_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
@@ -929,6 +943,7 @@ ALL_SCHEMAS = [
     RELATION_RESPONSE_ARRAY_SCHEMA,
     WORD_TAG_RESPONSE_SCHEMA,
     WORDLIST_METADATA_RESPONSE_SCHEMA,
+    WORDLIST_METADATA_RESPONSE_ARRAY_SCHEMA,
     WORDLIST_RESPONSE_SCHEMA,
     DISPLAYABLE_WORD_SCHEMA,
     WORDLISTS_RESPONSE_SCHEMA,

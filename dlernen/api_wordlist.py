@@ -9,6 +9,7 @@ from dlernen.dlernen_json_schema import \
     WORDLIST_CONTENTS_PAYLOAD_SCHEMA, \
     WORDLIST_METADATA_PAYLOAD_SCHEMA, \
     WORDLIST_METADATA_RESPONSE_SCHEMA, \
+    WORDLIST_METADATA_RESPONSE_ARRAY_SCHEMA, \
     WORDLIST_RESPONSE_SCHEMA
 from dlernen.decorators import js_validate_result, js_validate_payload
 from contextlib import closing
@@ -58,57 +59,120 @@ def validate_sqlcode(cursor, sqlcode):
         cursor.fetchall()
 
 
-@js_validate_result(WORDLIST_METADATA_RESPONSE_SCHEMA)
-def __get_wordlist_metadata(wordlist_id, cursor):
-    """
-    returns the metadata for a given wordlist:  name, sqlcode, citation, list_type, and id.
-    """
-    sql = """
-    select
-    id wordlist_id, name, citation, sqlcode
-    from wordlist
-    where id = %s
-    """
-    cursor.execute(sql, (wordlist_id,))
-    wl_metadata = cursor.fetchone()
+@js_validate_result(WORDLIST_METADATA_RESPONSE_ARRAY_SCHEMA)
+def __get_wordlist_metadata(cursor, wordlist_ids):
+    # empty wordlist_ids means GET ALL
 
-    # see if there are any known or unknown words in this wordlist
     sql = """
-    select count(*) nwords from (
-        select wordlist_id from wordlist_word where wordlist_id = %(wordlist_id)s) a  
-    """ % {
-        "wordlist_id": wordlist_id
-    }
-    cursor.execute(sql)
-    row = cursor.fetchone()
-    nwords = row['nwords']
+        with wordlist_counts as
+        (
+            select wordlist_id, sum(c) lcount from
+            (
+                select wordlist_id, count(*) c
+                from wordlist_word
+                group by wordlist_id
+            ) a
+            group by wordlist_id
+        )
+        select name, id wordlist_id, ifnull(lcount, 0) count, sqlcode, citation
+        from wordlist
+        left join wordlist_counts wc on wc.wordlist_id = wordlist.id
+        """
 
-    # don't validate sqlcode.  callers and wrapper functions should do that.
-    # sqlcode may not be valid, but we don't validate on read, so it's out of our hands here.  we need to be
-    # able to return list metadata even if it has broken sqlcode, so that clients may fix it.
-    if wl_metadata:
-        if wl_metadata['sqlcode']:
-            wl_metadata['list_type'] = 'smart'
-        elif nwords > 0:
-            wl_metadata['list_type'] = 'standard'
+    if wordlist_ids:
+        sql = sql + """
+        where wordlist.id in (%(args)s)
+        """ % {'args': ','.join(['%s'] * len(wordlist_ids))}
+
+    cursor.execute(sql, wordlist_ids)
+    metadata_rows = cursor.fetchall()
+
+    if not metadata_rows:
+        return []
+
+    # the connector is returning the count as a Decimal, have to convert it to int
+    for r in metadata_rows:
+        r['count'] = int(r['count'])
+
+    smartlists = list(filter(lambda x: x['sqlcode'] is not None, metadata_rows))
+
+    # construct a single sql query from all of the sqlcodes, which will give the word counts by wordlist_id
+    # as fetched by the sqlcodes.  the query will look like this:
+    #
+    # sql = """
+    # with omg as (
+    # select 666 wordlist_id, word_id from
+    # (
+    # <sqlcode for wordlist 666>
+    # ) a666
+    # UNION
+    # select 555 wordlist_id, word_id from
+    # (
+    # <sqlcode for wordlist 555>
+    # ) a555
+    # UNION ...
+    # )
+    # select wordlist_id, count(*) count
+    # from omg
+    # group by wordlist_id
+    # """
+
+    wordlist_id_to_metadata = {x['wordlist_id']: x for x in metadata_rows}
+
+    if smartlists:
+        selectors = [
+            """
+            select %(wordlist_id)s wordlist_id, word_id from (
+            %(sqlcode)s
+            ) a%(wordlist_id)s 
+            """ % {
+                'wordlist_id': x['wordlist_id'],
+                'sqlcode': x['sqlcode']
+            }
+            for x in smartlists
+        ]
+
+        sql = ' UNION '.join(selectors)
+        sql = """
+            with omg as
+            (
+            %(sql)s
+            )
+            select wordlist_id, count(*) listcount
+            from omg
+            group by wordlist_id
+            """ % {'sql': sql}
+
+        cursor.execute(sql)
+        smartlist_counts = cursor.fetchall()
+
+        for x in smartlist_counts:
+            wordlist_id_to_metadata[x['wordlist_id']]['count'] = x['listcount']
+
+    result = list(wordlist_id_to_metadata.values())
+    for r in result:
+        if r['sqlcode']:
+            r['list_type'] = 'smart'
+        elif r['count'] > 0:
+            r['list_type'] = 'standard'
         else:
-            wl_metadata['list_type'] = 'empty'
+            r['list_type'] = 'empty'
 
-    # could be None
-    return wl_metadata
+    return result
 
 
 @bp.route('/<int:wordlist_id>/metadata')
 def get_wordlist_metadata(wordlist_id):
     try:
         with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-            result = __get_wordlist_metadata(wordlist_id, cursor)
+            result = __get_wordlist_metadata(cursor, [wordlist_id])
             if not result:
                 return "wordlist %s not found" % wordlist_id, 404
 
             # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
 
-            return result
+            return result[0]
+
     except jsonschema.ValidationError as f:
         # responses that don't validate are a server implementation problem.
         return str(f), 500
@@ -142,11 +206,11 @@ def create_wordlist_metadata():
             result = cursor.fetchone()
             wordlist_id = result['wordlist_id']
             cursor.execute('commit')
-            result = __get_wordlist_metadata(wordlist_id, cursor)
+            result = __get_wordlist_metadata(cursor, [wordlist_id])
 
             # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
 
-            return result, 201
+            return result[0], 201
 
         except mysql.connector.errors.ProgrammingError as f:
             # if validation of sqlcode that is read from the database fails,
@@ -171,7 +235,7 @@ def update_wordlist_metadata(wordlist_id):
             if do_update:
                 # this is well-behaved if citation and sqlcode are not given.
 
-                wordlist_metadata = __get_wordlist_metadata(wordlist_id, cursor)
+                wordlist_metadata = __get_wordlist_metadata(cursor, [wordlist_id])[0]
                 if not wordlist_metadata:
                     return "wordlist %s not found" % wordlist_id, 404
 
@@ -210,7 +274,7 @@ def update_wordlist_metadata(wordlist_id):
                 cursor.execute('commit')
 
             # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
-            return __get_wordlist_metadata(wordlist_id, cursor)
+            return __get_wordlist_metadata(cursor, [wordlist_id])[0]
 
         except mysql.connector.errors.ProgrammingError as e:
             # this will happen if validate_sqlcode throws exception
