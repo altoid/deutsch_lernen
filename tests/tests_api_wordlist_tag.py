@@ -47,7 +47,7 @@ class TestAPIWordlistTagMultiList(unittest.TestCase):
             'name': list_name
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=add_payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         wordlist_id = obj['wordlist_id']
@@ -75,7 +75,7 @@ class TestAPIWordlistTagMultiList(unittest.TestCase):
             ]
         }
 
-        r = self.client.put(url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id), json=payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=wordlist_id), json=payload)
         self.assertEqual(200, r.status_code)
 
         r = self.client.post(url_for('api_wordlist_tag.add_tags',
@@ -322,7 +322,7 @@ class TestAPIWordlistTagSmartList(unittest.TestCase):
             'sqlcode': sql
         }
 
-        url = url_for('api_wordlist.create_wordlist_metadata')
+        url = url_for('api_wordlist.create_wordlist')
 
         r = self.client.post(url, json=add_payload)
         obj = json.loads(r.data)
@@ -398,7 +398,7 @@ class TestAPIWordlistTag(unittest.TestCase):
             'name': self.list_name
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=add_payload)
         obj = json.loads(r.data)
         self.wordlist_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
@@ -444,7 +444,7 @@ class TestAPIWordlistTag(unittest.TestCase):
         self.addCleanup(cleanupWordID, self.client, self.word2_id)
         self.addCleanup(cleanupWordID, self.client, self.word3_id)
 
-        r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
+        r = self.client.put(url_for('api_wordlist.update_wordlist',
                                     wordlist_id=self.wordlist_id),
                             json={
                                 "word_ids": [self.word1_id, self.word2_id, self.word3_id]

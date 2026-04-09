@@ -287,7 +287,7 @@ def addlist():
         'citation': citation
     }
 
-    url = url_for('api_wordlist.create_wordlist_metadata', _external=True)
+    url = url_for('api_wordlist.create_wordlist', _external=True)
     r = requests.post(url, json=payload)
     if r:
         return redirect(url_for('dlernen.wordlists'))

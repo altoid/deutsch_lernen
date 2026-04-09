@@ -5,9 +5,7 @@ from dlernen.dlernen_json_schema import get_validator, ATTRIBUTES, \
     WORDLIST_PAYLOAD_SCHEMA, \
     WORD_ADD_PAYLOAD_SCHEMA, \
     WORD_UPDATE_PAYLOAD_SCHEMA, \
-    WORDLIST_CONTENTS_PAYLOAD_SCHEMA, \
     WORDLISTS_DELETE_PAYLOAD_SCHEMA, \
-    WORDLIST_METADATA_PAYLOAD_SCHEMA, \
     WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA, \
     POS_STRUCTURE_RESPONSE_SCHEMA, \
     QUIZ_ANSWER_PAYLOAD_SCHEMA, \
@@ -1461,121 +1459,6 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
                 }
             ]
         },
-    ]
-
-    def test_valid_docs(self):
-        for jdoc in self.valid_docs:
-            with self.subTest(jdoc=jdoc):
-                get_validator(self.schema).validate(jdoc)
-
-    def test_invalid_docs(self):
-        for jdoc in self.invalid_docs:
-            with self.subTest(jdoc=jdoc):
-                with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    get_validator(self.schema).validate(jdoc)
-
-    def test_check_schema(self):
-        jsonschema.Draft202012Validator.check_schema(self.schema)
-
-
-class Test_WORDLIST_CONTENTS_PAYLOAD_SCHEMA(unittest.TestCase):
-    schema = WORDLIST_CONTENTS_PAYLOAD_SCHEMA
-
-    valid_docs = [
-        {
-        },
-        {
-            "notes": None
-        },
-        {
-            "notes": "whatevs"
-        },
-        {
-            "word_ids": []  # empty list is valid
-        },
-        {
-            "word_ids": [
-                123,
-                234,
-                345
-            ]
-        },
-        {
-            "notes": "whatevs",
-            "word_ids": [
-                11,
-                22
-            ]
-        }
-    ]
-
-    invalid_docs = [
-        {
-            "word_ids": [
-                "word_ids have to",
-                "be integers"
-            ]
-        }
-    ]
-
-    def test_valid_docs(self):
-        for jdoc in self.valid_docs:
-            with self.subTest(jdoc=jdoc):
-                get_validator(self.schema).validate(jdoc)
-
-    def test_invalid_docs(self):
-        for jdoc in self.invalid_docs:
-            with self.subTest(jdoc=jdoc):
-                with self.assertRaises(jsonschema.exceptions.ValidationError):
-                    get_validator(self.schema).validate(jdoc)
-
-    def test_check_schema(self):
-        jsonschema.Draft202012Validator.check_schema(self.schema)
-
-
-class Test_WORDLIST_METADATA_PAYLOAD_SCHEMA(unittest.TestCase):
-    # note:  these tests don't validate sqlcode.  that happens in the API tests.
-
-    schema = WORDLIST_METADATA_PAYLOAD_SCHEMA
-
-    valid_docs = [
-        {
-            "name": "saetuasasue",
-            "citation": "anteohusntaeo",
-            "sqlcode": "n;sercisr;cih"
-        },
-        {
-            "name": "saetuasasue",
-            "citation": None,
-            "sqlcode": None
-        },
-        {
-            "name": "x"
-        },
-        {
-            "citation": "    xxx    "
-        },
-        {
-            "sqlcode": "  line1\r\nline2\r\nline3  "
-        },
-        {
-            # empty payloads are valid
-        }
-    ]
-
-    invalid_docs = [
-        {
-            "name": "  leading and trailing whitespace not allowed  "
-        },
-        {
-            "name": None
-        },
-        {
-            "sqlcode": ""
-        },
-        {
-            "citation": ""
-        }
     ]
 
     def test_valid_docs(self):

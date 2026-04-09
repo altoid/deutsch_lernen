@@ -99,10 +99,6 @@ def __save_word_ids(relation_id, word_ids, cursor):
 def create_relation():
     payload = request.get_json()
 
-    word_ids = payload.get('word_ids', [])
-    if word_ids:
-        word_ids, _ = common.check_word_ids(word_ids)
-
     # description can have leading/trailing whitespace, but if it's only whitespace, insert it as null.
     description = payload.get('description')
     description_stripped = None
@@ -132,7 +128,9 @@ def create_relation():
             result = cursor.fetchone()
             relation_id = result['relation_id']
 
+            word_ids = payload.get('word_ids', [])
             if word_ids:
+                word_ids, _ = common.check_word_ids(cursor, word_ids)
                 __save_word_ids(relation_id, word_ids, cursor)
 
             cursor.execute('commit')
@@ -160,10 +158,6 @@ def update_relation(relation_id):
     # any words in the payload are added to the relation.
 
     payload = request.get_json()
-
-    word_ids = payload.get('word_ids', [])
-    if word_ids:
-        word_ids, _ = common.check_word_ids(word_ids)
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
@@ -199,7 +193,9 @@ def update_relation(relation_id):
                 """
                 cursor.execute(sql, {'relation_id': relation_id, 'notes': notes})
 
+            word_ids = payload.get('word_ids', [])
             if word_ids:
+                word_ids, _ = common.check_word_ids(cursor, word_ids)
                 __save_word_ids(relation_id, word_ids, cursor)
 
             cursor.execute('commit')
@@ -220,15 +216,15 @@ def update_relation(relation_id):
 def delete_from_relation(relation_id):
     payload = request.get_json()
 
-    word_ids = payload.get('word_ids', [])
-    if word_ids:
-        word_ids, _ = common.check_word_ids(word_ids)
-
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
             if not relation_exists(relation_id, cursor):
                 return "no such relation:  %s" % relation_id, 404
+
+            word_ids = payload.get('word_ids', [])
+            if word_ids:
+                word_ids, _ = common.check_word_ids(cursor, word_ids)
 
             if word_ids:
                 sql = """

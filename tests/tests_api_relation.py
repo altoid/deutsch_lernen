@@ -610,7 +610,7 @@ class TestAPIRelationWordlist(TestAPIRelation):
             'name': list_name
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         wordlist_id = obj['wordlist_id']
@@ -632,7 +632,7 @@ class TestAPIRelationWordlist(TestAPIRelation):
             'name': list_name
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         wordlist_id = obj['wordlist_id']
@@ -649,7 +649,7 @@ class TestAPIRelationWordlist(TestAPIRelation):
             'word_ids': word_ids[0:6]
         }
 
-        r = self.client.put(url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id),
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=wordlist_id),
                             json=payload)
         self.assertEqual(200, r.status_code)
 
@@ -697,7 +697,7 @@ class TestAPIRelationWordlist(TestAPIRelation):
             'sqlcode': sqlcode
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         wordlist_id = obj['wordlist_id']

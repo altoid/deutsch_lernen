@@ -2,8 +2,7 @@ import unittest
 import random
 import string
 from dlernen import create_app
-from dlernen.dlernen_json_schema import get_validator, \
-    ATTRIBUTES
+from dlernen.dlernen_json_schema import ATTRIBUTES
 from flask import url_for
 import json
 from pprint import pprint
@@ -51,7 +50,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
             'name': self.list_name
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=add_payload)
         obj = json.loads(r.data)
         self.wordlist_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
@@ -92,7 +91,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
             ]
         }
 
-        r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
+        r = self.client.put(url_for('api_wordlist.update_wordlist',
                                     wordlist_id=self.wordlist_id),
                             json=payload)
 
@@ -154,7 +153,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
             'name': self.list_name
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=add_payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         wordlist_id = obj['wordlist_id']
@@ -211,7 +210,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
             'name': self.list_name
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=add_payload)
         obj = json.loads(r.data)
         self.wordlist_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
@@ -265,7 +264,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
             ]
         }
 
-        r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
+        r = self.client.put(url_for('api_wordlist.update_wordlist',
                                     wordlist_id=self.wordlist_id),
                             json=payload)
 
@@ -356,7 +355,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
             'name': self.list_name
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=add_payload)
         obj = json.loads(r.data)
         wordlist_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, wordlist_id)

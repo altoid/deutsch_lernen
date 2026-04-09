@@ -302,30 +302,6 @@ WORDLIST_PAYLOAD_SCHEMA = {
 
 # wordlist contents are notes and a list of word ids.
 
-WORDLIST_CONTENTS_PAYLOAD_SCHEMA = {
-    # can be used for add or update of a list.
-    "$id": "https://deutsch-lernen.doug/schemas/wordlist_contents_payload.json",
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "WORDLIST_CONTENTS_PAYLOAD_SCHEMA",
-    "description": "Payload for adding content to a wordlist",
-    "type": "object",
-    "required": [
-        # none are required.
-    ],
-    "additionalProperties": False,
-    "properties": {
-        "notes": {
-            "type": ["string", 'null']
-        },
-        "word_ids": {
-            "type": "array",
-            "items": {
-                "type": "integer"
-            }
-        }
-    }
-}
-
 WORDLISTS_DELETE_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/wordlists_delete_payload.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
@@ -335,46 +311,6 @@ WORDLISTS_DELETE_PAYLOAD_SCHEMA = {
     "additionalProperties": False,
     "items": {
         "type": "integer"
-    }
-}
-
-# wordlist metadata is all the info about a list except its contents.  metadata fields are:
-#
-#     - name
-#     - id
-#     - citation
-#     - sqlcode
-#     - type (empty, standard, smart.  derived value, not stored in database)
-#
-
-WORDLIST_METADATA_PAYLOAD_SCHEMA = {
-    # can be used for add or update of a list.
-    "$id": "https://deutsch-lernen.doug/schemas/wordlist_metadata_payload.json",
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Payload for add wordlist",
-    "description": "Payload for add/update list",
-    "type": "object",
-    "required": [
-        # haha, none are required.  string values must be at least 1 char if provided.
-        # for creating a word list a name is of course required, but we will check that
-        # in code, not here.
-        #
-        # we permit payloads with no name so that we can update a given list without having to specify a name.
-    ],
-    "additionalProperties": False,
-    "properties": {
-        "name": {
-            "type": "string",
-            "pattern": NAME_PATTERN
-        },
-        "citation": {
-            "type": ["string", "null"],
-            "pattern": STRING_PATTERN
-        },
-        "sqlcode": {
-            "type": ["string", "null"],
-            "pattern": MULTILINE_STRING_PATTERN
-        }
     }
 }
 
@@ -969,9 +905,7 @@ ALL_SCHEMAS = [
     RELATION_PAYLOAD_SCHEMA,
     WORD_ADD_PAYLOAD_SCHEMA,
     WORD_UPDATE_PAYLOAD_SCHEMA,
-    WORDLIST_CONTENTS_PAYLOAD_SCHEMA,
     WORDLISTS_DELETE_PAYLOAD_SCHEMA,
-    WORDLIST_METADATA_PAYLOAD_SCHEMA,
     WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA,
     POS_STRUCTURE_RESPONSE_SCHEMA,
     QUIZ_ANSWER_PAYLOAD_SCHEMA,

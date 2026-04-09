@@ -15,24 +15,24 @@ from dlernen.dlernen_json_schema import ARRAY_WORD_RESPONSE_SCHEMA, \
 #
 # - the lists are disjoint
 # - no word id appears more than once in either list.
-def check_word_ids(word_ids):
+#
+def check_word_ids(cursor, word_ids):
     if not word_ids:
         return [], []
 
-    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        id_args = ', '.join(['%s'] * len(word_ids))
-        sql = """
-        select distinct id word_id
-        from word
-        where id in (%(id_args)s)
-        """ % {'id_args': id_args}
+    id_args = ', '.join(['%s'] * len(word_ids))
+    sql = """
+    select distinct id word_id
+    from word
+    where id in (%(id_args)s)
+    """ % {'id_args': id_args}
 
-        cursor.execute(sql, word_ids)
-        rows = cursor.fetchall()
-        known_ids = {x['word_id'] for x in rows}
-        unknown_ids = set(word_ids) - known_ids
+    cursor.execute(sql, word_ids)
+    rows = cursor.fetchall()
+    known_ids = {x['word_id'] for x in rows}
+    unknown_ids = set(word_ids) - known_ids
 
-        return list(known_ids), list(unknown_ids)
+    return list(known_ids), list(unknown_ids)
 
 
 def process_word_query_result(rows):

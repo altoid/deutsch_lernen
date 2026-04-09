@@ -39,13 +39,14 @@ class TestAPIWordlistCreateDelete(unittest.TestCase):
     def test_nothing(self):
         pass
 
+    # check that create and delete work
     def test1(self):
         list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
         add_payload = {
             'name': list_name
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=add_payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         wordlist_id = obj['wordlist_id']
@@ -58,6 +59,25 @@ class TestAPIWordlistCreateDelete(unittest.TestCase):
         r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id))
         self.assertEqual(404, r.status_code)
 
+    # create a list without a name; should not succeed
+    def test2(self):
+        add_payload = {
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=add_payload)
+        self.assertEqual(400, r.status_code)
+
+    # create a list with sqlcode and a list of word ids; should not succeed
+    def test3(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name,
+            'sqlcode': """select id word_id from word where word = 'geben'""",
+            'word_ids': [1, 2, 3]
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=add_payload)
+        self.assertEqual(400, r.status_code)
 
 
 class TestAPIWordlistBatchDelete(unittest.TestCase):
@@ -91,7 +111,7 @@ class TestAPIWordlistBatchDelete(unittest.TestCase):
             'name': list_name_1
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=add_payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         wordlist_id_1 = obj['wordlist_id']
@@ -102,7 +122,7 @@ class TestAPIWordlistBatchDelete(unittest.TestCase):
             'name': list_name_2
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=add_payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         wordlist_id_2 = obj['wordlist_id']
@@ -156,7 +176,7 @@ class TestAPIWordlist(unittest.TestCase):
             'name': list_name
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=add_payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         wordlist_id = obj['wordlist_id']
@@ -189,9 +209,8 @@ class TestAPIWordlist(unittest.TestCase):
         self.word2, self.word2_id = self.createWord()
         self.addCleanup(cleanupWordID, self.client, self.word2_id)
 
-        self.contents_update_url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=self.wordlist_id)
+        self.update_url = url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id)
         self.wordlist_get_url = url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id)
-        self.metadata_update_url = url_for('api_wordlist.update_wordlist_metadata', wordlist_id=self.wordlist_id)
 
     # do nothing, just make sure that setUp works
     def test_nothing(self):
@@ -218,7 +237,7 @@ class TestAPIWordlist(unittest.TestCase):
             'notes': 'important notes'
         }
 
-        r = self.client.put(self.contents_update_url, json=payload)
+        r = self.client.put(self.update_url, json=payload)
         self.assertEqual(200, r.status_code)
 
         r = self.client.get(self.wordlist_get_url)
@@ -236,7 +255,7 @@ class TestAPIWordlist(unittest.TestCase):
             ]
         }
 
-        r = self.client.put(self.contents_update_url, json=payload)
+        r = self.client.put(self.update_url, json=payload)
         self.assertEqual(200, r.status_code)
 
         payload = {
@@ -246,7 +265,7 @@ class TestAPIWordlist(unittest.TestCase):
             ]
         }
 
-        r = self.client.put(self.contents_update_url, json=payload)
+        r = self.client.put(self.update_url, json=payload)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -261,13 +280,13 @@ class TestAPIWordlist(unittest.TestCase):
             'sqlcode': """select id word_id from word where word = 'geben'"""
         }
 
-        r = self.client.put(self.metadata_update_url, json=metadata_payload)
+        r = self.client.put(self.update_url, json=metadata_payload)
         self.assertEqual(200, r.status_code)
 
         update_payload = {
         }
 
-        r = self.client.put(self.contents_update_url, json=update_payload)
+        r = self.client.put(self.update_url, json=update_payload)
         self.assertEqual(200, r.status_code)
 
         r = self.client.get(self.wordlist_get_url)
@@ -279,13 +298,22 @@ class TestAPIWordlist(unittest.TestCase):
 
         self.assertTrue(len(obj['words']) > 0)
 
+    # adding a bad word id does not cause error, but the id will not be placed into the list.
     def test_add_bad_word_id(self):
+        bad_id = self.word1_id * 2
         payload = {
-            'word_ids': self.word1_id * 2
+            'word_ids': [bad_id]
         }
 
-        r = self.client.put(self.contents_update_url, json=payload)
-        self.assertEqual(400, r.status_code)
+        r = self.client.put(self.update_url, json=payload)
+        self.assertEqual(200, r.status_code)
+
+        r = self.client.get(self.wordlist_get_url)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        word_ids = [x['word_id'] for x in obj['words']]
+        self.assertTrue(bad_id not in word_ids)
 
     # remove word by id from list
     def test_remove_word_by_id(self):
@@ -295,7 +323,7 @@ class TestAPIWordlist(unittest.TestCase):
             ]
         }
 
-        r = self.client.put(self.contents_update_url, json=payload)
+        r = self.client.put(self.update_url, json=payload)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -329,7 +357,7 @@ class TestAPIWordlist(unittest.TestCase):
         payload = {
             'notes': ''
         }
-        r = self.client.put(self.contents_update_url, json=payload)
+        r = self.client.put(self.update_url, json=payload)
         self.assertEqual(200, r.status_code)
 
         # make sure the notes were cleared
@@ -344,7 +372,7 @@ class TestAPIWordlist(unittest.TestCase):
         payload = {
             'notes': notes
         }
-        r = self.client.put(self.contents_update_url, json=payload)
+        r = self.client.put(self.update_url, json=payload)
         self.assertEqual(200, r.status_code)
 
         r = self.client.get(self.wordlist_get_url)
@@ -356,7 +384,7 @@ class TestAPIWordlist(unittest.TestCase):
         payload = {
             'notes': None
         }
-        r = self.client.put(self.contents_update_url, json=payload)
+        r = self.client.put(self.update_url, json=payload)
         self.assertEqual(200, r.status_code)
 
         # make sure the notes were cleared
@@ -371,7 +399,7 @@ class TestAPIWordlist(unittest.TestCase):
         payload = {
             'notes': notes
         }
-        r = self.client.put(self.contents_update_url, json=payload)
+        r = self.client.put(self.update_url, json=payload)
         self.assertEqual(200, r.status_code)
 
         # add some words then check the notes
@@ -382,7 +410,7 @@ class TestAPIWordlist(unittest.TestCase):
                 self.word2_id
             ]
         }
-        r = self.client.put(self.contents_update_url, json=payload)
+        r = self.client.put(self.update_url, json=payload)
         self.assertEqual(200, r.status_code)
 
         # make sure the notes were unaffected
@@ -401,14 +429,14 @@ class TestAPIWordlist(unittest.TestCase):
             ]
         }
 
-        r = self.client.put(self.contents_update_url, json=add_payload)
+        r = self.client.put(self.update_url, json=add_payload)
         self.assertEqual(200, r.status_code)
 
         update_payload = {
             'sqlcode': 'select id word_id from word where id = 555'
         }
 
-        r = self.client.put(self.metadata_update_url, json=update_payload)
+        r = self.client.put(self.update_url, json=update_payload)
         self.assertEqual(400, r.status_code)
 
     # add words to smart list --> not allowed.
@@ -418,7 +446,7 @@ class TestAPIWordlist(unittest.TestCase):
             'sqlcode': 'select id word_id from word where id = 555'
         }
 
-        r = self.client.put(self.metadata_update_url, json=payload)
+        r = self.client.put(self.update_url, json=payload)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
         self.assertEqual('smart', obj['list_type'])
@@ -430,7 +458,7 @@ class TestAPIWordlist(unittest.TestCase):
             ]
         }
 
-        r = self.client.put(self.contents_update_url, json=payload)
+        r = self.client.put(self.update_url, json=payload)
         self.assertEqual(400, r.status_code)
 
     # get with bullshit wordlist id
@@ -451,7 +479,7 @@ class TestAPIWordlist(unittest.TestCase):
             ]
         }
 
-        r = self.client.put(self.contents_update_url,
+        r = self.client.put(self.update_url,
                             json=update_payload)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
@@ -463,7 +491,7 @@ class TestAPIWordlist(unittest.TestCase):
             'sqlcode': 'select id word_id from word where id = 555'
         }
 
-        r = self.client.put(self.metadata_update_url, json=payload)
+        r = self.client.put(self.update_url, json=payload)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
         self.assertEqual('smart', obj['list_type'])
@@ -472,7 +500,7 @@ class TestAPIWordlist(unittest.TestCase):
             'sqlcode': None
         }
 
-        r = self.client.put(self.metadata_update_url, json=payload)
+        r = self.client.put(self.update_url, json=payload)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
         self.assertEqual('empty', obj['list_type'])
@@ -490,7 +518,7 @@ class TestAPIWordlist(unittest.TestCase):
             ]
         }
 
-        r = self.client.put(self.contents_update_url, json=payload)
+        r = self.client.put(self.update_url, json=payload)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -520,7 +548,7 @@ class TestAPIWordlist(unittest.TestCase):
             'sqlcode': 'select id word_id from word where id = 555'
         }
 
-        r = self.client.put(self.metadata_update_url, json=payload)
+        r = self.client.put(self.update_url, json=payload)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -570,7 +598,7 @@ class TestAPIWordlistGetWordIDs(unittest.TestCase):
             'name': self.list_name_1
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=add_payload)
         obj = json.loads(r.data)
         self.wordlist1_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, self.wordlist1_id)
@@ -580,7 +608,7 @@ class TestAPIWordlistGetWordIDs(unittest.TestCase):
             'name': self.list_name_2
         }
 
-        r = self.client.post(url_for('api_wordlist.create_wordlist_metadata'), json=add_payload)
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=add_payload)
         obj = json.loads(r.data)
         self.wordlist2_id = obj['wordlist_id']
         self.addCleanup(cleanupWordlistID, self.client, self.wordlist2_id)
@@ -622,14 +650,14 @@ class TestAPIWordlistGetWordIDs(unittest.TestCase):
         self.addCleanup(cleanupWordID, self.client, self.word2_id)
         self.addCleanup(cleanupWordID, self.client, self.word3_id)
 
-        r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
+        r = self.client.put(url_for('api_wordlist.update_wordlist',
                                     wordlist_id=self.wordlist1_id),
                             json={
                                 "word_ids": [self.word1_id, self.word2_id]
                             })
         self.assertEqual(200, r.status_code)
 
-        r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
+        r = self.client.put(url_for('api_wordlist.update_wordlist',
                                     wordlist_id=self.wordlist2_id),
                             json={
                                 "word_ids": [self.word2_id, self.word3_id]
@@ -649,7 +677,7 @@ class TestAPIWordlistGetWordIDs(unittest.TestCase):
         payload = {
             'bull': 'shit'
         }
-        r = self.client.put(url_for('api_wordlist.update_wordlist_contents',
+        r = self.client.put(url_for('api_wordlist.update_wordlist',
                                     wordlist_id=self.wordlist2_id), json=payload)
         self.assertEqual(400, r.status_code)
 

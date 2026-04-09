@@ -6,8 +6,7 @@ from mysql.connector import connect
 from dlernen import common
 from dlernen.dlernen_json_schema import \
     ARRAY_RELATION_RESPONSE_SCHEMA, \
-    WORDLIST_CONTENTS_PAYLOAD_SCHEMA, \
-    WORDLIST_METADATA_PAYLOAD_SCHEMA, \
+    WORDLIST_PAYLOAD_SCHEMA, \
     WORDLISTS_DELETE_PAYLOAD_SCHEMA, \
     WORDLIST_RESPONSE_SCHEMA
 from dlernen.decorators import js_validate_result, js_validate_payload
@@ -89,21 +88,22 @@ def get_metadata_multiple():
         return str(f), 500
 
 
-@bp.route('/metadata', methods=['POST'])
-@js_validate_payload(WORDLIST_METADATA_PAYLOAD_SCHEMA)
-def create_wordlist_metadata():
+@bp.route('', methods=['POST'])
+@js_validate_payload(WORDLIST_PAYLOAD_SCHEMA)
+def create_wordlist():
     payload = request.get_json()
     name = payload.get('name')
     citation = payload.get('citation')
     sqlcode = payload.get('sqlcode')
+    notes = payload.get('notes')
+    word_ids = payload.get('word_ids', [])
 
     # no need to strip the name; no leading/trailing whitespace is enforced by schema.  however, name is optional
     # in the schema but required here.
     if not name:
         return "wordlists must have a name", 400
 
-    # name is required, but the schema permits no name
-    # the json schema enforces that the name has no leading/trailing whitespace, so no need to check for that here.
+    # sqlcode and word_ids cannot both be present.  this is enforced by schema.
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         # this is well-behaved if citation and sqlcode are not given.
@@ -111,16 +111,26 @@ def create_wordlist_metadata():
         try:
             validate_sqlcode(cursor, sqlcode)
             cursor.execute('start transaction')
-            sql = "insert into wordlist (`name`, `citation`, `sqlcode`) values (%s, %s, %s)"
-            cursor.execute(sql, (name, citation, sqlcode))
+            sql = "insert into wordlist (`name`, `citation`, `sqlcode`, `notes`) values (%s, %s, %s, %s)"
+            cursor.execute(sql, (name, citation, sqlcode, notes))
             cursor.execute("select last_insert_id() wordlist_id")
             result = cursor.fetchone()
             wordlist_id = result['wordlist_id']
+
+            word_ids, _ = common.check_word_ids(cursor, word_ids)
+            if word_ids:
+                wkw_tuples = [(wordlist_id, x) for x in word_ids]
+                ins_sql = """
+                insert ignore into wordlist_word (wordlist_id, word_id)
+                values (%s, %s)
+                """
+                cursor.executemany(ins_sql, wkw_tuples)
+
             cursor.execute('commit')
 
-            result = common.get_wordlist_metadata(cursor, [wordlist_id])
+            result = __get_wordlist(wordlist_id, cursor)
 
-            return result[0], 201
+            return result, 201
 
         except mysql.connector.errors.ProgrammingError as f:
             # if validation of sqlcode that is read from the database fails,
@@ -131,13 +141,13 @@ def create_wordlist_metadata():
             return "create list failed", 500
 
 
-@bp.route('/<int:wordlist_id>/metadata', methods=['PUT'])
-@js_validate_payload(WORDLIST_METADATA_PAYLOAD_SCHEMA)
-def update_wordlist_metadata(wordlist_id):
+@bp.route('/<int:wordlist_id>', methods=['PUT'])
+@js_validate_payload(WORDLIST_PAYLOAD_SCHEMA)
+def update_wordlist(wordlist_id):
     payload = request.get_json()
 
     # don't update anything that isn't in the payload.
-    keys_to_check = ['name', 'citation', 'sqlcode']
+    keys_to_check = ['name', 'citation', 'sqlcode', 'word_ids', 'notes']
     do_update = any(key in payload for key in keys_to_check)
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
@@ -154,6 +164,10 @@ def update_wordlist_metadata(wordlist_id):
                         return "can't add sqlcode to a nonempty list", 400
 
                     validate_sqlcode(cursor, payload['sqlcode'])
+
+                if 'word_ids' in payload:
+                    if wordlist_metadata['list_type'] == 'smart':
+                        return "can't add words to a smart list", 400
 
                 cursor.execute('start transaction')
 
@@ -181,10 +195,27 @@ def update_wordlist_metadata(wordlist_id):
                         """
                     cursor.execute(sql, {'name': payload['name'], 'wordlist_id': wordlist_id})
 
+                if 'notes' in payload:
+                    sql = """
+                    update wordlist
+                    set notes = %(notes)s
+                    where id = %(wordlist_id)s
+                    """
+                    cursor.execute(sql, {'notes': payload['notes'], 'wordlist_id': wordlist_id})
+
+                word_ids = payload.get('word_ids', [])
+                word_ids, _ = common.check_word_ids(cursor, word_ids)
+                if word_ids:
+                    wkw_tuples = [(wordlist_id, x) for x in word_ids]
+                    ins_sql = """
+                    insert ignore into wordlist_word (wordlist_id, word_id)
+                    values (%s, %s)
+                    """
+                    cursor.executemany(ins_sql, wkw_tuples)
+
                 cursor.execute('commit')
 
-            # __get_wordlist_metadata validates the object it returns so we don't have to do it here.
-            return common.get_wordlist_metadata(cursor, [wordlist_id])[0]
+            return __get_wordlist(wordlist_id, cursor)
 
         except mysql.connector.errors.ProgrammingError as e:
             # this will happen if validate_sqlcode throws exception
@@ -342,53 +373,8 @@ def get_wordlist(wordlist_id):
         return str(f), 500
 
 
-@bp.route('/<int:wordlist_id>', methods=['PUT'])
-@js_validate_payload(WORDLIST_CONTENTS_PAYLOAD_SCHEMA)
-def update_wordlist_contents(wordlist_id):
-    payload = request.get_json()
-
-    word_ids = None
-    if 'word_ids' in payload:
-        word_ids = payload.get('word_ids')
-
-    word_ids, unknown_word_ids = common.check_word_ids(word_ids)
-    if unknown_word_ids:
-        message = "unknown_word_ids:  %s" % unknown_word_ids
-        return message, 400
-
-    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        try:
-            wordlist = __get_wordlist(wordlist_id, cursor)
-            if wordlist['list_type'] == 'smart' and word_ids:
-                return "can't add words to smart list", 400
-
-            cursor.execute('start transaction')
-            if 'notes' in payload:
-                sql = """
-                update wordlist
-                set notes = %(notes)s
-                where id = %(wordlist_id)s
-                """
-                cursor.execute(sql, {'notes': payload['notes'], 'wordlist_id': wordlist_id})
-
-            if word_ids:
-                wkw_tuples = [(wordlist_id, x) for x in word_ids]
-                ins_sql = """
-                insert ignore into wordlist_word (wordlist_id, word_id)
-                values (%s, %s)
-                """
-                cursor.executemany(ins_sql, wkw_tuples)
-
-            cursor.execute('commit')
-
-            return __get_wordlist(wordlist_id, cursor)
-        except Exception as e:
-            cursor.execute('rollback')
-            return "update list failed", 500
-
-
 @bp.route('/<int:wordlist_id>/batch_delete', methods=['PUT'])
-@js_validate_payload(WORDLIST_CONTENTS_PAYLOAD_SCHEMA)
+@js_validate_payload(WORDLIST_PAYLOAD_SCHEMA)
 def delete_from_wordlist(wordlist_id):
     payload = request.get_json()
 
