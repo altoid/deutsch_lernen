@@ -73,15 +73,18 @@ class Test_WORDLIST_PAYLOAD_SCHEMA(unittest.TestCase):
         {
             "word_ids": [1, 2, 3]
         },
+        {
+            "name": "aoeu"
+        },
+        {
+            # empty payload is ok.
+        }
     ]
 
     invalid_docs = [
         {
             "sqlcode": "whee",
             "word_ids": [1, 2, 3]
-        },
-        {
-            # empty payload is ok
         }
     ]
 

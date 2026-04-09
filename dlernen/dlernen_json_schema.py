@@ -288,6 +288,15 @@ WORDLIST_PAYLOAD_SCHEMA = {
                 "type": "integer"
             }
         }
+    },
+    # this forces the mutual exclusivity of sqlcode and word_ids.
+    "dependentSchemas": {
+        "sqlcode": {
+            "not": {"required": ["word_ids"]}
+        },
+        "word_ids": {
+            "not": {"required": ["sqlcode"]}
+        }
     }
 }
 
