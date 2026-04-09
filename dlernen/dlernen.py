@@ -353,7 +353,7 @@ def edit_list_attributes():
         'citation': citation
     }
 
-    url = url_for('api_wordlist.update_wordlist_metadata', wordlist_id=wordlist_id, _external=True)
+    url = url_for('api_wordlist.update_wordlist', wordlist_id=wordlist_id, _external=True)
     r = requests.put(url, json=payload)
 
     if r.status_code == 422:
@@ -453,7 +453,7 @@ def update_wordlist_notes():
         'notes': request.form['notes']
     }
 
-    url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True)
+    url = url_for('api_wordlist.update_wordlist', wordlist_id=wordlist_id, _external=True)
     r = requests.put(url, json=payload)
     if not r:
         return render_template("error.html",
@@ -749,7 +749,7 @@ def update_dict():
                 payload = {
                     'word_ids': [obj['word_id']]
                 }
-                url = url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True)
+                url = url_for('api_wordlist.update_wordlist', wordlist_id=wordlist_id, _external=True)
                 r = requests.put(url, json=payload)
                 if not r:
                     message = "could not add word to wordlist:  word %s, word_id = %s [%s]" % (
@@ -963,7 +963,7 @@ def __submit_to_wordlist(serialized_tag_state, word, redirect_to):
             "word_ids": word_ids
         }
 
-        r2 = requests.put(url_for('api_wordlist.update_wordlist_contents', wordlist_id=wordlist_id, _external=True),
+        r2 = requests.put(url_for('api_wordlist.update_wordlist', wordlist_id=wordlist_id, _external=True),
                           json=payload)
         if not r2:
             flash(r2.text)
