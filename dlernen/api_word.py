@@ -476,7 +476,7 @@ def __get_member_wordlists(cursor, word_ids):
     listed_words = [
         {
             "word": word_map[x],
-            "wordlist_metadata_list": [metadata_map[y] for y in word_list_mapping[x]]
+            "wordlist_metadata_list": sorted([metadata_map[y] for y in word_list_mapping[x]], key=lambda z: z['name'])
         }
         for x in listed_word_ids
     ]
