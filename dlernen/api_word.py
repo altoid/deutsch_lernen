@@ -9,7 +9,6 @@ from dlernen.dlernen_json_schema import \
     ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA, \
     ARRAY_RELATION_RESPONSE_SCHEMA, \
     WORD_ADD_PAYLOAD_SCHEMA, \
-    WORD_RESPONSE_SCHEMA, \
     WORD_UPDATE_PAYLOAD_SCHEMA
 from contextlib import closing
 import jsonschema
@@ -19,63 +18,18 @@ import jsonschema
 bp = Blueprint('api_word', __name__, url_prefix='/api/word')
 
 
-@js_validate_result(WORD_RESPONSE_SCHEMA)
-def __get_word(cursor, word_id):
-    """
-    returns word object, or None if word_id not found.
-    """
-    sql = """
-    select
-        pos_name,
-        word,
-        word_id,
-        notes,
-        attrkey,
-        attrvalue,
-        sort_order
-    from
-        mashup_v
-    where word_id = %(word_id)s
-    order by sort_order
-    """
-
-    cursor.execute(sql, {"word_id": word_id} )
-    rows = cursor.fetchall()
-
-    if not rows:
-        return None
-
-    # take the rows returned by the query and morph them into a SINGLE_WORD_RESPONSE_SCHEMA object.
-    result = {
-        "attributes": []
-    }
-    for r in rows:
-        attr = {
-            "attrkey": r['attrkey'],
-            "attrvalue": r['attrvalue'],
-            "sort_order": r['sort_order']
-        }
-        result['word'] = r['word']
-        result['word_id'] = r['word_id']
-        result['pos_name'] = r['pos_name']
-        result['notes'] = r['notes']
-        result['attributes'].append(attr)
-
-    return result
-
-
 @bp.route('/<int:word_id>')
 def get_word_by_id(word_id):
     """
     returns word object, or 404 if word_id not found.
     """
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        result = __get_word(cursor, word_id)
+        result = common.get_words_from_word_ids(cursor, [word_id])
         if not result:
             return "word id %s not found" % word_id, 404
 
         # result has already been validated in __get_word()
-        return result
+        return result[0]
 
 
 @bp.route('/<string:word>')
@@ -117,7 +71,7 @@ def get_word(word):
         rows = cursor.fetchall()
         word_ids = list(map(lambda x: x['word_id'], rows))
 
-        result = common.get_words_from_word_ids(word_ids, cursor)
+        result = common.get_words_from_word_ids(cursor, word_ids)
         if not result:
             return "no match for %s" % word, 404
 
@@ -424,21 +378,23 @@ def get_relations(word_id):
     # fetch all the relations that contain this word.
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        result = __get_word(cursor, word_id)
+        result = __get_relations(cursor, word_id)
         if not result:
             return "word %s not found" % word_id, 404
 
-        return __get_relations(cursor, word_id)
+        return result
 
 
 @js_validate_result(ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA)
 def __get_member_wordlists(cursor, word_ids):
     # for each of the given word ids, find the word lists of which the word is a member.
-    # return a list of "maps" (the best we can do with jsonschema) associating a displayable word object to a list of
+    # return a list of "maps" (the best we can do with jsonschema) associating a word object to a list of
     # list metadata objects, for each word id.
 
     if not word_ids:
         return []
+
+    word_ids = list(set(word_ids))  # remove dups
 
     args = ','.join(['%s'] * len(word_ids))
 
@@ -503,27 +459,36 @@ def __get_member_wordlists(cursor, word_ids):
             word_list_mapping[a['word_id']] = []
         word_list_mapping[a['word_id']].append(a['wordlist_id'])
 
-    wordlist_ids = [x['wordlist_id'] for x in word_list_associations]  # the api will filter dups
-
-    word_ids = [x['word_id'] for x in word_list_associations]  # the api will filter dups
-
-    metadata_list = common.get_wordlist_metadata(cursor, wordlist_ids)
-
     # for the lists of complex objects, create dictionaries mapping the ids to the objects so that we can
     # snag them while constructing the result.
 
-    word_map = {x: __get_word(cursor, x) for x in word_ids}
+    # word objects for all of the word ids.  some might not be in any list.
+    word_objects = common.get_words_from_word_ids(cursor, word_ids)
+    word_map = {x['word_id']: x for x in word_objects}
+
+    wordlist_ids = [x['wordlist_id'] for x in word_list_associations]  # the api will filter dups
+    metadata_list = common.get_wordlist_metadata(cursor, wordlist_ids)
     metadata_map = {x['wordlist_id']: x for x in metadata_list}
 
-    result = [
+    listed_word_ids = {x for x in word_list_mapping.keys()}
+    unlisted_word_ids = set(word_ids) - listed_word_ids
+
+    listed_words = [
         {
             "word": word_map[x],
             "wordlist_metadata_list": [metadata_map[y] for y in word_list_mapping[x]]
         }
-        for x in word_list_mapping.keys()
+        for x in listed_word_ids
     ]
-    result = sorted(result, key=lambda x: x['word']['word'].casefold())
-    return result
+    unlisted_words = [
+        {
+            "word": word_map[x],
+            "wordlist_metadata_list": []
+        }
+        for x in unlisted_word_ids
+    ]
+
+    return sorted(listed_words + unlisted_words, key=lambda x: x['word']['word'].casefold())
 
 
 @bp.route('/<int:word_id>/list_metadata')
@@ -545,7 +510,7 @@ def get_member_wordlists(word_id):
 @bp.route('/list_metadata')
 def get_member_wordlists_multiple():
     # word_ids are passed in via the URL.  empty list means do nothing.
-    word_ids = request.args.getlist('word_id')
+    word_ids = request.args.getlist('word_id', type=int)
 
     try:
         with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:

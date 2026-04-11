@@ -53,11 +53,7 @@ TODO - add interjections as a new part of speech
 
 TODO - home page should be placeholder (no forms) or drop it altogether.
 
-TODO - speed up lookup-by-word page:
-    1.  new endpoint:  given a wordlist id and a list of word ids, return the word ids that are members of the list.
-    2.  new endpoint:  given a list of word ids, return a structure giving all the wordlists that each word is
-        a member of, in a single request.
-
+FIXME - need a unit test for word results that verifies that attributes come back in sorted order.
 
 -----------
 

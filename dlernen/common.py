@@ -35,30 +35,6 @@ def check_word_ids(cursor, word_ids):
     return list(known_ids), list(unknown_ids)
 
 
-def process_word_query_result(rows):
-    """
-    take the rows returned by the query in get_words_from_word_ids and morph them into the format specified
-    by WORD_RESPONSE_SCHEMA.
-    """
-    dict_result = {}
-    for r in rows:
-        if not dict_result.get(r['word_id']):
-            dict_result[r['word_id']] = {}
-            dict_result[r['word_id']]['attributes'] = []
-        attr = {
-            "attrkey": r['attrkey'],
-            "attrvalue": r['attrvalue'],
-            "sort_order": r['sort_order']
-        }
-        dict_result[r['word_id']]['word'] = r['word']
-        dict_result[r['word_id']]['word_id'] = r['word_id']
-        dict_result[r['word_id']]['pos_name'] = r['pos_name']
-        dict_result[r['word_id']]['notes'] = r['notes']
-        dict_result[r['word_id']]['attributes'].append(attr)
-    result = list(dict_result.values())
-    return result
-
-
 @js_validate_result(ARRAY_DISPLAYABLE_WORD_SCHEMA)
 def get_displayable_words(cursor, word_ids):
     # for each in a list of word_ids, get the word info needed in order to display each word in a page:
@@ -110,31 +86,57 @@ def get_displayable_words(cursor, word_ids):
 
 
 @js_validate_result(ARRAY_WORD_RESPONSE_SCHEMA)
-def get_words_from_word_ids(word_ids, cursor):
-    """
-    returns word object for every valid word id.  returns empty list if no word_id was found.
-    """
-    result = []
-    if word_ids:
-        format_args = ', '.join(['%s'] * len(word_ids))
-        sql = """
-        select
-            pos_name,
-            word,
-            word_id,
-            attrkey,
-            attrvalue,
-            notes,
-            sort_order
-        from
-            mashup_v
-        where word_id in (%s)
-        order by sort_order
-        """ % format_args
+def get_words_from_word_ids(cursor, word_ids):
+    # returns empty array if nothing found.
 
-        cursor.execute(sql, word_ids)
-        rows = cursor.fetchall()
-        result = process_word_query_result(rows)
+    if not word_ids:
+        return []
+
+    sql = """
+    select
+        pos_name,
+        word,
+        word_id,
+        notes,
+        attrkey,
+        attrvalue,
+        sort_order
+    from
+        mashup_v
+    where word_id in (%(args)s)
+    """ % {
+        'args': ','.join(['%s'] * len(word_ids))
+    }
+
+    cursor.execute(sql, word_ids)
+    rows = cursor.fetchall()
+
+    if not rows:
+        return []
+
+    # take the rows returned by the query and morph them into a dict mapping word ids to WORD_RESPONSE_SCHEMA objects.
+    temp_result = {
+    }
+    for r in rows:
+        if r['word_id'] not in temp_result:
+            temp_result[r['word_id']] = {
+                'attributes': []
+            }
+
+        attr = {
+            "attrkey": r['attrkey'],
+            "attrvalue": r['attrvalue'],
+            "sort_order": r['sort_order']
+        }
+        temp_result[r['word_id']]['pos_name'] = r['pos_name']
+        temp_result[r['word_id']]['word'] = r['word']
+        temp_result[r['word_id']]['word_id'] = r['word_id']
+        temp_result[r['word_id']]['notes'] = r['notes']
+        temp_result[r['word_id']]['attributes'].append(attr)
+
+    result = list(temp_result.values())
+    for r in result:
+        r['attributes'] = sorted(r['attributes'], key=lambda x: x['sort_order'])
 
     return result
 

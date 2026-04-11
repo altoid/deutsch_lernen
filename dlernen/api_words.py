@@ -69,7 +69,7 @@ def get_words():
 
             word_ids = list(map(lambda x: x['word_id'], rows))
 
-        result = common.get_words_from_word_ids(word_ids, cursor)
+        result = common.get_words_from_word_ids(cursor, word_ids)
 
         # NB  the word response does not have any tag info in it.
         # common.get_words_from_word_ids validates its return value so we don't need to validate here.
@@ -92,8 +92,7 @@ def get_words_from_word_ids():
 
     word_ids = payload.get('word_ids', [])
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        result = common.get_words_from_word_ids(word_ids, cursor)
-
         # common.get_words_from_word_ids validates its return value so we don't need to validate here.
 
-        return result
+        return common.get_words_from_word_ids(cursor, word_ids)
+
