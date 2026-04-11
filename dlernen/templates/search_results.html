@@ -28,7 +28,6 @@ Lookup {{ word }}
     {% endif %}
 
     {% if search_results %}
-    {% if search_results|length > 1 %}
     <h1>Worte, die zu "{{ word }}" passen</h1>
     <ul>
         {% for r in search_results %}
@@ -37,7 +36,6 @@ Lookup {{ word }}
         </li>
         {% endfor %}
     </ul>
-    {% endif %}
     {% for r in search_results %}
     <h1>
         {% if serialized_tag_state %}
