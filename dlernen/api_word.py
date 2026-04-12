@@ -5,7 +5,7 @@ from mysql.connector import connect
 from dlernen import common
 from dlernen.decorators import js_validate_result, js_validate_payload
 from dlernen.dlernen_json_schema import \
-    ATTRIBUTES,\
+    ATTRIBUTES, \
     ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA, \
     ARRAY_RELATION_RESPONSE_SCHEMA, \
     WORD_ADD_PAYLOAD_SCHEMA, \
@@ -26,7 +26,7 @@ def get_word_by_id(word_id):
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         result = common.get_words_from_word_ids(cursor, [word_id])
         if not result:
-            return "word id %s not found" % word_id, 404
+            return "%s:  word id %s not found" % (request.endpoint, word_id), 404
 
         # result has already been validated in __get_word()
         return result[0]
@@ -73,7 +73,7 @@ def get_word(word):
 
         result = common.get_words_from_word_ids(cursor, word_ids)
         if not result:
-            return "no match for %s" % word, 404
+            return "%s:  no match for %s" % (request.endpoint, word), 404
 
         # common.get_words_from_word_ids validates its return value so we don't need to validate here.
 
@@ -149,7 +149,7 @@ def add_word():
     pos_structure = list(filter(lambda x: x['pos_id'] == pos_id, pos_structures))
     if not pos_structure:
         # pos_id is bogus
-        message = "unknown part of speech:  %s" % pos_id
+        message = "%s:  unknown part of speech:  %s" % (request.endpoint, pos_id)
         return message, 404
 
     # pos_structure is a length-1 array, get the first element
@@ -169,12 +169,14 @@ def add_word():
         request_attribute_ids = {a['attribute_id'] for a in attributes}
         undefined_attribute_ids = request_attribute_ids - defined_attribute_ids
         if len(undefined_attribute_ids) > 0:
-            message = "attribute ids not defined:  %s" % ', '.join(list(map(str, undefined_attribute_ids)))
+            message = "%s:  attribute ids not defined:  %s" % \
+                      (request.endpoint,
+                       ', '.join(list(map(str, undefined_attribute_ids))))
             return message, 400
 
         request_attribute_ids_list = [a['attribute_id'] for a in attributes]
         if len(request_attribute_ids_list) != len(request_attribute_ids):
-            message = "multiple values provided for the same attribute", 400
+            message = "%s:  multiple values provided for the same attribute" % request.endpoint, 400
             return message, 400
 
         attributes_adding = []
@@ -206,7 +208,7 @@ def add_word():
 
         except Exception as e:
             cursor.execute('rollback')
-            return "error, transaction rolled back:  %s" % (str(e)), 500
+            return "%s:  error, transaction rolled back:  %s" % (request.endpoint, (str(e))), 500
 
 
 @bp.route('/<int:word_id>', methods=['PUT'])
@@ -232,7 +234,7 @@ def update_word(word_id):
     pos_structure = r.json()
     if not pos_structure:
         # word_id is bogus
-        message = "word_id %s not found" % word_id
+        message = "%s:  word_id %s not found" % (request.endpoint, word_id)
         return message, 404
 
     # pos_structure is a length-1 array, get the first element
@@ -244,7 +246,7 @@ def update_word(word_id):
     undefined_attribute_ids = given_attribute_ids - defined_attribute_ids
     if len(undefined_attribute_ids) > 0:
         ids = list(map(str, undefined_attribute_ids))
-        message = "attribute_ids not defined:  %s" % ', '.join(ids)
+        message = "%s:  attribute_ids not defined:  %s" % (request.endpoint, ', '.join(ids))
         return message, 400
 
     attributes = payload.get(ATTRIBUTES, [])
@@ -259,14 +261,14 @@ def update_word(word_id):
     attrids_adding_list = [x['attribute_id'] for x in attributes_adding]
     attrids_adding_set = set(attrids_adding_list)
     if len(attrids_adding_set) != len(attrids_adding_list):
-        return "attempting to write multiple values for an attribute", 400
+        return "%s:  attempting to write multiple values for an attribute" % request.endpoint, 400
 
     attrids_deleting_set = {x['attribute_id'] for x in attributes_deleting}
 
     deleting_and_updating_ids = attrids_deleting_set & attrids_adding_set
     if deleting_and_updating_ids:
         ids = list(map(str, deleting_and_updating_ids))
-        message = "attempting to delete and update attr ids:  %s" % ', '.join(ids)
+        message = "%s:  attempting to delete and update attr ids:  %s" % (request.endpoint, ', '.join(ids))
         return message, 400
 
     # checks complete, let's do this.
@@ -325,10 +327,8 @@ def update_word(word_id):
             return get_word_by_id(word_id)
 
         except Exception as e:
-            print(e.__class__)
-            print(str(e))
             cursor.execute('rollback')
-            return "error, transaction rolled back", 500
+            return "%s:  error, transaction rolled back:  %s" % (request.endpoint, str(e)), 500
 
 
 @bp.route('/<int:word_id>', methods=['DELETE'])
@@ -344,7 +344,7 @@ def delete_word(word_id):
             return 'OK'
         except Exception as e:
             cursor.execute('rollback')
-            return 'error deleting word_id %s' % word_id, 500
+            return '%s:  error deleting word_id %s' % (request.endpoint, word_id), 500
 
 
 @js_validate_result(ARRAY_RELATION_RESPONSE_SCHEMA)
@@ -378,11 +378,7 @@ def get_relations(word_id):
     # fetch all the relations that contain this word.
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        result = __get_relations(cursor, word_id)
-        if not result:
-            return "word %s not found" % word_id, 404
-
-        return result
+        return __get_relations(cursor, word_id)
 
 
 @js_validate_result(ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA)
@@ -504,7 +500,7 @@ def get_member_wordlists(word_id):
 
     except jsonschema.ValidationError as f:
         # responses that don't validate are a server implementation problem.
-        return str(f), 500
+        return "%s:  %s" % (request.endpoint, str(f)), 500
 
 
 @bp.route('/list_metadata')
@@ -518,4 +514,4 @@ def get_member_wordlists_multiple():
 
     except jsonschema.ValidationError as f:
         # responses that don't validate are a server implementation problem.
-        return str(f), 500
+        return "%s:  %s" % (request.endpoint, str(f)), 500
