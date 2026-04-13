@@ -1,6 +1,3 @@
-from contextlib import closing
-from flask import current_app
-from mysql.connector import connect
 from dlernen.decorators import js_validate_result
 from dlernen.dlernen_json_schema import ARRAY_WORD_RESPONSE_SCHEMA, \
     ARRAY_DISPLAYABLE_WORD_SCHEMA, \
