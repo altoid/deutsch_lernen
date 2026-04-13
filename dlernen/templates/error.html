@@ -13,6 +13,10 @@
 <div class="error">
     <h1>{{ status_code }}</h1>
     Got error from the server: {{ message }}
+    {% if request %}
+    <br>
+    endpoint:  {{ request.endpoint }}
+    {% endif %}
 </div>
 </body>
 </html>
