@@ -1043,7 +1043,6 @@ def update_via_search_results():
     serialized_tag_state = request.form.get('serialized_tag_state')
     search_term = request.form.get('search_term')
     matching_word_ids = json.loads(request.form.get('matching_word_ids'))
-    pprint(matching_word_ids)
     selected_word_ids = request.form.getlist('selected', type=int)
 
     tag_state = TagState.deserialize(serialized_tag_state)
@@ -1055,6 +1054,10 @@ def update_via_search_results():
                      json={
                          'word_ids': matching_word_ids
                      })
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
 
     # add back the ones marked 'selected'
     r = requests.put(url_for('api_wordlist.update_wordlist', wordlist_id=wordlist_id,
@@ -1062,6 +1065,10 @@ def update_via_search_results():
                      json={
                          'word_ids': selected_word_ids
                      })
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
 
     return redirect(url_for('dlernen.lookup_word',
                             word=search_term,

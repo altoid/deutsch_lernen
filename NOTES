@@ -7,10 +7,6 @@ TODO - import word lists
 TODO - Nouns should be three separate parts of speech, one for each gender
     would have to update wordlists and quiz data.
 
-TODO - add-word field in the tag editor page.  redirect to word edit page if the word doesn't exist.
-    revise tag editor to show tooltip on mouse-over, giving POS and definition
-    (schnelles Hinzufügen)
-
 TODO - autosave word list notes.
     https://www.google.com/search?q=html+textarea+auto+save&newwindow=1&sca_esv=d160e5e212cd680a&ei=6TYeafOSLJvE0PEPiJingAU&ved=0ahUKEwizq5_LlP-QAxUbIjQIHQjMCVAQ4dUDCBE&uact=5&oq=html+textarea+auto+save&gs_lp=Egxnd3Mtd2l6LXNlcnAiF2h0bWwgdGV4dGFyZWEgYXV0byBzYXZlMgUQIRigATIFECEYoAEyBRAhGKABMgUQIRigATIFECEYoAEyBRAhGJ8FMgUQIRifBUiyZlCcHFj2YXABeAGQAQCYAaACoAH7E6oBBzEyLjEwLjG4AQPIAQD4AQGYAhigAvwUwgIKEAAYsAMY1gQYR8ICERAuGIAEGLEDGNEDGIMBGMcBwgIOEAAYgAQYsQMYgwEYigXCAgoQABiABBhDGIoFwgIIEAAYgAQYsQPCAg4QLhiABBixAxjRAxjHAcICCxAAGIAEGLEDGIMBwgIQEAAYgAQYsQMYQxiDARiKBcICERAAGIAEGLEDGIMBGIoFGI0GwgINEAAYgAQYsQMYQxiKBcICBRAAGIAEwgIGEAAYFhgewgIIEAAYFhgKGB7CAgUQABjvBcICCBAAGIAEGKIEwgIIEAAYogQYiQXCAgUQIRirApgDAIgGAZAGCJIHBzEyLjExLjGgB76CAbIHBzExLjExLjG4B_UUwgcIMC4xLjIyLjHIB2E&sclient=gws-wiz-serp
 
@@ -24,7 +20,7 @@ TODO - parse definitions, and for each word in the definition that is in the dic
     lookup page.  this may cause hyperlinks to appear in english definitions, but too bad.  to do this, tokenize
     the definition including spaces, look up each token in the dictionary.
 
-TODO - for parts of speech and their attributes add a display name column distinct from the key.  quiz table
+TODO - for parts of speech and their attributes, add a display name column distinct from the key.  quiz table
     already does this.
 
 TODO - dump out a smart wordlist as an ordinary word list.  this would effectively be a snapshot of the smart list.
@@ -37,10 +33,8 @@ FIXME - in quiz app, if you go to the main menu in the middle of a quiz where al
     state is lost and you lose your place.  should keep state until list is changed or app is reset.  this state
     should be saved to disk on program exit.
 
-TODO - in quiz app, imperfect query should prefetch all candidate words, not use the sql for one-at-a-time queries
-
-TODO - when the results page is displayed within the context of a wordlist, there should be a simple way to add
-    any of the search results to the list.
+TODO - in quiz app, imperfect query should prefetch all candidate words, not use the sql
+    for one-at-a-time queries
 
 FIXME - in the sidebar, show the name/id of the prevailing list
 
