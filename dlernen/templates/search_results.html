@@ -21,7 +21,9 @@ Lookup {{ word }}
     {% endif %}
     {% if not exact_match_found %}
     {% if serialized_tag_state %}
-    {{ word }} not found. Click <a href="{{ url_for('dlernen.edit_word_form', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state, word=word) }}">here</a> to define it.
+    {{ word }} not found. Click <a
+        href="{{ url_for('dlernen.edit_word_form', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state, word=word) }}">here</a>
+    to define it.
     {% else %}
     {{ word }} not found. Click <a href="{{ url_for('dlernen.edit_word_form', word=word) }}">here</a> to define it.
     {% endif %}
@@ -29,13 +31,45 @@ Lookup {{ word }}
 
     {% if search_results %}
     <h1>Worte, die zu "{{ word }}" passen</h1>
-    <ul>
+    {% if serialized_tag_state %}
+    <form action="{{ url_for('dlernen.update_via_search_results') }}"
+          method="post">
+        <input type="hidden" value="{{ word }}" name="search_term"/>
+        <input type="hidden" value="{{ tag_state.wordlist_id }}" name="wordlist_id"/>
+        <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
+        <input type="hidden" value="{{ matching_word_ids }}" name="matching_word_ids"/>
+        <table>
+            {% for r in search_results %}
+            <tr>
+                <td>
+                    {% if r.word.is_member %}
+                    <input type="checkbox"
+                           name="selected"
+                           value="{{ r.word.word_id }}" checked>
+                    <a href="#{{ r.word.word }}">{{ r.word.word }}</a>
+                    {% else %}
+                    <input type="checkbox"
+                           name="selected"
+                           value="{{ r.word.word_id }}">
+                    <a href="#{{ r.word.word }}">{{ r.word.word }}</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        <input type="submit" value="Update list members"/>
+    </form>
+    {% else %}
+    <table>
         {% for r in search_results %}
-        <li>
-            <a href="#{{ r.word.word }}">{{ r.word.word }}</a>
-        </li>
+        <tr>
+            <td>
+                <a href="#{{ r.word.word }}">{{ r.word.word }}</a>
+            </td>
+        </tr>
         {% endfor %}
-    </ul>
+    </table>
+    {% endif %}
     {% for r in search_results %}
     <h1>
         {% if serialized_tag_state %}

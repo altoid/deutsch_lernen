@@ -56,28 +56,44 @@ def lookup_word(word):
     words_found = {x['word'].casefold() for x in results}
     exact_match_found = word.casefold() in words_found
 
-    word_ids = [x['word_id'] for x in results]
+    matching_word_ids = [x['word_id'] for x in results]
 
-    r = requests.get(url_for('api_word.get_member_wordlists_multiple', word_id=word_ids, _external=True))
+    r = requests.get(url_for('api_word.get_member_wordlists_multiple', word_id=matching_word_ids, _external=True))
     if not r:
         return render_template("error.html",
                                message=r.text,
                                status_code=r.status_code)
 
-    obj = r.json()
+    search_results = r.json()
 
     # get wordlist if appropriate
     if serialized_tag_state:
+        # see which of the search results are already in the wordlist.
+        tag_state = TagState.deserialize(serialized_tag_state)
+        r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=tag_state.wordlist_id, _external=True))
+        if not r:
+            return render_template("error.html",
+                                   message=r.text,
+                                   status_code=r.status_code)
+        wordlist_obj = r.json()
+        member_word_ids = {x['word_id'] for x in wordlist_obj['words']}
+        matching_member_word_ids = set(matching_word_ids) & member_word_ids
+
+        # decorate the search result keys with a boolean indicating list membership
+        for r in search_results:
+            r['word']['is_member'] = r['word']['word_id'] in matching_member_word_ids
+
         return render_template('search_results.html',
                                word=word,
+                               matching_word_ids=matching_word_ids,
                                exact_match_found=exact_match_found,
-                               search_results=obj,
-                               tag_state=TagState.deserialize(serialized_tag_state))
+                               search_results=search_results,
+                               tag_state=tag_state)
 
     return render_template('search_results.html',
                            word=word,
                            exact_match_found=exact_match_found,
-                           search_results=obj)
+                           search_results=search_results)
 
 
 @bp.route('/word/<int:word_id>', methods=['GET'])
@@ -174,8 +190,7 @@ def list_editor(wordlist_id):
     else:
         tag_state = TagState(wordlist_id)
 
-    url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
-    r = requests.get(url)
+    r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True))
     if not r:
         return render_template("error.html",
                                message=r.text,
@@ -1018,3 +1033,37 @@ def add_word_submit():
     return redirect(url_for('dlernen.lookup_word',
                             word=word,
                             _external=True))
+
+
+@bp.route('/update_via_search_results', methods=['POST'])
+def update_via_search_results():
+    # the submit button under the matching words in the search results page brings us here.  of the matching
+    # words, remove all from the word list and add back the ones that were selected.
+
+    serialized_tag_state = request.form.get('serialized_tag_state')
+    search_term = request.form.get('search_term')
+    matching_word_ids = json.loads(request.form.get('matching_word_ids'))
+    pprint(matching_word_ids)
+    selected_word_ids = request.form.getlist('selected', type=int)
+
+    tag_state = TagState.deserialize(serialized_tag_state)
+    wordlist_id = tag_state.wordlist_id
+
+    # remove matching_word_ids from list.  not all will be in it to begin with but this should be ok.
+    r = requests.put(url_for('api_wordlist.delete_from_wordlist', wordlist_id=wordlist_id,
+                             _external=True),
+                     json={
+                         'word_ids': matching_word_ids
+                     })
+
+    # add back the ones marked 'selected'
+    r = requests.put(url_for('api_wordlist.update_wordlist', wordlist_id=wordlist_id,
+                             _external=True),
+                     json={
+                         'word_ids': selected_word_ids
+                     })
+
+    return redirect(url_for('dlernen.lookup_word',
+                            word=search_term,
+                            partial='true',
+                            serialized_tag_state=serialized_tag_state))
