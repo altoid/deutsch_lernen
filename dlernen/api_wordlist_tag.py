@@ -8,7 +8,6 @@ from dlernen.dlernen_json_schema import \
 from dlernen.decorators import js_validate_result, js_validate_payload
 from dlernen import common
 from contextlib import closing
-import jsonschema
 import requests
 
 # view functions for tags and word/tag linkages in wordlists
