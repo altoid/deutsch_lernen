@@ -54,6 +54,13 @@ Lookup {{ word }}
                     <a href="#{{ r.word.word }}">{{ r.word.word }}</a>
                     {% endif %}
                 </td>
+                <td>
+                    <input class="search_results_text"
+                           type="text"
+                           value="{{ r.word.tags }}"
+                           placeholder="tag update is not implemented"
+                           name="tag-{{ r.word.word_id }}"/>
+                </td>
             </tr>
             {% endfor %}
         </table>

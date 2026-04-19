@@ -79,9 +79,14 @@ def lookup_word(word):
         member_word_ids = {x['word_id'] for x in wordlist_obj['words']}
         matching_member_word_ids = set(matching_word_ids) & member_word_ids
 
-        # decorate the search result keys with a boolean indicating list membership
+        word_ids_to_words = {x['word_id']: x for x in wordlist_obj['words']}
+        # decorate the search result keys
         for r in search_results:
-            r['word']['is_member'] = r['word']['word_id'] in matching_member_word_ids
+            if r['word']['word_id'] in matching_member_word_ids:
+                r['word']['is_member'] = True
+                r['word']['tags'] = ' '.join(word_ids_to_words[r['word']['word_id']]['tags'])
+            else:
+                r['word']['is_member'] = False
 
         return render_template('search_results.html',
                                word=word,
