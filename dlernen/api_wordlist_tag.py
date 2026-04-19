@@ -153,22 +153,7 @@ def add_tags(wordlist_id, word_id):
     # returns a message and a status code, no object.
     # the payload is just a list of tags.
 
-    # operation is not allowed on smart lists.
-    url = url_for('api_wordlist.get_metadata', wordlist_id=wordlist_id, _external=True)
-    r = requests.get(url)
-    if not r:
-        return r.text, r.status_code
-
-    metadata = r.json()
-    if metadata['list_type'] == 'smart':
-        message = "cannot add tags to words in a smart list:  %s" % wordlist_id
-        return message, 400
-
     payload = request.get_json()
-
-    new_tags = list(set(payload))  # ensure no redundant tags
-    if not new_tags:
-        return "OK", 201
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
@@ -176,7 +161,7 @@ def add_tags(wordlist_id, word_id):
 
             # the wordlist_id must exist
             sql = """
-            select id
+            select id, sqlcode
             from wordlist
             where id = %s
             """
@@ -185,6 +170,17 @@ def add_tags(wordlist_id, word_id):
             if not rows:
                 cursor.execute('rollback')
                 return "list %s not found" % wordlist_id, 404
+
+            # operation is not allowed on smart lists.
+            if rows[0]['sqlcode']:
+                cursor.execute('rollback')
+                message = "cannot add tags to words in a smart list:  %s" % wordlist_id
+                return message, 400
+
+            new_tags = list(set(payload))  # ensure no redundant tags
+            if not new_tags:
+                cursor.execute('rollback')
+                return "OK", 201
 
             # the word_id must be present in this list
             sql = """
@@ -284,30 +280,13 @@ def delete_tags_for_word_id(wordlist_id, word_id):
     # do nothing.
     # returns a message and a status code, no object.
 
-    # operation is not allowed on smart lists.
-    url = url_for('api_wordlist.get_metadata', wordlist_id=wordlist_id, _external=True)
-    r = requests.get(url)
-    if not r:
-        return r.text, r.status_code
-
-    metadata = r.json()
-    if metadata['list_type'] == 'smart':
-        message = "cannot remove tags from words in a smart list:  %s" % wordlist_id
-        return message, 400
-
-    doomed_tags = request.args.getlist('tag')
-
-    doomed_tags = list(set(doomed_tags))  # ensure no redundant tags
-    if not doomed_tags:
-        return "OK", 200
-
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
 
             # the wordlist_id must exist
             sql = """
-            select id
+            select id, sqlcode
             from wordlist
             where id = %s
             """
@@ -316,6 +295,18 @@ def delete_tags_for_word_id(wordlist_id, word_id):
             if not rows:
                 cursor.execute('rollback')
                 return "list %s not found" % wordlist_id, 404
+
+            # operation is not allowed on smart lists.
+            if rows[0]['sqlcode']:
+                cursor.execute('rollback')
+                message = "cannot remove tags from words in a smart list:  %s" % wordlist_id
+                return message, 400
+
+            doomed_tags = request.args.getlist('tag')
+            doomed_tags = list(set(doomed_tags))  # ensure no redundant tags
+            if not doomed_tags:
+                cursor.execute('rollback')
+                return "OK", 200
 
             # the word_id must be present in this list
             sql = """
