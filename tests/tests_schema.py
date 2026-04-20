@@ -6,7 +6,7 @@ from dlernen.dlernen_json_schema import get_validator, ATTRIBUTES, \
     WORD_ADD_PAYLOAD_SCHEMA, \
     WORD_UPDATE_PAYLOAD_SCHEMA, \
     WORDLISTS_DELETE_PAYLOAD_SCHEMA, \
-    WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA, \
+    WORDLIST_TAG_PAYLOAD_SCHEMA, \
     POS_STRUCTURE_RESPONSE_SCHEMA, \
     QUIZ_ANSWER_PAYLOAD_SCHEMA, \
     QUIZ_REPORT_RESPONSE_SCHEMA, \
@@ -1810,17 +1810,44 @@ class Test_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
-class Test_WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA(unittest.TestCase):
-    schema = WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA
+class Test_WORDLIST_TAG_PAYLOAD_SCHEMA(unittest.TestCase):
+    schema = WORDLIST_TAG_PAYLOAD_SCHEMA
 
     valid_docs = [
-        ["bingo", "bango", "bongo", "irving"],
-        []
+        [
+            {
+                'word_id': 1,
+                'tags': ["bingo", "bango", "bongo", "irving"]
+            },
+            {
+                'word_id': 2,
+                'tags': ["bingo", "bango", "bongo", "irving"]
+            },
+        ],
+        [
+            {
+                'word_id': 3,
+                'tags': []
+            },
+        ],
+        [
+            # 0-length array is ok.  stupid, but ok.
+        ]
     ]
 
     invalid_docs = [
-        ["no spaces allowed"],
-        [1, 2, 3]
+        [
+            {
+                # 'word_id': 4,
+                'tags': []
+            },
+        ],
+        [
+            {
+                'word_id': 5,
+                # 'tags': []
+            },
+        ]
     ]
 
     def test_valid_docs(self):

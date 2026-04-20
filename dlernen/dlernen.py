@@ -419,21 +419,28 @@ def edit_list_contents():
 
         # get the keys for the text fields.
         tag_textfield_keys = list(filter(lambda x: x.startswith('tag-'), request.form.keys()))
+        payload = []
+
         for k in tag_textfield_keys:
             new_tags = request.form.get(k, '').strip().split()
             if not new_tags:
                 continue
             _, word_id = k.split('-')
             word_id = int(word_id)
-            url = url_for('api_wordlist_tag.add_tags',
-                          wordlist_id=wordlist_id,
-                          word_id=word_id,
-                          _external=True)
-            r = requests.post(url, json=new_tags)
-            if not r:
-                return render_template("error.html",
-                                       message=r.text,
-                                       status_code=r.status_code)
+            payload.append(
+                {
+                    'word_id': word_id,
+                    'tags': new_tags
+                }
+            )
+        url = url_for('api_wordlist_tag.add_tags',
+                      wordlist_id=wordlist_id,
+                      _external=True)
+        r = requests.post(url, json=payload)
+        if not r:
+            return render_template("error.html",
+                                   message=r.text,
+                                   status_code=r.status_code)
 
         # get the keys for the checkboxes
         untag_keys = list(filter(lambda x: x.startswith('untag-'), request.form.keys()))
@@ -830,6 +837,7 @@ def update_dict():
                     pos_id_to_tags_deleting[pos_id] = list(tags_before)
                     pos_id_to_tags_adding[pos_id] = list(tags_after)
 
+        add_tags_payload = []
         for p in pos_structure:
             if not p['word_id']:
                 continue
@@ -853,16 +861,21 @@ def update_dict():
                                                (wordlist_id, p['word_id'], r.text),
                                        status_code=r.status_code)
 
-            url = url_for('api_wordlist_tag.add_tags',
-                          word_id=p['word_id'],
-                          wordlist_id=wordlist_id,
-                          _external=True)
-            r = requests.post(url, json=pos_id_to_tags_adding[p['pos_id']])
-            if not r:
-                return render_template("error.html",
-                                       message="add tags failed (wordlist_id %s, word_id %s):  %s [%s]" %
-                                               (wordlist_id, p['word_id'], r.text, r.status_code),
-                                       status_code=r.status_code)
+            add_tags_payload.append(
+                {
+                    'word_id': p['word_id'],
+                    'tags': pos_id_to_tags_adding[p['pos_id']]
+                }
+            )
+        url = url_for('api_wordlist_tag.add_tags',
+                      wordlist_id=wordlist_id,
+                      _external=True)
+        r = requests.post(url, json=add_tags_payload)
+        if not r:
+            return render_template("error.html",
+                                   message="add tags failed (wordlist_id %s):  %s [%s]" %
+                                           (wordlist_id, r.text, r.status_code),
+                                   status_code=r.status_code)
 
         # in case we added a new tag while editing the word
         tag_state_object = TagState.deserialize(request.form.get('serialized_tag_state'))

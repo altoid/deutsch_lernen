@@ -314,8 +314,8 @@ WORDLISTS_DELETE_PAYLOAD_SCHEMA = {
     }
 }
 
-WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/wordlist_tag_add_delete_payload.json",
+WORDLIST_TAG_PAYLOAD_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/wordlist_tag_payload.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Payload for add/delete tags",
     "description": """
@@ -323,10 +323,26 @@ WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA = {
     wordlist_id must be in the url; they aren't here.
     """,
     "type": "array",
-    "additionalProperties": False,
+    "minItems": 0,
     "items": {
-        "type": "string",
-        "pattern": WORD_PATTERN
+        "type": "object",
+        "required": [
+            "word_id",
+            "tags"
+        ],
+        "properties": {
+            "word_id": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "tags": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "pattern": WORD_PATTERN
+                }
+            }
+        }
     }
 }
 
@@ -906,7 +922,7 @@ ALL_SCHEMAS = [
     WORD_ADD_PAYLOAD_SCHEMA,
     WORD_UPDATE_PAYLOAD_SCHEMA,
     WORDLISTS_DELETE_PAYLOAD_SCHEMA,
-    WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA,
+    WORDLIST_TAG_PAYLOAD_SCHEMA,
     POS_STRUCTURE_RESPONSE_SCHEMA,
     QUIZ_ANSWER_PAYLOAD_SCHEMA,
     QUIZ_REPORT_RESPONSE_SCHEMA,

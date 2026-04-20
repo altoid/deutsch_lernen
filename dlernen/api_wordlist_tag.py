@@ -3,7 +3,7 @@ from flask import Blueprint, request, url_for, current_app
 from pprint import pprint
 from mysql.connector import connect
 from dlernen.dlernen_json_schema import \
-    WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA, \
+    WORDLIST_TAG_PAYLOAD_SCHEMA, \
     WORD_TAG_RESPONSE_SCHEMA
 from dlernen.decorators import js_validate_result, js_validate_payload
 from dlernen import common
@@ -147,13 +147,16 @@ def get_all_tags(wordlist_id):
             return str(e), 500
 
 
-@bp.route('/<int:wordlist_id>/<int:word_id>', methods=['POST'])
-@js_validate_payload(WORDLIST_TAG_ADD_DELETE_PAYLOAD_SCHEMA)
-def add_tags(wordlist_id, word_id):
+@bp.route('/<int:wordlist_id>', methods=['POST'])
+@js_validate_payload(WORDLIST_TAG_PAYLOAD_SCHEMA)
+def add_tags(wordlist_id):
     # returns a message and a status code, no object.
-    # the payload is just a list of tags.
 
     payload = request.get_json()
+
+    # the payload is an array, possibly empty.
+    if not payload:
+        return 'OK', 201
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
@@ -177,27 +180,30 @@ def add_tags(wordlist_id, word_id):
                 message = "cannot add tags to words in a smart list:  %s" % wordlist_id
                 return message, 400
 
-            new_tags = list(set(payload))  # ensure no redundant tags
-            if not new_tags:
-                cursor.execute('rollback')
-                return "OK", 201
+            # toss any word ids that are not in this list.
+            payload_word_ids = [x['word_id'] for x in payload]
+            member_word_ids, _ = common.check_word_ids(cursor, payload_word_ids)
 
-            # the word_id must be present in this list
-            sql = """
-            select wordlist_id, word_id
-            from wordlist_word
-            where wordlist_id=%(wordlist_id)s and word_id=%(word_id)s
-            """
-            cursor.execute(sql, {
-                "wordlist_id": wordlist_id,
-                "word_id": word_id
-            })
-            rows = cursor.fetchall()
-            if not rows:
+            if not member_word_ids:
                 cursor.execute('rollback')
-                return "word %s not in list %s" % (word_id, wordlist_id), 400
+                message = "no valid word_ids in payload for list:  %s" % wordlist_id
+                return message, 400
 
             # checks complete, let's do this.
+
+            # construct the argument list.
+            args = []
+            for i in payload:
+                if i['word_id'] in member_word_ids:
+                    x = [
+                        {
+                            "wordlist_id": wordlist_id,
+                            "word_id": i['word_id'],
+                            "tag": tag
+                        }
+                        for tag in i['tags']
+                    ]
+                    args += x
 
             # note that if word_id is not in the wordlist, this insert won't do anything.  the check above
             # keeps this from happening, but without the check nothing bad will happen anyway.
@@ -206,15 +212,8 @@ def add_tags(wordlist_id, word_id):
             values (%(wordlist_id)s, %(word_id)s, %(tag)s)
             """
 
-            args = [
-                {
-                    "wordlist_id": wordlist_id,
-                    "word_id": word_id,
-                    "tag": tag
-                }
-                for tag in new_tags
-            ]
-            cursor.executemany(sql, args)
+            if args:
+                cursor.executemany(sql, args)
 
             cursor.execute('commit')
             return "OK", 201

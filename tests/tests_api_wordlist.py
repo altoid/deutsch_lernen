@@ -695,10 +695,15 @@ class TestAPIWordlistGetWordIDs(unittest.TestCase):
 
     def test2(self):
         # in list 1, give one word two tags, then fetch with both tags.  verify correctness of result.
+        payload = [
+            {
+                'word_id': self.word1_id,
+                'tags': ['tag1', 'tag2']
+            }
+        ]
         r = self.client.post(url_for('api_wordlist_tag.add_tags',
-                                     wordlist_id=self.wordlist1_id,
-                                     word_id=self.word1_id),
-                             json=['tag1', 'tag2'])
+                                     wordlist_id=self.wordlist1_id),
+                             json=payload)
         self.assertEqual(201, r.status_code)
 
         r = self.client.get(url_for('api_wordlist.get_word_ids_from_wordlists',

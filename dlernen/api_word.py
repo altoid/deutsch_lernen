@@ -378,7 +378,10 @@ def get_relations(word_id):
     # fetch all the relations that contain this word.
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        return __get_relations(cursor, word_id)
+        result = __get_relations(cursor, word_id)
+        if not result:
+            message = "relations for word_id %s not found" % word_id
+            return message, 404
 
 
 @js_validate_result(ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA)

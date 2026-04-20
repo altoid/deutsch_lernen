@@ -269,10 +269,16 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
                             json=payload)
 
         # tag word_1
+        payload = [
+            {
+                'word_id': self.word_id_1,
+                'tags': ['tag1']
+            }
+        ]
+
         r = self.client.post(url_for('api_wordlist_tag.add_tags',
-                                     wordlist_id=self.wordlist_id,
-                                     word_id=self.word_id_1),
-                             json=['tag1'])
+                                     wordlist_id=self.wordlist_id),
+                             json=payload)
         self.assertEqual(201, r.status_code)
 
     # do nothing, just make sure that setUp works

@@ -611,10 +611,15 @@ def tag_word(word_id, tag):
     global APPSTATE
 
     for wordlist_id in APPSTATE.wordlists:
+        payload = [
+            {
+                'word_id': word_id,
+                'tags': [tag]
+            }
+        ]
         r = requests.post(url_for('api_wordlist_tag.add_tags',
-                                  wordlist_id=wordlist_id,
-                                  word_id=word_id),
-                          json=[tag])
+                                  wordlist_id=wordlist_id),
+                          json=payload)
 
         if r.status_code == 400:
             pass
