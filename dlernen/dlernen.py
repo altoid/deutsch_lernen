@@ -1088,6 +1088,25 @@ def update_via_search_results():
                                message=r.text,
                                status_code=r.status_code)
 
+    # add the tags that were in the selected words' fields
+    payload = []
+    for x in selected_word_ids:
+        tags = request.form.get('tag-%s' % x).strip().split()
+        payload.append({
+            'word_id': x,
+            'tags': tags
+        })
+
+    if payload:
+        r = requests.post(url_for('api_wordlist_tag.add_tags',
+                                  wordlist_id=wordlist_id,
+                                  _external=True),
+                          json=payload)
+        if not r:
+            return render_template("error.html",
+                                   message=r.text,
+                                   status_code=r.status_code)
+
     return redirect(url_for('dlernen.lookup_word',
                             word=search_term,
                             partial='true',
