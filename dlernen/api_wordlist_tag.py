@@ -276,7 +276,8 @@ def delete_tag(tag):
 @bp.route('/<int:wordlist_id>/<int:word_id>', methods=['DELETE'])
 def delete_tags_for_word_id(wordlist_id, word_id):
     # clear tags from this word id in this wordlist.  tags are given in the URL.  if no tags are given in the URL,
-    # do nothing.
+    # delete all tags for the word.
+    #
     # returns a message and a status code, no object.
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
@@ -302,10 +303,6 @@ def delete_tags_for_word_id(wordlist_id, word_id):
                 return message, 400
 
             doomed_tags = request.args.getlist('tag')
-            doomed_tags = list(set(doomed_tags))  # ensure no redundant tags
-            if not doomed_tags:
-                cursor.execute('rollback')
-                return "OK", 200
 
             # the word_id must be present in this list
             sql = """
@@ -323,20 +320,31 @@ def delete_tags_for_word_id(wordlist_id, word_id):
                 return "word %s not in list %s" % (word_id, wordlist_id), 400
 
             # checks complete, let's do this.
-            sql = """
-            delete from tag
-            where wordlist_id=%(wordlist_id)s and word_id=%(word_id)s and tag=%(tag)s
-            """
+            if doomed_tags:
+                sql = """
+                delete from tag
+                where wordlist_id=%(wordlist_id)s and word_id=%(word_id)s and tag=%(tag)s
+                """
 
-            args = [
-                {
-                    "wordlist_id": wordlist_id,
-                    "word_id": word_id,
-                    "tag": tag
-                }
-                for tag in doomed_tags
-            ]
-            cursor.executemany(sql, args)
+                args = [
+                    {
+                        "wordlist_id": wordlist_id,
+                        "word_id": word_id,
+                        "tag": tag
+                    }
+                    for tag in doomed_tags
+                ]
+                cursor.executemany(sql, args)
+            else:
+                # drop all tags for this word.
+                sql = """
+                delete from tag
+                where wordlist_id=%(wordlist_id)s and word_id=%(word_id)s
+                """
+                cursor.execute(sql, {
+                    'wordlist_id': wordlist_id,
+                    'word_id': word_id
+                })
 
             cursor.execute('commit')
             return "OK", 200

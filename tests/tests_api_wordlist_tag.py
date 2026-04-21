@@ -265,8 +265,6 @@ class TestAPIWordlistTagMultiList(unittest.TestCase):
                                     tag=['tag1']))
         self.assertEqual(200, r.status_code)
 
-    # TODO need tests for smart lists!
-
 
 class TestAPIWordlistTagSmartList(unittest.TestCase):
     app = None
@@ -360,7 +358,7 @@ class TestAPIWordlistTagSmartList(unittest.TestCase):
                                        wordlist_id=self.wordlist_id,
                                        word_id=self.word1_id),
                                json=['tag1', 'tag2'])
-        self.assertNotEqual(200, r.status_code)
+        self.assertEqual(400, r.status_code)
 
     def test_get_nonmember(self):
         r = self.client.get(url_for('api_wordlist_tag.get_tags',
@@ -484,7 +482,16 @@ class TestAPIWordlistTag(unittest.TestCase):
                              json=payload)
         self.assertEqual(201, r.status_code)
 
-        # not checking the results, just make sure that add_tags doesn't crash.
+        # verify add_tags operation
+        r = self.client.get(url_for('api_wordlist_tag.get_tags',
+                                    word_id=self.word1_id,
+                                    wordlist_id=self.wordlist_id))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        control = ['tag1', 'tag2']
+
+        self.assertCountEqual(control, obj['tags'])
 
 
 class TestAPIWordlistTagStandardList(unittest.TestCase):
@@ -616,6 +623,8 @@ class TestAPIWordlistTagStandardList(unittest.TestCase):
     # 4. GET /api/wordlist/<int:wordlist_id>?tag=tag1&tag=tag2
     # 5. GET /api/wordlist/<int:wordlist_id>?tag=tag2&tag=tag2  # i.e. duplicate tag
     # 6. GET /api/wordlist/<int:wordlist_id>?tag=bullshit       # should return nothing
+    # 7. DELETE /api/wordlist/tag/<int:wordlist_id>/<int:word_id>   # should delete every tag for the word
+    # 8. DELETE /api/wordlist/tag/<int:wordlist_id>/<int:word_id>?tag=tag   # should delete only specific tags
 
     # 1. GET /api/wordlist/<int:wordlist_id>
     def test1(self):
@@ -746,3 +755,38 @@ class TestAPIWordlistTagStandardList(unittest.TestCase):
         obj = json.loads(r.data)
 
         self.assertEqual(0, len(obj['words']))
+
+    # 7. DELETE /api/wordlist/tag/<int:wordlist_id>/<int:word_id>   # should delete every tag for the word
+    def test7(self):
+        r = self.client.delete(url_for('api_wordlist_tag.delete_tags_for_word_id',
+                                       word_id=self.word2_id,
+                                       wordlist_id=self.wordlist_id))
+        self.assertEqual(200, r.status_code)
+
+        # get the tags for this word and make sure there aren't any.
+        r = self.client.get(url_for('api_wordlist_tag.get_tags',
+                                    word_id=self.word2_id,
+                                    wordlist_id=self.wordlist_id))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        self.assertEqual(0, len(obj['tags']))
+
+    # 8. DELETE /api/wordlist/tag/<int:wordlist_id>/<int:word_id>?tag=tag   # should delete only specific tags
+    def test8(self):
+        r = self.client.delete(url_for('api_wordlist_tag.delete_tags_for_word_id',
+                                       word_id=self.word2_id,
+                                       tag=['tag1'],
+                                       wordlist_id=self.wordlist_id))
+        self.assertEqual(200, r.status_code)
+
+        # get the tags for this word and make sure tag2 is still there.
+        r = self.client.get(url_for('api_wordlist_tag.get_tags',
+                                    word_id=self.word2_id,
+                                    wordlist_id=self.wordlist_id))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        control = ['tag2']
+
+        self.assertCountEqual(control, obj['tags'])
