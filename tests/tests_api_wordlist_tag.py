@@ -617,14 +617,16 @@ class TestAPIWordlistTagStandardList(unittest.TestCase):
 
     # test cases:
     #
-    # 1. GET /api/wordlist/<int:wordlist_id>
-    # 2. GET /api/wordlist/<int:wordlist_id>?tag=tag1
-    # 3. GET /api/wordlist/<int:wordlist_id>?tag=tag2
-    # 4. GET /api/wordlist/<int:wordlist_id>?tag=tag1&tag=tag2
-    # 5. GET /api/wordlist/<int:wordlist_id>?tag=tag2&tag=tag2  # i.e. duplicate tag
-    # 6. GET /api/wordlist/<int:wordlist_id>?tag=bullshit       # should return nothing
-    # 7. DELETE /api/wordlist/tag/<int:wordlist_id>/<int:word_id>   # should delete every tag for the word
-    # 8. DELETE /api/wordlist/tag/<int:wordlist_id>/<int:word_id>?tag=tag   # should delete only specific tags
+    #  1. GET /api/wordlist/<int:wordlist_id>
+    #  2. GET /api/wordlist/<int:wordlist_id>?tag=tag1
+    #  3. GET /api/wordlist/<int:wordlist_id>?tag=tag2
+    #  4. GET /api/wordlist/<int:wordlist_id>?tag=tag1&tag=tag2
+    #  5. GET /api/wordlist/<int:wordlist_id>?tag=tag2&tag=tag2  # i.e. duplicate tag
+    #  6. GET /api/wordlist/<int:wordlist_id>?tag=bullshit       # should return nothing
+    #  7. DELETE /api/wordlist/tag/<int:wordlist_id>/<int:word_id>   # should delete every tag for the word
+    #  8. DELETE /api/wordlist/tag/<int:wordlist_id>/<int:word_id>?tag=tag   # should delete only specific tags
+    #  9. DELETE /api/wordlist/tag/<int:wordlist_id>/<int:word_id>  # bullshit wordlist id
+    # 10. DELETE /api/wordlist/tag/<int:wordlist_id>/<int:word_id>  # bullshit word id
 
     # 1. GET /api/wordlist/<int:wordlist_id>
     def test1(self):
@@ -790,3 +792,17 @@ class TestAPIWordlistTagStandardList(unittest.TestCase):
         control = ['tag2']
 
         self.assertCountEqual(control, obj['tags'])
+
+    #  9. DELETE /api/wordlist/tag/<int:wordlist_id>/<int:word_id>  # bullshit wordlist id
+    def test9(self):
+        r = self.client.delete(url_for('api_wordlist_tag.delete_tags_for_word_id',
+                                       word_id=self.word2_id,
+                                       wordlist_id=666666666))
+        self.assertEqual(404, r.status_code)
+
+    # 10. DELETE /api/wordlist/tag/<int:wordlist_id>/<int:word_id>  # bullshit word id
+    def test10(self):
+        r = self.client.delete(url_for('api_wordlist_tag.delete_tags_for_word_id',
+                                       word_id=5555555555,
+                                       wordlist_id=self.wordlist_id))
+        self.assertEqual(400, r.status_code)
