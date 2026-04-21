@@ -538,7 +538,6 @@ def edit_word_form(word):
     serialized_tag_state = request.args.get('serialized_tag_state')
     redirect_to = request.args.get('redirect_to', 'dlernen.lookup_word')
     relation_id = request.args.get('relation_id')
-    print("edit_word_form:  redirect_to = %s" % redirect_to)
 
     url = url_for('api_pos.get_pos_for_word', word=word, _external=True)
     r = requests.get(url)
@@ -699,7 +698,7 @@ def update_dict():
     wordlist_id = request.form.get('wordlist_id')
     relation_id = request.form.get('relation_id')
     redirect_to = request.form.get('redirect_to', 'dlernen.lookup_word')
-    print("update_dict:  redirect_to = %s" % redirect_to)
+
     field_values_before = json.loads(request.form.get('field_values_before'))
     field_values_after = {k: request.form.get(k, '') for k in field_values_before.keys()}
 
@@ -799,8 +798,8 @@ def update_dict():
                                            message=message,
                                            status_code=r.status_code)
 
-    # now we deal with the tags.  at this point every POS in the edit form has a word_id.  get the POS info for
-    # this word to get those word ids.  not all of them will be in the wordlist.
+    # now we deal with the tags.  at this point every POS for which values were supplied in the edit form has a
+    # word_id.  get the POS info for this word to get those word ids.  not all of them will be in the wordlist.
 
     if wordlist_id:
         url = url_for('api_pos.get_pos_for_word', word=word, _external=True)

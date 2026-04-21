@@ -31,7 +31,7 @@ def __get_pos(sql, args):
                     "attrkey": r['attrkey'].casefold(),
                     "attribute_id": r['attribute_id'],
                     "sort_order": r['sort_order'],
-                    "attrvalue": r['attrvalue']
+                    "attrvalue": r['attrvalue']  # might be None
                 }
             )
 
@@ -41,8 +41,8 @@ def __get_pos(sql, args):
                 {
                     "pos_name": k.casefold(),
                     "pos_id": pos_name_to_ids[k],
-                    "word": pos_to_word_info[k][0],
-                    "word_id": pos_to_word_info[k][1],
+                    "word": pos_to_word_info[k][0],  # might be None
+                    "word_id": pos_to_word_info[k][1],  # might be None
                     "attributes": pos_name_to_attrs[k]
                 }
             )
