@@ -812,42 +812,29 @@ def update_dict():
         pos_structure = r.json()
 
         # this will contain the set of tags based on the tag string (what was entered in the field) for the POS.
-        # we will put a pos_id -> tags mapping here if:
+        # we will put a pos_id -> tags mapping here if a word id is present.
         #
-        # - a wordlist_id is present
-        # - the tag string has been changed.
-        #
-        # so, word_id_to_tags_adding and word_id_to_tags_deleting will only contain a mapping when the tags for a word
-        # have changed.
-        pos_id_to_tags_adding = {}
-        pos_id_to_tags_deleting = {}
+        # this works by dropping all of the tags for each of the word ids, then adding back the tags we
+        # pulled from the form.
+
+        pos_id_to_tags = {}
 
         for field_name in field_values_before.keys():
             parts = field_name.split('-')
             if parts[0] == 'tag':
-                tag_str_before = field_values_before[field_name]
-                tags_before = set(tag_str_before.split())
-                tag_str_after = field_values_after[field_name]
-                tags_after = set(tag_str_after.split())
-
                 pos_id = int(parts[1])
 
-                if tags_after != tags_before:
-                    pos_id_to_tags_deleting[pos_id] = list(tags_before)
-                    pos_id_to_tags_adding[pos_id] = list(tags_after)
+                tag_str_after = field_values_after[field_name]
+                pos_id_to_tags[pos_id] = tag_str_after.split()  # doesn't matter if there are dups.
 
         add_tags_payload = []
         for p in pos_structure:
             if not p['word_id']:
                 continue
 
-            if p['pos_id'] not in pos_id_to_tags_deleting:
-                continue
-
             url = url_for('api_wordlist_tag.delete_tags_for_word_id',
                           word_id=p['word_id'],
                           wordlist_id=wordlist_id,
-                          tag=pos_id_to_tags_deleting[p['pos_id']],
                           _external=True)
             r = requests.delete(url)
             if r.status_code == 400:
@@ -863,7 +850,7 @@ def update_dict():
             add_tags_payload.append(
                 {
                     'word_id': p['word_id'],
-                    'tags': pos_id_to_tags_adding[p['pos_id']]
+                    'tags': pos_id_to_tags[p['pos_id']]
                 }
             )
         url = url_for('api_wordlist_tag.add_tags',
