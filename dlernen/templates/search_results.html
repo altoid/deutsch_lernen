@@ -31,7 +31,7 @@ Lookup {{ word }}
 
     {% if search_results %}
     <h1>Worte, die zu "{{ word }}" passen</h1>
-    {% if serialized_tag_state %}
+    {% if tag_state and tag_state.list_type != 'smart' %}
     <form action="{{ url_for('dlernen.update_via_search_results') }}"
           method="post">
         <input type="hidden" value="{{ word }}" name="search_term"/>
