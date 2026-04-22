@@ -689,9 +689,86 @@ def diff_attr_values(pos_id, attribute_id, word_id,
                                            'attrvalue': value_after})
 
 
+def pantomime(request):
+    # go through the text fields in the request to distinguish what words are being edited and added.
+
+    word = request.form.get('word', '').strip()
+
+    # maps word_ids to WORD_UPDATE_PAYLOAD_SCHEMA docs
+    word_ids_to_update_payloads = {}
+    word_ids_to_delete_payloads = {}
+
+    # maps (word, pos_id) pairs to WORD_ADD_PAYLOAD_SCHEMA docs
+    word_pos_to_add_payloads = {}
+
+    for field_name, value in request.form.items():
+        parts = field_name.split('-')
+        if parts[0] != 'attr':
+            continue
+
+        pos_id = int(parts[1])
+        attribute_id = int(parts[2])
+        word_id = int(parts[3]) if len(parts) > 3 else None
+
+        # if there is a word_id, we are updating; otherwise we are adding.
+        if word_id:
+            if word_id not in word_ids_to_update_payloads:
+                word_ids_to_update_payloads[word_id] = {
+                    'word': word,
+                    'attributes': []
+                }
+            payload = word_ids_to_update_payloads[word_id]
+            if value:
+                payload['attributes'].append(
+                    {
+                        'attribute_id': attribute_id,
+                        'attrvalue': value
+                    }
+                )
+
+            if word_id not in word_ids_to_delete_payloads:
+                word_ids_to_delete_payloads[word_id] = {
+                    'attributes': []
+                }
+            payload = word_ids_to_delete_payloads[word_id]
+            payload['attributes'].append(
+                {
+                    'attribute_id': attribute_id
+                }
+            )
+        else:
+            t = (word, pos_id)
+            if t not in word_pos_to_add_payloads:
+                word_pos_to_add_payloads[t] = {
+                    'word': word,
+                    'attributes': []
+                }
+            payload = word_pos_to_add_payloads[t]
+            if value:
+                payload['attributes'].append(
+                    {
+                        'attribute_id': attribute_id,
+                        'attrvalue': value
+                    }
+                )
+
+    # get rid of payloads with empty attribute lists
+    word_pos_to_add_payloads = {k: v for k, v in word_pos_to_add_payloads.items() if len(v['attributes']) > 0 }
+    word_ids_to_update_payloads = {k: v for k, v in word_ids_to_update_payloads.items() if len(v['attributes']) > 0 }
+
+    print("############# add payloads")
+    pprint(word_pos_to_add_payloads)
+    print("############# update payloads")
+    pprint(word_ids_to_update_payloads)
+    print("############# delete payloads")
+    pprint(word_ids_to_delete_payloads)
+
+
 @bp.route('/word_editor', methods=['POST'])
 def update_dict():
     # hitting the submit button in the word editor brings us here.
+
+    pantomime(request)
 
     word = request.form.get('word', '').strip()
     word_before = request.form.get('word_before')
