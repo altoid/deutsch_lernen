@@ -146,7 +146,9 @@ def create_wordlist():
 def update_wordlist(wordlist_id):
     payload = request.get_json()
 
-    # don't update anything that isn't in the payload.
+    # don't update anything that isn't in the payload.  if the payload is empty, nothing is changed but we still
+    # return a wordlist object.
+
     keys_to_check = ['name', 'citation', 'sqlcode', 'word_ids', 'notes']
     do_update = any(key in payload for key in keys_to_check)
 
