@@ -549,11 +549,6 @@ def edit_word_form(word):
     pos_structure = r.json()
     form_data = {p['pos_name']: [] for p in pos_structure}
 
-    # field_values_before is a mapping of field names to field values, and contains the values of the
-    # attributes as retrieved from the database - before they are changed.  when the form is submitted,
-    # we will get another such mapping, with whatever changes were made.  we implement the dictionary
-    # update by diffing these and making the appropriate changes to the database.
-
     for p in pos_structure:
         for a in p['attributes']:
             t = ['attr', p['pos_id'], a['attribute_id']]
@@ -583,28 +578,21 @@ def edit_word_form(word):
                                    status_code=r.status_code)
         wordlist_obj = r.json()
 
+        # the wordlist object already has the tags for the words.  traverse the wordlist and create a map of word_ids
+        # to tag strings.
+        word_id_to_tag_string = {w['word_id']: ' '.join(w['tags']) for w in wordlist_obj['words']}
+
         for p in pos_structure:
             field_disabled = False
+            tags = ''
             if p['word_id']:
-                url = url_for('api_wordlist_tag.get_tags',
-                              wordlist_id=wordlist_id,
-                              word_id=p['word_id'],
-                              _external=True)
-                r = requests.get(url)
-                if r.status_code == 404:
+                if p['word_id'] not in word_id_to_tag_string:
                     # p['word_id'] is not in the word list.  no big deal.
                     field_disabled = True
-                    tags = ''
-                elif not r:
-                    return render_template("error.html",
-                                           message="2: %s" % r.text,
-                                           status_code=r.status_code)
                 else:
-                    tags_result = r.json()
-                    tags = ' '.join(tags_result['tags'])
+                    tags = word_id_to_tag_string[p['word_id']]
                 field_name_parts = ['tag', str(p['pos_id']), str(p['word_id'])]  # convert to str so join won't choke
             else:
-                tags = ''
                 field_name_parts = ['tag', str(p['pos_id'])]  # convert to str so join won't choke
 
             field_name = '-'.join(field_name_parts)
@@ -661,7 +649,7 @@ def update_dict():
     # maps (word, pos_id) pairs to WORD_ADD_PAYLOAD_SCHEMA docs
     word_pos_to_add_payloads = {}
 
-    # mapping of (word, pos_id) to word_id.  this is returned to the caller.
+    # mapping of (word, pos_id) to word_id.
     word_pos_to_word_id = {}
 
     for field_name, value_unstripped in request.form.items():
