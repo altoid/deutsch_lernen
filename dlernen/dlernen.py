@@ -649,8 +649,10 @@ def update_dict():
     #
     # returns a dictionary mapping (word, pos_id) --> word_id
     #
-    word = request.form.get('word', '').strip()
     wordlist_id = request.form.get('wordlist_id')
+    relation_id = request.form.get('relation_id')
+    redirect_to = request.form.get('redirect_to', 'dlernen.lookup_word')
+    word = request.form.get('word', '').strip()
 
     # maps word_ids to WORD_UPDATE_PAYLOAD_SCHEMA docs
     word_ids_to_update_payloads = {}
@@ -762,13 +764,6 @@ def update_dict():
             return render_template("error.html",
                                    message=message,
                                    status_code=r.status_code)
-
-    print("%%%%%%%%%%% word_pos_to_word_id")
-    pprint(word_pos_to_word_id)
-    wordlist_id = request.form.get('wordlist_id')
-    relation_id = request.form.get('relation_id')
-    redirect_to = request.form.get('redirect_to', 'dlernen.lookup_word')
-    word = request.form.get('word', '').strip()
 
     # now we deal with the tags.
 
