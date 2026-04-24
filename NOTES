@@ -1,5 +1,6 @@
 TODO - really need a better way to deal with reflexive verbs
-    separate part of speech
+    - separate part of speech
+    - additional definition field
 
 TODO - import word lists
     CSV:  word, pos, definition
@@ -23,7 +24,8 @@ TODO - parse definitions, and for each word in the definition that is in the dic
 TODO - for parts of speech and their attributes, add a display name column distinct from the key.  quiz table
     already does this.
 
-TODO - dump out a smart wordlist as an ordinary word list.  this would effectively be a snapshot of the smart list.
+TODO - dump out a smart wordlist as an ordinary word list.  this would effectively be a snapshot
+    of the smart list.
 
 TODO - for definitions quiz app, can we just rewrite the whole thing as a class?
 
@@ -48,6 +50,10 @@ TODO - add interjections as a new part of speech
 TODO - home page should be placeholder (no forms) or drop it altogether.
 
 FIXME - need a unit test for word results that verifies that attributes come back in sorted order.
+
+TODO - review the test classes and make sure that there is at least one class for each test module
+    where the setup method doesn't call code we need to test.
+
 
 -----------
 
