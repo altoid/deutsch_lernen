@@ -714,7 +714,7 @@ def quiz_loop(generating_function_and_args):
                 APPSTATE.hints_requested.add(attr_to_test['word_id'])
 
                 # show wordlists this word is in.
-                r = requests.get(url_for('api_wordlists.get_wordlists_by_word_id',
+                r = requests.get(url_for('api_word.get_member_wordlists',
                                          word_id=attr_to_test['word_id']))
                 if not r:
                     message = "could not get wordlists for word id %s:  [%s, %s]" % (attr_to_test['word_id'], r.text,
@@ -722,8 +722,12 @@ def quiz_loop(generating_function_and_args):
                     print(message)
                     return message, r.status_code
 
+                # this is a WORD_WORDLIST_METADATA_MAP_SCHEMA object.
                 obj = r.json()
-                for n in obj:
+
+                wordlist_list_obj = obj['wordlist_metadata_list']
+
+                for n in wordlist_list_obj:
                     r = requests.get(url_for('api_wordlist_tag.get_tags',
                                              wordlist_id=n['wordlist_id'],
                                              word_id=attr_to_test['word_id']))
