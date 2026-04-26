@@ -33,11 +33,7 @@ for the tags fields, the names are:
 
 <div class="addword">
     {% include 'header.html' %}
-    {% if word %}
     <h1>{{ word }}</h1>
-    {% else %}
-    <h1>New Word</h1>
-    {% endif %}
     <form action="{{ url_for('dlernen.update_dict') }}" method="post">
         <input type="hidden" name="redirect_to" value="{{ redirect_to }}">
         {% if serialized_tag_state %}
@@ -80,13 +76,13 @@ for the tags fields, the names are:
                 <td class="wordedit">
                     {% if field.disabled %}
                     <input type="text"
-                           class="wordedit"
+                           class="wordedit {{ field.enlightened }}"
                            placeholder="{{ field.label }}"
                            name="{{ field.field_name }}"
                            value="{{ field.field_value }}" disabled>
                     {% else %}
                     <input type="text"
-                           class="wordedit"
+                           class="wordedit {{ field.enlightened }}"
                            placeholder="{{ field.label }}"
                            name="{{ field.field_name }}"
                            value="{{ field.field_value }}">

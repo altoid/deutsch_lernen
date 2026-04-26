@@ -563,6 +563,7 @@ def edit_word_form(word):
                 'field_value': field_value,
                 'label': a['attrkey'],
                 'sort_order': a['sort_order'],
+                'enlightened': 'enlightened' if p['word_id'] else '',  # tell CSS to color the text field
                 'disabled': False
             }
             form_data[p['pos_name']].append(d)
@@ -605,6 +606,7 @@ def edit_word_form(word):
                     'field_value': tags,
                     'label': 'tags',
                     'sort_order': max([x['sort_order'] for x in p['attributes']]) + 1,
+                    'enlightened': 'enlightened' if p['word_id'] else '',  # tell CSS to color the text field
                     'disabled': field_disabled
                 }
 

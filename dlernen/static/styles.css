@@ -369,6 +369,10 @@ table.tableau {
 }
 
 input[type="text"].wordedit {
-    width: 400px
+    width: 400px;
+}
+
+input[type="text"].enlightened {
+    background-color: #f2f5b5;
 }
 
