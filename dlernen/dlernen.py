@@ -549,11 +549,26 @@ def edit_word_form(word):
     pos_structure = r.json()
     form_data = {p['pos_name']: [] for p in pos_structure}
 
+    wordlist_obj = None
+    if wordlist_id:
+        url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
+        r = requests.get(url)
+        if not r:
+            return render_template("error.html",
+                                   message=r.text,
+                                   status_code=r.status_code)
+        wordlist_obj = r.json()
+
     for p in pos_structure:
         for a in p['attributes']:
+            field_disabled = False
             t = ['attr', p['pos_id'], a['attribute_id']]
             if p['word_id']:
                 t.append(p['word_id'])
+            elif wordlist_obj['list_type'] == 'smart':
+                # if this is a smart list, do not allow adding attribute values to words that
+                # are not in it.
+                field_disabled = True
 
             t = list(map(str, t))  # convert to str so join won't choke
             field_name = '-'.join(t)
@@ -564,21 +579,13 @@ def edit_word_form(word):
                 'label': a['attrkey'],
                 'sort_order': a['sort_order'],
                 'enlightened': 'enlightened' if p['word_id'] else '',  # tell CSS to color the text field
-                'disabled': False
+                'disabled': field_disabled
             }
             form_data[p['pos_name']].append(d)
         form_data[p['pos_name']] = sorted(form_data[p['pos_name']], key=lambda x: x['sort_order'])
 
     # get tags for any words that have them.  join them as a single space-separated string.
-    if wordlist_id:
-        url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
-        r = requests.get(url)
-        if not r:
-            return render_template("error.html",
-                                   message=r.text,
-                                   status_code=r.status_code)
-        wordlist_obj = r.json()
-
+    if wordlist_obj:
         # the wordlist object already has the tags for the words.  traverse the wordlist and create a map of word_ids
         # to tag strings.
         word_id_to_tag_string = {w['word_id']: ' '.join(w['tags']) for w in wordlist_obj['words']}
