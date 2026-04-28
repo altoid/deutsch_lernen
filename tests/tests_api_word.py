@@ -574,7 +574,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         self.assertEqual("Xxxxxxxxxx", attrdict['plural'])
         self.assertEqual("feelthy", attrdict['definition'])
 
-        # update again but with empty attribute lists
+        # update again but with empty attribute lists.  should have no effect.
 
         update_payload = {
             ATTRIBUTES: [
@@ -596,7 +596,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         self.assertEqual("Xxxxxxxxxx", attrdict['plural'])
         self.assertEqual("feelthy", attrdict['definition'])
 
-        # update AGAIN but with empty payload.
+        # update AGAIN but with empty payload.  should also have no effect.
 
         update_payload = {
         }
