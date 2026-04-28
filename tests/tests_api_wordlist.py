@@ -568,6 +568,95 @@ class TestAPIWordlist(unittest.TestCase):
         r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(400, r.status_code)
 
+    # update smart list with empty word_id list ==> ok
+    def test_update_smart_list_1(self):
+        payload = {
+            'sqlcode': 'select id word_id from word where id = %s' % self.word1_id
+        }
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual('smart', obj['list_type'])
+
+        payload = {
+            'word_ids': []
+        }
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
+        self.assertEqual(200, r.status_code)
+
+    # update smart list with words already in the list ==> ok
+    def test_update_smart_list_2(self):
+        payload = {
+            'sqlcode': 'select id word_id from word where id = %s' % self.word1_id
+        }
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual('smart', obj['list_type'])
+
+        payload = {
+            'word_ids': [self.word1_id]
+        }
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
+        self.assertEqual(200, r.status_code)
+
+    # update smart list with words not in the list ==> 400
+    def test_update_smart_list_3(self):
+        payload = {
+            'sqlcode': 'select id word_id from word where id = %s' % self.word1_id
+        }
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual('smart', obj['list_type'])
+
+        payload = {
+            'word_ids': [self.word2_id]
+        }
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
+        self.assertEqual(400, r.status_code)
+
+    # update smart list with words in the list and not in the list ==> 400
+    def test_update_smart_list_4(self):
+        payload = {
+            'sqlcode': 'select id word_id from word where id = %s' % self.word1_id
+        }
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual('smart', obj['list_type'])
+
+        payload = {
+            'word_ids': [self.word1_id, self.word2_id]
+        }
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
+        self.assertEqual(400, r.status_code)
+
+    # update smart list with words not in the list, but also attempt to update other things, e.g. citation
+    # ==> 400, citation not changed
+    def test_update_smart_list_5(self):
+        original_citation = 'driving while stupid'
+        payload = {
+            'sqlcode': 'select id word_id from word where id = %s' % self.word1_id,
+            'citation': original_citation
+        }
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual('smart', obj['list_type'])
+
+        payload = {
+            'word_ids': [self.word1_id, self.word2_id],
+            'citation': """shouldn't see this"""
+        }
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
+        self.assertEqual(400, r.status_code)
+
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual(original_citation, obj['citation'])
+
 
 class TestAPIWordlistGetWordIDs(unittest.TestCase):
     app = None

@@ -293,7 +293,7 @@ def __get_word_to_test(cursor, quiz_key, wordlist_ids, query):
     word_id_filter = ""
     word_ids = []
     if wordlist_ids:
-        word_ids = common.get_word_ids_from_wordlists(wordlist_ids, cursor)
+        word_ids = common.get_word_ids_from_wordlists(cursor, wordlist_ids)
         if word_ids:
             word_id_args = ['%s'] * len(word_ids)
             word_id_args = ', '.join(word_id_args)
@@ -445,7 +445,7 @@ def get_report(quiz_key, wordlist_id):
             rows = cursor.fetchall()
             word_ids = [x['word_id'] for x in rows]
         else:
-            word_ids = common.get_word_ids_from_wordlists([wordlist_id], cursor)
+            word_ids = common.get_word_ids_from_wordlists(cursor, [wordlist_id])
 
         word_id_args = ['%s'] * len(word_ids)
         word_id_args = ', '.join(word_id_args)

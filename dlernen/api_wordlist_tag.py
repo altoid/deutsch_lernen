@@ -65,7 +65,7 @@ def get_tags(wordlist_id, word_id):
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
-            members = set(common.get_word_ids_from_wordlists([wordlist_id], cursor))
+            members = set(common.get_word_ids_from_wordlists(cursor, [wordlist_id]))
             if word_id not in members:
                 return "word %s not in list %s" % (word_id, wordlist_id), 404
 

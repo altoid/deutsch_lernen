@@ -141,6 +141,25 @@ def create_wordlist():
             return "create list failed", 500
 
 
+# returns two lists:  the word_ids that exist in the word list and those that don't.
+# wordlist_id is assumed to be a valid wordlist.
+#
+# it is guaranteed that:
+#
+# - the lists are disjoint
+# - no word id appears more than once in either list.
+#
+# note:  for those word ids NOT in the word list, there is no guarantee that they are
+#        even present in the database.
+#
+def __check_word_ids(cursor, wordlist_id, word_ids):
+    member_word_ids = set(common.get_word_ids_from_wordlists(cursor, [wordlist_id]))
+    word_ids_set = set(word_ids)
+    word_ids_not_in_list = word_ids_set - member_word_ids
+    word_ids_in_list = word_ids_set & member_word_ids
+    return list(word_ids_in_list), list(word_ids_not_in_list)
+
+
 @bp.route('/<int:wordlist_id>', methods=['PUT'])
 @js_validate_payload(WORDLIST_PAYLOAD_SCHEMA)
 def update_wordlist(wordlist_id):
@@ -161,6 +180,10 @@ def update_wordlist(wordlist_id):
                 if not wordlist_metadata:
                     return "wordlist %s not found" % wordlist_id, 404
 
+                # the mutual exclusivity of word_ids and sqlcode is enforced in the json schema,
+                # no need to check for it here.  there are unit tests for this, for both the create
+                # and update cases.
+
                 if 'sqlcode' in payload:
                     if wordlist_metadata['list_type'] == 'standard' and payload['sqlcode']:
                         return "can't add sqlcode to a nonempty list", 400
@@ -169,7 +192,13 @@ def update_wordlist(wordlist_id):
 
                 if 'word_ids' in payload:
                     if wordlist_metadata['list_type'] == 'smart':
-                        return "can't add words to a smart list", 400
+                        # with a smart list, if the payload has word ids that are in the list,
+                        # this is considered harmless and we won't do anything.  only if the
+                        # word_id list has words NOT in the smart list do we reject the request.
+                        members, nonmembers = __check_word_ids(cursor, wordlist_id, payload['word_ids'])
+
+                        if nonmembers:
+                            return "can't add words to a smart list", 400
 
                 cursor.execute('start transaction')
 
@@ -207,7 +236,8 @@ def update_wordlist(wordlist_id):
 
                 word_ids = payload.get('word_ids', [])
                 word_ids, _ = common.check_word_ids(cursor, word_ids)
-                if word_ids:
+                if word_ids and wordlist_metadata['list_type'] != 'smart':
+
                     wkw_tuples = [(wordlist_id, x) for x in word_ids]
                     ins_sql = """
                     insert ignore into wordlist_word (wordlist_id, word_id)
@@ -478,7 +508,7 @@ def get_word_ids_from_wordlists():
             return {'word_ids': [x['word_id'] for x in rows]}
 
         if wordlist_ids:
-            word_ids = common.get_word_ids_from_wordlists(wordlist_ids, cursor)
+            word_ids = common.get_word_ids_from_wordlists(cursor, wordlist_ids)
 
             return {'word_ids': word_ids}
 

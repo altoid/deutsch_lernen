@@ -42,7 +42,7 @@ def get_words():
             word_ids = list(map(lambda x: x['word_id'], rows))
 
         elif wordlist_ids:
-            word_ids = common.get_word_ids_from_wordlists(wordlist_ids, cursor)
+            word_ids = common.get_word_ids_from_wordlists(cursor, wordlist_ids)
 
         elif tags:
             tag_args = ['%s'] * len(tags)

@@ -145,9 +145,9 @@ def get_words_from_word_ids(cursor, word_ids):
 # this should be called from within a context manager, e.g.
 #
 # with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-#     get_word_ids_from_wordlists(wordlist_ids, cursor)
+#     get_word_ids_from_wordlists(cursor, wordlist_ids)
 #
-def get_word_ids_from_wordlists(wordlist_ids, cursor):
+def get_word_ids_from_wordlists(cursor, wordlist_ids):
     if not wordlist_ids:
         return []
 
@@ -158,17 +158,17 @@ def get_word_ids_from_wordlists(wordlist_ids, cursor):
         """
     select distinct word_id
     from wordlist_word
-    where wordlist_id in (""" + wordlist_args + """)
-    """
+    where wordlist_id in (%(wordlist_args)s)
+    """ % {'wordlist_args': wordlist_args}
     ]
 
     # make a UNION out of this and all the sqlcode routines for all the word lists
     sql = """
     select sqlcode
     from wordlist
-    where id in (""" + wordlist_args + """)
+    where id in (%(wordlist_args)s)
     and sqlcode is not NULL
-    """
+    """ % {'wordlist_args': wordlist_args}
 
     cursor.execute(sql, wordlist_ids)
     rows = cursor.fetchall()
