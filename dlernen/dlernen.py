@@ -547,7 +547,7 @@ def edit_word_form(word):
                                status_code=r.status_code)
 
     pos_structure = r.json()
-    form_data = {p['pos_name']: [] for p in pos_structure}
+    form_data = {}
 
     wordlist_obj = None
     if wordlist_id:
@@ -560,15 +560,16 @@ def edit_word_form(word):
         wordlist_obj = r.json()
 
     for p in pos_structure:
+        if wordlist_obj and wordlist_obj['list_type'] == 'smart' and not p['word_id']:
+            # if this is a smart list, do not even render any part of speech for a word that is
+            # not in it.
+            continue
+
+        form_data[p['pos_name']] = []
         for a in p['attributes']:
-            field_disabled = False
             t = ['attr', p['pos_id'], a['attribute_id']]
             if p['word_id']:
                 t.append(p['word_id'])
-            elif wordlist_obj['list_type'] == 'smart':
-                # if this is a smart list, do not allow adding attribute values to words that
-                # are not in it.
-                field_disabled = True
 
             t = list(map(str, t))  # convert to str so join won't choke
             field_name = '-'.join(t)
@@ -579,7 +580,7 @@ def edit_word_form(word):
                 'label': a['attrkey'],
                 'sort_order': a['sort_order'],
                 'enlightened': 'enlightened' if p['word_id'] else '',  # tell CSS to color the text field
-                'disabled': field_disabled
+                'disabled': False
             }
             form_data[p['pos_name']].append(d)
         form_data[p['pos_name']] = sorted(form_data[p['pos_name']], key=lambda x: x['sort_order'])
