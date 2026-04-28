@@ -865,7 +865,7 @@ class TestAPIWordPUT(unittest.TestCase):
         cls.app_context.pop()
 
     def setUp(self):
-        self.word = "Apitestswordput_" + ''.join(random.choices(string.ascii_lowercase, k=10))
+        self.word = '%s_%s' % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=10)))
         add_payload = {
             "word": self.word,
             "pos_id": self.keyword_mappings['pos_names_to_ids']['noun']
@@ -1035,7 +1035,7 @@ class TestAPIWordPUT(unittest.TestCase):
         obj = json.loads(r.data)
         self.assertEqual(200, r.status_code)
         self.assertEqual(3, len(obj['attributes']))
-        self.assertEqual(self.word, obj['word'])
+        self.assertEqual(self.word.casefold(), obj['word'].casefold())
 
 
 class TestAPIWordUpdate(unittest.TestCase):

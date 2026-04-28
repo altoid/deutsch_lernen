@@ -197,7 +197,7 @@ class TestAPIWordlist(unittest.TestCase):
 
         return word, word_id
 
-    # the setup for this class creates a list with just a name.
+    # the setup for this class creates a list with just a name and no content.
     # no tearDown method is needed thanks to our friend addCleanup
     def setUp(self):
         self.list_name, self.wordlist_id = self.createWordlist()
@@ -209,16 +209,13 @@ class TestAPIWordlist(unittest.TestCase):
         self.word2, self.word2_id = self.createWord()
         self.addCleanup(cleanupWordID, self.client, self.word2_id)
 
-        self.update_url = url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id)
-        self.wordlist_get_url = url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id)
-
     # do nothing, just make sure that setUp works
     def test_nothing(self):
         pass
 
     # the list setUp creates should exist and be empty.
     def test_get_extant(self):
-        r = self.client.get(self.wordlist_get_url)
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -237,10 +234,10 @@ class TestAPIWordlist(unittest.TestCase):
             'notes': 'important notes'
         }
 
-        r = self.client.put(self.update_url, json=payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(200, r.status_code)
 
-        r = self.client.get(self.wordlist_get_url)
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -255,7 +252,7 @@ class TestAPIWordlist(unittest.TestCase):
             ]
         }
 
-        r = self.client.put(self.update_url, json=payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(200, r.status_code)
 
         payload = {
@@ -265,7 +262,7 @@ class TestAPIWordlist(unittest.TestCase):
             ]
         }
 
-        r = self.client.put(self.update_url, json=payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -280,16 +277,16 @@ class TestAPIWordlist(unittest.TestCase):
             'sqlcode': """select id word_id from word where word = 'geben'"""
         }
 
-        r = self.client.put(self.update_url, json=metadata_payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=metadata_payload)
         self.assertEqual(200, r.status_code)
 
         update_payload = {
         }
 
-        r = self.client.put(self.update_url, json=update_payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=update_payload)
         self.assertEqual(200, r.status_code)
 
-        r = self.client.get(self.wordlist_get_url)
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -305,10 +302,10 @@ class TestAPIWordlist(unittest.TestCase):
             'word_ids': [bad_id]
         }
 
-        r = self.client.put(self.update_url, json=payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(200, r.status_code)
 
-        r = self.client.get(self.wordlist_get_url)
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -323,7 +320,7 @@ class TestAPIWordlist(unittest.TestCase):
             ]
         }
 
-        r = self.client.put(self.update_url, json=payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -336,7 +333,7 @@ class TestAPIWordlist(unittest.TestCase):
         r = self.client.put(url, json=payload)
         self.assertEqual(200, r.status_code)
 
-        r = self.client.get(self.wordlist_get_url)
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -357,12 +354,12 @@ class TestAPIWordlist(unittest.TestCase):
         payload = {
             'notes': ''
         }
-        r = self.client.put(self.update_url, json=payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(200, r.status_code)
 
         # make sure the notes were cleared
 
-        r = self.client.get(self.wordlist_get_url)
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
         obj = json.loads(r.data)
         self.assertEqual('', obj['notes'])
 
@@ -372,10 +369,10 @@ class TestAPIWordlist(unittest.TestCase):
         payload = {
             'notes': notes
         }
-        r = self.client.put(self.update_url, json=payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(200, r.status_code)
 
-        r = self.client.get(self.wordlist_get_url)
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
         obj = json.loads(r.data)
         self.assertEqual(notes, obj['notes'])
 
@@ -384,12 +381,12 @@ class TestAPIWordlist(unittest.TestCase):
         payload = {
             'notes': None
         }
-        r = self.client.put(self.update_url, json=payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(200, r.status_code)
 
         # make sure the notes were cleared
 
-        r = self.client.get(self.wordlist_get_url)
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
         obj = json.loads(r.data)
         self.assertIsNone(obj['notes'])
 
@@ -399,7 +396,7 @@ class TestAPIWordlist(unittest.TestCase):
         payload = {
             'notes': notes
         }
-        r = self.client.put(self.update_url, json=payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(200, r.status_code)
 
         # add some words then check the notes
@@ -410,12 +407,12 @@ class TestAPIWordlist(unittest.TestCase):
                 self.word2_id
             ]
         }
-        r = self.client.put(self.update_url, json=payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(200, r.status_code)
 
         # make sure the notes were unaffected
 
-        r = self.client.get(self.wordlist_get_url)
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
         result = json.loads(r.data)
         self.assertEqual(notes, result['notes'])
 
@@ -429,14 +426,14 @@ class TestAPIWordlist(unittest.TestCase):
             ]
         }
 
-        r = self.client.put(self.update_url, json=add_payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=add_payload)
         self.assertEqual(200, r.status_code)
 
         update_payload = {
             'sqlcode': 'select id word_id from word where id = 555'
         }
 
-        r = self.client.put(self.update_url, json=update_payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=update_payload)
         self.assertEqual(400, r.status_code)
 
     # add words to smart list --> not allowed.
@@ -446,7 +443,7 @@ class TestAPIWordlist(unittest.TestCase):
             'sqlcode': 'select id word_id from word where id = 555'
         }
 
-        r = self.client.put(self.update_url, json=payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
         self.assertEqual('smart', obj['list_type'])
@@ -458,7 +455,7 @@ class TestAPIWordlist(unittest.TestCase):
             ]
         }
 
-        r = self.client.put(self.update_url, json=payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(400, r.status_code)
 
     # get with bullshit wordlist id
@@ -479,7 +476,7 @@ class TestAPIWordlist(unittest.TestCase):
             ]
         }
 
-        r = self.client.put(self.update_url,
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id),
                             json=update_payload)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
@@ -491,7 +488,7 @@ class TestAPIWordlist(unittest.TestCase):
             'sqlcode': 'select id word_id from word where id = 555'
         }
 
-        r = self.client.put(self.update_url, json=payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
         self.assertEqual('smart', obj['list_type'])
@@ -500,7 +497,7 @@ class TestAPIWordlist(unittest.TestCase):
             'sqlcode': None
         }
 
-        r = self.client.put(self.update_url, json=payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
         self.assertEqual('empty', obj['list_type'])
@@ -518,7 +515,7 @@ class TestAPIWordlist(unittest.TestCase):
             ]
         }
 
-        r = self.client.put(self.update_url, json=payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -536,7 +533,7 @@ class TestAPIWordlist(unittest.TestCase):
         r = self.client.put(url, json=payload)
         self.assertEqual(200, r.status_code)
 
-        r = self.client.get(self.wordlist_get_url)
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
         obj = json.loads(r.data)
 
         self.assertEqual('empty', obj['list_type'])
@@ -548,7 +545,7 @@ class TestAPIWordlist(unittest.TestCase):
             'sqlcode': 'select id word_id from word where id = 555'
         }
 
-        r = self.client.put(self.update_url, json=payload)
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
@@ -561,6 +558,15 @@ class TestAPIWordlist(unittest.TestCase):
         })
 
         self.assertNotEqual(200, r.status_code)
+
+    def test_update_with_word_ids_and_sqlcode(self):
+        # the mutual exclusivity of word_ids and sqlcode is enforced in the json schema.
+        payload = {
+            'word_ids': [self.word1_id, self.word2_id],
+            'sqlcode': 'select id word_id from word where id = %s' % self.word1_id
+        }
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
+        self.assertEqual(400, r.status_code)
 
 
 class TestAPIWordlistGetWordIDs(unittest.TestCase):
