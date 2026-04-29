@@ -13,7 +13,7 @@ and attrvalue like '% %'
 separable_prefix as (
 -- this will give the word_ids for the verb, the separable prefix, and the root, subject to the following conditions:
 --
--- 1.  the second person singular for the verb is present
+-- 1.  the third person singular for the verb is present
 -- 2.  the SPS shows that there is a separable prefix
 -- 3.  the prefix exists in the database
 -- 4.  the root exists in the database
