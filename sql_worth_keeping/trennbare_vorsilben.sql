@@ -7,7 +7,7 @@ select
 SUBSTRING_INDEX(attrvalue, ' ', -1) prefix, word_id, word,
     substring(word, char_length(attrvalue) - instr(attrvalue, ' ') + 1) root
 from mashup_v
-where attrkey = 'second_person_singular'
+where attrkey = 'third_person_singular'
 and attrvalue like '% %'
 ),
 separable_prefix as (

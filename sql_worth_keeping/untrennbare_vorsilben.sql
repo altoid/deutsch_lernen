@@ -13,7 +13,7 @@ with inseparable_prefix as
     from mashup_v w1
     inner join mashup_v w2
     on w1.pos_id = 2 and w2.pos_id = 2
-    and w1.attrkey = 'second_person_singular' and w2.attrkey = 'second_person_singular'
+    and w1.attrkey = 'third_person_singular' and w2.attrkey = 'third_person_singular'
     and w1.attrvalue not like '% %'  -- w1 can't have separable prefix.
     and char_length(w1.word) > char_length(w2.word)
     and substring(w1.word, -char_length(w2.word)) = w2.word
