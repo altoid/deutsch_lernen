@@ -17,7 +17,7 @@ separable_prefix as (
 -- 2.  the SPS shows that there is a separable prefix
 -- 3.  the prefix exists in the database
 -- 4.  the root exists in the database
--- 
+--
 select distinct
 extracted_prefix.word_id, m1.word_id prefix_word_id, m2.word_id root_word_id
 from extracted_prefix
@@ -33,17 +33,3 @@ and m2.pos_name = 'verb'
 )
 select * from separable_prefix
 ;
-
--- for every verb, gimme:
---
---     its word id
---     the word id of its separable prefix if it has one
---     the word_id of its root if it has a separable prefix
---
---     entgehen     ent      gehen
---     gehen        NULL     NULL
---     hinausgehen  hinaus   gehen       -- prefix is hinaus, not hin, and root is gehen, not ausgehen
---     ausgehen     aus      gehen
---     abgehen      ab       gehen
---
---     we'll rely on second person singular conjugations to provide the separable prefixes.
