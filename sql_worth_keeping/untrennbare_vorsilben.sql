@@ -7,7 +7,7 @@ with inseparable_prefix as
 (
     select distinct
         w1.word_id,
-        w2.word_id root_word_id,
+        w2.word_id grundverb_word_id,
         w3.word_id prefix_word_id
     
     from mashup_v w1
