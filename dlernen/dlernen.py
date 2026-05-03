@@ -1,7 +1,6 @@
 from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app
 import requests
 import json
-from dlernen import dlernen_json_schema as js
 from dlernen.tagstate import TagState
 
 from pprint import pprint
@@ -550,6 +549,7 @@ def edit_word_form(word):
     form_data = {}
 
     wordlist_obj = None
+    member_word_ids = set()
     if wordlist_id:
         url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
         r = requests.get(url)
@@ -558,12 +558,17 @@ def edit_word_form(word):
                                    message=r.text,
                                    status_code=r.status_code)
         wordlist_obj = r.json()
+        member_word_ids = {x['word_id'] for x in wordlist_obj['words']}
 
     for p in pos_structure:
-        if wordlist_obj and wordlist_obj['list_type'] == 'smart' and not p['word_id']:
+        if wordlist_obj and wordlist_obj['list_type'] == 'smart':
             # if this is a smart list, do not even render any part of speech for a word that is
             # not in it.
-            continue
+            if not p['word_id']:
+                continue
+
+            if p['word_id'] not in member_word_ids:
+                continue
 
         form_data[p['pos_name']] = []
         for a in p['attributes']:
