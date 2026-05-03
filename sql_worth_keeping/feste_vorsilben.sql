@@ -3,13 +3,14 @@ use deutsch;
 -- to identify inseparable prefixes, do an auto-join of the word table to itself, on all the verbs.
 -- the join condition is that len(A) > len(B) and B is a suffix of A.
 
+create or replace view inseparable_prefix_v as
 with inseparable_prefix as
 (
     select distinct
-        w1.word_id,
-        w2.word_id grundverb_word_id,
-        w3.word_id prefix_word_id
-    
+        w1.word_id, w1.word,
+        w2.word_id grundverb_word_id, w2.word grundverb,
+        w3.word_id prefix_word_id, w3.word prefix
+
     from mashup_v w1
     inner join mashup_v w2
     on w1.pos_id = 2 and w2.pos_id = 2
@@ -22,5 +23,10 @@ with inseparable_prefix as
     on substring(w1.word, 1, char_length(w1.word) - char_length(w2.word)) = w3.word
     and w3.pos_id = 10  -- inseparable prefix
 )
-select * from inseparable_prefix
+select
+    word_id, word,
+    prefix_word_id, prefix,
+    grundverb_word_id, grundverb
+
+from inseparable_prefix
 ;
