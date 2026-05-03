@@ -1,6 +1,7 @@
 use deutsch;
 
 -- gimme all the separable prefixes
+create or replace view separable_prefix_v as
 with extracted_prefix as
 (
 select
@@ -19,7 +20,9 @@ separable_prefix as (
 -- 4.  the grundverb exists in the database
 --
 select distinct
-extracted_prefix.word_id, m1.word_id prefix_word_id, m2.word_id grundverb_word_id
+extracted_prefix.word_id, extracted_prefix.word,
+m1.word_id prefix_word_id, m1.word prefix,
+m2.word_id grundverb_word_id, m2.word grundverb
 from extracted_prefix
 
 inner join mashup_v m1
@@ -31,5 +34,13 @@ on m2.word = extracted_prefix.grundverb
 where m1.pos_name = 'separable prefix'
 and m2.pos_name = 'verb'
 )
-select * from separable_prefix
+
+select
+    word_id, word,
+    prefix_word_id, prefix,
+    grundverb_word_id, grundverb
+
+from separable_prefix
+
+
 ;
