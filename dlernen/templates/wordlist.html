@@ -83,7 +83,7 @@ Wordlist:  {{ wordlist.name }}
                                         </a>
                                         {% endif %}
                                     </td>
-                                    <td>{{ r.definition if r.definition else '(no definition)' }}</td>
+                                    <td>{{ r.definition if r.definition else '--' }}</td>
                                 </tr>
                                 {% endfor %}
                             </table>

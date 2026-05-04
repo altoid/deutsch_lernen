@@ -37,10 +37,12 @@
         <input type="text" id="sidebar_search" name="lookup"/>
     </form>
 
-    {% if request.endpoint in [
+    {% if (request.endpoint in [
         'dlernen.lookup_word',
-        'dlernen.wordlists', 'dlernen.home', 'dlernen.wordlist', 'dlernen.list_editor'
-    ] and tag_state and tag_state.list_type != 'smart' %}
+        'dlernen.home', 'dlernen.wordlist', 'dlernen.list_editor'
+    ] and tag_state and tag_state.list_type != 'smart')
+    or request.endpoint == 'dlernen.wordlists'
+    %}
     <div>
         <form action="{{ url_for('dlernen.add_word_submit') }}" method="post">
             <label for="add_word">Wort hinzufügen</label>
