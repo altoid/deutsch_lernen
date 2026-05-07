@@ -22,23 +22,23 @@ separable_prefix as (
 select distinct
 extracted_prefix.word_id, extracted_prefix.word,
 m1.word_id prefix_word_id, m1.word prefix,
+extracted_prefix.prefix extracted_prefix,
 m2.word_id grundverb_word_id, m2.word grundverb
 from extracted_prefix
 
-inner join mashup_v m1
-on m1.word = extracted_prefix.prefix
-
 inner join mashup_v m2
-on m2.word = extracted_prefix.grundverb
+on m2.word = extracted_prefix.grundverb and m2.pos_name = 'verb'
 
-where m1.pos_name = 'separable prefix'
-and m2.pos_name = 'verb'
+left join mashup_v m1
+on m1.word = extracted_prefix.prefix and m1.pos_name = 'separable prefix'
+
 )
 
 select
-    word_id, word,
-    prefix_word_id, prefix,
-    grundverb_word_id, grundverb
+    word, word_id,                -- verb with prefix and its id.
+    prefix, prefix_word_id,       -- prefix and its id.  might be null; prefix doesn't have to be in the dictionary.
+    extracted_prefix,             -- prefix as extracted from the word.  this is derived.  with math.
+    grundverb, grundverb_word_id  -- grundverb and its id.
 
 from separable_prefix
 
