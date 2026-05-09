@@ -24,7 +24,7 @@ Manage Relation
             <tr>
                 <td>{{ w['article'] }}</td>
                 <td>{{ w['word'] }}</td>
-                <td class="relation_definition">{{ w['definition'] }}</td>
+                <td class="relation_definition">{{ w['definition'] if w['definition'] else '--' }}</td>
             </tr>
             {% endfor %}
         </table>
