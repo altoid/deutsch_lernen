@@ -285,10 +285,37 @@ class TestAPIWordEndToEnd(unittest.TestCase):
     def test_nothing(self):
         pass
 
-    def test_garbage_payload(self):
-        payload = "this here is some bullshit"
+    # make sure the attributes are retrieved in sorted order.
+    def test_attributes_are_sorted(self):
+        r = self.client.get(url_for('api_pos.get_pos'))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        # construct a fake verb, setting values for all the attributes.  we derive the attributes from the POS
+        # structure for verbs.
+
+        verb_structure = list(filter(lambda x: x['pos_name'] == 'verb', obj))[0]
+        attributes = [
+            {
+                'attribute_id': x['attribute_id'],
+                'attrvalue': ''.join(random.choices(string.ascii_lowercase, k=10)),
+            }
+            for x in verb_structure['attributes']
+        ]
+        payload = {
+            'word': '%s_%s' % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=10))),
+            "pos_id": verb_structure['pos_id'],
+            ATTRIBUTES: attributes
+        }
+
         r = self.client.post(url_for('api_word.add_word'), json=payload)
-        self.assertEqual(400, r.status_code)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+
+        defined_sort_order = sorted([x['sort_order'] for x in verb_structure['attributes']])
+        retrieved_sort_order = [x['sort_order'] for x in obj['attributes']]
+
+        self.assertCountEqual(defined_sort_order, retrieved_sort_order)
 
     # insert a word with 'ss' but look it up with 'ß'.  should succeed.
     def test_add_ss_lookup_with_eszet(self):
@@ -791,11 +818,11 @@ class TestAPIWordPOST(unittest.TestCase):
         r = self.client.post(url_for('api_word.add_word'), json=payload)
         self.assertNotEqual(r.status_code, 201)
 
-    # payload not json
-    def test_payload_not_json(self):
-        payload = "this is some bullshit right here"
+    # payload is bullshit
+    def test_garbage_payload(self):
+        payload = "this here is some bullshit"
         r = self.client.post(url_for('api_word.add_word'), json=payload)
-        self.assertNotEqual(r.status_code, 201)
+        self.assertEqual(400, r.status_code)
 
     # attr ids are bullshit
     def test_bullshit_attribute_ids(self):

@@ -1,6 +1,18 @@
 TODO - really need a better way to deal with reflexive verbs
-    - separate part of speech
+    - separate part of speech - no, would have to deal with redundant attributes
     - additional definition field
+
+TODO - analysis of separable and inseparable prefixes
+    - separate parts of speech for each
+    - dictionary entries for each prefix
+    - wordlists/relations where words have the same prefix
+    - wordlists/relations where a root is shown with all its prefixes
+    - query to show all the separable prefixes in the dictionary - some are weird.
+      (can't make a smart list, existing prefixes don't have word ids)
+    - new view - verbs only - word id, word_id of prefix possibly null, word_id of grundverb (possibly null)
+      - verb must have third_person_singular
+      - root and prefix must be preset
+      - ex:  entgehen (insep), gehen (grundverb), abgehen (gehst ab)
 
 TODO - import word lists
     CSV:  word, pos, definition
@@ -49,12 +61,8 @@ TODO - add interjections as a new part of speech
 
 TODO - home page should be placeholder (no forms) or drop it altogether.
 
-FIXME - need a unit test for word results that verifies that attributes come back in sorted order.
-
-TODO - review the test classes and make sure that there is at least one class for each test module
-    where the setup method doesn't call code we need to test.
-
-
+FIXME - relation editor page should show all the attributes for the words in the relation, and have hyperlinks
+    to their lookup pages.
 -----------
 
 dlernen.edit_word_form takes a redirect_to argument
@@ -104,7 +112,8 @@ best practices:
   that payload.  there must be a unit test for that endpoint that passes an invalid payload to it.
   the unit test must ensure that the reponse code is 400 for that case.
 - PAYLOAD schemas should have additionalProperties set to False, so that testing payload validation is easier.
-
+- in a unit test module for an api, there must be at least one class where the setup method
+  doesn't call code from the API we are testing. ==> VERIFIED THAT ALL TEST MODULES COMPLY 4/27/26
 -----------
 
 tag api changes:
