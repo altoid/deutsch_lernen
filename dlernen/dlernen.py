@@ -768,6 +768,20 @@ def update_dict():
                                    message=message,
                                    status_code=r.status_code)
 
+    # if there is a relation id, add all the word ids to the relation.
+    
+    if relation_id and word_ids:
+        payload = {
+            'word_ids': word_ids
+        }
+        r = requests.put(url_for('api_relation.update_relation', relation_id=relation_id, _external=True),
+                         json=payload)
+        if not r:
+            message = "could not update relation %s:  %s [%s]" % (relation_id, r.status_code, r.text)
+            return render_template("error.html",
+                                   message=message,
+                                   status_code=r.status_code)
+
     # now we deal with the tags.
 
     if wordlist_id:
@@ -819,17 +833,11 @@ def update_dict():
         tag_state_object = TagState.deserialize(request.form.get('serialized_tag_state'))
         tag_state_object.update()
 
-        if relation_id:
-            target = url_for(redirect_to,
-                             word=word,
-                             relation_id=relation_id,
-                             serialized_tag_state=tag_state_object.serialize(),
-                             wordlist_id=wordlist_id)
-        else:
-            target = url_for(redirect_to,
-                             word=word,
-                             serialized_tag_state=tag_state_object.serialize(),
-                             wordlist_id=wordlist_id)
+        target = url_for(redirect_to,
+                         word=word,
+                         relation_id=relation_id,
+                         serialized_tag_state=tag_state_object.serialize(),
+                         wordlist_id=wordlist_id)
     else:
         target = url_for(redirect_to, word=word)
 
