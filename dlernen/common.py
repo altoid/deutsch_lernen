@@ -49,7 +49,7 @@ def get_displayable_words(cursor, word_ids):
             m1.word word,
             m1.pos_name pos_name,
             m0.word_id,
-            m1.attrvalue definition,
+            ifnull(m1.attrvalue, '') definition,
             ifnull(m2.attrvalue, '') article
         from  mashup_v m0
         left  join mashup_v m1
