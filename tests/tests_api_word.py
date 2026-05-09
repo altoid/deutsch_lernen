@@ -311,6 +311,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         r = self.client.post(url_for('api_word.add_word'), json=payload)
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
+        self.addCleanup(cleanupWordID, self.client, obj['word_id'])
 
         defined_sort_order = sorted([x['sort_order'] for x in verb_structure['attributes']])
         retrieved_sort_order = [x['sort_order'] for x in obj['attributes']]
