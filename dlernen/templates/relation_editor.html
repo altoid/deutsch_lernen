@@ -22,9 +22,19 @@ Manage Relation
         <table>
             {% for w in relation.words %}
             <tr>
-                <td>{{ w['article'] }}</td>
-                <td>{{ w['word'] }}</td>
-                <td class="relation_definition">{{ w['definition'] if w['definition'] else '--' }}</td>
+                <td>{{ w.article }}</td>
+                <td>
+                    {% if serialized_tag_state %}
+                    <a href="{{ url_for('dlernen.lookup_by_id', word_id=w.word_id, serialized_tag_state=serialized_tag_state) }}">
+                        {{ w.word }}
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('dlernen.lookup_by_id', word_id=w.word_id) }}">
+                        {{ w.word }}
+                    </a>
+                    {% endif %}
+                </td>
+                <td class="relation_definition">{{ w.definition if w.definition else '--' }}</td>
             </tr>
             {% endfor %}
         </table>
@@ -52,11 +62,11 @@ Manage Relation
                 {% for w in relation.words %}
                 <tr>
                     <td>
-                        <input type="checkbox" name="removing" value="{{ w['word_id'] }}">
+                        <input type="checkbox" name="removing" value="{{ w.word_id }}">
                     </td>
-                    <td>{{ w['article'] }}</td>
-                    <td>{{ w['word'] }}</td>
-                    <td>{{ w['pos_name'] }}</td>
+                    <td>{{ w.article }}</td>
+                    <td>{{ w.word }}</td>
+                    <td>{{ w.pos_name }}</td>
                 </tr>
                 {% endfor %}
             </table>

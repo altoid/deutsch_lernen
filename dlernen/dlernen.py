@@ -752,10 +752,23 @@ def update_dict():
         obj = r.json()
         word_pos_to_word_id[(word, pos_id)] = obj['word_id']
 
+    word_ids = list(word_pos_to_word_id.values())
+
+    # if there aren't any word ids, then the form was submitted with no fields filled in and there is no part of
+    # speech with this word.  redirect back to the form.
+
+    if not word_ids:
+        flash("""word "%s" not created""" % word)
+        return redirect(url_for('dlernen.edit_word_form',
+                                word=word,
+                                wordlist_id=wordlist_id,
+                                serialized_tag_state=request.form.get('serialized_tag_state'),
+                                redirect_to=redirect_to,
+                                _external=True))
+
     # if there is a wordlist_id, add all the word ids to the wordlist.  just add all of them; adding a word id that
     # is already there does nothing.
 
-    word_ids = list(word_pos_to_word_id.values())
     if wordlist_id and word_ids:
         payload = {
             'word_ids': word_ids
@@ -769,7 +782,7 @@ def update_dict():
                                    status_code=r.status_code)
 
     # if there is a relation id, add all the word ids to the relation.
-    
+
     if relation_id and word_ids:
         payload = {
             'word_ids': word_ids

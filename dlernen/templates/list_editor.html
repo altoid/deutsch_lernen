@@ -30,15 +30,15 @@ Manage List:  {{ wordlist.name }}
             {% for w in wordlist.words %}
             <tr>
                 <td>
-                    <input type="checkbox" name="removing" value="{{ w['word_id'] }}">
+                    <input type="checkbox" name="removing" value="{{ w.word_id }}">
                 </td>
-                <td>{{ w['article'] }}</td>
-                <td>{{ w['word'] }}</td>
+                <td>{{ w.article }}</td>
+                <td>{{ w.word }}</td>
                 <td>
-                    {% for t in w['tags'] %}
+                    {% for t in w.tags %}
                     <input type="checkbox"
-                           name="untag-{{ w['word_id'] }}-{{ t }}"
-                           id="untag-{{ w['word_id'] }}-{{ t }}"
+                           name="untag-{{ w.word_id }}-{{ t }}"
+                           id="untag-{{ w.word_id }}-{{ t }}"
                            value="{{ t }}">
                     {{ t }}
                     {% endfor %}
@@ -46,10 +46,10 @@ Manage List:  {{ wordlist.name }}
                 <td>
                     <input class="list_editor_text"
                            type="text"
-                           name="tag-{{ w['word_id'] }}"
+                           name="tag-{{ w.word_id }}"
                            placeholder="space-separated list of tags"/>
                 </td>
-                <td class="wortart">{{ w['pos_name'] }}</td>
+                <td class="wortart">{{ w.pos_name }}</td>
             </tr>
             {% endfor %}
         </table>
