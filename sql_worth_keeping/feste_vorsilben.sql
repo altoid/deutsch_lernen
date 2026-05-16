@@ -22,11 +22,18 @@ with inseparable_prefix as
     inner join mashup_v w3
     on substring(w1.word, 1, char_length(w1.word) - char_length(w2.word)) = w3.word
     and w3.pos_id = 10  -- inseparable prefix
+),
+pos_info as (
+    select id pos_id, name pos_name
+    from pos
+    where name = 'Inseparable Prefix'
 )
 select
-    word_id, word,
-    prefix_word_id, prefix,
-    grundverb_word_id, grundverb
+    word, word_id,
+    NULL as extracted_prefix,
+    prefix, prefix_word_id,
+    grundverb, grundverb_word_id,
+    pos_name, pos_id
 
-from inseparable_prefix
+from inseparable_prefix, pos_info
 ;

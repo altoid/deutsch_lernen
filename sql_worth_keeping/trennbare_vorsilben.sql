@@ -1,7 +1,7 @@
 use deutsch;
 
 -- gimme all the separable prefixes
-create or replace view separable_prefix_v as
+-- create or replace view separable_prefix_v as
 with extracted_prefix as
 (
 select
@@ -31,16 +31,18 @@ on m2.word = extracted_prefix.grundverb and m2.pos_name = 'verb'
 
 left join mashup_v m1
 on m1.word = extracted_prefix.prefix and m1.pos_name = 'separable prefix'
-
+),
+pos_info as (
+    select id pos_id, name pos_name
+    from pos
+    where name = 'Separable Prefix'
 )
-
 select
     word, word_id,                -- verb with prefix and its id.
-    prefix, prefix_word_id,       -- prefix and its id.  might be null; prefix doesn't have to be in the dictionary.
     extracted_prefix,             -- prefix as extracted from the word.  this is derived.  with math.
-    grundverb, grundverb_word_id  -- grundverb and its id.
+    prefix, prefix_word_id,       -- prefix and its id.  might be null; prefix doesn't have to be in the dictionary.
+    grundverb, grundverb_word_id, -- grundverb and its id.
+    pos_name, pos_id
 
-from separable_prefix
-
-
+from separable_prefix, pos_info
 ;
