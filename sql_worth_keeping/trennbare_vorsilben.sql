@@ -1,7 +1,7 @@
 use deutsch;
 
 -- gimme all the separable prefixes
--- create or replace view separable_prefix_v as
+create or replace view separable_prefix_v as
 with extracted_prefix as
 (
 select
