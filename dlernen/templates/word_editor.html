@@ -35,6 +35,7 @@ for the tags fields, the names are:
     {% include 'header.html' %}
     <h1>{{ word }}</h1>
     <form action="{{ url_for('dlernen.update_dict') }}" method="post">
+        <input type="submit" value="Submit"/>
         <input type="hidden" name="redirect_to" value="{{ redirect_to }}">
         {% if serialized_tag_state %}
         <input type="hidden" name="wordlist_id" value="{{ tag_state.wordlist_id }}">
