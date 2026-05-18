@@ -8,6 +8,17 @@ from contextlib import closing
 
 bp = Blueprint('api_pos', __name__, url_prefix='/api/pos')
 
+NOUN_POS_NAME = "Noun"
+ADJECTIVE_POS_NAME = "Adjective"
+ADVERB_POS_NAME = "Adverb"
+VERB_POS_NAME = "Verb"
+PREPOSITION_POS_NAME = "Preposition"
+PLACE_POS_NAME = "Place"
+OTHER_POS_NAME = "other"
+CONJUNCTION_POS_NAME = "Conjunction"
+SEPARABLE_PREFIX_POS_NAME = "Separable Prefix"
+INSEPARABLE_PREFIX_POS_NAME = "Inseparable Prefix"
+
 
 @js_validate_result(POS_STRUCTURE_RESPONSE_SCHEMA)
 def __get_pos(sql, args):

@@ -8,6 +8,7 @@ from dlernen.dlernen_json_schema import get_validator, ATTRIBUTES, \
     WORDLISTS_DELETE_PAYLOAD_SCHEMA, \
     WORDLIST_TAG_PAYLOAD_SCHEMA, \
     POS_STRUCTURE_RESPONSE_SCHEMA, \
+    PREFIX_VERB_RESPONSE_SCHEMA, \
     QUIZ_ANSWER_PAYLOAD_SCHEMA, \
     QUIZ_REPORT_RESPONSE_SCHEMA, \
     QUIZ_RESPONSE_SCHEMA, \
@@ -33,6 +34,118 @@ class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
     ]
 
     invalid_docs = [
+    ]
+
+    #############################################################
+    #
+    # the jsonschema.validate method needs a schema against which it
+    # can validate the data.  if you don't specify it via cls=
+    # then it will figure it out from the $schema in the schema object.
+    # more here:
+    #
+    # https://python-jsonschema.readthedocs.io/en/stable/api/#jsonschema.validate
+    #
+    #############################################################
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                get_validator(self.schema).validate(jdoc)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    get_validator(self.schema).validate(jdoc)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
+class Test_PREFIX_VERB_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = PREFIX_VERB_RESPONSE_SCHEMA
+
+    valid_docs = [
+        {
+            "grundverb_word_id": 1111,
+            "word_id": 1111,
+            "prefix": "pre",
+            "prefix_word_id": 1111,
+            "prefix_pos_name": "aoeu"
+        },
+        {
+            "grundverb_word_id": 2222,
+            "word_id": 2222,
+            "prefix": "pre",
+            "prefix_word_id": None,
+            "prefix_pos_name": "aoeu"
+        },
+    ]
+
+    invalid_docs = [
+        {
+            # "grundverb_word_id": 1111,
+            "word_id": 11112,
+            "prefix": "pre",
+            "prefix_word_id": 11112,
+            "prefix_pos_name": "aoeu"
+        },
+        {
+            "grundverb_word_id": 11113,
+            # "word_id": 1111,
+            "prefix": "pre",
+            "prefix_word_id": 11113,
+            "prefix_pos_name": "aoeu"
+        },
+        {
+            "grundverb_word_id": 11114,
+            "word_id": 11114,
+            # "prefix": "pre",
+            "prefix_word_id": 11114,
+            "prefix_pos_name": "aoeu"
+        },
+        {
+            "grundverb_word_id": 11115,
+            "word_id": 11115,
+            "prefix": "pre",
+            # "prefix_word_id": 1111,
+            "prefix_pos_name": "aoeu"
+        },
+        {
+            "grundverb_word_id": 11116,
+            "word_id": 11116,
+            "prefix": "pre",
+            "prefix_word_id": 11116,
+            # "prefix_pos_name": "aoeu"
+        },
+        {
+            "grundverb_word_id": 11117,
+            "word_id": 11117,
+            "prefix": None,  # can't be none
+            "prefix_word_id": 11117,
+            "prefix_pos_name": "aoeu"
+        },
+        {
+            "grundverb_word_id": 11118,
+            "word_id": 11118,
+            "prefix": "",  # can't be empty
+            "prefix_word_id": 11118,
+            "prefix_pos_name": "aoeu"
+        },
+        {
+            "grundverb_word_id": 11119,
+            "word_id": 11119,
+            "prefix": "uuuu",
+            "prefix_word_id": 11119,
+            "prefix_pos_name": None  # can't be none
+        },
+        {
+            "grundverb_word_id": 11110,
+            "word_id": 11110,
+            "prefix": "uuuu",
+            "prefix_word_id": 11110,
+            "prefix_pos_name": ""  # can't be empty
+        },
     ]
 
     #############################################################

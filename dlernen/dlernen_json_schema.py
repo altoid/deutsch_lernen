@@ -488,6 +488,46 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
     }
 }
 
+PREFIX_VERB_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/prefix_verb_response.json",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Prefix Verb Response",
+    "description": """
+    id info for a verb that has a prefix
+    """,
+    "type": "object",
+    "required": [
+        "grundverb_word_id",
+        "word_id",
+        "prefix_word_id", # required but might be null
+        "prefix",  # required and cannot be null
+        "prefix_pos_name"
+    ],
+    "additionalProperties": False,
+    "properties": {
+        "grundverb_word_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "word_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "prefix_word_id": {
+            "type": ["integer", "null"],
+            "minimum": 1
+        },
+        "prefix": {
+            "type": "string",
+            "pattern": WORD_PATTERN
+        },
+        "prefix_pos_name": {
+            "type": "string",
+            "pattern": ID_PATTERN
+        }
+    }
+}
+
 QUIZ_ANSWER_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/quiz_answer_payload.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
@@ -939,7 +979,8 @@ ALL_SCHEMAS = [
     ARRAY_WORD_RESPONSE_SCHEMA,
     WORD_WORDLIST_METADATA_MAP_SCHEMA,
     ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA,
-    WORDLIST_PAYLOAD_SCHEMA
+    WORDLIST_PAYLOAD_SCHEMA,
+    PREFIX_VERB_RESPONSE_SCHEMA
 ]
 
 # build the registry ONCE at module level
