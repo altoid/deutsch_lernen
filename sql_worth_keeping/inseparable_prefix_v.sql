@@ -14,6 +14,7 @@ with inseparable_prefix as
     from mashup_v w1
     inner join mashup_v w2
     on w1.pos_id = 2 and w2.pos_id = 2
+    -- third_person_singular cannot show that there is a separable prefix.
     and w1.attrkey = 'third_person_singular' and w2.attrkey = 'third_person_singular'
     and w1.attrvalue not like '% %'  -- w1 can't have separable prefix.
     and char_length(w1.word) > char_length(w2.word)
@@ -30,7 +31,7 @@ pos_info as (
 )
 select
     word, word_id,
-    NULL as extracted_prefix,
+    prefix as extracted_prefix,
     prefix, prefix_word_id,
     grundverb, grundverb_word_id,
     pos_name, pos_id

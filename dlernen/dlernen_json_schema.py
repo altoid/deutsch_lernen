@@ -528,6 +528,17 @@ PREFIX_VERB_RESPONSE_SCHEMA = {
     }
 }
 
+ARRAY_PREFIX_VERB_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/array_prefix_verb_response.json",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Array of Prefix Verb Response",
+    "description": "array of PREFIX_VERB_RESPONSE_SCHEMA",
+    "type": "array",
+    "items": {
+        "$ref": PREFIX_VERB_RESPONSE_SCHEMA["$id"]
+    }
+}
+
 QUIZ_ANSWER_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/quiz_answer_payload.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
@@ -980,7 +991,8 @@ ALL_SCHEMAS = [
     WORD_WORDLIST_METADATA_MAP_SCHEMA,
     ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA,
     WORDLIST_PAYLOAD_SCHEMA,
-    PREFIX_VERB_RESPONSE_SCHEMA
+    PREFIX_VERB_RESPONSE_SCHEMA,
+    ARRAY_PREFIX_VERB_RESPONSE_SCHEMA
 ]
 
 # build the registry ONCE at module level

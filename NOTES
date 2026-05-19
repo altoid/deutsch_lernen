@@ -5,6 +5,7 @@ TODO - really need a better way to deal with reflexive verbs
 TODO - analysis of separable and inseparable prefixes
     - separate parts of speech for each
     - dictionary entries for each prefix
+    - API calls to fetch by prefix and grundverb - separate calls for sep/insep
     - wordlists/relations where words have the same prefix
     - wordlists/relations where a root is shown with all its prefixes
     - query to show all the separable prefixes in the dictionary - some are weird.
@@ -15,7 +16,7 @@ TODO - analysis of separable and inseparable prefixes
       - ex:  entgehen (insep), gehen (grundverb), abgehen (gehst ab)
 
 TODO - import word lists
-    CSV:  word, pos, definition
+    CSV:  word, pos, definition, article if noun
 
 TODO - Nouns should be three separate parts of speech, one for each gender
     would have to update wordlists and quiz data.
@@ -36,9 +37,6 @@ TODO - parse definitions, and for each word in the definition that is in the dic
 TODO - for parts of speech and their attributes, add a display name column distinct from the key.  quiz table
     already does this.
 
-TODO - dump out a smart wordlist as an ordinary word list.  this would effectively be a snapshot
-    of the smart list.
-
 TODO - for definitions quiz app, can we just rewrite the whole thing as a class?
 
 TODO - in quiz app, add options to k, l, and tags subcommands
@@ -52,8 +50,6 @@ TODO - in quiz app, imperfect query should prefetch all candidate words, not use
 
 FIXME - in the sidebar, show the name/id of the prevailing list
 
-FIXME - attempting to add a word with no POS info (via editor page) should flash a message
-
 FIXME - overhaul json schema
     crawl schema to make sure $ref links are not broken.
 
@@ -63,6 +59,8 @@ TODO - home page should be placeholder (no forms) or drop it altogether.
 
 FIXME - relation editor page should show all the attributes for the words in the relation, and have hyperlinks
     to their lookup pages.
+
+FIXME - in wordlist page, better indication that the list is a smart list.
 -----------
 
 dlernen.edit_word_form takes a redirect_to argument

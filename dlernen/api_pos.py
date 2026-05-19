@@ -8,16 +8,16 @@ from contextlib import closing
 
 bp = Blueprint('api_pos', __name__, url_prefix='/api/pos')
 
-NOUN_POS_NAME = "Noun"
-ADJECTIVE_POS_NAME = "Adjective"
-ADVERB_POS_NAME = "Adverb"
-VERB_POS_NAME = "Verb"
-PREPOSITION_POS_NAME = "Preposition"
-PLACE_POS_NAME = "Place"
+NOUN_POS_NAME = "noun"
+ADJECTIVE_POS_NAME = "adjective"
+ADVERB_POS_NAME = "adverb"
+VERB_POS_NAME = "verb"
+PREPOSITION_POS_NAME = "preposition"
+PLACE_POS_NAME = "place"
 OTHER_POS_NAME = "other"
-CONJUNCTION_POS_NAME = "Conjunction"
-SEPARABLE_PREFIX_POS_NAME = "Separable Prefix"
-INSEPARABLE_PREFIX_POS_NAME = "Inseparable Prefix"
+CONJUNCTION_POS_NAME = "conjunction"
+SEPARABLE_PREFIX_POS_NAME = "separable prefix"
+INSEPARABLE_PREFIX_POS_NAME = "inseparable prefix"
 
 
 @js_validate_result(POS_STRUCTURE_RESPONSE_SCHEMA)
