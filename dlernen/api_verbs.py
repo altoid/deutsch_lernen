@@ -49,8 +49,8 @@ def get_verbs_by_prefix(prefix):
 
 
 @js_validate_result(ARRAY_PREFIX_VERB_RESPONSE_SCHEMA)
-@bp.route('/grundverb_word_id/<int:grundverb_word_id>', methods=['GET'])
-def get_verbs_by_grundverb_word_id(grundverb_word_id):
+@bp.route('/grundverb/<string:grundverb>', methods=['GET'])
+def get_verbs_by_grundverb(grundverb):
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         sql = """
         select
@@ -60,12 +60,10 @@ def get_verbs_by_grundverb_word_id(grundverb_word_id):
             pos_name prefix_pos_name,
             prefix
         from verb_prefix_v
-        where grundverb_word_id = %(grundverb_word_id)s
-        """ % {
-            'grundverb_word_id': grundverb_word_id
-        }
+        where grundverb = %s
+        """
 
-        cursor.execute(sql)
+        cursor.execute(sql, (grundverb,))
         rows = cursor.fetchall()
 
         result = [

@@ -97,8 +97,8 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
         grundverb_word_id = self.add_verb(grundverb)
         word_id = self.add_verb(grundverb, prefix)
 
-        r = self.client.get(url_for('api_verbs.get_verbs_by_grundverb_word_id',
-                                    grundverb_word_id=grundverb_word_id))
+        r = self.client.get(url_for('api_verbs.get_verbs_by_grundverb',
+                                    grundverb=grundverb))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
         s = obj[0]
@@ -143,8 +143,8 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
         grundverb_word_id = self.add_verb(grundverb)
         word_id = self.add_verb(grundverb, prefix)
 
-        r = self.client.get(url_for('api_verbs.get_verbs_by_grundverb_word_id',
-                                    grundverb_word_id=grundverb_word_id))
+        r = self.client.get(url_for('api_verbs.get_verbs_by_grundverb',
+                                    grundverb=grundverb))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
         s = obj[0]
@@ -190,8 +190,8 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
         prefix_word_id = self.add_prefix(prefix)
         grundverb_word_id = self.add_verb(grundverb)
 
-        r = self.client.get(url_for('api_verbs.get_verbs_by_grundverb_word_id',
-                                    grundverb_word_id=grundverb_word_id))
+        r = self.client.get(url_for('api_verbs.get_verbs_by_grundverb',
+                                    grundverb=grundverb))
         self.assertEqual(404, r.status_code)
 
     def test3b(self):
@@ -285,8 +285,8 @@ class TestVerbsInseparablePrefixes(unittest.TestCase):
         grundverb_word_id = self.add_verb(grundverb)
         word_id = self.add_verb(grundverb, prefix)
 
-        r = self.client.get(url_for('api_verbs.get_verbs_by_grundverb_word_id',
-                                    grundverb_word_id=grundverb_word_id))
+        r = self.client.get(url_for('api_verbs.get_verbs_by_grundverb',
+                                    grundverb=grundverb))
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
         s = obj[0]
@@ -331,8 +331,8 @@ class TestVerbsInseparablePrefixes(unittest.TestCase):
         grundverb_word_id = self.add_verb(grundverb)
         word_id = self.add_verb(grundverb, prefix)
 
-        r = self.client.get(url_for('api_verbs.get_verbs_by_grundverb_word_id',
-                                    grundverb_word_id=grundverb_word_id))
+        r = self.client.get(url_for('api_verbs.get_verbs_by_grundverb',
+                                    grundverb=grundverb))
         self.assertEqual(404, r.status_code)
 
     def test2b(self):
@@ -356,8 +356,8 @@ class TestVerbsInseparablePrefixes(unittest.TestCase):
         prefix_word_id = self.add_prefix(prefix)
         grundverb_word_id = self.add_verb(grundverb)
 
-        r = self.client.get(url_for('api_verbs.get_verbs_by_grundverb_word_id',
-                                    grundverb_word_id=grundverb_word_id))
+        r = self.client.get(url_for('api_verbs.get_verbs_by_grundverb',
+                                    grundverb=grundverb))
         self.assertEqual(404, r.status_code)
 
     def test3b(self):
