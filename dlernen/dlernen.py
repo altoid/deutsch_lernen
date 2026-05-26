@@ -852,7 +852,9 @@ def update_dict():
                          serialized_tag_state=tag_state_object.serialize(),
                          wordlist_id=wordlist_id)
     else:
-        target = url_for(redirect_to, word=word)
+        target = url_for(redirect_to,
+                         word=word,
+                         relation_id=relation_id)
 
     return redirect(target)
 
