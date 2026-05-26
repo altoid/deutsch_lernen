@@ -6,6 +6,7 @@ import random
 import string
 from mysql.connector import connect
 from contextlib import closing
+from dlernen.api_pos import ADJECTIVE_POS_NAME
 from pprint import pprint
 
 
@@ -41,7 +42,7 @@ class TestCommon(unittest.TestCase):
 
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)

@@ -5,6 +5,8 @@ from dlernen import create_app
 from dlernen.dlernen_json_schema import ATTRIBUTES
 from flask import url_for
 import json
+from dlernen.api_pos import \
+    VERB_POS_NAME
 from pprint import pprint
 
 
@@ -74,7 +76,7 @@ class APIQuizGetWordToTest(unittest.TestCase):
         ]
         add_payload = {
             "word": self.word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids']['verb'],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][VERB_POS_NAME],
             ATTRIBUTES: attributes
         }
 
@@ -235,7 +237,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
         self.word_1 = ''.join(random.choices(string.ascii_lowercase, k=11))
         add_payload = {
             "word": self.word_1,
-            "pos_id": self.keyword_mappings['pos_names_to_ids']['verb'],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][VERB_POS_NAME],
             ATTRIBUTES: attributes
         }
 
@@ -247,7 +249,7 @@ class APIQuizGetWordToTestSingleWordlist(unittest.TestCase):
         self.word_2 = ''.join(random.choices(string.ascii_lowercase, k=11))
         add_payload = {
             "word": self.word_2,
-            "pos_id": self.keyword_mappings['pos_names_to_ids']['verb'],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][VERB_POS_NAME],
             ATTRIBUTES: attributes
         }
 
@@ -426,7 +428,7 @@ class APIQuizTestGetAllAttrValuesForQuiz(unittest.TestCase):
         ]
         add_payload = {
             "word": self.word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids']['verb'],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][VERB_POS_NAME],
             ATTRIBUTES: attributes
         }
 
@@ -486,6 +488,8 @@ class APIQuizTestGetAllAttrValuesForQuiz(unittest.TestCase):
                      'word_id': self.word_id}]
 
         self.assertCountEqual(expected, obj)
+        for i in range(len(expected)):
+            self.assertDictEqual(expected[i], obj[i])
 
     # use a valid quiz key but one that won't return anything:  genders for a verb
     def test_nonmatching_quiz_key(self):

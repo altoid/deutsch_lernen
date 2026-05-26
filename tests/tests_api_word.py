@@ -5,7 +5,8 @@ from dlernen.dlernen_json_schema import ATTRIBUTES
 from flask import url_for
 from dlernen.api_pos import \
     VERB_POS_NAME, \
-    NOUN_POS_NAME
+    NOUN_POS_NAME, \
+    ADJECTIVE_POS_NAME
 from pprint import pprint
 import random
 import string
@@ -326,7 +327,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word + 'ss',
-            "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -342,7 +343,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word + 'ß',
-            "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -392,7 +393,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
             ATTRIBUTES: [
                 {
                     "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
@@ -717,7 +718,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
 
         payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids']['adjective'],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
             ATTRIBUTES: [
                 {
                     "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
