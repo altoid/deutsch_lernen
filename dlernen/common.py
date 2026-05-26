@@ -35,8 +35,7 @@ def check_word_ids(cursor, word_ids):
 @js_validate_result(ARRAY_DISPLAYABLE_WORD_SCHEMA)
 def get_displayable_words(cursor, word_ids):
     # for each in a list of word_ids, get the word info needed in order to display each word in a page:
-    # definition, article (if noun), and the word itself.  the data structures must pass validation with
-    # DISPLAYABLE_WORD_SCHEMA, though it is up to the caller to do the validation.
+    # definition, article (if noun), and the word itself.
 
     result = []
     if word_ids:
@@ -88,6 +87,8 @@ def get_words_from_word_ids(cursor, word_ids):
 
     if not word_ids:
         return []
+
+    word_ids = list(set(word_ids))  # remove dups
 
     sql = """
     select
