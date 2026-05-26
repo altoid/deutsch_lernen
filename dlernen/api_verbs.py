@@ -58,6 +58,7 @@ def get_verbs_by_grundverb(grundverb):
             grundverb_word_id,
             prefix_word_id,
             pos_name prefix_pos_name,
+            extracted_prefix,
             prefix
         from verb_prefix_v
         where grundverb = %s
@@ -65,14 +66,13 @@ def get_verbs_by_grundverb(grundverb):
 
         cursor.execute(sql, (grundverb,))
         rows = cursor.fetchall()
-
         result = [
             {
                 'word_id': x['word_id'],
                 'grundverb_word_id': x['grundverb_word_id'],
                 'prefix_word_id': x['prefix_word_id'],
                 'prefix_pos_name': x['prefix_pos_name'],
-                'prefix': x['prefix']
+                'prefix': x['extracted_prefix']
             }
             for x in rows
         ]
