@@ -110,7 +110,7 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
             'prefix_pos_name': SEPARABLE_PREFIX_POS_NAME
         }
         self.assertEqual(1, len(obj))
-        self.assertCountEqual(control, s)
+        self.assertDictEqual(control, s)
 
     def test1b(self):
         grundverb = ''.join(random.choices(string.ascii_lowercase, k=10))
@@ -133,7 +133,7 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
             'prefix_pos_name': SEPARABLE_PREFIX_POS_NAME
         }
         self.assertEqual(1, len(obj))
-        self.assertCountEqual(control, s)
+        self.assertDictEqual(control, s)
 
     def test2a(self):
         # prefix will not be put into the dictionary.
@@ -156,7 +156,7 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
             'prefix_pos_name': SEPARABLE_PREFIX_POS_NAME
         }
         self.assertEqual(1, len(obj))
-        self.assertCountEqual(control, s)
+        self.assertDictEqual(control, s)
 
     def test2b(self):
         # prefix will not be put into the dictionary.
@@ -179,7 +179,7 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
             'prefix_pos_name': SEPARABLE_PREFIX_POS_NAME
         }
         self.assertEqual(1, len(obj))
-        self.assertCountEqual(control, s)
+        self.assertDictEqual(control, s)
 
     def test3a(self):
         # - put a prefix and a grundverb into the dictionary but no combination of them.
@@ -295,10 +295,10 @@ class TestVerbsInseparablePrefixes(unittest.TestCase):
             'prefix': prefix,
             'word_id': word_id,
             'grundverb_word_id': grundverb_word_id,
-            'prefix_pos_name': SEPARABLE_PREFIX_POS_NAME
+            'prefix_pos_name': INSEPARABLE_PREFIX_POS_NAME
         }
         self.assertEqual(1, len(obj))
-        self.assertCountEqual(control, s)
+        self.assertDictEqual(control, s)
 
     def test1b(self):
         grundverb = ''.join(random.choices(string.ascii_lowercase, k=10))
@@ -318,10 +318,10 @@ class TestVerbsInseparablePrefixes(unittest.TestCase):
             'prefix': prefix,
             'word_id': word_id,
             'grundverb_word_id': grundverb_word_id,
-            'prefix_pos_name': SEPARABLE_PREFIX_POS_NAME
+            'prefix_pos_name': INSEPARABLE_PREFIX_POS_NAME
         }
         self.assertEqual(1, len(obj))
-        self.assertCountEqual(control, s)
+        self.assertDictEqual(control, s)
 
     def test2a(self):
         # prefix will not be put into the dictionary.
