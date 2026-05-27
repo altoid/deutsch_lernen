@@ -2,7 +2,10 @@ from flask import Blueprint, request, render_template, redirect, url_for, flash,
 import requests
 import json
 from dlernen.tagstate import TagState
-
+from dlernen.api_pos import \
+    VERB_POS_NAME, \
+    SEPARABLE_PREFIX_POS_NAME, \
+    INSEPARABLE_PREFIX_POS_NAME
 from pprint import pprint
 
 bp = Blueprint('dlernen', __name__, url_prefix='/dlernen')
@@ -100,10 +103,68 @@ def lookup_word(word):
                            search_results=search_results)
 
 
+def get_related_verbs(verbobject):
+    url = None
+    if verbobject['pos_name'] == VERB_POS_NAME:
+        url = url_for('api_verbs.get_verbs_by_grundverb', grundverb=verbobject['word'], _external=True)
+    elif verbobject['pos_name'] == SEPARABLE_PREFIX_POS_NAME:
+        url = url_for('api_verbs.get_verbs_by_prefix', prefix=verbobject['word'], _external=True)
+    elif verbobject['pos_name'] == INSEPARABLE_PREFIX_POS_NAME:
+        url = url_for('api_verbs.get_verbs_by_prefix', prefix=verbobject['word'], _external=True)
+
+    if not url:
+        return []
+
+    r = requests.get(url)
+    if r.status_code == 404:
+        return []
+
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+
+    verbinfo_arr = r.json()
+
+    # pull out all of the word ids in all the verbinfos, then get the corresponding displayable words.  this lets us
+    # get all of them in a single request.  figure out what goes where later.
+
+    word_ids = []
+    for x in verbinfo_arr:
+        word_ids.append(x['grundverb_word_id'])
+        word_ids.append(x['word_id'])
+        if x['prefix_word_id']:
+            word_ids.append(x['prefix_word_id'])
+
+    r = requests.put(url_for('api_words.get_words_from_word_ids', _external=True),
+                     json={
+                         'word_ids': word_ids
+                     })
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
+
+    wordobjects = r.json()
+    word_ids_to_words = {x['word_id']: x for x in wordobjects}
+
+    # decorate the verb respons info with the word objects
+    for x in verbinfo_arr:
+        x['grundverb_word_obj'] = word_ids_to_words[x['grundverb_word_id']]
+        x['word_obj'] = word_ids_to_words[x['word_id']]
+        if x['prefix_word_id']:
+            x['prefix_word_obj'] = word_ids_to_words[x['prefix_word_id']]
+
+    verbinfo_arr = sorted(verbinfo_arr, key=lambda x: x['word_obj']['word'])
+
+    return verbinfo_arr
+
+
 @bp.route('/word/<int:word_id>', methods=['GET'])
 def lookup_by_id(word_id):
     # for when a word appears as a hyperlink in a page.
-    wordlist_id = request.args.get('wordlist_id')
+
+    serialized_tag_state = request.args.get('serialized_tag_state')
 
     r = requests.get(url_for('api_word.get_word_by_id', word_id=word_id, _external=True))
     if not r:
@@ -130,18 +191,21 @@ def lookup_by_id(word_id):
 
     relations = r.json()
 
-    if wordlist_id:
+    related_verbs = get_related_verbs(wordobject)
+    if serialized_tag_state:
         tag_state = TagState.deserialize(request.args.get('serialized_tag_state'))
         return render_template('lookup.html',
                                wordobject=wordobject,
                                member_wordlists=member_wordlists,
                                relations=relations,
+                               related_verbs=related_verbs,
                                tag_state=tag_state)
 
     return render_template('lookup.html',
                            wordobject=wordobject,
                            member_wordlists=member_wordlists,
-                           relations=relations)
+                           relations=relations,
+                           related_verbs=related_verbs)
 
 
 @bp.route('/lookup', methods=['POST'])
@@ -394,10 +458,10 @@ def edit_list_attributes():
 
 @bp.route('/list_editor', methods=['POST'])
 def edit_list_contents():
-    wordlist_id = request.form.get('wordlist_id')
     button = request.form.get('submit')
     serialized_tag_state = request.form.get('serialized_tag_state')
     tag_state_object = TagState.deserialize(serialized_tag_state)
+    wordlist_id = tag_state_object.wordlist_id
 
     if button.startswith("Delete"):
         # the checkboxes are called 'removing'
@@ -496,7 +560,6 @@ def update_wordlist_notes():
 @bp.route('/update_word_notes', methods=['POST'])
 def update_word_notes():
     word_id = request.form.get('word_id')
-    wordlist_id = request.form.get('wordlist_id')
     serialized_tag_state = request.form.get('serialized_tag_state')
 
     notes = request.form.get('notes')
@@ -515,8 +578,7 @@ def update_word_notes():
 
     target = url_for('dlernen.lookup_by_id',
                      word_id=word_id,
-                     serialized_tag_state=serialized_tag_state,
-                     wordlist_id=wordlist_id)
+                     serialized_tag_state=serialized_tag_state)
 
     return redirect(target)
 

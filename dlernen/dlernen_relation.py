@@ -48,14 +48,12 @@ def create_relation():
 
     relation = r.json()
     return redirect(url_for('dlernen_relation.relation_editor',
-                            wordlist_id=wordlist_id,
                             relation_id=relation['relation_id'],
                             serialized_tag_state=serialized_tag_state))
 
 
 @bp.route('/description', methods=['POST'])
 def update_description():
-    wordlist_id = request.form.get('wordlist_id', type=int)
     relation_id = request.form.get('relation_id', type=int)
     serialized_tag_state = request.form.get('serialized_tag_state')
     description = request.form.get('description')
@@ -70,7 +68,6 @@ def update_description():
                                status_code=r.status_code)
 
     return redirect(url_for('dlernen_relation.relation_editor',
-                            wordlist_id=wordlist_id,
                             relation_id=relation_id,
                             serialized_tag_state=serialized_tag_state,
                             _external=True))
@@ -78,7 +75,6 @@ def update_description():
 
 @bp.route('/notes', methods=['POST'])
 def update_notes():
-    wordlist_id = request.form.get('wordlist_id', type=int)
     relation_id = request.form.get('relation_id', type=int)
     serialized_tag_state = request.form.get('serialized_tag_state')
     notes = request.form.get('notes')
@@ -93,7 +89,6 @@ def update_notes():
                                status_code=r.status_code)
 
     return redirect(url_for('dlernen_relation.relation_editor',
-                            wordlist_id=wordlist_id,
                             relation_id=relation_id,
                             serialized_tag_state=serialized_tag_state,
                             _external=True))

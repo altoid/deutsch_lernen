@@ -74,11 +74,11 @@ Wordlist:  {{ wordlist.name }}
                                     </td>
                                     <td>
                                         {% if serialized_tag_state %}
-                                        <a href="{{ url_for('dlernen.lookup_by_id', word_id=r.word_id, wordlist_id=wordlist.wordlist_id, serialized_tag_state=serialized_tag_state) }}">
+                                        <a href="{{ url_for('dlernen.lookup_by_id', word_id=r.word_id, serialized_tag_state=serialized_tag_state) }}">
                                             {{ r.word }}
                                         </a>
                                         {% else %}
-                                        <a href="{{ url_for('dlernen.lookup_by_id', word_id=r.word_id, wordlist_id=wordlist.wordlist_id) }}">
+                                        <a href="{{ url_for('dlernen.lookup_by_id', word_id=r.word_id) }}">
                                             {{ r.word }}
                                         </a>
                                         {% endif %}
@@ -98,7 +98,6 @@ Wordlist:  {{ wordlist.name }}
         <h2>Relationen</h2>
         {% if serialized_tag_state %}
         <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
-        <input type="hidden" value="{{ tag_state.wordlist_id }}" name="wordlist_id"/>
         {% endif %}
         <table>
             {% for r in relations %}

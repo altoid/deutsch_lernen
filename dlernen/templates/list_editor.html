@@ -7,9 +7,8 @@ Manage List:  {{ wordlist.name }}
 {% block body %}
 {{ super() }}
 
-{% if tag_state %}
+{# there must always be a tag state object when rendering this page #}
 {% set serialized_tag_state = tag_state.serialize() %}
-{% endif %}
 
 <div class="list_editor">
     {% include 'header.html' %}
@@ -18,7 +17,6 @@ Manage List:  {{ wordlist.name }}
     </h1>
     {% if wordlist.list_type == 'empty' or wordlist.list_type == 'standard' %}
     <form action="{{ url_for('dlernen.edit_list_contents') }}" method="post">
-        <input type="hidden" value="{{ wordlist.wordlist_id }}" name="wordlist_id"/>
         <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
         <table>
             <tr>

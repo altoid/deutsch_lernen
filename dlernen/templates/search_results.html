@@ -37,7 +37,6 @@ Lookup {{ word }}
     <form action="{{ url_for('dlernen.update_via_search_results') }}"
           method="post">
         <input type="hidden" value="{{ word }}" name="search_term"/>
-        <input type="hidden" value="{{ tag_state.wordlist_id }}" name="wordlist_id"/>
         <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
         <input type="hidden" value="{{ matching_word_ids }}" name="matching_word_ids"/>
         <table>
@@ -82,7 +81,7 @@ Lookup {{ word }}
     <h1>
         {% if serialized_tag_state %}
         <a name="{{ r.word.word }}"
-           href="{{ url_for('dlernen.lookup_by_id', word_id=r.word.word_id, wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state) }}">
+           href="{{ url_for('dlernen.lookup_by_id', word_id=r.word.word_id, serialized_tag_state=serialized_tag_state) }}">
             {{ r.word.word }}
         </a>
         {% else %}
