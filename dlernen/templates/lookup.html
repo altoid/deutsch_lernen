@@ -104,14 +104,15 @@ word id.
 
     {% if related_verbs %}
     <h2>Related Verbs</h2>
-    <table>
+    <table class="prefix_verbs">
         {% for v in related_verbs %}
         <tr>
-            <td>
+            <td class="verb_prefix">
                 {{ v.prefix }}
             </td>
-            <td>
-                &bull;{{ v.grundverb_word_obj.word }}
+            <td>&bull;</td>
+            <td class="grundverb">
+               {{ v.grundverb_word_obj.word }}
             </td>
         </tr>
         {% endfor %}
