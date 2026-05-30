@@ -4,7 +4,14 @@ Wordlist:  {{ wordlist.name }}
 {% endblock %}
 {% block body %}
 {{ super() }}
-<div class="wordlist">
+
+{% if wordlist.list_type == 'smart' %}
+{% set divclass='wordlist smartlist' %}
+{% else %}
+{% set divclass='wordlist' %}
+{% endif %}
+
+<div class="{{ divclass }}">
     <h1>
         {{wordlist.name}} ({{wordlist.wordlist_id}})
     </h1>

@@ -75,6 +75,10 @@ td {
     min-height: 100vh;
 }
 
+.smartlist {
+    background-color:  #fefae0
+}
+
 .tooltip {
   position: relative;
   display: inline-block;
