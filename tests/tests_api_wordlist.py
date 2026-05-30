@@ -364,6 +364,26 @@ class TestAPIWordlist(unittest.TestCase):
         obj = json.loads(r.data)
         self.assertEqual('', obj['notes'])
 
+    # for notes, leading and trailing whitespace should not be clipped.
+    def test_notes_leading_trailing_whitespace(self):
+        notes = """
+
+
+ blank lines before
+and after
+
+
+        """
+        payload = {
+            'notes': notes
+        }
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
+        self.assertEqual(200, r.status_code)
+
+        r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
+        obj = json.loads(r.data)
+        self.assertEqual(notes, obj['notes'])
+
     # update list with notes as None
     def test_update_notes_to_None(self):
         notes = 'euioeuiaoeuaoeu'
