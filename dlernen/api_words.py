@@ -96,3 +96,20 @@ def get_words_from_word_ids():
 
         return common.get_words_from_word_ids(cursor, word_ids)
 
+
+@bp.route('/displayable/<string:word>')
+def get_displayable_words(word):
+    # get all the ids for this word
+
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        sql = """
+        select id word_id
+        from word
+        where word = %s
+        """
+
+        cursor.execute(sql, (word,))
+        rows = cursor.fetchall()
+        word_ids = [x['word_id'] for x in rows]
+
+        return common.get_displayable_words(cursor, word_ids)
