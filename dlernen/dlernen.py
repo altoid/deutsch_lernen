@@ -1050,30 +1050,73 @@ def add_word_submit():
     # this will update the prevailing word list with the word in the request.  if that word isn't in the dictionary,
     # redirect to the word edit page.  on submit, go to <redirect_to>.
 
-    word = request.form.get('add_word').strip()
+    tag_state = None
     serialized_tag_state = request.form.get('serialized_tag_state')
-    redirect_to = request.form.get('redirect_to')
-    # print("add_word_submit:  redirect_to = %s" % redirect_to)
     if serialized_tag_state:
-        return __submit_to_wordlist(serialized_tag_state, word, redirect_to)
+        tag_state = TagState.deserialize(serialized_tag_state)
 
-    if not word:
+    redirect_to = request.form.get('redirect_to')
+
+    words_to_add = request.form.get('bulk_add').strip().split()
+
+    if not words_to_add:
+        if tag_state:
+            return redirect(url_for(redirect_to,
+                                    wordlist_id=tag_state.wordlist_id,
+                                    _external=True))
         return redirect(url_for(redirect_to, _external=True))
 
-    r = requests.get(url_for('api_word.get_word', word=word, partial='true', _external=True))
+    words_to_add = sorted(set(words_to_add))  # remove dups and sort
 
-    if r.status_code == 404:
-        return redirect(url_for('dlernen.edit_word_form',
-                                word=word,
-                                redirect_to='dlernen.lookup_word',
-                                _external=True))
+    # get info for all parts of speech
 
-    if not r:
-        flash(r.text)
+    word_to_pos_info = {}
+    for w in words_to_add:
+        r = requests.get(url_for('api_pos.get_pos_for_word', word=w, _external=True))
+        if not r:
+            return render_template("error.html",
+                                   message=r.text,
+                                   status_code=r.status_code)
+        pos_info = r.json()
+        word_to_pos_info[w] = pos_info
 
-    return redirect(url_for('dlernen.lookup_word',
-                            word=word,
-                            _external=True))
+    # turn the word_to_pos_info into something we can render
+    # need label, field name, field value
+
+    word_to_form_data = {}
+    for w, pos_info in word_to_pos_info.items():
+        a = []
+        for p in pos_info:
+            # dig the definition out of the pos_info.
+            defn_attr = list(filter(lambda x: x['attrkey'] == 'definition', p['attributes']))
+            if not defn_attr:
+                # 'definition' *should* be a defined attribute for every part of speech, but let's be careful anyway.
+                continue
+
+            defn_attr = defn_attr[0]
+            field_value = defn_attr['attrvalue'] if defn_attr['attrvalue'] is not None else ''
+            field_label = p['pos_name']
+            field_name_parts = [w, p['pos_id'], defn_attr['attribute_id']]
+            if p['word_id']:
+                field_name_parts.append(p['word_id'])
+            field_name_parts = list(map(str, field_name_parts))  # convert to str so join won't choke
+            field_name = '-'.join(field_name_parts)
+
+            a.append({
+                'label': field_label,
+                'value': field_value,
+                'name': field_name
+            })
+        word_to_form_data[w] = a
+
+    return render_template("bulk_add.html",
+                           word_to_form_data=word_to_form_data)
+
+
+@bp.route('/bulk_add', methods=['POST'])
+def bulk_add():
+    # hitting the submit button in the bulk add page brings us here.
+    pass
 
 
 @bp.route('/update_via_search_results', methods=['POST'])
