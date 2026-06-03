@@ -820,7 +820,7 @@ def update_dict():
     # speech with this word.  redirect back to the form.
 
     if not word_ids:
-        flash("""word "%s" not created""" % word)
+        flash("""no words created""")
         return redirect(url_for('dlernen.edit_word_form',
                                 word=word,
                                 wordlist_id=wordlist_id,
@@ -831,7 +831,7 @@ def update_dict():
     # if there is a wordlist_id, add all the word ids to the wordlist.  just add all of them; adding a word id that
     # is already there does nothing.
 
-    if wordlist_id and word_ids:
+    if wordlist_id:
         payload = {
             'word_ids': word_ids
         }
@@ -845,7 +845,7 @@ def update_dict():
 
     # if there is a relation id, add all the word ids to the relation.
 
-    if relation_id and word_ids:
+    if relation_id:
         payload = {
             'word_ids': word_ids
         }
