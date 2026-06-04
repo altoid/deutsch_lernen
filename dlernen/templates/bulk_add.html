@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}
+Bulk Add
+{% endblock %}
+
+{% block body %}
+{{ super() }}
+
+{% if tag_state %}
+{% set serialized_tag_state = tag_state.serialize() %}
+{% endif %}
+
+<div class="bulk_add_submit">
+    {% include 'header.html' %}
+    <h1>Bulk Add</h1>
+    <form action="{{ url_for('dlernen.bulk_add_submit') }}" method="post">
+        <input type="submit" value="Submit"/>
+        {% for word, fields in word_to_form_data.items() %}
+        <h2>{{ word }}</h2>
+        <table>
+            {% for f in fields %}
+            <tr>
+                <td>
+                    <label for="{{ f.name }}">{{ f.label }}</label>
+                </td>
+                <td>
+                    <input type="text"
+                           class="wordedit"
+                           name="{{ f.name }}"
+                           id="{{ f.name }}"
+                           value="{{ f.value }}">
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endfor %}
+        <input type="submit" value="Submit"/>
+    </form>
+</div>
+{% endblock %}

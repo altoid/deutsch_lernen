@@ -19,17 +19,17 @@
     </a>
 
     {% if tag_state.list_type == 'empty' or tag_state.list_type == 'standard' %}
-    <a href="{{ url_for('dlernen.list_editor', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state) }}">Editor</a>
+    <a href="{{ url_for('dlernen.wordlist_editor', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state) }}">Editor</a>
     {% endif %}
     <a href="{{ url_for('dlernen.study_guide', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state) }}">Studienanleitung</a>
     <a href="{{ url_for('dlernen.quiz_report', quiz_key='definitions', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state) }}">
         Zeugnis: Definitionen</a>
-    <a href="{{ url_for('dlernen.list_attributes', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state) }}">
+    <a href="{{ url_for('dlernen.wordlist_attributes', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state) }}">
         Metadaten der Liste</a>
 
     {% endif %} {# if tag_state #}
 
-    <form action="{{ url_for('dlernen.lookup_by_post') }}" method="post">
+    <form action="{{ url_for('dlernen.lookup_submit') }}" method="post">
         {% if serialized_tag_state %}
         <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
         {% endif %}
@@ -39,18 +39,19 @@
 
     {% if (request.endpoint in [
         'dlernen.lookup_word',
-        'dlernen.home', 'dlernen.wordlist', 'dlernen.list_editor'
+        'dlernen.home', 'dlernen.wordlist', 'dlernen.wordlist_editor'
     ] and tag_state and tag_state.list_type != 'smart')
     or request.endpoint == 'dlernen.wordlists'
     %}
     <div>
         <form action="{{ url_for('dlernen.add_word_submit') }}" method="post">
-            <label for="add_word">Wort hinzufügen</label>
+            <label for="bulk_add_submit">Worte hinzufügen</label>
             {% if serialized_tag_state %}
             <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
             {% endif %}
             <input type="hidden" value="{{ request.endpoint }}" name="redirect_to"/>
-            <input type="text" id="add_word" name="add_word"/>
+            <textarea class="bulk_add_submit" id="bulk_add_submit" name="bulk_add_submit" rows="8" cols="15"></textarea>
+            <input type="submit" value="Submit"/>
         </form>
     </div>
     {% endif %}

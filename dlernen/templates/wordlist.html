@@ -131,7 +131,7 @@ Wordlist:  {{ wordlist.name }}
         </table>
         <input type="submit" value="Neue Relation"/>
     </form>
-    <form action="{{ url_for('dlernen.update_wordlist_notes') }}" method="post">
+    <form action="{{ url_for('dlernen.wordlist_notes_submit') }}" method="post">
         <h2>Noten</h2>
         {% if serialized_tag_state %}
         <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>

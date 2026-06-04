@@ -70,7 +70,7 @@ def lookup_word(word):
 
     # get wordlist if appropriate
     tag_state = TagState.deserialize(serialized_tag_state) if serialized_tag_state else None
-    if serialized_tag_state:
+    if tag_state:
         # see which of the search results are already in the wordlist.
         r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=tag_state.wordlist_id, _external=True))
         if not r:
@@ -189,7 +189,7 @@ def lookup_by_id(word_id):
     related_verbs = get_related_verbs(wordobject)
     tag_state = TagState.deserialize(serialized_tag_state) if serialized_tag_state else None
 
-    return render_template('lookup.html',
+    return render_template('word.html',
                            wordobject=wordobject,
                            member_wordlists=member_wordlists,
                            relations=relations,
@@ -198,7 +198,7 @@ def lookup_by_id(word_id):
 
 
 @bp.route('/lookup', methods=['POST'])
-def lookup_by_post():
+def lookup_submit():
     # submitting from the search field in the sidebar will bring us here.
     #
 
@@ -224,8 +224,8 @@ def wordlists():
     return render_template('wordlists.html', rows=result)
 
 
-@bp.route('/list_attributes/<int:wordlist_id>')
-def list_attributes(wordlist_id):
+@bp.route('/wordlist/attributes/<int:wordlist_id>')
+def wordlist_attributes(wordlist_id):
     url = url_for('api_wordlist.get_metadata', wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
     if not r:
@@ -234,13 +234,13 @@ def list_attributes(wordlist_id):
                                status_code=r.status_code)
     wordlist_metadata = {k: '' if v is None else v for k, v in r.json().items()}
 
-    return render_template('list_attributes.html',
+    return render_template('wordlist_attributes.html',
                            wordlist_metadata=wordlist_metadata,
                            tag_state=TagState.deserialize(request.args.get('serialized_tag_state')))
 
 
-@bp.route('/list_editor/<int:wordlist_id>')
-def list_editor(wordlist_id):
+@bp.route('/wordlist/editor/<int:wordlist_id>')
+def wordlist_editor(wordlist_id):
     serialized_tag_state = request.args.get('serialized_tag_state')
     if serialized_tag_state:
         tag_state = TagState.deserialize(serialized_tag_state)
@@ -254,12 +254,12 @@ def list_editor(wordlist_id):
                                status_code=r.status_code)
     wordlist_obj = r.json()
 
-    return render_template('list_editor.html',
+    return render_template('wordlist_editor.html',
                            tag_state=tag_state,
                            wordlist=wordlist_obj)
 
 
-@bp.route('/wordlist/update_tags/<int:wordlist_id>', methods=['POST'])
+@bp.route('/wordlist/tags/<int:wordlist_id>', methods=['POST'])
 def update_tag_state(wordlist_id):
     # the checkboxes are all called "tag"
     tags = request.form.getlist('tag')
@@ -297,7 +297,7 @@ def wordlist(wordlist_id):
         wordlist_metadata = {k: '' if v is None else v for k, v in r2.json().items()}
 
         flash("invalid sqlcode")
-        return render_template('list_attributes.html',
+        return render_template('wordlist_attributes.html',
                                tag_state=TagState.deserialize(request.args.get('serialized_tag_state')),
                                wordlist_metadata=wordlist_metadata)
 
@@ -333,8 +333,8 @@ def wordlist(wordlist_id):
                            words=words)
 
 
-@bp.route('/addlist', methods=['POST'])
-def addlist():
+@bp.route('/wordlists', methods=['POST'])
+def wordlists_submit():
     # note that the values in the form have not been subject to json schema validation.  these are just
     # whatever bullshit was entered into the form.  so we have to fiddle with the values before stuffing
     # them into the payload, which IS validated.
@@ -383,10 +383,10 @@ def deletelist():
                            status_code=r.status_code)
 
 
-@bp.route('/list_attributes', methods=['POST'])
-def edit_list_attributes():
+@bp.route('/wordlist/attributes', methods=['POST'])
+def wordlist_attributes_submit():
     # note that the values in the form have not been subject to json schema validation.  these are just
-    # whatever bullshit was entered into the form (the list_attributes template).  so we have to
+    # whatever bullshit was entered into the form (the wordlist_attributes template).  so we have to
     # fiddle with the values before stuffing them into the payload, which IS validated.
 
     serialized_tag_state = request.form.get('serialized_tag_state')
@@ -410,7 +410,7 @@ def edit_list_attributes():
     name = name.strip()
     if not name:
         flash("Die Liste muss einen Namen haben")
-        return render_template('list_attributes.html',
+        return render_template('wordlist_attributes.html',
                                tag_state=tag_state,
                                wordlist_metadata=metadata)
 
@@ -434,7 +434,7 @@ def edit_list_attributes():
     if r.status_code == 422:
         # unprocessable content - the sqlcode is not valid.  redirect to the list attributes page to fix it.
         flash("invalid sqlcode")
-        return render_template('list_attributes.html',
+        return render_template('wordlist_attributes.html',
                                tag_state=tag_state,
                                wordlist_metadata=metadata)
 
@@ -448,8 +448,8 @@ def edit_list_attributes():
                             wordlist_id=wordlist_id))
 
 
-@bp.route('/list_editor', methods=['POST'])
-def edit_list_contents():
+@bp.route('/wordlist/editor', methods=['POST'])
+def wordlist_editor_submit():
     button = request.form.get('submit')
     serialized_tag_state = request.form.get('serialized_tag_state')
     tag_state_object = TagState.deserialize(serialized_tag_state)
@@ -521,14 +521,14 @@ def edit_list_contents():
     tag_state_object.update()
     serialized_tag_state = tag_state_object.serialize()
 
-    return redirect(url_for('dlernen.list_editor',
+    return redirect(url_for('dlernen.wordlist_editor',
                             serialized_tag_state=serialized_tag_state,
                             wordlist_id=wordlist_id,
                             _external=True))
 
 
-@bp.route('/update_wordlist_notes', methods=['POST'])
-def update_wordlist_notes():
+@bp.route('/wordlist/notes', methods=['POST'])
+def wordlist_notes_submit():
     wordlist_id = request.form['wordlist_id']
 
     payload = {
@@ -549,8 +549,8 @@ def update_wordlist_notes():
     return redirect(target)
 
 
-@bp.route('/update_word_notes', methods=['POST'])
-def update_word_notes():
+@bp.route('/word/notes', methods=['POST'])
+def word_notes_submit():
     word_id = request.form.get('word_id')
     serialized_tag_state = request.form.get('serialized_tag_state')
 
@@ -575,7 +575,7 @@ def update_word_notes():
     return redirect(target)
 
 
-@bp.route('/word_editor/<string:word>', methods=['GET'])
+@bp.route('/word/editor/<string:word>', methods=['GET'])
 def word_editor(word):
     # construct the editing form for this word, with all attributes for all parts of speech.
     # field name formats are described in word_editor.html.  a tags field
@@ -692,8 +692,8 @@ def word_editor(word):
                            tag_state=tag_state_object)
 
 
-@bp.route('/word_editor', methods=['POST'])
-def update_dict():
+@bp.route('/word/editor', methods=['POST'])
+def word_editor_submit():
     # hitting the submit button in the word editor brings us here.
 
     # go through the text fields in the request to distinguish what words are being edited and added.
@@ -1064,7 +1064,7 @@ def add_word_submit():
 
     redirect_to = request.form.get('redirect_to')
 
-    words_to_add = request.form.get('bulk_add').strip().split()
+    words_to_add = request.form.get('bulk_add_submit').strip().split()
 
     if not words_to_add:
         if tag_state:
@@ -1116,18 +1116,18 @@ def add_word_submit():
             })
         word_to_form_data[w] = a
 
-    return render_template("bulk_add.html",
+    return render_template("bulk_add_submit.html",
                            word_to_form_data=word_to_form_data)
 
 
-@bp.route('/bulk_add', methods=['POST'])
-def bulk_add():
+@bp.route('/bulk_add_submit', methods=['POST'])
+def bulk_add_submit():
     # hitting the submit button in the bulk add page brings us here.
     pass
 
 
-@bp.route('/update_via_search_results', methods=['POST'])
-def update_via_search_results():
+@bp.route('/search_results', methods=['POST'])
+def search_results_submit():
     # the submit button under the matching words in the search results page brings us here.  of the matching
     # words, remove all from the word list and add back the ones that were selected.
 

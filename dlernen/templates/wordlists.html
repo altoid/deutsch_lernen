@@ -9,7 +9,7 @@ Manage Word Lists
 <div class="wordlists">
     {% include 'header.html' %}
     <h1>Create a List</h1>
-    <form action="{{ url_for('dlernen.addlist') }}" method="post">
+    <form action="{{ url_for('dlernen.wordlists_submit') }}" method="post">
         <table>
             <tr>
                 <td>List Name:</td>
