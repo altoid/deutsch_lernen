@@ -584,7 +584,7 @@ def update_word_notes():
 
 
 @bp.route('/word_editor/<string:word>', methods=['GET'])
-def edit_word_form(word):
+def word_editor(word):
     # construct the editing form for this word, with all attributes for all parts of speech.
     # field name formats are described in word_editor.html.  a tags field
     # will NOT appear for the part of speech if:
@@ -712,8 +712,6 @@ def update_dict():
     # to each of the update and add payloads, add the word.  for the update case, this is necessary in case we are
     # making a spelling change.
     #
-    # returns a dictionary mapping (word, pos_id) --> word_id
-    #
     wordlist_id = request.form.get('wordlist_id')
     relation_id = request.form.get('relation_id')
     redirect_to = request.form.get('redirect_to', 'dlernen.lookup_word')
@@ -821,7 +819,7 @@ def update_dict():
 
     if not word_ids:
         flash("""no words created""")
-        return redirect(url_for('dlernen.edit_word_form',
+        return redirect(url_for('dlernen.word_editor',
                                 word=word,
                                 wordlist_id=wordlist_id,
                                 serialized_tag_state=request.form.get('serialized_tag_state'),
@@ -1025,7 +1023,7 @@ def __submit_to_wordlist(serialized_tag_state, word, redirect_to):
             flash(r2.text)
 
     elif r.status_code == 404:
-        return redirect(url_for('dlernen.edit_word_form',
+        return redirect(url_for('dlernen.word_editor',
                                 word=word,
                                 wordlist_id=wordlist_id,
                                 serialized_tag_state=serialized_tag_state,
@@ -1035,7 +1033,7 @@ def __submit_to_wordlist(serialized_tag_state, word, redirect_to):
     else:
         flash(r.text)
 
-    return redirect(url_for('dlernen.edit_word_form',
+    return redirect(url_for('dlernen.word_editor',
                             word=word,
                             wordlist_id=wordlist_id,
                             serialized_tag_state=serialized_tag_state,

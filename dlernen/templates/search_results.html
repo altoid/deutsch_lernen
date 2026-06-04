@@ -23,11 +23,11 @@ Lookup {{ word }}
         {% if tag_state %}
             {% if tag_state.list_type != 'smart' %}
                 {{ word }} not found. Click <a
-                    href="{{ url_for('dlernen.edit_word_form', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state, word=word) }}">here</a>
+                    href="{{ url_for('dlernen.word_editor', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state, word=word) }}">here</a>
                 to define it.
             {% endif %}
         {% else %}
-            {{ word }} not found. Click <a href="{{ url_for('dlernen.edit_word_form', word=word) }}">here</a> to define it.
+            {{ word }} not found. Click <a href="{{ url_for('dlernen.word_editor', word=word) }}">here</a> to define it.
         {% endif %}
     {% endif %}
 

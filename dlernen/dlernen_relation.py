@@ -142,7 +142,7 @@ def update_words():
             elif r.status_code == 404:
                 if serialized_tag_state:
                     tag_state = TagState.deserialize(serialized_tag_state)
-                    return redirect(url_for('dlernen.edit_word_form',
+                    return redirect(url_for('dlernen.word_editor',
                                             word=word,
                                             relation_id=relation_id,
                                             wordlist_id=tag_state.wordlist_id,
@@ -150,7 +150,7 @@ def update_words():
                                             redirect_to=redirect_to,
                                             _external=True))
 
-                return redirect(url_for('dlernen.edit_word_form',
+                return redirect(url_for('dlernen.word_editor',
                                         word=word,
                                         relation_id=relation_id,
                                         redirect_to=redirect_to,
