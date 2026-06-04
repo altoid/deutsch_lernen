@@ -69,9 +69,9 @@ def lookup_word(word):
     search_results = r.json()
 
     # get wordlist if appropriate
+    tag_state = TagState.deserialize(serialized_tag_state) if serialized_tag_state else None
     if serialized_tag_state:
         # see which of the search results are already in the wordlist.
-        tag_state = TagState.deserialize(serialized_tag_state)
         r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=tag_state.wordlist_id, _external=True))
         if not r:
             return render_template("error.html",
@@ -90,17 +90,12 @@ def lookup_word(word):
             else:
                 r['word']['is_member'] = False
 
-        return render_template('search_results.html',
-                               word=word,
-                               matching_word_ids=matching_word_ids,
-                               exact_match_found=exact_match_found,
-                               search_results=search_results,
-                               tag_state=tag_state)
-
     return render_template('search_results.html',
                            word=word,
+                           matching_word_ids=matching_word_ids,
                            exact_match_found=exact_match_found,
-                           search_results=search_results)
+                           search_results=search_results,
+                           tag_state=tag_state)
 
 
 def get_related_verbs(verbobject):
@@ -192,20 +187,14 @@ def lookup_by_id(word_id):
     relations = r.json()
 
     related_verbs = get_related_verbs(wordobject)
-    if serialized_tag_state:
-        tag_state = TagState.deserialize(request.args.get('serialized_tag_state'))
-        return render_template('lookup.html',
-                               wordobject=wordobject,
-                               member_wordlists=member_wordlists,
-                               relations=relations,
-                               related_verbs=related_verbs,
-                               tag_state=tag_state)
+    tag_state = TagState.deserialize(serialized_tag_state) if serialized_tag_state else None
 
     return render_template('lookup.html',
                            wordobject=wordobject,
                            member_wordlists=member_wordlists,
                            relations=relations,
-                           related_verbs=related_verbs)
+                           related_verbs=related_verbs,
+                           tag_state=tag_state)
 
 
 @bp.route('/lookup', methods=['POST'])
@@ -226,13 +215,13 @@ def lookup_by_post():
 def wordlists():
     url = url_for('api_wordlist.get_metadata_multiple', _external=True)
     r = requests.get(url)
-    if r:
-        result = json.loads(r.text)
-        return render_template('wordlists.html', rows=result)
+    if not r:
+        return render_template("error.html",
+                               message=r.text,
+                               status_code=r.status_code)
 
-    return render_template("error.html",
-                           message=r.text,
-                           status_code=r.status_code)
+    result = r.json()
+    return render_template('wordlists.html', rows=result)
 
 
 @bp.route('/list_attributes/<int:wordlist_id>')
@@ -408,7 +397,7 @@ def edit_list_attributes():
 
     wordlist_id = tag_state.wordlist_id
     list_type = tag_state.list_type
-    
+
     # snapshot the list metadata as entered into the form in case we need to render it again later.
     metadata = {
         "name": name,
@@ -695,18 +684,12 @@ def word_editor(word):
 
                 form_data[p['pos_name']].append(d)
 
-        return render_template('word_editor.html',
-                               word=word,
-                               form_data=form_data,
-                               redirect_to=redirect_to,
-                               relation_id=relation_id,
-                               tag_state=tag_state_object)
-
     return render_template('word_editor.html',
                            word=word,
                            form_data=form_data,
                            redirect_to=redirect_to,
-                           relation_id=relation_id)
+                           relation_id=relation_id,
+                           tag_state=tag_state_object)
 
 
 @bp.route('/word_editor', methods=['POST'])
@@ -740,19 +723,12 @@ def update_dict():
     word = request.form.get('word', '').strip()
 
     if not word:
-        if serialized_tag_state:
-            target = url_for('dlernen.word_editor',
-                             word=word_original,
-                             serialized_tag_state=serialized_tag_state,
-                             redirect_to=redirect_to,
-                             relation_id=relation_id,
-                             _external=True)
-        else:
-            target = url_for('dlernen.word_editor',
-                             word=word_original,
-                             redirect_to=redirect_to,
-                             relation_id=relation_id,
-                             _external=True)
+        target = url_for('dlernen.word_editor',
+                         word=word_original,
+                         serialized_tag_state=serialized_tag_state,  # can be None
+                         redirect_to=redirect_to,
+                         relation_id=relation_id,
+                         _external=True)
 
         flash("word field has been cleared; that's not right")
         return redirect(target)

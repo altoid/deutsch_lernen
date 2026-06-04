@@ -19,18 +19,15 @@ def relation_editor(relation_id):
     relation = r.json()
 
     serialized_tag_state = request.args.get('serialized_tag_state')
-    if serialized_tag_state:
-        return render_template('relation_editor.html',
-                               tag_state=TagState.deserialize(serialized_tag_state),
-                               relation=relation)
+    tag_state = TagState.deserialize(serialized_tag_state) if serialized_tag_state else None
 
     return render_template('relation_editor.html',
+                           tag_state=tag_state,
                            relation=relation)
 
 
 @bp.route('', methods=['POST'])
 def create_relation():
-    wordlist_id = request.form.get('wordlist_id', type=int)
     word_id = request.form.get('word_id', type=int)
     serialized_tag_state = request.form.get('serialized_tag_state')
 
@@ -158,10 +155,7 @@ def update_words():
             else:
                 flash(r.text)
 
-    if serialized_tag_state:
-        return redirect(url_for(redirect_to,
-                                relation_id=relation_id,
-                                serialized_tag_state=serialized_tag_state))
-
     return redirect(url_for(redirect_to,
-                            relation_id=relation_id))
+                            relation_id=relation_id,
+                            serialized_tag_state=serialized_tag_state))  # state can be None
+
