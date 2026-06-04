@@ -400,12 +400,15 @@ def edit_list_attributes():
     # whatever bullshit was entered into the form (the list_attributes template).  so we have to
     # fiddle with the values before stuffing them into the payload, which IS validated.
 
+    serialized_tag_state = request.form.get('serialized_tag_state')
+    tag_state = TagState.deserialize(serialized_tag_state)
     name = request.form.get('name', '')
     citation = request.form.get('citation', '')
     sqlcode = request.form.get('sqlcode', '')
-    wordlist_id = request.form.get('wordlist_id')
-    list_type = request.form.get('list_type')
 
+    wordlist_id = tag_state.wordlist_id
+    list_type = tag_state.list_type
+    
     # snapshot the list metadata as entered into the form in case we need to render it again later.
     metadata = {
         "name": name,
@@ -419,7 +422,7 @@ def edit_list_attributes():
     if not name:
         flash("Die Liste muss einen Namen haben")
         return render_template('list_attributes.html',
-                               tag_state=TagState.deserialize(request.form.get('serialized_tag_state')),
+                               tag_state=tag_state,
                                wordlist_metadata=metadata)
 
     x = sqlcode.strip()
@@ -443,7 +446,7 @@ def edit_list_attributes():
         # unprocessable content - the sqlcode is not valid.  redirect to the list attributes page to fix it.
         flash("invalid sqlcode")
         return render_template('list_attributes.html',
-                               tag_state=TagState.deserialize(request.form.get('serialized_tag_state')),
+                               tag_state=tag_state,
                                wordlist_metadata=metadata)
 
     if not r:
@@ -452,7 +455,7 @@ def edit_list_attributes():
                                status_code=r.status_code)
 
     return redirect(url_for('dlernen.wordlist',
-                            serialized_tag_state=request.form.get('serialized_tag_state'),
+                            serialized_tag_state=serialized_tag_state,
                             wordlist_id=wordlist_id))
 
 
