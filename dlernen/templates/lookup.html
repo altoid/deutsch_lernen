@@ -25,7 +25,7 @@ word id.
     <h1>
         {% if serialized_tag_state %}
         <a name="{{ wordobject['word'] }}"
-           href="{{ url_for('dlernen.word_editor', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state, word=wordobject['word']) }}">
+           href="{{ url_for('dlernen.word_editor', serialized_tag_state=serialized_tag_state, word=wordobject['word']) }}">
             {{ wordobject['word'] }}
         </a>
         {% else %}

@@ -595,10 +595,15 @@ def word_editor(word):
     # otherwise this form lets us add tags to new parts of speech that we are adding to the dictionary, or
     # modify tags for parts of speech that are already in the dictionary.
 
-    wordlist_id = request.args.get('wordlist_id')
-    serialized_tag_state = request.args.get('serialized_tag_state')
     redirect_to = request.args.get('redirect_to', 'dlernen.lookup_word')
     relation_id = request.args.get('relation_id')
+
+    wordlist_id = None
+    tag_state_object = None
+    serialized_tag_state = request.args.get('serialized_tag_state')
+    if serialized_tag_state:
+        tag_state_object = TagState.deserialize(serialized_tag_state)
+        wordlist_id = tag_state_object.wordlist_id
 
     url = url_for('api_pos.get_pos_for_word', word=word, _external=True)
     r = requests.get(url)
@@ -692,7 +697,7 @@ def word_editor(word):
                                form_data=form_data,
                                redirect_to=redirect_to,
                                relation_id=relation_id,
-                               tag_state=TagState.deserialize(serialized_tag_state))
+                               tag_state=tag_state_object)
 
     return render_template('word_editor.html',
                            word=word,
@@ -712,10 +717,42 @@ def update_dict():
     # to each of the update and add payloads, add the word.  for the update case, this is necessary in case we are
     # making a spelling change.
     #
-    wordlist_id = request.form.get('wordlist_id')
+    wordlist_id = None
+    tag_state_object = None
+    serialized_tag_state = request.form.get('serialized_tag_state')
+    if serialized_tag_state:
+        # in case we added a new tag while editing the word
+        tag_state_object = TagState.deserialize(serialized_tag_state)
+        tag_state_object.update()
+        wordlist_id = tag_state_object.wordlist_id
+
     relation_id = request.form.get('relation_id')
     redirect_to = request.form.get('redirect_to', 'dlernen.lookup_word')
+
+    # there are two incarnations of the word being edited:  the word itself, as pulled from the word table,
+    # and the word as pulled from the 'word' text field.  these will be the same, unless we have altered the word in
+    # the text field, e.g. changing the spelling.  the form must be well-behaved if the word field is cleared.
+
+    word_original = request.form.get('word_original')
     word = request.form.get('word', '').strip()
+
+    if not word:
+        if serialized_tag_state:
+            target = url_for('dlernen.word_editor',
+                             word=word_original,
+                             serialized_tag_state=serialized_tag_state,
+                             redirect_to=redirect_to,
+                             relation_id=relation_id,
+                             _external=True)
+        else:
+            target = url_for('dlernen.word_editor',
+                             word=word_original,
+                             redirect_to=redirect_to,
+                             relation_id=relation_id,
+                             _external=True)
+
+        flash("word field has been cleared; that's not right")
+        return redirect(target)
 
     # maps word_ids to WORD_UPDATE_PAYLOAD_SCHEMA docs
     word_ids_to_update_payloads = {}
@@ -821,7 +858,6 @@ def update_dict():
         flash("""no words created""")
         return redirect(url_for('dlernen.word_editor',
                                 word=word,
-                                wordlist_id=wordlist_id,
                                 serialized_tag_state=request.form.get('serialized_tag_state'),
                                 redirect_to=redirect_to,
                                 _external=True))
@@ -901,10 +937,6 @@ def update_dict():
                                        message="add tags failed (wordlist_id %s):  %s [%s]" %
                                                (wordlist_id, r.text, r.status_code),
                                        status_code=r.status_code)
-
-        # in case we added a new tag while editing the word
-        tag_state_object = TagState.deserialize(request.form.get('serialized_tag_state'))
-        tag_state_object.update()
 
         target = url_for(redirect_to,
                          word=word,
@@ -1025,7 +1057,6 @@ def __submit_to_wordlist(serialized_tag_state, word, redirect_to):
     elif r.status_code == 404:
         return redirect(url_for('dlernen.word_editor',
                                 word=word,
-                                wordlist_id=wordlist_id,
                                 serialized_tag_state=serialized_tag_state,
                                 redirect_to=redirect_to,
                                 _external=True))
@@ -1035,7 +1066,6 @@ def __submit_to_wordlist(serialized_tag_state, word, redirect_to):
 
     return redirect(url_for('dlernen.word_editor',
                             word=word,
-                            wordlist_id=wordlist_id,
                             serialized_tag_state=serialized_tag_state,
                             redirect_to=redirect_to,
                             _external=True))
