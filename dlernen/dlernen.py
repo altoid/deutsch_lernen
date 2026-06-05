@@ -883,10 +883,11 @@ def word_editor_submit():
                                         _external=True))
             if r.status_code == 400:
                 # word id is not in the word list.  no big deal.
+                # NB - will this ever happen?
                 continue
 
         # next, add back the tags that we pull from the form.
-
+        payload = []
         for field_name, value_unstripped in request.form.items():
             parts = field_name.split('-')
             if parts[0] != 'tag':
@@ -902,14 +903,14 @@ def word_editor_submit():
             if not tags:
                 continue
 
-            payload = [
+            payload.append(
                 {
                     'word_id': word_pos_to_word_id[(word, pos_id)],
                     'tags': tags
                 }
-            ]
+            )
 
-            # FIXME - pull this out of the loop; we can update tags for multiple word_ids in a single request.
+        if payload:
             r = requests.post(url_for('api_wordlist_tag.add_tags',
                                       wordlist_id=wordlist_id,
                                       _external=True),
@@ -1156,7 +1157,7 @@ def bulk_add_submit():
         tag_state_object = TagState.deserialize(serialized_tag_state)
         tag_state_object.update()
         wordlist_id = tag_state_object.wordlist_id
-    print("########################## %s" % wordlist_id)
+
     # maps word_ids to WORD_UPDATE_PAYLOAD_SCHEMA docs.  what an update payload looks like:
     #
     # payload for deleting an attribute value:
