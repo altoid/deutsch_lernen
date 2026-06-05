@@ -3,6 +3,30 @@
 Bulk Add
 {% endblock %}
 
+{#
+this form is used to bulk-add multiple words in one submit.  the words are provided from the add-word textarea in the
+sidebar.  when adding/updating a word, we will not specify all attributes for the parts of speech, only the
+definition.  for nouns, we'll also give the gender.
+
+the names of the fields are:
+
+for definitions:
+
+"word"-[word]-pos_id-attribute_id           - when there is no word id
+"word"-[word]-pos_id-attribute_id-word_id   - when there is a word id
+
+for tags:
+
+"tag"-[word]-pos_id-attribute_id            - when there is no word id
+"tag"-[word]-pos_id-attribute_id-word_id    - when there is a word id
+
+for definitions:
+
+(hell if i know)
+
+
+#}
+
 {% block body %}
 {{ super() }}
 
@@ -15,6 +39,10 @@ Bulk Add
     <h1>Bulk Add</h1>
     <form action="{{ url_for('dlernen.bulk_add_submit') }}" method="post">
         <input type="submit" value="Submit"/>
+        <input type="hidden" value="{{ redirect_to }}" name="redirect_to"/>
+        {% if serialized_tag_state %}
+        <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
+        {% endif %}
         {% for word, fields in word_to_form_data.items() %}
         <h2>{{ word }}</h2>
         <table>
@@ -28,6 +56,7 @@ Bulk Add
                            class="wordedit"
                            name="{{ f.name }}"
                            id="{{ f.name }}"
+                           placeholder="{{ f.name }}"
                            value="{{ f.value }}">
                 </td>
             </tr>

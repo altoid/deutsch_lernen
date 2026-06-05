@@ -39,12 +39,13 @@
 
     {% if (request.endpoint in [
         'dlernen.lookup_word',
+        'dlernen.bulk_add_page',
         'dlernen.home', 'dlernen.wordlist', 'dlernen.wordlist_editor'
     ] and tag_state and tag_state.list_type != 'smart')
     or request.endpoint == 'dlernen.wordlists'
     %}
     <div>
-        <form action="{{ url_for('dlernen.add_word_submit') }}" method="post">
+        <form action="{{ url_for('dlernen.bulk_add_page') }}" method="post">
             <label for="bulk_add_submit">Worte hinzufügen</label>
             {% if serialized_tag_state %}
             <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>

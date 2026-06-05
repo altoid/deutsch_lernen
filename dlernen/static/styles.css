@@ -158,7 +158,7 @@ td.grundverb {
     min-height: 100vh;
 }
 
-.list_editor {
+.wordlist_editor {
     background-color: var(--background-color);
     padding: 10px;
     min-height: 100vh;
@@ -168,11 +168,11 @@ td.relation_definition {
     padding-left: 50px;
 }
 
-.list_editor th {
+.wordlist_editor th {
     text-align: left;
 }
 
-.list_editor .wortart {
+.wordlist_editor .wortart {
     padding-left: 44px;
 }
 

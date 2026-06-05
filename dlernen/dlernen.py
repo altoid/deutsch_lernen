@@ -2,6 +2,7 @@ from flask import Blueprint, request, render_template, redirect, url_for, flash,
 import requests
 import json
 from dlernen.tagstate import TagState
+from dlernen_json_schema import ATTRIBUTES
 from dlernen.api_pos import \
     VERB_POS_NAME, \
     SEPARABLE_PREFIX_POS_NAME, \
@@ -630,7 +631,7 @@ def word_editor(word):
                 continue
 
         form_data[p['pos_name']] = []
-        for a in p['attributes']:
+        for a in p[ATTRIBUTES]:
             t = ['attr', p['pos_id'], a['attribute_id']]
             if p['word_id']:
                 t.append(p['word_id'])
@@ -677,7 +678,7 @@ def word_editor(word):
                     'field_name': field_name,
                     'field_value': tags,
                     'label': 'tags',
-                    'sort_order': max([x['sort_order'] for x in p['attributes']]) + 1,
+                    'sort_order': max([x['sort_order'] for x in p[ATTRIBUTES]]) + 1,
                     'enlightened': 'enlightened' if p['word_id'] else '',  # tell CSS to color the text field
                     'disabled': field_disabled
                 }
@@ -759,11 +760,11 @@ def word_editor_submit():
             if word_id not in word_ids_to_update_payloads:
                 word_ids_to_update_payloads[word_id] = {
                     'word': word,
-                    'attributes': []
+                    ATTRIBUTES: []
                 }
             payload = word_ids_to_update_payloads[word_id]
             if value:
-                payload['attributes'].append(
+                payload[ATTRIBUTES].append(
                     {
                         'attribute_id': attribute_id,
                         'attrvalue': value
@@ -772,10 +773,10 @@ def word_editor_submit():
 
             if word_id not in word_ids_to_delete_payloads:
                 word_ids_to_delete_payloads[word_id] = {
-                    'attributes': []
+                    ATTRIBUTES: []
                 }
             payload = word_ids_to_delete_payloads[word_id]
-            payload['attributes'].append(
+            payload[ATTRIBUTES].append(
                 {
                     'attribute_id': attribute_id
                 }
@@ -788,11 +789,11 @@ def word_editor_submit():
                 word_pos_to_add_payloads[t] = {
                     'word': word,
                     'pos_id': t[1],
-                    'attributes': []
+                    ATTRIBUTES: []
                 }
             payload = word_pos_to_add_payloads[t]
             if value:
-                payload['attributes'].append(
+                payload[ATTRIBUTES].append(
                     {
                         'attribute_id': attribute_id,
                         'attrvalue': value
@@ -800,8 +801,8 @@ def word_editor_submit():
                 )
 
     # get rid of payloads with empty attribute lists
-    word_pos_to_add_payloads = {k: v for k, v in word_pos_to_add_payloads.items() if len(v['attributes']) > 0}
-    word_ids_to_update_payloads = {k: v for k, v in word_ids_to_update_payloads.items() if len(v['attributes']) > 0}
+    word_pos_to_add_payloads = {k: v for k, v in word_pos_to_add_payloads.items() if len(v[ATTRIBUTES]) > 0}
+    word_ids_to_update_payloads = {k: v for k, v in word_ids_to_update_payloads.items() if len(v[ATTRIBUTES]) > 0}
 
     # drop all the attribute values for existing words
     for word_id, payload in word_ids_to_delete_payloads.items():
@@ -893,6 +894,7 @@ def word_editor_submit():
 
             pos_id = int(parts[1])
             if (word, pos_id) not in word_pos_to_word_id:
+                # don't add tags if we didn't create a dictionary entry.
                 continue
 
             tag_str = request.form.get(field_name)
@@ -907,6 +909,7 @@ def word_editor_submit():
                 }
             ]
 
+            # FIXME - pull this out of the loop; we can update tags for multiple word_ids in a single request.
             r = requests.post(url_for('api_wordlist_tag.add_tags',
                                       wordlist_id=wordlist_id,
                                       _external=True),
@@ -1051,20 +1054,19 @@ def __submit_to_wordlist(serialized_tag_state, word, redirect_to):
 
 
 @bp.route('/update_words', methods=['POST'])
-def add_word_submit():
+def bulk_add_page():
     # submitting from the add word field in the sidebar will bring us here.
 
     # this will update the prevailing word list with the word in the request.  if that word isn't in the dictionary,
     # redirect to the word edit page.  on submit, go to <redirect_to>.
 
-    tag_state = None
     serialized_tag_state = request.form.get('serialized_tag_state')
+    redirect_to = request.form.get('redirect_to')
+    words_to_add = request.form.get('bulk_add_submit').strip().split()
+
+    tag_state = None
     if serialized_tag_state:
         tag_state = TagState.deserialize(serialized_tag_state)
-
-    redirect_to = request.form.get('redirect_to')
-
-    words_to_add = request.form.get('bulk_add_submit').strip().split()
 
     if not words_to_add:
         if tag_state:
@@ -1095,7 +1097,7 @@ def add_word_submit():
         a = []
         for p in pos_info:
             # dig the definition out of the pos_info.
-            defn_attr = list(filter(lambda x: x['attrkey'] == 'definition', p['attributes']))
+            defn_attr = list(filter(lambda x: x['attrkey'] == 'definition', p[ATTRIBUTES]))
             if not defn_attr:
                 # 'definition' *should* be a defined attribute for every part of speech, but let's be careful anyway.
                 continue
@@ -1103,7 +1105,7 @@ def add_word_submit():
             defn_attr = defn_attr[0]
             field_value = defn_attr['attrvalue'] if defn_attr['attrvalue'] is not None else ''
             field_label = p['pos_name']
-            field_name_parts = [w, p['pos_id'], defn_attr['attribute_id']]
+            field_name_parts = ['word', w, p['pos_id'], defn_attr['attribute_id']]
             if p['word_id']:
                 field_name_parts.append(p['word_id'])
             field_name_parts = list(map(str, field_name_parts))  # convert to str so join won't choke
@@ -1116,14 +1118,244 @@ def add_word_submit():
             })
         word_to_form_data[w] = a
 
-    return render_template("bulk_add_submit.html",
+    return render_template("bulk_add.html",
+                           redirect_to=redirect_to,
+                           tag_state=tag_state,
                            word_to_form_data=word_to_form_data)
 
 
-@bp.route('/bulk_add_submit', methods=['POST'])
+@bp.route('/bulk_add', methods=['POST'])
 def bulk_add_submit():
     # hitting the submit button in the bulk add page brings us here.
-    pass
+
+    # NB - this is pretty close to the algorithm used in word_editor_submit, but not close enough that we can
+    #  actually reuse code.  the form fields in the word-edit form and this form are different.  the words are
+    #  embedded in the field names here.  we can't do that in the other form because of the possibility that we would
+    #  change the spelling of the word there.
+
+    # TODO - tags
+    # TODO - noun genders
+    # TODO - checkboxes to indicate which words we will/will not add.
+
+    # rules of the game:
+    #
+    # - do not add/update anything if no definition is given.
+    # - clearing the definition for an existing word will cause its attributes to be deleted.
+    # - noun gender must be set if its definition is given.
+
+    # this will word by dropping all the definitions for extant words, then adding them back with what we pull from
+    # the form.  even if the definition is unchanged.  clunky but better than diffing.
+
+    serialized_tag_state = request.form.get('serialized_tag_state')
+    redirect_to = request.form.get('redirect_to')
+
+    wordlist_id = None
+    tag_state_object = None
+    if serialized_tag_state:
+        # in case we added a new tag while editing the word
+        tag_state_object = TagState.deserialize(serialized_tag_state)
+        tag_state_object.update()
+        wordlist_id = tag_state_object.wordlist_id
+    print("########################## %s" % wordlist_id)
+    # maps word_ids to WORD_UPDATE_PAYLOAD_SCHEMA docs.  what an update payload looks like:
+    #
+    # payload for deleting an attribute value:
+    # {
+    #     ATTRIBUTES: [
+    #         {
+    #             'attribute_id': attr_id
+    #         }
+    #     ]
+    # }
+    #
+    # payload for updating an attribute value:
+    # {
+    #     ATTRIBUTES: [
+    #         {
+    #             'attrvalue': attrvalue,
+    #             'attribute_id': attr_id
+    #         }
+    #     ]
+    # }
+
+    word_ids_to_update_payloads = {}
+    word_ids_to_delete_payloads = {}
+
+    # maps (word, pos_id) pairs to WORD_ADD_PAYLOAD_SCHEMA docs
+    word_pos_to_add_payloads = {}
+
+    # mapping of (word, pos_id) to word_id.  this will be used for extant words as well as new ones we create.
+    word_pos_to_word_id = {}
+
+    for field_name, value_unstripped in request.form.items():
+        parts = field_name.split('-')
+        if parts[0] != 'word':
+            continue
+
+        value = value_unstripped.strip()
+        word = parts[1]
+        pos_id = int(parts[2])
+        attribute_id = int(parts[3])
+        word_id = int(parts[4]) if len(parts) > 4 else None
+
+        t = (word, pos_id)
+        if word_id:
+            word_pos_to_word_id[t] = word_id
+
+            if word_id not in word_ids_to_delete_payloads:
+                word_ids_to_delete_payloads[word_id] = {
+                    ATTRIBUTES: []
+                }
+            payload = word_ids_to_delete_payloads[word_id]
+            payload[ATTRIBUTES].append(
+                {
+                    'attribute_id': attribute_id
+                }
+            )
+
+            if word_id not in word_ids_to_update_payloads:
+                word_ids_to_update_payloads[word_id] = {
+                    ATTRIBUTES: []
+                }
+            payload = word_ids_to_update_payloads[word_id]
+            if value:
+                payload[ATTRIBUTES].append(
+                    {
+                        'attribute_id': attribute_id,
+                        'attrvalue': value
+                    }
+                )
+
+        else:
+            if t not in word_pos_to_add_payloads:
+                word_pos_to_add_payloads[t] = {
+                    'word': word,
+                    'pos_id': t[1],
+                    ATTRIBUTES: []
+                }
+            payload = word_pos_to_add_payloads[t]
+            if value:
+                payload[ATTRIBUTES].append(
+                    {
+                        'attribute_id': attribute_id,
+                        'attrvalue': value
+                    }
+                )
+
+    # get rid of payloads with empty attribute lists
+    # FIXME - need to refine this to also drop add payloads for nouns where gender and defn are not both
+    #  present.
+    word_pos_to_add_payloads = {k: v for k, v in word_pos_to_add_payloads.items()
+                                if len(v[ATTRIBUTES]) > 0}
+    word_ids_to_update_payloads = {k: v for k, v in word_ids_to_update_payloads.items()
+                                   if len(v[ATTRIBUTES]) > 0}
+
+    # drop all the attribute values for existing words
+    for word_id, payload in word_ids_to_delete_payloads.items():
+        r = requests.put(url_for('api_word.update_word', word_id=word_id, _external=True), json=payload)
+        if not r:
+            flash("could not update word_id %s [%s]:  %s" % (word_id, r.status_code, r.text))
+
+    # add back all the attribute values we pulled from the form.
+    for word_id, payload in word_ids_to_update_payloads.items():
+        r = requests.put(url_for('api_word.update_word', word_id=word_id, _external=True), json=payload)
+        if not r:
+            flash("could not update word_id %s [%s]:  %s" % (word_id, r.status_code, r.text))
+
+    for t, payload in word_pos_to_add_payloads.items():
+        word, pos_id = t
+        url = url_for('api_word.add_word', _external=True)
+        r = requests.post(url, json=payload)
+        if not r:
+            message = "could not add word %s [%s]:  %s" % (word, r.status_code, r.text)
+            return render_template("error.html",
+                                   message=message,
+                                   status_code=r.status_code)
+
+        obj = r.json()
+        word_pos_to_word_id[(word, pos_id)] = obj['word_id']
+
+    # this is *all* of the words in the bulk add operation, both extant and newly-created.
+    word_ids = list(word_pos_to_word_id.values())
+
+    # if there is a wordlist_id, add all the word ids to the wordlist.  just add all of them; adding a word id that
+    # is already there does nothing.
+
+    if wordlist_id:
+        payload = {
+            'word_ids': word_ids
+        }
+        r = requests.put(url_for('api_wordlist.update_wordlist', wordlist_id=wordlist_id, _external=True),
+                         json=payload)
+        if not r:
+            message = "could not update wordlist %s:  %s [%s]" % (wordlist_id, r.status_code, r.text)
+            return render_template("error.html",
+                                   message=message,
+                                   status_code=r.status_code)
+
+    # now we deal with the tags.
+
+    if False and wordlist_id:
+        # first, drop all the tags for each word_id in the wordlist.
+
+        for word_id in word_pos_to_word_id.values():
+            r = requests.delete(url_for('api_wordlist_tag.delete_tags_for_word_id',
+                                        word_id=word_id,
+                                        wordlist_id=wordlist_id,
+                                        _external=True))
+            if not r:
+                message = "could not delete tags %s:  %s [%s] (shouldn't get a 400 here)" % (wordlist_id,
+                                                                                             r.status_code,
+                                                                                             r.text)
+                return render_template("error.html",
+                                       message=message,
+                                       status_code=r.status_code)
+
+        # next, add back the tags that we pull from the form.
+
+        payload = []
+        for field_name, value_unstripped in request.form.items():
+            parts = field_name.split('-')
+
+            value = value_unstripped.strip()
+            word = parts[1]
+            pos_id = int(parts[2])
+
+            if parts[0] != 'tag':
+                continue
+
+            if (word, pos_id) not in word_pos_to_word_id:
+                # don't add tags if we didn't create a dictionary entry.
+                continue
+
+            tag_str = value
+            tags = tag_str.split()
+            if not tags:
+                continue
+
+            payload.append(
+                {
+                    'word_id': word_pos_to_word_id[(word, pos_id)],
+                    'tags': tags
+                }
+            )
+
+        if payload:
+            r = requests.post(url_for('api_wordlist_tag.add_tags',
+                                      wordlist_id=wordlist_id,
+                                      _external=True),
+                              json=payload)
+            if not r:
+                return render_template("error.html",
+                                       message="add tags failed (wordlist_id %s):  %s [%s]" %
+                                               (wordlist_id, r.text, r.status_code),
+                                       status_code=r.status_code)
+
+    # wrap up by redirecting to the right place ...
+    return redirect(url_for(redirect_to,
+                            serialized_tag_state=serialized_tag_state,
+                            wordlist_id=wordlist_id,
+                            _external=True))
 
 
 @bp.route('/search_results', methods=['POST'])
