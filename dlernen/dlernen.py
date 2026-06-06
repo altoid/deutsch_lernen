@@ -1013,7 +1013,7 @@ def __submit_to_wordlist(serialized_tag_state, word, redirect_to):
                             _external=True))
 
 
-def get_bulk_add_form_data(raw_list):
+def get_bulk_add_form_data(raw_list, wordlist_id=None):
     # returns 2 dictionaries:
     #
     # 1.  mapping of each unique word in the raw list to a dict giving the label and field name
@@ -1050,6 +1050,17 @@ def get_bulk_add_form_data(raw_list):
                 if p['word_id']:
                     defn_field_name_parts.append(p['word_id'])
                     tag_field_name_parts.append(p['word_id'])
+                    if wordlist_id:
+                        r = requests.get(url_for('api_wordlist_tag.get_tags',
+                                                 word_id=p['word_id'],
+                                                 wordlist_id=wordlist_id,
+                                                 _external=True))
+                        if not r:
+                            abort(r.status_code, response=r)
+
+                        tags_obj = r.json()
+                        tag_field_value = ' '.join(tags_obj['tags'])
+
                 defn_field_name_parts = list(map(str, defn_field_name_parts))  # convert to str so join won't choke
                 defn_field_name = '-'.join(defn_field_name_parts)
                 tag_field_name_parts = list(map(str, tag_field_name_parts))  # convert to str so join won't choke
@@ -1079,16 +1090,15 @@ def bulk_add_page():
     redirect_to = request.form.get('redirect_to')
 
     tag_state = None
+    wordlist_id = None
     if serialized_tag_state:
         tag_state = TagState.deserialize(serialized_tag_state)
+        wordlist_id = tag_state.wordlist_id
 
     raw_list = request.form.get('bulk_add_submit', '')
-    word_to_form_data, field_names_to_field_values = get_bulk_add_form_data(raw_list)
+    word_to_form_data, field_names_to_field_values = get_bulk_add_form_data(raw_list, wordlist_id=wordlist_id)
 
     if not word_to_form_data:
-        wordlist_id = None
-        if tag_state:
-            wordlist_id = tag_state.wordlist_id
 
         return redirect(url_for(redirect_to,
                                 wordlist_id=wordlist_id,
