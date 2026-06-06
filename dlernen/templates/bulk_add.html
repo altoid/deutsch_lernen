@@ -40,6 +40,7 @@ for definitions:
     <form action="{{ url_for('dlernen.bulk_add_submit') }}" method="post">
         <input type="submit" value="Submit"/>
         <input type="hidden" value="{{ redirect_to }}" name="redirect_to"/>
+        <input type="hidden" value="{{ raw_list }}" name="bulk_add_submit"/>
         {% if serialized_tag_state %}
         <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
         {% endif %}
@@ -52,12 +53,28 @@ for definitions:
                     <label for="{{ f.name }}">{{ f.label }}</label>
                 </td>
                 <td>
+                    {% if f.attribute == 'definition' %}
                     <input type="text"
                            class="wordedit"
                            name="{{ f.name }}"
                            id="{{ f.name }}"
                            placeholder="{{ f.name }}"
-                           value="{{ f.value }}">
+                           value="{{ field_names_to_field_values.get(f.name, '') }}">
+                    {% else %}
+                    <fieldset>
+                        {% for article in ['der', 'die', 'das'] %}
+                        <input type="radio"
+                               id="{{ article }}-{{ f.name }}"
+                               name="{{ f.name }}"
+                               value="{{ article }}"
+                               {% if field_names_to_field_values.get(f.name) == article %}
+                               checked
+                               {% endif %}
+                        >
+                        <label for="{{ article }}-{{ f.name }}">{{ article }}</label>
+                        {% endfor %}
+                    </fieldset>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}

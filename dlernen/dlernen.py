@@ -1013,32 +1013,17 @@ def __submit_to_wordlist(serialized_tag_state, word, redirect_to):
                             _external=True))
 
 
-@bp.route('/update_words', methods=['POST'])
-def bulk_add_page():
-    # submitting from the add word field in the sidebar will bring us here.
+def get_bulk_add_form_data(raw_list):
+    # returns 2 dictionaries:
+    #
+    # 1.  mapping of each unique word in the raw list to a dict giving the label and field name
+    #     for each text field in the bulk-add page.
+    # 2.  mapping of field names to field values.
 
-    # this will update the prevailing word list with the word in the request.  if that word isn't in the dictionary,
-    # redirect to the word edit page.  on submit, go to <redirect_to>.
-
-    serialized_tag_state = request.form.get('serialized_tag_state')
-    redirect_to = request.form.get('redirect_to')
-    words_to_add = request.form.get('bulk_add_submit').strip().split()
-
-    tag_state = None
-    if serialized_tag_state:
-        tag_state = TagState.deserialize(serialized_tag_state)
-
-    if not words_to_add:
-        if tag_state:
-            return redirect(url_for(redirect_to,
-                                    wordlist_id=tag_state.wordlist_id,
-                                    _external=True))
-        return redirect(url_for(redirect_to, _external=True))
-
+    words_to_add = raw_list.strip().split()
     words_to_add = sorted(set(words_to_add))  # remove dups and sort
 
     # get info for all parts of speech
-
     word_to_pos_info = {}
     for w in words_to_add:
         r = requests.get(url_for('api_pos.get_pos_for_word', word=w, _external=True))
@@ -1049,8 +1034,8 @@ def bulk_add_page():
 
     # turn the word_to_pos_info into something we can render
     # need label, field name, field value
-
     word_to_form_data = {}
+    field_names_to_field_values = {}
     for w, pos_info in word_to_pos_info.items():
         a = []
         for p in pos_info:
@@ -1067,16 +1052,47 @@ def bulk_add_page():
 
                 a.append({
                     'label': field_label,
-                    'value': field_value,
                     'name': field_name,
                     'attribute': attr['attrkey']
                 })
+                field_names_to_field_values[field_name] = field_value
         word_to_form_data[w] = a
-    pprint(word_to_form_data)
+
+    return word_to_form_data, field_names_to_field_values
+
+
+@bp.route('/update_words', methods=['POST'])
+def bulk_add_page():
+    # submitting from the add word field in the sidebar will bring us here.
+
+    # this will update the prevailing word list with the word in the request.  if that word isn't in the dictionary,
+    # redirect to the word edit page.  on submit, go to <redirect_to>.
+
+    serialized_tag_state = request.form.get('serialized_tag_state')
+    redirect_to = request.form.get('redirect_to')
+
+    tag_state = None
+    if serialized_tag_state:
+        tag_state = TagState.deserialize(serialized_tag_state)
+
+    raw_list = request.form.get('bulk_add_submit', '')
+    word_to_form_data, field_names_to_field_values = get_bulk_add_form_data(raw_list)
+
+    if not word_to_form_data:
+        wordlist_id = None
+        if tag_state:
+            wordlist_id = tag_state.wordlist_id
+
+        return redirect(url_for(redirect_to,
+                                wordlist_id=wordlist_id,
+                                _external=True))
+
     return render_template("bulk_add.html",
                            redirect_to=redirect_to,
                            tag_state=tag_state,
-                           word_to_form_data=word_to_form_data)
+                           raw_list=raw_list,
+                           word_to_form_data=word_to_form_data,
+                           field_names_to_field_values=field_names_to_field_values)
 
 
 @bp.route('/bulk_add', methods=['POST'])
@@ -1198,12 +1214,54 @@ def bulk_add_submit():
                 )
 
     # get rid of payloads with empty attribute lists
-    # FIXME - need to refine this to also drop add payloads for nouns where gender and defn are not both
-    #  present.
     word_pos_to_add_payloads = {k: v for k, v in word_pos_to_add_payloads.items()
                                 if len(v[ATTRIBUTES]) > 0}
     word_ids_to_update_payloads = {k: v for k, v in word_ids_to_update_payloads.items()
                                    if len(v[ATTRIBUTES]) > 0}
+
+    # FIXME - if a noun is given without definition or article, flash message and return to page.
+    nouns_missing_attributes = []
+    for k, payload in word_pos_to_add_payloads.items():
+        word, pos_id = k
+        if pos_id != 1:  # noun POS id
+            continue
+
+        article_attr = list(filter(lambda x: x['attribute_id'] == 1, payload[ATTRIBUTES]))  # attr id for article
+        if not article_attr:
+            nouns_missing_attributes.append(word)
+            continue
+
+        defn_attr = list(filter(lambda x: x['attribute_id'] == 5, payload[ATTRIBUTES]))  # attr id for defn
+        if not defn_attr:
+            nouns_missing_attributes.append(word)
+            continue
+
+    if nouns_missing_attributes:
+        message = 'definition or article not given for these nouns:  %s' % ', '.join(nouns_missing_attributes)
+
+        # go back and try again
+
+        raw_list = request.form.get('bulk_add_submit', '')
+        word_to_form_data, _ = get_bulk_add_form_data(raw_list)
+
+        # construct the form data from what we have already entered into the form, not from prior knowledge
+        # of the words we want to bulk-add.
+
+        field_names_to_field_values = {}
+        for field_name, value_unstripped in request.form.items():
+            parts = field_name.split('-')
+            if parts[0] != 'word':
+                continue
+
+            field_names_to_field_values[field_name] = value_unstripped
+
+        flash(message)
+        return render_template("bulk_add.html",
+                               redirect_to=redirect_to,
+                               tag_state=tag_state_object,
+                               raw_list=raw_list,
+                               word_to_form_data=word_to_form_data,
+                               field_names_to_field_values=field_names_to_field_values)
 
     # drop all the attribute values for existing words
     for word_id, payload in word_ids_to_delete_payloads.items():
