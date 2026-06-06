@@ -1105,7 +1105,6 @@ def bulk_add_submit():
     #  change the spelling of the word there.
 
     # TODO - tags
-    # TODO - noun genders
     # TODO - checkboxes to indicate which words we will/will not add.
 
     # rules of the game:

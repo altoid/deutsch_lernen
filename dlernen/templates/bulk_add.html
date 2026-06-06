@@ -34,7 +34,7 @@ for definitions:
 {% set serialized_tag_state = tag_state.serialize() %}
 {% endif %}
 
-<div class="bulk_add_submit">
+<div class="bulk_add">
     {% include 'header.html' %}
     <h1>Bulk Add</h1>
     <form action="{{ url_for('dlernen.bulk_add_submit') }}" method="post">
