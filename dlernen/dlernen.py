@@ -67,9 +67,7 @@ def lookup_word(word):
     elif r.status_code == 200:
         results = r.json()
     else:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     words_found = {x['word'].casefold() for x in results}
     exact_match_found = word.casefold() in words_found
@@ -78,9 +76,7 @@ def lookup_word(word):
 
     r = requests.get(url_for('api_word.get_member_wordlists_multiple', word_id=matching_word_ids, _external=True))
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     search_results = r.json()
 
@@ -90,9 +86,8 @@ def lookup_word(word):
         # see which of the search results are already in the wordlist.
         r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=tag_state.wordlist_id, _external=True))
         if not r:
-            return render_template("error.html",
-                                   message=r.text,
-                                   status_code=r.status_code)
+            abort(r.status_code, response=r)
+
         wordlist_obj = r.json()
         member_word_ids = {x['word_id'] for x in wordlist_obj['words']}
         matching_member_word_ids = set(matching_word_ids) & member_word_ids
@@ -131,9 +126,7 @@ def get_related_verbs(verbobject):
         return []
 
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     verbinfo_arr = r.json()
 
@@ -152,9 +145,7 @@ def get_related_verbs(verbobject):
                          'word_ids': word_ids
                      })
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     wordobjects = r.json()
     word_ids_to_words = {x['word_id']: x for x in wordobjects}
@@ -179,26 +170,20 @@ def lookup_by_id(word_id):
 
     r = requests.get(url_for('api_word.get_word_by_id', word_id=word_id, _external=True))
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     wordobject = r.json()
 
     r = requests.get(url_for('api_word.get_member_wordlists', word_id=word_id, _external=True))
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     obj = r.json()
     member_wordlists = obj['wordlist_metadata_list']
 
     r = requests.get(url_for('api_word.get_relations', word_id=word_id, _external=True))
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     relations = r.json()
 
@@ -232,9 +217,7 @@ def wordlists():
     url = url_for('api_wordlist.get_metadata_multiple', _external=True)
     r = requests.get(url)
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     result = r.json()
     return render_template('wordlists.html', rows=result)
@@ -245,9 +228,8 @@ def wordlist_attributes(wordlist_id):
     url = url_for('api_wordlist.get_metadata', wordlist_id=wordlist_id, _external=True)
     r = requests.get(url)
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
+
     wordlist_metadata = {k: '' if v is None else v for k, v in r.json().items()}
 
     return render_template('wordlist_attributes.html',
@@ -265,9 +247,8 @@ def wordlist_editor(wordlist_id):
 
     r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True))
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
+
     wordlist_obj = r.json()
 
     return render_template('wordlist_editor.html',
@@ -318,9 +299,7 @@ def wordlist(wordlist_id):
                                wordlist_metadata=wordlist_metadata)
 
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     wordlist_obj = r.json()
     if wordlist_obj['notes'] is None:
@@ -335,9 +314,7 @@ def wordlist(wordlist_id):
                              wordlist_id=wordlist_id,
                              _external=True))
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     relations = r.json()
 
@@ -377,12 +354,10 @@ def wordlists_submit():
 
     url = url_for('api_wordlist.create_wordlist', _external=True)
     r = requests.post(url, json=payload)
-    if r:
-        return redirect(url_for('dlernen.wordlists'))
+    if not r:
+        abort(r.status_code, response=r)
 
-    return render_template("error.html",
-                           message=r.text,
-                           status_code=r.status_code)
+    return redirect(url_for('dlernen.wordlists'))
 
 
 @bp.route('/deletelist', methods=['POST'])
@@ -391,12 +366,10 @@ def deletelist():
     doomed = list(map(int, doomed))
 
     r = requests.put(url_for('api_wordlist.delete_wordlists', _external=True), json=doomed)
-    if r:
-        return redirect(url_for('dlernen.wordlists'))
+    if not r:
+        abort(r.status_code, response=r)
 
-    return render_template("error.html",
-                           message=r.text,
-                           status_code=r.status_code)
+    return redirect(url_for('dlernen.wordlists'))
 
 
 @bp.route('/wordlist/attributes', methods=['POST'])
@@ -455,9 +428,7 @@ def wordlist_attributes_submit():
                                wordlist_metadata=metadata)
 
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     return redirect(url_for('dlernen.wordlist',
                             serialized_tag_state=serialized_tag_state,
@@ -480,9 +451,7 @@ def wordlist_editor_submit():
             "word_ids": word_ids
         })
         if not r:
-            return render_template("error.html",
-                                   message=r.text,
-                                   status_code=r.status_code)
+            abort(r.status_code, response=r)
 
     elif button.startswith("Update"):
         # the text fields are all named 'tag-<word_id>'
@@ -509,9 +478,7 @@ def wordlist_editor_submit():
                       _external=True)
         r = requests.post(url, json=payload)
         if not r:
-            return render_template("error.html",
-                                   message=r.text,
-                                   status_code=r.status_code)
+            abort(r.status_code, response=r)
 
         # get the keys for the checkboxes
         untag_keys = list(filter(lambda x: x.startswith('untag-'), request.form.keys()))
@@ -530,9 +497,7 @@ def wordlist_editor_submit():
                           _external=True)
             r = requests.delete(url)
             if not r:
-                return render_template("error.html",
-                                       message=r.text,
-                                       status_code=r.status_code)
+                abort(r.status_code, response=r)
 
     tag_state_object.update()
     serialized_tag_state = tag_state_object.serialize()
@@ -554,9 +519,8 @@ def wordlist_notes_submit():
     url = url_for('api_wordlist.update_wordlist', wordlist_id=wordlist_id, _external=True)
     r = requests.put(url, json=payload)
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        if not r:
+            abort(r.status_code, response=r)
 
     target = url_for('dlernen.wordlist',
                      wordlist_id=wordlist_id,
@@ -580,9 +544,7 @@ def word_notes_submit():
 
     r = requests.put(url_for('api_word.update_word', word_id=word_id, _external=True), json=payload)
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     target = url_for('dlernen.lookup_by_id',
                      word_id=word_id,
@@ -616,9 +578,7 @@ def word_editor(word):
     url = url_for('api_pos.get_pos_for_word', word=word, _external=True)
     r = requests.get(url)
     if not r:
-        return render_template("error.html",
-                               message="1: %s" % r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     pos_structure = r.json()
     form_data = {}
@@ -629,9 +589,7 @@ def word_editor(word):
         url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
         r = requests.get(url)
         if not r:
-            return render_template("error.html",
-                                   message=r.text,
-                                   status_code=r.status_code)
+            abort(r.status_code, response=r)
         wordlist_obj = r.json()
         member_word_ids = {x['word_id'] for x in wordlist_obj['words']}
 
@@ -836,10 +794,8 @@ def word_editor_submit():
         url = url_for('api_word.add_word', _external=True)
         r = requests.post(url, json=payload)
         if not r:
-            message = "could not add word %s [%s]:  %s" % (word, r.status_code, r.text)
-            return render_template("error.html",
-                                   message=message,
-                                   status_code=r.status_code)
+            message = "could not add word %s" % word
+            abort(r.status_code, message=message, response=r)
 
         obj = r.json()
         word_pos_to_word_id[(word, pos_id)] = obj['word_id']
@@ -868,9 +824,7 @@ def word_editor_submit():
                          json=payload)
         if not r:
             message = "could not update wordlist %s:  %s [%s]" % (wordlist_id, r.status_code, r.text)
-            return render_template("error.html",
-                                   message=message,
-                                   status_code=r.status_code)
+            abort(r.status_code, message=message, response=r)
 
     # if there is a relation id, add all the word ids to the relation.
 
@@ -882,9 +836,7 @@ def word_editor_submit():
                          json=payload)
         if not r:
             message = "could not update relation %s:  %s [%s]" % (relation_id, r.status_code, r.text)
-            return render_template("error.html",
-                                   message=message,
-                                   status_code=r.status_code)
+            abort(r.status_code, message=message, response=r)
 
     # now we deal with the tags.
 
@@ -931,10 +883,8 @@ def word_editor_submit():
                                       _external=True),
                               json=payload)
             if not r:
-                return render_template("error.html",
-                                       message="add tags failed (wordlist_id %s):  %s [%s]" %
-                                               (wordlist_id, r.text, r.status_code),
-                                       status_code=r.status_code)
+                message = "add tags failed for wordlist_id %s" % wordlist_id
+                abort(r.status_code, message=message, response=r)
 
         target = url_for(redirect_to,
                          word=word,
@@ -961,9 +911,7 @@ def quiz_report(quiz_key, wordlist_id):
 
     r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True))
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     wordlist_obj = r.json()
 
@@ -973,9 +921,7 @@ def quiz_report(quiz_key, wordlist_id):
                              tag=selected_tags,
                              _external=True))
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     report = r.json()
     return render_template("quiz_report.html",
@@ -999,9 +945,7 @@ def study_guide(wordlist_id):
                              tag=selected_tags,
                              wordlist_id=wordlist_id, _external=True))
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     wordlist_obj = r.json()
 
@@ -1099,9 +1043,7 @@ def bulk_add_page():
     for w in words_to_add:
         r = requests.get(url_for('api_pos.get_pos_for_word', word=w, _external=True))
         if not r:
-            return render_template("error.html",
-                                   message=r.text,
-                                   status_code=r.status_code)
+            abort(r.status_code, response=r)
         pos_info = r.json()
         word_to_pos_info[w] = pos_info
 
@@ -1280,10 +1222,8 @@ def bulk_add_submit():
         url = url_for('api_word.add_word', _external=True)
         r = requests.post(url, json=payload)
         if not r:
-            message = "could not add word %s [%s]:  %s" % (word, r.status_code, r.text)
-            return render_template("error.html",
-                                   message=message,
-                                   status_code=r.status_code)
+            message = "could not add word %s" % word
+            abort(r.status_code, message=message, response=r)
 
         obj = r.json()
         word_pos_to_word_id[(word, pos_id)] = obj['word_id']
@@ -1301,10 +1241,8 @@ def bulk_add_submit():
         r = requests.put(url_for('api_wordlist.update_wordlist', wordlist_id=wordlist_id, _external=True),
                          json=payload)
         if not r:
-            message = "could not update wordlist %s:  %s [%s]" % (wordlist_id, r.status_code, r.text)
-            return render_template("error.html",
-                                   message=message,
-                                   status_code=r.status_code)
+            message = "could not update wordlist %s" % wordlist_id
+            abort(r.status_code, message=message, response=r)
 
     # now we deal with the tags.
 
@@ -1317,12 +1255,8 @@ def bulk_add_submit():
                                         wordlist_id=wordlist_id,
                                         _external=True))
             if not r:
-                message = "could not delete tags %s:  %s [%s] (shouldn't get a 400 here)" % (wordlist_id,
-                                                                                             r.status_code,
-                                                                                             r.text)
-                return render_template("error.html",
-                                       message=message,
-                                       status_code=r.status_code)
+                message = "could not delete tags for wordlist %s (shouldn't get a 400 here)" % wordlist_id
+                abort(r.status_code, message=message, response=r)
 
         # next, add back the tags that we pull from the form.
 
@@ -1359,10 +1293,8 @@ def bulk_add_submit():
                                       _external=True),
                               json=payload)
             if not r:
-                return render_template("error.html",
-                                       message="add tags failed (wordlist_id %s):  %s [%s]" %
-                                               (wordlist_id, r.text, r.status_code),
-                                       status_code=r.status_code)
+                message = "add tags failed for wordlist %s" % wordlist_id
+                abort(r.status_code, message=message, response=r)
 
     # wrap up by redirecting to the right place ...
     return redirect(url_for(redirect_to,
@@ -1391,9 +1323,7 @@ def search_results_submit():
                          'word_ids': matching_word_ids
                      })
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     # add back the ones marked 'selected'
     r = requests.put(url_for('api_wordlist.update_wordlist', wordlist_id=wordlist_id,
@@ -1402,9 +1332,7 @@ def search_results_submit():
                          'word_ids': selected_word_ids
                      })
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     # add the tags that were in the selected words' fields
     payload = []
@@ -1421,9 +1349,7 @@ def search_results_submit():
                                   _external=True),
                           json=payload)
         if not r:
-            return render_template("error.html",
-                                   message=r.text,
-                                   status_code=r.status_code)
+            abort(r.status_code, response=r)
 
     return redirect(url_for('dlernen.lookup_word',
                             word=search_term,

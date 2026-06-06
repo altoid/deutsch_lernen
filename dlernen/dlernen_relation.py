@@ -1,4 +1,4 @@
-from flask import Blueprint, request, render_template, redirect, url_for, flash
+from flask import Blueprint, request, render_template, redirect, url_for, flash, abort
 import requests
 from dlernen.tagstate import TagState
 
@@ -12,9 +12,7 @@ def relation_editor(relation_id):
     url = url_for('api_relation.get_relation', relation_id=relation_id, _external=True)
     r = requests.get(url)
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     relation = r.json()
 
@@ -39,9 +37,7 @@ def create_relation():
 
     r = requests.post(url_for('api_relation.create_relation', _external=True), json=payload)
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     relation = r.json()
     return redirect(url_for('dlernen_relation.relation_editor',
@@ -60,9 +56,7 @@ def update_description():
     }
     r = requests.put(url_for('api_relation.update_relation', relation_id=relation_id, _external=True), json=payload)
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     return redirect(url_for('dlernen_relation.relation_editor',
                             relation_id=relation_id,
@@ -81,9 +75,7 @@ def update_notes():
     }
     r = requests.put(url_for('api_relation.update_relation', relation_id=relation_id, _external=True), json=payload)
     if not r:
-        return render_template("error.html",
-                               message=r.text,
-                               status_code=r.status_code)
+        abort(r.status_code, response=r)
 
     return redirect(url_for('dlernen_relation.relation_editor',
                             relation_id=relation_id,
@@ -116,9 +108,7 @@ def update_words():
                                      _external=True),
                              json=payload)
             if not r:
-                return render_template("error.html",
-                                       message=r.text,
-                                       status_code=r.status_code)
+                abort(r.status_code, response=r)
 
     elif button.startswith('Add'):
         word = request.form.get('add_word').strip()
