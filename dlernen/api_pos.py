@@ -19,6 +19,11 @@ CONJUNCTION_POS_NAME = "Conjunction"
 SEPARABLE_PREFIX_POS_NAME = "Separable Prefix"
 INSEPARABLE_PREFIX_POS_NAME = "Inseparable Prefix"
 
+##########################################################################################
+#
+# NB - there are no ORDER BY clauses in the sql.  all the sorting is done by __get_pos.
+#
+
 
 @js_validate_result(POS_STRUCTURE_RESPONSE_SCHEMA)
 def __get_pos(sql, args):
@@ -47,16 +52,22 @@ def __get_pos(sql, args):
             )
 
         result = []
-        for k in pos_name_to_attrs.keys():
+        for pos_name, attrs in pos_name_to_attrs.items():
+            # sort the attributes by sort_order
+            attrs = sorted(attrs, key=lambda x: x['sort_order'])
             result.append(
                 {
-                    "pos_name": k,
-                    "pos_id": pos_name_to_ids[k],
-                    "word": pos_to_word_info[k][0],  # might be None
-                    "word_id": pos_to_word_info[k][1],  # might be None
-                    "attributes": pos_name_to_attrs[k]
+                    "pos_name": pos_name,
+                    "pos_id": pos_name_to_ids[pos_name],
+                    "word": pos_to_word_info[pos_name][0],  # might be None
+                    "word_id": pos_to_word_info[pos_name][1],  # might be None
+                    "attributes": attrs
                 }
             )
+
+        # sort the results by pos_id.
+        # FIXME - introduce a sort key for POS names in the database (pos table)
+        result = sorted(result, key=lambda x: x['pos_id'])
 
         return result
 
