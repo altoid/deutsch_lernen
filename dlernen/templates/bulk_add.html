@@ -50,30 +50,40 @@ for definitions:
             {% for f in fields %}
             <tr>
                 <td>
-                    <label for="{{ f.name }}">{{ f.label }}</label>
+                    <label for="{{ f.defn_field_name }}">{{ f.label }}</label>
                 </td>
                 <td>
                     {% if f.attribute == 'definition' %}
                     <input type="text"
                            class="wordedit"
-                           name="{{ f.name }}"
-                           id="{{ f.name }}"
-                           placeholder="{{ f.name }}"
-                           value="{{ field_names_to_field_values.get(f.name, '') }}">
+                           name="{{ f.defn_field_name }}"
+                           id="{{ f.defn_field_name }}"
+                           placeholder="{{ f.defn_field_name }}"
+                           value="{{ field_names_to_field_values.get(f.defn_field_name, '') }}">
                     {% else %}
                     <fieldset>
                         {% for article in ['der', 'die', 'das'] %}
                         <input type="radio"
-                               id="{{ article }}-{{ f.name }}"
-                               name="{{ f.name }}"
+                               id="{{ article }}-{{ f.defn_field_name }}"
+                               name="{{ f.defn_field_name }}"
                                value="{{ article }}"
-                               {% if field_names_to_field_values.get(f.name) == article %}
+                               {% if field_names_to_field_values.get(f.defn_field_name) == article %}
                                checked
                                {% endif %}
                         >
-                        <label for="{{ article }}-{{ f.name }}">{{ article }}</label>
+                        <label for="{{ article }}-{{ f.defn_field_name }}">{{ article }}</label>
                         {% endfor %}
                     </fieldset>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if f.attribute == 'definition' %}
+                    <input type="text"
+                           class="wordedit"
+                           name="{{ f.tag_field_name }}"
+                           id="{{ f.tag_field_name }}"
+                           placeholder="{{ f.tag_field_name }}"
+                           value="{{ field_names_to_field_values.get(f.tag_field_name, '') }}">
                     {% endif %}
                 </td>
             </tr>

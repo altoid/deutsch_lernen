@@ -1042,20 +1042,27 @@ def get_bulk_add_form_data(raw_list):
             # dig the definition out of the pos_info.
             attrs = list(filter(lambda x: x['attrkey'] in ['definition', 'article'], p[ATTRIBUTES]))
             for attr in attrs:
-                field_value = attr['attrvalue'] if attr['attrvalue'] is not None else ''
-                field_label = p['pos_name']
-                field_name_parts = ['word', w, p['pos_id'], attr['attribute_id']]
+                defn_field_value = attr['attrvalue'] if attr['attrvalue'] is not None else ''
+                tag_field_value = ''
+                label = p['pos_name']
+                defn_field_name_parts = ['word', w, p['pos_id'], attr['attribute_id']]
+                tag_field_name_parts = ['tag', w, p['pos_id'], attr['attribute_id']]
                 if p['word_id']:
-                    field_name_parts.append(p['word_id'])
-                field_name_parts = list(map(str, field_name_parts))  # convert to str so join won't choke
-                field_name = '-'.join(field_name_parts)
+                    defn_field_name_parts.append(p['word_id'])
+                    tag_field_name_parts.append(p['word_id'])
+                defn_field_name_parts = list(map(str, defn_field_name_parts))  # convert to str so join won't choke
+                defn_field_name = '-'.join(defn_field_name_parts)
+                tag_field_name_parts = list(map(str, tag_field_name_parts))  # convert to str so join won't choke
+                tag_field_name = '-'.join(tag_field_name_parts)
 
                 a.append({
-                    'label': field_label,
-                    'name': field_name,
+                    'label': label,
+                    'defn_field_name': defn_field_name,
+                    'tag_field_name': tag_field_name,
                     'attribute': attr['attrkey']
                 })
-                field_names_to_field_values[field_name] = field_value
+                field_names_to_field_values[defn_field_name] = defn_field_value
+                field_names_to_field_values[tag_field_name] = tag_field_value
         word_to_form_data[w] = a
 
     return word_to_form_data, field_names_to_field_values
@@ -1127,26 +1134,7 @@ def bulk_add_submit():
         tag_state_object.update()
         wordlist_id = tag_state_object.wordlist_id
 
-    # maps word_ids to WORD_UPDATE_PAYLOAD_SCHEMA docs.  what an update payload looks like:
-    #
-    # payload for deleting an attribute value:
-    # {
-    #     ATTRIBUTES: [
-    #         {
-    #             'attribute_id': attr_id
-    #         }
-    #     ]
-    # }
-    #
-    # payload for updating an attribute value:
-    # {
-    #     ATTRIBUTES: [
-    #         {
-    #             'attrvalue': attrvalue,
-    #             'attribute_id': attr_id
-    #         }
-    #     ]
-    # }
+    # these map word_ids to WORD_UPDATE_PAYLOAD_SCHEMA docs.
 
     word_ids_to_update_payloads = {}
     word_ids_to_delete_payloads = {}
@@ -1218,7 +1206,7 @@ def bulk_add_submit():
     word_ids_to_update_payloads = {k: v for k, v in word_ids_to_update_payloads.items()
                                    if len(v[ATTRIBUTES]) > 0}
 
-    # FIXME - if a noun is given without definition or article, flash message and return to page.
+    # if a noun is given with only one of definition or article, flash message and return to page.
     nouns_missing_attributes = []
     for k, payload in word_pos_to_add_payloads.items():
         word, pos_id = k
