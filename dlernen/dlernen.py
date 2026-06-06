@@ -1,13 +1,14 @@
-from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app
+from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app, abort
 import requests
 import json
+
 from dlernen.tagstate import TagState
 from dlernen_json_schema import ATTRIBUTES
 from dlernen.api_pos import \
     VERB_POS_NAME, \
     SEPARABLE_PREFIX_POS_NAME, \
     INSEPARABLE_PREFIX_POS_NAME
-from pprint import pprint
+from pprint import pprint, pformat
 
 bp = Blueprint('dlernen', __name__, url_prefix='/dlernen')
 
@@ -35,6 +36,20 @@ def chunkify(arr, nchunks=1):
 @bp.route('/')
 def home():
     return render_template('home.html')
+
+
+@bp.route('/error')
+def error():
+    # the error handler is in __init__.py
+    # look up a bullshit word to generate an error
+    word = 'tohdeuithuiedthena'
+    r = requests.get(url_for('api_word.get_word', word=word, _external=True))
+    if not r:
+        message = "endpoint for testing error handling"
+        abort(r.status_code, message=message, response=r)
+        # abort(r.status_code, response=r)
+        # abort(r.status_code, message=message)
+        # abort(r.status_code)
 
 
 @bp.route('/word/<string:word>', methods=['GET'])
@@ -1098,27 +1113,24 @@ def bulk_add_page():
         a = []
         for p in pos_info:
             # dig the definition out of the pos_info.
-            defn_attr = list(filter(lambda x: x['attrkey'] == 'definition', p[ATTRIBUTES]))
-            if not defn_attr:
-                # 'definition' *should* be a defined attribute for every part of speech, but let's be careful anyway.
-                continue
+            attrs = list(filter(lambda x: x['attrkey'] in ['definition', 'article'], p[ATTRIBUTES]))
+            for attr in attrs:
+                field_value = attr['attrvalue'] if attr['attrvalue'] is not None else ''
+                field_label = p['pos_name']
+                field_name_parts = ['word', w, p['pos_id'], attr['attribute_id']]
+                if p['word_id']:
+                    field_name_parts.append(p['word_id'])
+                field_name_parts = list(map(str, field_name_parts))  # convert to str so join won't choke
+                field_name = '-'.join(field_name_parts)
 
-            defn_attr = defn_attr[0]
-            field_value = defn_attr['attrvalue'] if defn_attr['attrvalue'] is not None else ''
-            field_label = p['pos_name']
-            field_name_parts = ['word', w, p['pos_id'], defn_attr['attribute_id']]
-            if p['word_id']:
-                field_name_parts.append(p['word_id'])
-            field_name_parts = list(map(str, field_name_parts))  # convert to str so join won't choke
-            field_name = '-'.join(field_name_parts)
-
-            a.append({
-                'label': field_label,
-                'value': field_value,
-                'name': field_name
-            })
+                a.append({
+                    'label': field_label,
+                    'value': field_value,
+                    'name': field_name,
+                    'attribute': attr['attrkey']
+                })
         word_to_form_data[w] = a
-
+    pprint(word_to_form_data)
     return render_template("bulk_add.html",
                            redirect_to=redirect_to,
                            tag_state=tag_state,
