@@ -1,16 +1,15 @@
-from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app, abort
+from flask import Blueprint, request, render_template, redirect, url_for, flash, abort
 import requests
-import json
 
 from dlernen.tagstate import TagState
 from dlernen_json_schema import ATTRIBUTES
-from dlernen.api_pos import \
-    VERB_POS_NAME, \
-    SEPARABLE_PREFIX_POS_NAME, \
-    INSEPARABLE_PREFIX_POS_NAME
+
 from pprint import pprint, pformat
 
 bp = Blueprint('dlernen_bulk_add', __name__, url_prefix='/dlernen/bulk_add')
+
+ATTRIBUTE_FIELD_PREFIX = 'attr'
+TAG_FIELD_PREFIX = 'tag'
 
 
 def get_bulk_add_form_data(raw_list, wordlist_id=None):
@@ -42,14 +41,12 @@ def get_bulk_add_form_data(raw_list, wordlist_id=None):
             # dig the definition out of the pos_info.
             attrs = list(filter(lambda x: x['attrkey'] in ['definition', 'article'], p[ATTRIBUTES]))
             for attr in attrs:
-                defn_field_value = attr['attrvalue'] if attr['attrvalue'] is not None else ''
+                attr_field_value = attr['attrvalue'] if attr['attrvalue'] is not None else ''
                 tag_field_value = ''
                 label = p['pos_name']
-                defn_field_name_parts = ['word', w, p['pos_id'], attr['attribute_id']]
-                tag_field_name_parts = ['tag', w, p['pos_id'], attr['attribute_id']]
+                common_field_parts = [w, p['pos_id'], attr['attribute_id']]
                 if p['word_id']:
-                    defn_field_name_parts.append(p['word_id'])
-                    tag_field_name_parts.append(p['word_id'])
+                    common_field_parts.append(p['word_id'])
                     if wordlist_id:
                         r = requests.get(url_for('api_wordlist_tag.get_tags',
                                                  word_id=p['word_id'],
@@ -61,19 +58,27 @@ def get_bulk_add_form_data(raw_list, wordlist_id=None):
                         tags_obj = r.json()
                         tag_field_value = ' '.join(tags_obj['tags'])
 
-                defn_field_name_parts = list(map(str, defn_field_name_parts))  # convert to str so join won't choke
-                defn_field_name = '-'.join(defn_field_name_parts)
-                tag_field_name_parts = list(map(str, tag_field_name_parts))  # convert to str so join won't choke
-                tag_field_name = '-'.join(tag_field_name_parts)
+                common_field_parts = list(map(str, common_field_parts))  # convert to str so join won't choke
+
+                attr_field_name = '-'.join([ATTRIBUTE_FIELD_PREFIX] + common_field_parts)
+                field_names_to_field_values[attr_field_name] = attr_field_value
+
+                tag_field_name = None
+                if attr['attrkey'] == 'definition':
+                    tag_field_name = '-'.join([TAG_FIELD_PREFIX] + common_field_parts)
+                    field_names_to_field_values[tag_field_name] = tag_field_value
 
                 a.append({
                     'label': label,
-                    'defn_field_name': defn_field_name,
+                    'attr_field_name': attr_field_name,
                     'tag_field_name': tag_field_name,
                     'attribute': attr['attrkey']
                 })
-                field_names_to_field_values[defn_field_name] = defn_field_value
-                field_names_to_field_values[tag_field_name] = tag_field_value
+
+                # tag_field_name will be None for articles, tag+word+pos_id+attribute_id for definitions.  that way
+                # when we have a tag field name, we will also have an attr field name (for definitions) and we will
+                # know what the attr field name is:  the two fields will be the same except for the FIELD_PREFIX.
+
         word_to_form_data[w] = a
 
     return word_to_form_data, field_names_to_field_values
@@ -157,7 +162,7 @@ def bulk_add_submit():
 
     for field_name, value_unstripped in request.form.items():
         parts = field_name.split('-')
-        if parts[0] != 'word':
+        if parts[0] != ATTRIBUTE_FIELD_PREFIX:
             continue
 
         value = value_unstripped.strip()
@@ -216,7 +221,8 @@ def bulk_add_submit():
     word_ids_to_update_payloads = {k: v for k, v in word_ids_to_update_payloads.items()
                                    if len(v[ATTRIBUTES]) > 0}
 
-    # if a noun is given with only one of definition or article, flash message and return to page.
+    # check:  if a noun is given with only one of definition or article, flash message and return to page.
+    messages = []
     nouns_missing_attributes = []
     for k, payload in word_pos_to_add_payloads.items():
         word, pos_id = k
@@ -235,7 +241,31 @@ def bulk_add_submit():
 
     if nouns_missing_attributes:
         message = 'definition or article not given for these nouns:  %s' % ', '.join(nouns_missing_attributes)
+        messages.append(message)
 
+    # check:  if we have specified tags for a word but not a definition, flash message and return to page.
+    tags_but_no_defns = []
+    for tag_field_name, value_unstripped in request.form.items():
+        parts = tag_field_name.split('-')
+        if parts[0] != TAG_FIELD_PREFIX:
+            continue
+
+        word = parts[1]
+
+        # construct corresponding attribute field name
+        attr_field_name = '-'.join([ATTRIBUTE_FIELD_PREFIX] + parts[1:])
+
+        defn = request.form.get(attr_field_name)
+        tag_str = request.form.get(tag_field_name)
+
+        if tag_str and not defn:
+            tags_but_no_defns.append(word)
+
+    if tags_but_no_defns:
+        message = 'tags but no definitions for these words:  %s' % ', '.join(tags_but_no_defns)
+        messages.append(message)
+
+    if messages:
         # go back and try again
 
         raw_list = request.form.get('bulk_add_submit', '')
@@ -247,11 +277,12 @@ def bulk_add_submit():
         field_names_to_field_values = {}
         for field_name, value_unstripped in request.form.items():
             parts = field_name.split('-')
-            if parts[0] != 'word':
+            if parts[0] not in {ATTRIBUTE_FIELD_PREFIX, TAG_FIELD_PREFIX}:
                 continue
 
             field_names_to_field_values[field_name] = value_unstripped
 
+        message = ' | '.join(messages)
         flash(message)
         return render_template("bulk_add.html",
                                redirect_to=redirect_to,
@@ -323,7 +354,7 @@ def bulk_add_submit():
             word = parts[1]
             pos_id = int(parts[2])
 
-            if parts[0] != 'tag':
+            if parts[0] != TAG_FIELD_PREFIX:
                 continue
 
             if (word, pos_id) not in word_pos_to_word_id:

@@ -6,24 +6,19 @@ Bulk Add
 {#
 this form is used to bulk-add multiple words in one submit.  the words are provided from the add-word textarea in the
 sidebar.  when adding/updating a word, we will not specify all attributes for the parts of speech, only the
-definition.  for nouns, we'll also give the gender.
+definition.  for nouns, we'll also give the article.
 
 the names of the fields are:
 
-for definitions:
+for definitions and articles:
 
-"word"-[word]-pos_id-attribute_id           - when there is no word id
-"word"-[word]-pos_id-attribute_id-word_id   - when there is a word id
+"attr"-[word]-pos_id-attribute_id           - when there is no word id
+"attr"-[word]-pos_id-attribute_id-word_id   - when there is a word id
 
 for tags:
 
 "tag"-[word]-pos_id-attribute_id            - when there is no word id
 "tag"-[word]-pos_id-attribute_id-word_id    - when there is a word id
-
-for definitions:
-
-(hell if i know)
-
 
 #}
 
@@ -50,28 +45,28 @@ for definitions:
             {% for f in fields %}
             <tr>
                 <td>
-                    <label for="{{ f.defn_field_name }}">{{ f.label }}</label>
+                    <label for="{{ f.attr_field_name }}">{{ f.label }}</label>
                 </td>
                 <td>
                     {% if f.attribute == 'definition' %}
                     <input type="text"
                            class="wordedit"
-                           name="{{ f.defn_field_name }}"
-                           id="{{ f.defn_field_name }}"
-                           placeholder="{{ f.defn_field_name }}"
-                           value="{{ field_names_to_field_values.get(f.defn_field_name, '') }}">
+                           name="{{ f.attr_field_name }}"
+                           id="{{ f.attr_field_name }}"
+                           placeholder="{{ f.attr_field_name }}"
+                           value="{{ field_names_to_field_values.get(f.attr_field_name, '') }}">
                     {% else %}
                     <fieldset>
                         {% for article in ['der', 'die', 'das'] %}
                         <input type="radio"
-                               id="{{ article }}-{{ f.defn_field_name }}"
-                               name="{{ f.defn_field_name }}"
+                               id="{{ article }}-{{ f.attr_field_name }}"
+                               name="{{ f.attr_field_name }}"
                                value="{{ article }}"
-                               {% if field_names_to_field_values.get(f.defn_field_name) == article %}
+                               {% if field_names_to_field_values.get(f.attr_field_name) == article %}
                                checked
                                {% endif %}
                         >
-                        <label for="{{ article }}-{{ f.defn_field_name }}">{{ article }}</label>
+                        <label for="{{ article }}-{{ f.attr_field_name }}">{{ article }}</label>
                         {% endfor %}
                     </fieldset>
                     {% endif %}
