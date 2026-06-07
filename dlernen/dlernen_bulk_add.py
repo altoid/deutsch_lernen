@@ -35,6 +35,9 @@ def get_bulk_add_form_data(raw_list, wordlist_id=None):
     # need label, field name, field value
     word_to_form_data = {}
     field_names_to_field_values = {}
+
+    # FIXME - don't do anything with tags if there is no wordlist!
+
     for w, pos_info in word_to_pos_info.items():
         a = []
         for p in pos_info:

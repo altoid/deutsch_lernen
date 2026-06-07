@@ -71,6 +71,7 @@ for tags:
                     </fieldset>
                     {% endif %}
                 </td>
+                {% if tag_state %}
                 <td>
                     {% if f.attribute == 'definition' %}
                     <input type="text"
@@ -81,6 +82,7 @@ for tags:
                            value="{{ field_names_to_field_values.get(f.tag_field_name, '') }}">
                     {% endif %}
                 </td>
+                {% endif %}
             </tr>
             {% endfor %}
         </table>
