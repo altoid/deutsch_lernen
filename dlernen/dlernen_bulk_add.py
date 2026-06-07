@@ -36,8 +36,6 @@ def get_bulk_add_form_data(raw_list, wordlist_id=None):
     word_to_form_data = {}
     field_names_to_field_values = {}
 
-    # FIXME - don't do anything with tags if there is no wordlist!
-
     for w, pos_info in word_to_pos_info.items():
         a = []
         for p in pos_info:
@@ -46,30 +44,35 @@ def get_bulk_add_form_data(raw_list, wordlist_id=None):
             for attr in attrs:
                 attr_field_value = attr['attrvalue'] if attr['attrvalue'] is not None else ''
                 tag_field_value = ''
+                tag_field_name = None
                 label = p['pos_name']
                 common_field_parts = [w, p['pos_id'], attr['attribute_id']]
                 if p['word_id']:
                     common_field_parts.append(p['word_id'])
-                    if wordlist_id:
-                        r = requests.get(url_for('api_wordlist_tag.get_tags',
-                                                 word_id=p['word_id'],
-                                                 wordlist_id=wordlist_id,
-                                                 _external=True))
-                        if not r:
-                            abort(r.status_code, response=r)
-
-                        tags_obj = r.json()
-                        tag_field_value = ' '.join(tags_obj['tags'])
 
                 common_field_parts = list(map(str, common_field_parts))  # convert to str so join won't choke
 
                 attr_field_name = '-'.join([ATTRIBUTE_FIELD_PREFIX] + common_field_parts)
                 field_names_to_field_values[attr_field_name] = attr_field_value
 
-                tag_field_name = None
-                if attr['attrkey'] == 'definition':
-                    tag_field_name = '-'.join([TAG_FIELD_PREFIX] + common_field_parts)
-                    field_names_to_field_values[tag_field_name] = tag_field_value
+                if p['word_id'] and wordlist_id:
+                    r = requests.get(url_for('api_wordlist_tag.get_tags',
+                                             word_id=p['word_id'],
+                                             wordlist_id=wordlist_id,
+                                             _external=True))
+
+                    if r:
+                        tags_obj = r.json()
+                        tag_field_value = ' '.join(tags_obj['tags'])
+                    elif r.status_code == 404:
+                        pass  # we don't care.
+                    else:
+                        # other problems, we care about.
+                        abort(r.status_code, response=r)
+
+                    if attr['attrkey'] == 'definition':
+                        tag_field_name = '-'.join([TAG_FIELD_PREFIX] + common_field_parts)
+                        field_names_to_field_values[tag_field_name] = tag_field_value
 
                 a.append({
                     'label': label,
@@ -85,6 +88,51 @@ def get_bulk_add_form_data(raw_list, wordlist_id=None):
         word_to_form_data[w] = a
 
     return word_to_form_data, field_names_to_field_values
+
+
+def update_tags(word_pos_to_word_id, wordlist_id):
+    # first, drop all the tags for each word_id in the wordlist.
+    for word_id in word_pos_to_word_id.values():
+        r = requests.delete(url_for('api_wordlist_tag.delete_tags_for_word_id',
+                                    word_id=word_id,
+                                    wordlist_id=wordlist_id,
+                                    _external=True))
+        if not r:
+            message = "could not delete tags for wordlist %s (shouldn't get a 400 here)" % wordlist_id
+            abort(r.status_code, message=message, response=r)
+    # next, add back the tags that we pull from the form.
+    payload = []
+    for field_name, value_unstripped in request.form.items():
+        parts = field_name.split('-')
+
+        if parts[0] != TAG_FIELD_PREFIX:
+            continue
+
+        word = parts[1]
+        pos_id = int(parts[2])
+
+        if (word, pos_id) not in word_pos_to_word_id:
+            # don't add tags if we didn't create a dictionary entry.
+            continue
+
+        tags = value_unstripped.strip().split()
+        if not tags:
+            continue
+
+        payload.append(
+            {
+                'word_id': word_pos_to_word_id[(word, pos_id)],
+                'tags': tags
+            }
+        )
+    if payload:
+        r = requests.post(url_for('api_wordlist_tag.add_tags',
+                                  wordlist_id=wordlist_id,
+                                  _external=True),
+                          json=payload)
+        if not r:
+            message = "add tags failed for wordlist %s" % wordlist_id
+            abort(r.status_code, message=message, response=r)
 
 
 @bp.route('/editor', methods=['POST'])
@@ -137,7 +185,7 @@ def bulk_add_submit():
     # - clearing the definition for an existing word will cause its attributes to be deleted.
     # - noun gender must be set if its definition is given.
 
-    # this will word by dropping all the definitions for extant words, then adding them back with what we pull from
+    # this will work by dropping all the definitions for extant words, then adding them back with what we pull from
     # the form.  even if the definition is unchanged.  clunky but better than diffing.
 
     serialized_tag_state = request.form.get('serialized_tag_state')
@@ -335,57 +383,10 @@ def bulk_add_submit():
     # now we deal with the tags.
 
     if wordlist_id:
-        # first, drop all the tags for each word_id in the wordlist.
-
-        for word_id in word_pos_to_word_id.values():
-            r = requests.delete(url_for('api_wordlist_tag.delete_tags_for_word_id',
-                                        word_id=word_id,
-                                        wordlist_id=wordlist_id,
-                                        _external=True))
-            if not r:
-                message = "could not delete tags for wordlist %s (shouldn't get a 400 here)" % wordlist_id
-                abort(r.status_code, message=message, response=r)
-
-        # next, add back the tags that we pull from the form.
-
-        payload = []
-        for field_name, value_unstripped in request.form.items():
-            parts = field_name.split('-')
-
-            if parts[0] != TAG_FIELD_PREFIX:
-                continue
-
-            word = parts[1]
-            pos_id = int(parts[2])
-
-            if (word, pos_id) not in word_pos_to_word_id:
-                # don't add tags if we didn't create a dictionary entry.
-                continue
-
-            tags = value_unstripped.strip().split()
-            if not tags:
-                continue
-
-            payload.append(
-                {
-                    'word_id': word_pos_to_word_id[(word, pos_id)],
-                    'tags': tags
-                }
-            )
-
-        if payload:
-            r = requests.post(url_for('api_wordlist_tag.add_tags',
-                                      wordlist_id=wordlist_id,
-                                      _external=True),
-                              json=payload)
-            if not r:
-                message = "add tags failed for wordlist %s" % wordlist_id
-                abort(r.status_code, message=message, response=r)
+        update_tags(word_pos_to_word_id, wordlist_id)
 
     # wrap up by redirecting to the right place ...
     return redirect(url_for(redirect_to,
                             serialized_tag_state=serialized_tag_state,
                             wordlist_id=wordlist_id,
                             _external=True))
-
-
