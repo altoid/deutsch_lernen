@@ -3,6 +3,7 @@ from flask import Flask, render_template
 from dlernen import config
 from dlernen.dlernen import bp as dlernen_bp
 from dlernen.dlernen_relation import bp as dlernen_relation_bp
+from dlernen.dlernen_bulk_add import bp as dlernen_bulk_add_bp
 
 from dlernen.api_misc import bp as api_misc_bp
 from dlernen.api_misc import bp as api_misc_bp
@@ -39,6 +40,7 @@ def create_app():
 
     app.register_blueprint(dlernen_bp)
     app.register_blueprint(dlernen_relation_bp)
+    app.register_blueprint(dlernen_bulk_add_bp)
 
     app.register_blueprint(api_misc_bp)
     app.register_blueprint(api_quiz_bp)
@@ -59,7 +61,7 @@ def create_app():
     app.aborter.mapping[500] = DLException
 
     @app.errorhandler(DLException)
-    # stacking decoratoors is ok
+    # stacking decorators is ok
     def dl_error_handler(dlexception):
         # abort() will create a DLException which winds up here.
 
