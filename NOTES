@@ -60,12 +60,16 @@ TODO - home page should be placeholder (no forms) or drop it altogether.
 FIXME - relation editor page should show all the attributes for the words in the relation, and have hyperlinks
     to their lookup pages.
 
-FIXME - in wordlist page, better indication that the list is a smart list.
+TODO - permit multiple definitions for a word.  this would make the above feature a little easier.
+
+FIXME - stop clipping leading/trailing spaces in wordlist notes (and elsewhere)
+
+TODO - top-level api request for get_displayable_words
 -----------
 
-dlernen.edit_word_form takes a redirect_to argument
+dlernen.word_editor takes a redirect_to argument
 
-currently dlernen.list_editor
+currently dlernen.wordlist_editor
 defaults to dlernen.wordlist
 
 putting the add-word field in the sidebar:  endpoints where we want the field to appear:
@@ -79,7 +83,7 @@ reviewed  endpoint                           args                      from word
 yes    GET dlernen.wordlist               wordlist_id               dlernen.wordlist
                                           ser tag state (opt.)
 
-yes    GET dlernen.list_editor            wordlist_id               dlernen.list_editor
+yes    GET dlernen.wordlist_editor        wordlist_id               dlernen.wordlist_editor
                                           ser tag state
 
 yes    dlernen_relation.relation_editor   relation_id               dlernen_relation.relation_editor

@@ -126,7 +126,6 @@ def bulk_add_submit():
     #  embedded in the field names here.  we can't do that in the other form because of the possibility that we would
     #  change the spelling of the word there.
 
-    # TODO - tags
     # TODO - checkboxes to indicate which words we will/will not add.
 
     # rules of the game:
@@ -244,7 +243,7 @@ def bulk_add_submit():
         messages.append(message)
 
     # check:  if we have specified tags for a word but not a definition, flash message and return to page.
-    tags_but_no_defns = []
+    tags_but_no_defns = set()
     for tag_field_name, value_unstripped in request.form.items():
         parts = tag_field_name.split('-')
         if parts[0] != TAG_FIELD_PREFIX:
@@ -259,7 +258,7 @@ def bulk_add_submit():
         tag_str = request.form.get(tag_field_name)
 
         if tag_str and not defn:
-            tags_but_no_defns.append(word)
+            tags_but_no_defns.add(word)
 
     if tags_but_no_defns:
         message = 'tags but no definitions for these words:  %s' % ', '.join(tags_but_no_defns)
@@ -332,7 +331,7 @@ def bulk_add_submit():
 
     # now we deal with the tags.
 
-    if False and wordlist_id:
+    if wordlist_id:
         # first, drop all the tags for each word_id in the wordlist.
 
         for word_id in word_pos_to_word_id.values():
@@ -350,19 +349,17 @@ def bulk_add_submit():
         for field_name, value_unstripped in request.form.items():
             parts = field_name.split('-')
 
-            value = value_unstripped.strip()
-            word = parts[1]
-            pos_id = int(parts[2])
-
             if parts[0] != TAG_FIELD_PREFIX:
                 continue
+
+            word = parts[1]
+            pos_id = int(parts[2])
 
             if (word, pos_id) not in word_pos_to_word_id:
                 # don't add tags if we didn't create a dictionary entry.
                 continue
 
-            tag_str = value
-            tags = tag_str.split()
+            tags = value_unstripped.strip().split()
             if not tags:
                 continue
 
