@@ -357,7 +357,9 @@ def wordlists_submit():
     if not r:
         abort(r.status_code, response=r)
 
-    return redirect(url_for('dlernen.wordlists'))
+    obj = r.json()
+
+    return redirect(url_for('dlernen.wordlist', wordlist_id=obj['wordlist_id']))
 
 
 @bp.route('/deletelist', methods=['POST'])
