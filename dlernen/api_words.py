@@ -85,7 +85,7 @@ def get_words_from_word_ids():
     # this is for PUT requests because we have to send in the list of words ids as a payload.
     # if we try to put the word_ids into a GET URL, the URL might be too long.
     """
-    given a list of word_ids, get the details for each word:  word, attributes, etc.
+    disgorges a list of WORD_RESPONSE_SCHEMA objects.
     """
 
     payload = request.get_json()

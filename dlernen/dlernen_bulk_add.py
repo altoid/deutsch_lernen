@@ -70,9 +70,9 @@ def get_bulk_add_form_data(raw_list, wordlist_id=None):
                         # other problems, we care about.
                         abort(r.status_code, response=r)
 
-                    if attr['attrkey'] == 'definition':
-                        tag_field_name = '-'.join([TAG_FIELD_PREFIX] + common_field_parts)
-                        field_names_to_field_values[tag_field_name] = tag_field_value
+                if attr['attrkey'] == 'definition':
+                    tag_field_name = '-'.join([TAG_FIELD_PREFIX] + common_field_parts)
+                    field_names_to_field_values[tag_field_name] = tag_field_value
 
                 a.append({
                     'label': label,
@@ -155,7 +155,6 @@ def editor_page():
     word_to_form_data, field_names_to_field_values = get_bulk_add_form_data(raw_list, wordlist_id=wordlist_id)
 
     if not word_to_form_data:
-
         return redirect(url_for(redirect_to,
                                 wordlist_id=wordlist_id,
                                 _external=True))
