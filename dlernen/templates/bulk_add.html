@@ -43,7 +43,8 @@ for tags:
         <h2>{{ word }}</h2>
         <table>
             {% for f in fields %}
-            {% set enlightened = 'enlightened' if field_names_to_field_values.get(f.attr_field_name) else '' %}
+            {% set defn_enlightened = 'enlightened' if field_names_to_field_values.get(f.attr_field_name) else '' %}
+            {% set tag_enlightened = 'enlightened' if field_names_to_field_values.get(f.tag_field_name) else '' %}
             <tr>
                 <td>
                     <label for="{{ f.attr_field_name }}">{{ f.label }}</label>
@@ -51,7 +52,7 @@ for tags:
                 <td>
                     {% if f.attribute == 'definition' %}
                     <input type="text"
-                           class="wordedit {{ enlightened }}"
+                           class="wordedit {{ defn_enlightened }}"
                            name="{{ f.attr_field_name }}"
                            id="{{ f.attr_field_name }}"
                            placeholder="{{ f.attr_field_name }}"
@@ -76,7 +77,7 @@ for tags:
                 <td>
                     {% if f.attribute == 'definition' %}
                     <input type="text"
-                           class="wordedit {{ enlightened }}"
+                           class="wordedit {{ tag_enlightened }}"
                            name="{{ f.tag_field_name }}"
                            id="{{ f.tag_field_name }}"
                            placeholder="{{ f.tag_field_name }}"
