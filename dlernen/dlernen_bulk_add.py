@@ -171,17 +171,14 @@ def editor_page():
 def bulk_add_submit():
     # hitting the submit button in the bulk add page brings us here.
 
-    # NB - this is pretty close to the algorithm used in word_editor_submit, but not close enough that we can
-    #  actually reuse code.  the form fields in the word-edit form and this form are different.  the words are
-    #  embedded in the field names here.  we can't do that in the other form because of the possibility that we would
-    #  change the spelling of the word there.
-
-    # TODO - checkboxes to indicate which words we will/will not add.
+    # this is pretty close to the algorithm used in word_editor_submit, but not close enough that we can
+    # actually reuse code.  the form fields in the word-edit form and this form are different.  the words are
+    # embedded in the field names here.  we can't do that in the other form because of the possibility that we would
+    # change the spelling of the word there.
 
     # rules of the game:
     #
     # - do not add/update anything if no definition is given.
-    # - clearing the definition for an existing word will cause its attributes to be deleted.
     # - noun gender must be set if its definition is given.
 
     # this will work by dropping all the definitions for extant words, then adding them back with what we pull from
@@ -290,6 +287,7 @@ def bulk_add_submit():
 
     if nouns_missing_attributes:
         message = 'definition or article not given for these nouns:  %s' % ', '.join(nouns_missing_attributes)
+        flash(message)
         messages.append(message)
 
     # check:  if we have specified tags for a word but not a definition, flash message and return to page.
@@ -312,6 +310,7 @@ def bulk_add_submit():
 
     if tags_but_no_defns:
         message = 'tags but no definitions for these words:  %s' % ', '.join(tags_but_no_defns)
+        flash(message)
         messages.append(message)
 
     if messages:
@@ -331,8 +330,6 @@ def bulk_add_submit():
 
             field_names_to_field_values[field_name] = value_unstripped
 
-        message = ' | '.join(messages)
-        flash(message)
         return render_template("bulk_add.html",
                                redirect_to=redirect_to,
                                tag_state=tag_state_object,
