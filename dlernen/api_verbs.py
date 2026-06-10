@@ -1,7 +1,6 @@
-from flask import Blueprint, request, current_app
+from flask import Blueprint, current_app
 from pprint import pprint
 from mysql.connector import connect
-from dlernen import common
 from contextlib import closing
 from dlernen.dlernen_json_schema import ARRAY_PREFIX_VERB_RESPONSE_SCHEMA
 from dlernen.decorators import js_validate_result

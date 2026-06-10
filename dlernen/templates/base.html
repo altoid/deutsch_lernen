@@ -30,6 +30,7 @@
     {% endif %} {# if tag_state #}
 
     <form action="{{ url_for('dlernen.lookup_submit') }}" method="post">
+        <input type="hidden" value="{{ request.endpoint }}" name="redirect_to"/>
         {% if serialized_tag_state %}
         <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
         {% endif %}

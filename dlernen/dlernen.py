@@ -56,6 +56,8 @@ def error():
 def lookup_word(word):
     partial_match = request.args.get('partial', 'false')
     serialized_tag_state = request.args.get('serialized_tag_state')
+    redirect_to = request.args.get('redirect_to')
+
     partial = False
     if partial_match.lower() == 'true':
         partial = True
@@ -103,6 +105,7 @@ def lookup_word(word):
 
     return render_template('search_results.html',
                            word=word,
+                           redirect_to=redirect_to,
                            matching_word_ids=matching_word_ids,
                            exact_match_found=exact_match_found,
                            search_results=search_results,
@@ -205,10 +208,11 @@ def lookup_submit():
 
     word = request.form.get('lookup')
     serialized_tag_state = request.form.get('serialized_tag_state')
-
+    redirect_to = request.form.get('redirect_to')
     return redirect(url_for('dlernen.lookup_word',
                             word=word,
                             partial='true',
+                            redirect_to=redirect_to,
                             serialized_tag_state=serialized_tag_state))
 
 
@@ -1024,6 +1028,7 @@ def search_results_submit():
     search_term = request.form.get('search_term')
     matching_word_ids = json.loads(request.form.get('matching_word_ids'))
     selected_word_ids = request.form.getlist('selected', type=int)
+    redirect_to = request.form.get('redirect_to', 'dlernen.lookup_word')
 
     tag_state = TagState.deserialize(serialized_tag_state)
     wordlist_id = tag_state.wordlist_id
@@ -1063,7 +1068,8 @@ def search_results_submit():
         if not r:
             abort(r.status_code, response=r)
 
-    return redirect(url_for('dlernen.lookup_word',
+    return redirect(url_for(redirect_to,
+                            wordlist_id=wordlist_id,
                             word=search_term,
                             partial='true',
                             serialized_tag_state=serialized_tag_state))
