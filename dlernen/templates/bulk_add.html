@@ -55,7 +55,7 @@ for tags:
                            class="wordedit {{ defn_enlightened }}"
                            name="{{ f.attr_field_name }}"
                            id="{{ f.attr_field_name }}"
-                           placeholder="{{ f.attr_field_name }}"
+                           placeholder="definition"
                            value="{{ field_names_to_field_values.get(f.attr_field_name, '') }}">
                     {% else %}
                     <fieldset>
@@ -80,7 +80,7 @@ for tags:
                            class="wordedit {{ tag_enlightened }}"
                            name="{{ f.tag_field_name }}"
                            id="{{ f.tag_field_name }}"
-                           placeholder="{{ f.tag_field_name }}"
+                           placeholder="tag"
                            value="{{ field_names_to_field_values.get(f.tag_field_name, '') }}">
                     {% endif %}
                 </td>
