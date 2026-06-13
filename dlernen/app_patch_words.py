@@ -50,6 +50,7 @@ def patch_words(wordlist_ids, attributes):
         if tpp:
             words_to_patch.append(w)
 
+    remaining = len(words_to_patch)
     print("found %s verbs to patch" % (len(words_to_patch)))
 
     if not words_to_patch:
@@ -63,6 +64,7 @@ def patch_words(wordlist_ids, attributes):
     counter = 0
     for p in words_to_patch:
         counter += 1
+        remaining -= 1
         attrs_to_patch = list(filter(lambda x: x['attrkey'] in attrkeys_to_patch and x['attrvalue'] is None,
                                      p['attributes']))
 
@@ -72,7 +74,7 @@ def patch_words(wordlist_ids, attributes):
 
         payload['attributes'].clear()
 
-        print("[%s] ============================= %s" % (counter, p['word']))
+        print("[%s/%s] ============================= %s" % (counter, remaining, p['word']))
         for i in ordering:
             k = sort_order_to_attrkey[i]
             v = keys_to_values[k]
