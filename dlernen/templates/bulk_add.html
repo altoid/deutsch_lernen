@@ -60,13 +60,13 @@ for tags:
                     {% else %}
                     <fieldset>
                         {% for article in ['der', 'die', 'das'] %}
+                        {% set is_checked = 'checked' if field_names_to_field_values.get(f.attr_field_name) ==
+                        article else '' %}
                         <input type="radio"
                                id="{{ article }}-{{ f.attr_field_name }}"
                                name="{{ f.attr_field_name }}"
                                value="{{ article }}"
-                               {% if field_names_to_field_values.get(f.attr_field_name) == article %}
-                               checked
-                               {% endif %}
+                               {{ is_checked }}
                         >
                         <label for="{{ article }}-{{ f.attr_field_name }}">{{ article }}</label>
                         {% endfor %}
