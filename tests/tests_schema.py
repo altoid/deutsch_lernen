@@ -10,8 +10,10 @@ from dlernen.dlernen_json_schema import get_validator, ATTRIBUTES, \
     POS_STRUCTURE_RESPONSE_SCHEMA, \
     PREFIX_VERB_RESPONSE_SCHEMA, \
     QUIZ_ANSWER_PAYLOAD_SCHEMA, \
+    QUIZ_ANSWER_PAYLOAD_SCHEMA_2, \
     QUIZ_REPORT_RESPONSE_SCHEMA, \
     QUIZ_RESPONSE_SCHEMA, \
+    QUIZ_RESPONSE_SCHEMA_2, \
     RELATION_RESPONSE_SCHEMA, \
     ARRAY_RELATION_RESPONSE_SCHEMA, \
     WORD_RESPONSE_SCHEMA, \
@@ -563,48 +565,108 @@ class Test_QUIZ_ANSWER_PAYLOAD_SCHEMA(unittest.TestCase):
 
     valid_docs = [
         {
-            'quiz_id': 123,
-            'word_id': 123,
-            'attribute_id': 123,
+            'quiz_id': 1,
+            'word_id': 1,
+            'attribute_id': 1,
             'correct': True
         },
         {
-            'quiz_id': 123,
-            'word_id': 123,
-            'attribute_id': 123,
+            'quiz_id': 2,
+            'word_id': 2,
+            'attribute_id': 2,
             'correct': False
         },
     ]
 
     invalid_docs = [
         {
-            # 'quiz_id': 123,
-            'word_id': 123,
-            'attribute_id': 123,
+            # 'quiz_id': 3,
+            'word_id': 3,
+            'attribute_id': 3,
             'correctt': True,
         },
         {
-            'quiz_id': 123,
-            # 'word_id': 123,
-            'attribute_id': 123,
+            'quiz_id': 4,
+            # 'word_id': 4,
+            'attribute_id': 4,
             'correct': True,
         },
         {
-            'quiz_id': 123,
-            'word_id': 123,
-            # 'attribute_id': 123,
+            'quiz_id': 5,
+            'word_id': 5,
+            # 'attribute_id': 5,
             'correct': True,
         },
         {
-            'quiz_id': 123,
-            'word_id': 123,
-            'attribute_id': 123,
+            'quiz_id': 6,
+            'word_id': 6,
+            'attribute_id': 6,
             # 'correct': True,
         },
         {
-            'quiz_id': 123,
-            'word_id': 123,
-            'attribute_id': 123,
+            'quiz_id': 7,
+            'word_id': 7,
+            'attribute_id': 7,
+            'correct': 0,  # wrong type
+        },
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                get_validator(self.schema).validate(jdoc)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    get_validator(self.schema).validate(jdoc)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
+class Test_QUIZ_ANSWER_PAYLOAD_SCHEMA_2(unittest.TestCase):
+    schema = QUIZ_ANSWER_PAYLOAD_SCHEMA_2
+
+    valid_docs = [
+        {
+            'word_id': 1,
+            'attribute_id': 1,
+            'correct': True
+        },
+        {
+            'word_id': 2,
+            'attribute_id': 2,
+            'correct': False
+        },
+    ]
+
+    invalid_docs = [
+        {
+            'extra_field': 8,
+            'word_id': 8,
+            'attribute_id': 8,
+            'correct': True,
+        },
+        {
+            # 'word_id': 3,
+            'attribute_id': 3,
+            'correct': True,
+        },
+        {
+            'word_id': 5,
+            # 'attribute_id': 5,
+            'correct': True,
+        },
+        {
+            'word_id': 6,
+            'attribute_id': 6,
+            # 'correct': True,
+        },
+        {
+            'word_id': 7,
+            'attribute_id': 7,
             'correct': 0,  # wrong type
         },
     ]
@@ -932,6 +994,111 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
                 # 'attrkey': 'whateverrr'
             }
         ],
+    ]
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                get_validator(self.schema).validate(jdoc)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    get_validator(self.schema).validate(jdoc)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
+class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
+    schema = QUIZ_RESPONSE_SCHEMA_2
+
+    valid_docs = [
+        {
+            'quiz_id': 1,
+            'word_id': 1,
+            ATTRIBUTES: [
+                {
+                    'attribute_id': 1,
+                    'attrvalue': 'whatevs'
+                }
+            ]
+        },
+        {
+            'quiz_id': 2,
+            'word_id': 2,
+            ATTRIBUTES: [
+                {
+                    'attribute_id': 2,
+                    'attrvalue': 'multiple attributes'
+                },
+                {
+                    'attribute_id': 3,
+                    'attrvalue': 'bleep'
+                },
+            ]
+        },
+    ]
+
+    invalid_docs = [
+        {
+            # 'quiz_id': 1,
+            'word_id': 1,
+            ATTRIBUTES: [
+                {
+                    'attribute_id': 1,
+                    'attrvalue': 'whatevs'
+                }
+            ]
+        },
+        {
+            'quiz_id': 2,
+            # 'word_id': 2,
+            ATTRIBUTES: [
+                {
+                    'attribute_id': 2,
+                    'attrvalue': 'whatevs'
+                }
+            ]
+        },
+        {
+            'quiz_id': 3,
+            'word_id': 3,
+            # ATTRIBUTES: [
+            #     {
+            #         'attribute_id': 3,
+            #         'attrvalue': 'whatevs'
+            #     }
+            # ]
+        },
+        {
+            'quiz_id': 4,
+            'word_id': 4,
+            ATTRIBUTES: [
+                # need at least 1
+            ]
+        },
+        {
+            'quiz_id': 5,
+            'word_id': 5,
+            ATTRIBUTES: [
+                {
+                    # 'attribute_id': 5,
+                    'attrvalue': 'whatevs'
+                }
+            ]
+        },
+        {
+            'quiz_id': 6,
+            'word_id': 6,
+            ATTRIBUTES: [
+                {
+                    'attribute_id': 6,
+                    # 'attrvalue': 'whatevs'
+                }
+            ]
+        },
     ]
 
     def test_valid_docs(self):

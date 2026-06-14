@@ -3,7 +3,7 @@ import requests
 import json
 
 from dlernen.tagstate import TagState
-from dlernen_json_schema import ATTRIBUTES
+from dlernen.dlernen_json_schema import ATTRIBUTES
 from dlernen.api_pos import \
     VERB_POS_NAME, \
     SEPARABLE_PREFIX_POS_NAME, \

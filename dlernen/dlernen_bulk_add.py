@@ -2,7 +2,7 @@ from flask import Blueprint, request, render_template, redirect, url_for, flash,
 import requests
 
 from dlernen.tagstate import TagState
-from dlernen_json_schema import ATTRIBUTES
+from dlernen.dlernen_json_schema import ATTRIBUTES
 
 from pprint import pprint, pformat
 

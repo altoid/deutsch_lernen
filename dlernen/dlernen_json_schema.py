@@ -573,6 +573,44 @@ QUIZ_ANSWER_PAYLOAD_SCHEMA = {
     }
 }
 
+QUIZ_ANSWER_PAYLOAD_SCHEMA_2 = {
+    "$id": "https://deutsch-lernen.doug/schemas/quiz_answer_payload_2.json",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Quiz Data List",
+    "description": "payload for posting a quiz answer",
+    "type": "object",
+    "required": [
+        "word_id",
+        "attribute_id",
+        "correct"
+    ],
+    "additionalProperties": False,
+    "properties": {
+        "word_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "correct": {
+            "type": "boolean"
+        },
+        "attribute_id": {
+            "type": "integer",
+            "minimum": 1
+        }
+    }
+}
+
+ARRAY_QUIZ_ANSWER_PAYLOAD_SCHEMA_2 = {
+    "$id": "https://deutsch-lernen.doug/schemas/array_quiz_answer_payload_2.json",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Array of QUIZ_ANSWER_PAYLOAD_SCHEMA_2",
+    "description": "array of QUIZ_ANSWER_PAYLOAD_SCHEMA_2",
+    "type": "array",
+    "items": {
+        "$ref": QUIZ_ANSWER_PAYLOAD_SCHEMA_2["$id"]
+    }
+}
+
 QUIZ_REPORT_RESPONSE_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/quiz_report_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
@@ -681,6 +719,64 @@ QUIZ_RESPONSE_SCHEMA = {
                 "type": ["string", "null"]
             }
         }
+    }
+}
+
+QUIZ_RESPONSE_SCHEMA_2 = {
+    "$id": "https://deutsch-lernen.doug/schemas/quiz_response_2.json",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Gives candidate word ids and attributes for a quiz",
+    "description": """
+    Gives candidate word ids and attributes for a quiz.
+    """,
+    "type": "object",
+    "required": [
+        "quiz_id",
+        "word_id",
+        ATTRIBUTES
+    ],
+    "additionalProperties": False,
+    "properties": {
+        "word_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "quiz_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        ATTRIBUTES: {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "object",
+                "required": [
+                    "attribute_id",
+                    "attrvalue"
+                ],
+                "additionalProperties": False,
+                "properties": {
+                    "attribute_id": {
+                        "type": "integer",
+                    },
+                    "attrvalue": {
+                        "type": "string",
+                        "pattern": STRING_PATTERN
+                    },
+                }
+            }
+        }
+    }
+}
+
+ARRAY_QUIZ_RESPONSE_SCHEMA_2 = {
+    "$id": "https://deutsch-lernen.doug/schemas/array_quiz_response_2.json",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Array of QUIZ_RESPONSE_SCHEMA_2",
+    "description": "array of QUIZ_RESPONSE_SCHEMA_2",
+    "type": "array",
+    "items": {
+        "$ref": QUIZ_RESPONSE_SCHEMA_2["$id"]
     }
 }
 
@@ -978,8 +1074,12 @@ ALL_SCHEMAS = [
     WORDLIST_TAG_PAYLOAD_SCHEMA,
     POS_STRUCTURE_RESPONSE_SCHEMA,
     QUIZ_ANSWER_PAYLOAD_SCHEMA,
+    QUIZ_ANSWER_PAYLOAD_SCHEMA_2,
+    ARRAY_QUIZ_ANSWER_PAYLOAD_SCHEMA_2,
     QUIZ_REPORT_RESPONSE_SCHEMA,
     QUIZ_RESPONSE_SCHEMA,
+    QUIZ_RESPONSE_SCHEMA_2,
+    ARRAY_QUIZ_RESPONSE_SCHEMA_2,
     RELATION_RESPONSE_SCHEMA,
     ARRAY_RELATION_RESPONSE_SCHEMA,
     WORD_TAG_RESPONSE_SCHEMA,
