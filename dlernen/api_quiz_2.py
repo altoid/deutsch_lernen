@@ -21,6 +21,58 @@ DEFINED_QUERIES = {
     'crappy_score',  # raw score < 0.8
 }
 
+SQL_SMARTLIST = """
+with candidate_word_id as
+(
+    select
+        qc.quiz_id,
+        qc.word_id,
+        qc.word,
+        qc.attribute_id,
+        qc.attrvalue,
+        qc.sort_order,
+        %(WORDLIST_ID)s wordlist_id
+
+    from quiz_candidate_v qc
+
+    where quiz_key = '%(QUIZ_KEY)s'
+    and qc.word_id in (%(WORD_ID_PLACEHOLDERS)s)
+),
+incomplete_candidates as
+(
+    select distinct word_id
+    from candidate_word_id
+    where attrvalue is null
+),
+complete_candidates as
+(
+    select distinct word_id, wordlist_id
+    from candidate_word_id
+    where word_id not in (select word_id from incomplete_candidates)
+)
+select distinct
+    candidate.quiz_id,
+    candidate.word_id,
+    candidate.word,
+    candidate.attribute_id,
+    candidate.attrvalue,
+    candidate.sort_order,
+    candidate.wordlist_id,
+    ifnull(score.last_presentation, '1970-01-01 00:00:00') last_presentation,
+    ifnull(score.correct_count, 0) correct_count,
+    ifnull(score.presentation_count, 0) presentation_count,
+    ifnull(score.correct_count / score.presentation_count, 0.0) raw_score
+
+from candidate_word_id candidate
+left join quiz_score_v score on score.quiz_id = candidate.quiz_id and score.word_id = candidate.word_id
+
+where candidate.word_id in
+    (select word_id from complete_candidates)
+
+-- default query for client is 'random', so stir the shit
+order by rand()
+"""
+
 SQL_WORDLIST = """
 with candidate_word_id as
 (
@@ -70,7 +122,7 @@ left join quiz_score_v score on score.quiz_id = candidate.quiz_id and score.word
 
 where candidate.word_id in
     (select word_id from complete_candidates)
-    
+
 -- default query for client is 'random', so stir the shit
 order by rand()
 """
@@ -230,8 +282,9 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
         if not list_metadata:
             return "wordlist %s not found" % wordlist_id, 404
 
+        list_metadata = list_metadata[0]
         # tags verboten with smart lists
-        if tags and list_metadata[0]['list_type'] == 'smart':
+        if tags and list_metadata['list_type'] == 'smart':
             message = "tags are verboten with smart lists"
             return message, 400
 
@@ -243,7 +296,22 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
                 'QUIZ_KEY': quiz_key,
                 'TAGS': ','.join(tags)
             })
-            pass
+        elif list_metadata['list_type'] == 'smart':
+            word_ids = common.get_word_ids_from_wordlists(cursor, [wordlist_id])
+            if not word_ids:
+                message = "no words in smart list %s" % wordlist_id
+                return message, 404
+
+            placeholders = ','.join(['%s'] * len(word_ids))
+            word_ids = list(map(str, word_ids))  # stringify word ids so join won't choke
+            sql = SQL_SMARTLIST % {
+                'WORDLIST_ID': wordlist_id,
+                'QUIZ_KEY': quiz_key,
+                'WORD_ID_PLACEHOLDERS': placeholders
+            }
+            print(sql)
+            cursor.execute(sql, word_ids)
+            print(cursor.statement)
         else:
             sql = SQL_WORDLIST
             cursor.execute(sql, {
