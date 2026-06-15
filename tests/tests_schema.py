@@ -1099,6 +1099,16 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
                 }
             ]
         },
+        {
+            'quiz_id': 7,
+            'word_id': 7,
+            ATTRIBUTES: [
+                {
+                    'attribute_id': 7,
+                    'attrvalue': ''  # can't be empty
+                }
+            ]
+        },
     ]
 
     def test_valid_docs(self):
