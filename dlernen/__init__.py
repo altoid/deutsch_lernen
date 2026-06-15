@@ -13,6 +13,7 @@ from dlernen.api_word import bp as api_word_bp
 from dlernen.api_words import bp as api_words_bp
 from dlernen.api_pos import bp as api_pos_bp
 from dlernen.api_quiz import bp as api_quiz_bp
+from dlernen.api_quiz_2 import bp as api_quiz_bp_2
 from dlernen.api_relation import bp as api_relation_bp
 from dlernen.api_verbs import bp as api_verbs_bp
 
@@ -44,6 +45,7 @@ def create_app():
 
     app.register_blueprint(api_misc_bp)
     app.register_blueprint(api_quiz_bp)
+    app.register_blueprint(api_quiz_bp_2)
     app.register_blueprint(api_wordlist_bp)
     app.register_blueprint(api_wordlist_tag_bp)
     app.register_blueprint(api_word_bp)
@@ -58,6 +60,7 @@ def create_app():
 
     app.aborter.mapping[400] = DLException
     app.aborter.mapping[404] = DLException
+    app.aborter.mapping[409] = DLException  # quiz api can return 409 (conflict)
     app.aborter.mapping[500] = DLException
 
     @app.errorhandler(DLException)

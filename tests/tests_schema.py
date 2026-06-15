@@ -1021,7 +1021,8 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     'attribute_id': 1,
-                    'attrvalue': 'whatevs'
+                    'attrvalue': 'whatevs',
+                    'sort_order': 1
                 }
             ]
         },
@@ -1031,11 +1032,13 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     'attribute_id': 2,
-                    'attrvalue': 'multiple attributes'
+                    'attrvalue': 'multiple attributes',
+                    'sort_order': 2
                 },
                 {
                     'attribute_id': 3,
-                    'attrvalue': 'bleep'
+                    'attrvalue': 'bleep',
+                    'sort_order': 3
                 },
             ]
         },
@@ -1048,7 +1051,8 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     'attribute_id': 1,
-                    'attrvalue': 'whatevs'
+                    'attrvalue': 'whatevs',
+                    'sort_order': 1
                 }
             ]
         },
@@ -1058,6 +1062,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     'attribute_id': 2,
+                    'sort_order': 2,
                     'attrvalue': 'whatevs'
                 }
             ]
@@ -1068,6 +1073,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             # ATTRIBUTES: [
             #     {
             #         'attribute_id': 3,
+            #         'sort_order': 3,
             #         'attrvalue': 'whatevs'
             #     }
             # ]
@@ -1085,6 +1091,18 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     # 'attribute_id': 5,
+                    'sort_order': 5,
+                    'attrvalue': 'whatevs'
+                }
+            ]
+        },
+        {
+            'quiz_id': 55,
+            'word_id': 55,
+            ATTRIBUTES: [
+                {
+                    'attribute_id': 55,
+                    # 'sort_order': 55,
                     'attrvalue': 'whatevs'
                 }
             ]
@@ -1095,6 +1113,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     'attribute_id': 6,
+                    'sort_order': 6,
                     # 'attrvalue': 'whatevs'
                 }
             ]
@@ -1105,6 +1124,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     'attribute_id': 7,
+                    'sort_order': 7,
                     'attrvalue': ''  # can't be empty
                 }
             ]
@@ -1116,6 +1136,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     'attribute_id': 8,
+                    'sort_order': 8,
                     'attrvalue': 'aoeu'
                 }
             ]
@@ -1127,6 +1148,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
                 {
                     'attribute_id': 9,
                     'stowaway': 'bleep',
+                    'sort_order': 9,
                     'attrvalue': 'aoeu'
                 }
             ]

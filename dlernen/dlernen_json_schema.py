@@ -752,11 +752,15 @@ QUIZ_RESPONSE_SCHEMA_2 = {
                 "type": "object",
                 "required": [
                     "attribute_id",
-                    "attrvalue"
+                    "attrvalue",
+                    "sort_order"
                 ],
                 "additionalProperties": False,
                 "properties": {
                     "attribute_id": {
+                        "type": "integer",
+                    },
+                    "sort_order": {
                         "type": "integer",
                     },
                     "attrvalue": {
