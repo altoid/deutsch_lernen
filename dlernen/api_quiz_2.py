@@ -31,11 +31,11 @@ with candidate_word_id as
         qc.attribute_id,
         qc.attrvalue,
         qc.sort_order,
-        %(WORDLIST_ID)s wordlist_id
+        %%s wordlist_id
 
     from quiz_candidate_v qc
 
-    where quiz_key = '%(QUIZ_KEY)s'
+    where quiz_key = %%s
     and qc.word_id in (%(WORD_ID_PLACEHOLDERS)s)
 ),
 incomplete_candidates as
@@ -89,8 +89,8 @@ with candidate_word_id as
     inner join wordlist_word ww
     on qc.word_id = ww.word_id
 
-    where quiz_key = %(QUIZ_KEY)s
-    and ww.wordlist_id = %(WORDLIST_ID)s
+    where quiz_key = %s
+    and ww.wordlist_id = %s
 ),
 incomplete_candidates as
 (
@@ -144,8 +144,8 @@ with candidate_word_id as
     inner join wordlist_word ww
     on qc.word_id = ww.word_id
 
-    where quiz_key = %(QUIZ_KEY)s
-    and ww.wordlist_id = %(WORDLIST_ID)s
+    where quiz_key = %%s
+    and ww.wordlist_id = %%s
 ),
 incomplete_candidates as
 (
@@ -167,7 +167,7 @@ tagged_candidates as
     from tag
     inner join complete_candidates cc on cc.word_id = tag.word_id and cc.wordlist_id = tag.wordlist_id
     where
-        tag.tag in (%(TAGS)s)
+        tag.tag in (%(TAG_PLACEHOLDERS)s)
 )
 select distinct
     candidate.quiz_id,
@@ -290,12 +290,11 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
 
         # checks complete, let's do this.
         if tags:
-            sql = SQL_WORDLIST_TAGS
-            cursor.execute(sql, {
-                'WORDLIST_ID': wordlist_id,
-                'QUIZ_KEY': quiz_key,
-                'TAGS': ','.join(tags)
-            })
+            placeholders = ','.join(['%s'] * len(tags))
+            sql = SQL_WORDLIST_TAGS % {
+                'TAG_PLACEHOLDERS': placeholders
+            }
+            cursor.execute(sql, [quiz_key, wordlist_id] + tags)
         elif list_metadata['list_type'] == 'smart':
             word_ids = common.get_word_ids_from_wordlists(cursor, [wordlist_id])
             if not word_ids:
@@ -303,21 +302,15 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
                 return message, 404
 
             placeholders = ','.join(['%s'] * len(word_ids))
-            word_ids = list(map(str, word_ids))  # stringify word ids so join won't choke
             sql = SQL_SMARTLIST % {
-                'WORDLIST_ID': wordlist_id,
-                'QUIZ_KEY': quiz_key,
                 'WORD_ID_PLACEHOLDERS': placeholders
             }
             print(sql)
-            cursor.execute(sql, word_ids)
+            cursor.execute(sql, [wordlist_id, quiz_key] + word_ids)
             print(cursor.statement)
         else:
             sql = SQL_WORDLIST
-            cursor.execute(sql, {
-                'WORDLIST_ID': wordlist_id,
-                'QUIZ_KEY': quiz_key
-            })
+            cursor.execute(sql, [quiz_key, wordlist_id])
 
         rows = cursor.fetchall()
         if not rows:
