@@ -1109,6 +1109,28 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
                 }
             ]
         },
+        {
+            'quiz_id': 8,
+            'stowaway': 'eek',
+            'word_id': 8,
+            ATTRIBUTES: [
+                {
+                    'attribute_id': 8,
+                    'attrvalue': 'aoeu'
+                }
+            ]
+        },
+        {
+            'quiz_id': 9,
+            'word_id': 9,
+            ATTRIBUTES: [
+                {
+                    'attribute_id': 9,
+                    'stowaway': 'bleep',
+                    'attrvalue': 'aoeu'
+                }
+            ]
+        },
     ]
 
     def test_valid_docs(self):
