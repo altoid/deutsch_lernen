@@ -21,7 +21,7 @@ DEFINED_QUERIES = {
     'crappy_score',  # raw score < 0.8
 }
 
-SQL_SMARTLIST = """
+SQL_WORD_IDS = """
 with candidate_word_id as
 (
     select
@@ -30,8 +30,7 @@ with candidate_word_id as
         qc.word,
         qc.attribute_id,
         qc.attrvalue,
-        qc.sort_order,
-        %%s wordlist_id
+        qc.sort_order
 
     from quiz_candidate_v qc
 
@@ -46,7 +45,7 @@ incomplete_candidates as
 ),
 complete_candidates as
 (
-    select distinct word_id, wordlist_id
+    select distinct word_id
     from candidate_word_id
     where word_id not in (select word_id from incomplete_candidates)
 )
@@ -57,7 +56,6 @@ select distinct
     candidate.attribute_id,
     candidate.attrvalue,
     candidate.sort_order,
-    candidate.wordlist_id,
     ifnull(score.last_presentation, '1970-01-01 00:00:00') last_presentation,
     ifnull(score.correct_count, 0) correct_count,
     ifnull(score.presentation_count, 0) presentation_count,
@@ -198,7 +196,7 @@ order by rand()
 
 
 @js_validate_result(ARRAY_QUIZ_RESPONSE_SCHEMA_2)
-def __build_result(quiz_id, rows):
+def __build_results(quiz_id, rows):
     # get the unique word ids in the order in which they appear in the query result.
     word_ids_in_order = []
     word_ids_seen = set()
@@ -217,7 +215,7 @@ def __build_result(quiz_id, rows):
                 'attrvalue': r['attrvalue']
             }
         )
-    result = [
+    results = [
         {
             'quiz_id': quiz_id,
             'word_id': x,
@@ -225,7 +223,7 @@ def __build_result(quiz_id, rows):
         }
         for x in word_ids_in_order
     ]
-    return result
+    return results
 
 
 @bp.route('/<string:quiz_key>/candidates/wordlist/<int:wordlist_id>')
@@ -302,12 +300,11 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
                 return message, 404
 
             placeholders = ','.join(['%s'] * len(word_ids))
-            sql = SQL_SMARTLIST % {
+            sql = SQL_WORD_IDS % {
                 'WORD_ID_PLACEHOLDERS': placeholders
             }
-            print(sql)
-            cursor.execute(sql, [wordlist_id, quiz_key] + word_ids)
-            print(cursor.statement)
+            cursor.execute(sql, [quiz_key] + word_ids)
+
         else:
             sql = SQL_WORDLIST
             cursor.execute(sql, [quiz_key, wordlist_id])
@@ -324,28 +321,9 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
         if query == 'oldest_first':
             rows = sorted(rows, key=lambda x: x['last_presentation'])
 
-        result = __build_result(quiz_id, rows)
+        result = __build_results(quiz_id, rows)
 
         return result
-
-
-@js_validate_result(QUIZ_RESPONSE_SCHEMA_2)
-def __build_single_result(rows, word_id):
-    attributes = [
-        {
-            'attribute_id': r['attribute_id'],
-            'sort_order': r['sort_order'],
-            'attrvalue': r['attrvalue']
-        }
-        for r in rows
-    ]
-    result = {
-        'quiz_id': rows[0]['quiz_id'],
-        'word_id': word_id,
-        ATTRIBUTES: attributes
-    }
-
-    return result
 
 
 @bp.route('/<string:quiz_key>/candidate/<int:word_id>')
@@ -361,7 +339,7 @@ def get_single_word(quiz_key, word_id):
 
         # - quiz key exists
         sql = """
-        select id 
+        select id quiz_id
         from quiz
         where quiz_key = %(quiz_key)s
         """
@@ -371,6 +349,8 @@ def get_single_word(quiz_key, word_id):
         if not rows:
             message = "unknown quiz:  %s" % quiz_key
             return message, 404
+
+        quiz_id = rows[0]['quiz_id']
 
         # - word id exists
         sql = """
@@ -387,17 +367,17 @@ def get_single_word(quiz_key, word_id):
 
         # - word is a candidate for the quiz
         sql = """
-        select
-            quiz_id,
-            word_id,
-            attribute_id,
-            attrvalue,
-            sort_order
-        from quiz_candidate_v
-        where 
-            quiz_key = %(quiz_key)s
-            and word_id = %(word_id)s
-        """
+            select
+                quiz_id,
+                word_id,
+                attribute_id,
+                attrvalue,
+                sort_order
+            from quiz_candidate_v
+            where 
+                quiz_key = %(quiz_key)s
+                and word_id = %(word_id)s
+            """
 
         cursor.execute(sql, {
             'word_id': word_id,
@@ -408,15 +388,24 @@ def get_single_word(quiz_key, word_id):
             message = "word_id %s not a candidate for quiz %s" % (word_id, quiz_key)
             return message, 400
 
-        # - all attributes defined for the quiz have values
-        undefined_attrs = list(filter(lambda x: not x['attrvalue'], rows))
-        if undefined_attrs:
+        word_ids = [word_id]
+        placeholders = ','.join(['%s'] * len(word_ids))
+        sql = SQL_WORD_IDS % {
+            'WORD_ID_PLACEHOLDERS': placeholders
+        }
+        cursor.execute(sql, [quiz_key] + word_ids)
+        rows = cursor.fetchall()
+        if not rows:
             message = "missing attribute values for word %s" % word_id
             return message, 409
 
-        result = __build_single_result(rows, word_id)
+        # the connector is returning the raw score as a Decimal, have to convert it to float
+        for r in rows:
+            r['raw_score'] = float(r['raw_score'])
 
-        return result
+        results = __build_results(quiz_id, rows)
+
+        return results[0]
 
 
 @bp.route('/<string:quiz_key>/scores', methods=['POST'])
