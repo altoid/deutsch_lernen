@@ -29,18 +29,19 @@ incomplete_candidates as
 ),
 complete_candidates as
 (
-    select distinct word_id
+    select distinct word_id, wordlist_id
     from candidate_word_id
     where word_id not in (select word_id from incomplete_candidates)
 ),
 tagged_candidates as
 (
     select distinct
-        cc.word_id
+        cc.word_id,
+        cc.wordlist_id
     from tag
-    inner join complete_candidates cc on cc.word_id = tag.word_id
-    where tag.wordlist_id = 12735
-    and tag.tag in ('1025', '1145', 'testtag')
+    inner join complete_candidates cc on cc.word_id = tag.word_id and cc.wordlist_id = tag.wordlist_id
+    where
+        tag.tag in ('1025', '1145', 'testtag')
 )
 select distinct
     candidate.quiz_id,
@@ -59,7 +60,7 @@ from candidate_word_id candidate
 left join quiz_score_v score on score.quiz_id = candidate.quiz_id and score.word_id = candidate.word_id
 
 where candidate.word_id in
---    (select word_id from complete_candidates)
-    (select word_id from tagged_candidates)
+    (select word_id from complete_candidates)
+--    (select word_id from tagged_candidates)
 
 ;
