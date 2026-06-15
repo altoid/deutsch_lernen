@@ -30,7 +30,7 @@ incomplete_candidates as
     select distinct word_id
     from candidate_word_id
     where attrvalue is null
-),
+)
 select distinct
     candidate.quiz_id,
     candidate.word_id,
