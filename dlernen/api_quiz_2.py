@@ -36,8 +36,8 @@ SELECTORS = {
     'random',
     'oldest_first',  # sort by last_presentation
     'crappy_score',  # raw score < 0.8
-    'imperfect',     # raw score < 100%
-    'rare',          # presentation_count <= 5
+    'imperfect',  # raw score < 100%
+    'rare',  # presentation_count <= 5
 }
 
 
@@ -118,16 +118,18 @@ def __complete_and_incomplete_candidates(cursor, quiz_key, word_ids=None):
     return complete_candidates, incomplete_candidates
 
 
-def __complete_and_incomplete_candidates_in_wordlist(cursor, quiz_key, wordlist_id, tags=None):
+def __complete_and_incomplete_candidates_in_wordlists(cursor, quiz_key, wordlist_ids, tags=None):
     # divide the candidate words in the given wordlist into complete/incomplete.  filter by the given tags.  it's up
     # to the caller to ensure that the tags exist in the wordlist.
     #
-    # the wordlist_id is assumed to point to a valid wordlist; caller must check this.
+    # the wordlist_ids are assumed to point to valid wordlists.
+    #
+    # tags will be ignored if there is more than one wordlist_id.
 
-    word_ids = common.get_word_ids_from_wordlists(cursor, [wordlist_id])
+    word_ids = common.get_word_ids_from_wordlists(cursor, wordlist_ids)
     complete_candidates, incomplete_candidates = __complete_and_incomplete_candidates(cursor, quiz_key, word_ids)
 
-    if tags:
+    if tags and len(wordlist_ids) == 1:
         sql = """
         select distinct word_id
         from tag
@@ -137,7 +139,7 @@ def __complete_and_incomplete_candidates_in_wordlist(cursor, quiz_key, wordlist_
             'PLACEHOLDERS': __placeholder_string(tags)
         }
 
-        cursor.execute(sql, [wordlist_id] + tags)
+        cursor.execute(sql, [wordlist_ids[0]] + tags)
         rows = cursor.fetchall()
         tagged_word_ids = {r['word_id'] for r in rows}
 
@@ -235,6 +237,64 @@ def __build_results(quiz_id, rows):
     return results
 
 
+@bp.route('/<string:quiz_key>/candidates')
+def get_words(quiz_key):
+    # returns ARRAY_QUIZ_RESPONSE_SCHEMA_2
+    # optional arguments:  selector, wordlist_ids (multiple.  if none given use whole dictionary.)
+
+    selector = request.args.get('selector', 'random')
+    wordlist_ids = request.args.getlist('wordlist_id')
+    wordlist_ids = list(set(wordlist_ids))  # remove dups
+
+    # checks:
+    # - selector is valid
+    # - quiz_key is valid
+
+    # - selector is valid
+    if selector not in SELECTORS:
+        message = "unknown selector:  %s" % selector
+        return message, 400
+
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+
+        # - quiz key is valid
+        sql = """
+        select id quiz_id
+        from quiz
+        where quiz_key = %(quiz_key)s
+        """
+
+        cursor.execute(sql, {'quiz_key': quiz_key})
+        rows = cursor.fetchall()
+        if not rows:
+            message = "unknown quiz:  %s" % quiz_key
+            return message, 404
+
+        quiz_id = rows[0]['quiz_id']
+
+        # checks complete, let's do this.
+        if wordlist_ids:
+            complete_candidates, incomplete_candidates = __complete_and_incomplete_candidates_in_wordlists(cursor,
+                                                                                                           quiz_key,
+                                                                                                           wordlist_ids)
+        else:
+            complete_candidates, incomplete_candidates = __complete_and_incomplete_candidates(cursor, quiz_key)
+
+        if not complete_candidates:
+            if incomplete_candidates:
+                message = "missing attribute values for candidate words"
+                return message, 409
+
+            message = "no candidates for quiz %s" % quiz_key
+            return message, 400
+
+        rows = __get_rows_for_candidates(cursor, complete_candidates, quiz_id, selector)
+
+        results = __build_results(quiz_id, rows)
+
+        return results
+
+
 @bp.route('/<string:quiz_key>/candidates/wordlist/<int:wordlist_id>')
 def get_words_in_wordlist(quiz_key, wordlist_id):
     # returns ARRAY_QUIZ_RESPONSE_SCHEMA_2
@@ -297,10 +357,10 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
             return message, 400
 
         # checks complete, let's do this.
-        complete_candidates, incomplete_candidates = __complete_and_incomplete_candidates_in_wordlist(cursor,
-                                                                                                      quiz_key,
-                                                                                                      wordlist_id,
-                                                                                                      tags)
+        complete_candidates, incomplete_candidates = __complete_and_incomplete_candidates_in_wordlists(cursor,
+                                                                                                       quiz_key,
+                                                                                                       wordlist_id,
+                                                                                                       tags)
 
         if not complete_candidates:
             if incomplete_candidates:
@@ -415,5 +475,3 @@ def post_quiz_score(quiz_key):
         cursor.execute('commit')
 
         return 'OK', 201
-
-
