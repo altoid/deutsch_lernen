@@ -2,91 +2,10 @@ from flask import Blueprint, url_for
 from pprint import pprint, pformat
 import requests
 import click
-import random
-from nltk.metrics.distance import edit_distance
 
 bp = Blueprint('app_quiz', __name__)
 
 QUIZ_KEY = 'definitions'
-
-
-@bp.cli.command('quiz_words')
-@click.option('--wordlist_ids', '-l', multiple=True)
-@click.option('--query', '-q', multiple=True)
-def quiz_words(wordlist_ids, queries):
-    # pick a definition and select the right german word for it.  as decoys, use words within a short levenshtein
-    # distance away from the real answer.
-
-    # get all the words
-    url = url_for('api_word.get_words', _external=True)
-    r = requests.get(url)
-    if not r:
-        return r.text, r.status_code
-
-    dictionary = r.json()
-
-    while True:
-        quiz_url = url_for('api_quiz.get_word_to_test',
-                           wordlist_id=wordlist_ids,
-                           quiz_key=QUIZ_KEY,
-                           query=queries,
-                           _external=True)
-        r = requests.get(quiz_url)
-        if not r:
-            return r.text, r.status_code
-
-        attr_to_test = r.json()
-
-        if not attr_to_test:
-            print("es gibt keine Welten mehr zu erobern")
-
-        # edit_distance is case sensitive
-        distances = [(edit_distance(w['word'], attr_to_test['word'], transpositions=True), w['word']) for w in
-                     dictionary]
-
-        distances = sorted(distances, key=lambda x: (x[0], x[1]))
-        candidates = [x[1] for x in distances[1:4]]  # distances[0] will be the word itself
-        candidates.append(attr_to_test['word'])
-        random.shuffle(candidates)
-
-        print()
-        print("################## %s" % attr_to_test['attrvalue'])
-        print()
-
-        for i in range(len(candidates)):
-            print("%s: %s" % (i, candidates[i]))
-
-        # keep pestering for usable response
-        while True:
-            prompt = "answer, q to quit  --> "
-            answer = input(prompt).strip().lower()
-            if not answer:
-                continue
-
-            if answer[0] == 'q':
-                return "OK", 200
-
-            try:
-                answer = int(answer)
-                if 0 <= answer < len(candidates):
-                    break
-            except ValueError:
-                pass
-
-        if candidates[answer] == attr_to_test['word']:
-            attr_to_test['correct'] = True
-            print("richtig")
-        else:
-            attr_to_test['correct'] = False
-            print("falsch")
-
-        r = requests.post(url_for('api_quiz.post_quiz_answer',
-                                  quiz_key=QUIZ_KEY,
-                                  _external=True), json=attr_to_test)
-
-        if not r:
-            print(r.text, r.status_code)
-            return r.text, r.status_code
 
 
 @bp.cli.command('quiz')
