@@ -5,7 +5,7 @@ import click
 import random
 from nltk.metrics.distance import edit_distance
 
-bp = Blueprint('app_quiz', __name__)
+bp = Blueprint('app_quiz_multiple_choice', __name__)
 
 QUIZ_KEY = 'definitions'
 
