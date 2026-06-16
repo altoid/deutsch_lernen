@@ -183,7 +183,6 @@ def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id, selector=None
         %(WHERE)s
         and word_id in (%(PLACEHOLDERS)s)
 
-        -- default selector is random, stir the shit
         order by %(ORDER_BY)s
     """ % {
         'PLACEHOLDERS': __placeholder_string(candidate_word_ids),
@@ -201,8 +200,43 @@ def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id, selector=None
     return rows
 
 
+def __get_articles_for_word_ids(cursor, quiz_key, word_ids):
+    # if this quiz does NOT test for articles, then get the articles for every candidate word that has one.
+    # return a dict mapping word_id to article.
+
+    result = {}
+
+    sql = """
+    select quiz_key, quiz_id, attrkey from quiz q 
+    inner join quiz_structure qs on q.id = qs.quiz_id 
+    inner join attribute a on a.id = qs.attribute_id 
+    where quiz_key = %(QUIZ_KEY)s and attrkey = 'article';
+    """
+
+    cursor.execute(sql, {
+        'QUIZ_KEY': quiz_key
+    })
+    rows = cursor.fetchall()
+
+    if word_ids and not rows:
+        # this quiz is NOT testing for articles, so we can present them.
+
+        sql = """
+        select word_id, attrvalue from mashup_v 
+        where word_id in (%(PLACEHOLDERS)s)
+        and attrkey='article'
+        """ % {
+            'PLACEHOLDERS': __placeholder_string(word_ids)
+        }
+        cursor.execute(sql, list(word_ids))
+        rows = cursor.fetchall()
+        result = {r['word_id']: r['attrvalue'] for r in rows}
+
+    return result
+
+
 @js_validate_result(ARRAY_QUIZ_RESPONSE_SCHEMA_2)
-def __build_results(quiz_id, rows):
+def __build_results(quiz_id, rows, word_ids_to_articles):
     # get the unique word ids in the order in which they appear in the query result.
     word_ids_in_order = []
     word_ids_seen = set()
@@ -234,6 +268,11 @@ def __build_results(quiz_id, rows):
         }
         for x in word_ids_in_order
     ]
+
+    for r in results:
+        if r['word_id'] in word_ids_to_articles:
+            r['article'] = word_ids_to_articles[r['word_id']]
+
     return results
 
 
@@ -289,8 +328,9 @@ def get_words(quiz_key):
             return message, 400
 
         rows = __get_rows_for_candidates(cursor, complete_candidates, quiz_id, selector)
+        word_ids_to_articles = __get_articles_for_word_ids(cursor, quiz_key, complete_candidates)
 
-        results = __build_results(quiz_id, rows)
+        results = __build_results(quiz_id, rows, word_ids_to_articles)
 
         return results
 
@@ -359,7 +399,7 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
         # checks complete, let's do this.
         complete_candidates, incomplete_candidates = __complete_and_incomplete_candidates_in_wordlists(cursor,
                                                                                                        quiz_key,
-                                                                                                       wordlist_id,
+                                                                                                       [wordlist_id],
                                                                                                        tags)
 
         if not complete_candidates:
@@ -371,8 +411,9 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
             return message, 400
 
         rows = __get_rows_for_candidates(cursor, complete_candidates, quiz_id, selector)
+        word_ids_to_articles = __get_articles_for_word_ids(cursor, quiz_key, complete_candidates)
 
-        results = __build_results(quiz_id, rows)
+        results = __build_results(quiz_id, rows, word_ids_to_articles)
 
         return results
 
@@ -430,8 +471,9 @@ def get_single_word(quiz_key, word_id):
             return message, 400
 
         rows = __get_rows_for_candidates(cursor, complete_candidates, quiz_id)
+        word_ids_to_articles = __get_articles_for_word_ids(cursor, quiz_key, complete_candidates)
 
-        results = __build_results(quiz_id, rows)
+        results = __build_results(quiz_id, rows, word_ids_to_articles)
 
         return results[0]
 

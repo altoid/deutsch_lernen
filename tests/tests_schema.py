@@ -1203,20 +1203,6 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
         },
         {
             'word': 'dribble',
-            'quiz_id': 8,
-            'stowaway': 'eek',
-            'word_id': 8,
-            ATTRIBUTES: [
-                {
-                    'attrkey': 'bubbles',
-                    'attribute_id': 8,
-                    'sort_order': 8,
-                    'attrvalue': 'aoeu'
-                }
-            ]
-        },
-        {
-            'word': 'dribble',
             'quiz_id': 88,
             'word_id': 88,
             ATTRIBUTES: [

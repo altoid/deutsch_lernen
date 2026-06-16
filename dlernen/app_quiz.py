@@ -62,7 +62,11 @@ def quiz(quiz_key, wordlist_id, selector, tags):
 
         counter += 1
 
-        print("############ %s ###########" % candidate['word'])
+        word = candidate['word']
+        if 'article' in candidate:
+            word = "%s %s" % (candidate['article'], word)
+
+        print("############ %s ###########" % word)
         for attr in candidate[ATTRIBUTES]:
             prompt = "[%s] ===== %s ====> " % (counter, attr['attrkey'])
 
