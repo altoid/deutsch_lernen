@@ -15,6 +15,23 @@ from pprint import pprint
 
 bp = Blueprint('api_quiz_2', __name__, url_prefix='/api/quiz/v2')
 
+#
+# SELECTORS
+#
+# these order and filter the rows returned by __get_rows_for_candidates.  they have the following semantics:
+#
+# random -        randomize the rows returned by the query.  this is the default.
+# oldest_first -  order by last_presentation.  null values of last_presentation sort first.
+# imperfect -     where raw_score < 1.00
+#                 order by last_presentation
+# rare -          where presentation_count <= 5
+#                 order by presentation_count, last_presentation
+# crappy_sccore - where raw_score < 0.8
+#                 or presentation_count <= 5   -- without this, if we get it right the
+#                                              -- first time we never see it again
+#                 order by raw_score, presentation_count, last_presentation
+
+
 SELECTORS = {
     'random',
     'oldest_first',  # sort by last_presentation
@@ -130,7 +147,22 @@ def __complete_and_incomplete_candidates_in_wordlist(cursor, quiz_key, wordlist_
     return complete_candidates, incomplete_candidates
 
 
-def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id):
+def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id, selector=None):
+    where = ''
+    if selector == 'oldest_first':
+        order_by = 'last_presentation'
+    elif selector == 'imperfect':
+        order_by = 'last_presentation'
+        where = 'AND raw_score < 1.00'
+    elif selector == 'rare':
+        order_by = 'presentation_count, last_presentation'
+        where = 'AND presentation_count <= 5'
+    elif selector == 'crappy_score':
+        order_by = 'raw_score, presentation_count, last_presentation'
+        where = 'AND (raw_score < 0.8 or presentation_count <= 5)'
+    else:
+        order_by = 'rand()'
+
     sql = """
         select
             word_id,
@@ -144,12 +176,15 @@ def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id):
             raw_score
         from quiz_candidate_v
         where quiz_id = %%s 
+        %(WHERE)s
         and word_id in (%(PLACEHOLDERS)s)
 
         -- default selector is random, stir the shit
-        order by rand()
+        order by %(ORDER_BY)s
     """ % {
-        'PLACEHOLDERS': __placeholder_string(candidate_word_ids)
+        'PLACEHOLDERS': __placeholder_string(candidate_word_ids),
+        'ORDER_BY': order_by,
+        'WHERE': where
     }
 
     cursor.execute(sql, [quiz_id] + list(candidate_word_ids))
@@ -268,13 +303,7 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
             message = "no candidates for quiz %s" % quiz_key
             return message, 400
 
-        rows = __get_rows_for_candidates(cursor, complete_candidates, quiz_id)
-
-        # apply client selector (oldest_first, imperfect, etc.)  default is random.
-        if selector == 'oldest_first':
-            urvalue = datetime.strptime('1970-01-01', '%Y-%m-%d')
-            rows = sorted(rows,
-                          key=lambda x: x['last_presentation'] if x['last_presentation'] else urvalue)
+        rows = __get_rows_for_candidates(cursor, complete_candidates, quiz_id, selector)
 
         results = __build_results(quiz_id, rows)
 
