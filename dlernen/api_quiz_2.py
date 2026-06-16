@@ -334,7 +334,44 @@ def get_single_word(quiz_key, word_id):
         return results[0]
 
 
-@bp.route('/<string:quiz_key>/scores', methods=['POST'])
-def post_quiz_scores(quiz_key):
+@bp.route('/<string:quiz_key>/score', methods=['POST'])
+@js_validate_payload(QUIZ_ANSWER_PAYLOAD_SCHEMA_2)
+def post_quiz_score(quiz_key):
+    payload = request.get_json()
+
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        return "unimplemented", 501
+        cursor.execute('start transaction')
+
+        # make sure the payload makes sense
+        sql = """
+        select quiz_id, word_id, attribute_id
+        from quiz_candidate_v
+        where quiz_key = %(QUIZ_KEY)s
+        and word_id = %(WORD_ID)s
+        and attribute_id = %(ATTRIBUTE_ID)s
+        """
+        cursor.execute(sql, {
+            'QUIZ_KEY': quiz_key,
+            'WORD_ID': payload['word_id'],
+            'ATTRIBUTE_ID': payload['attribute_id']
+        })
+        rows = cursor.fetchall()
+        if not rows:
+            message = "payload ain't right for quiz %s" % quiz_key
+            cursor.execute('rollback')
+            return message, 400
+
+        payload['quiz_id'] = rows[0]['quiz_id']
+        update = """
+            insert into quiz_score_event
+            (quiz_id, word_id, attribute_id, correct)
+            VALUES
+            (%(quiz_id)s, %(word_id)s, %(attribute_id)s, %(correct)s)
+            """
+
+        cursor.execute(update, payload)
+        cursor.execute('commit')
+
+        return 'OK', 201
+
+
