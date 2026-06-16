@@ -1018,6 +1018,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
         {
             'quiz_id': 1,
             'word_id': 1,
+            'word': 'assdribble',
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
@@ -1030,6 +1031,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
         {
             'quiz_id': 2,
             'word_id': 2,
+            'word': 'assdribble',
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
@@ -1049,6 +1051,33 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
 
     invalid_docs = [
         {
+            'word': '',  # must conform to WORD_PATTERN
+            'quiz_id': 111,
+            'word_id': 111,
+            ATTRIBUTES: [
+                {
+                    'attribute_id': 111,
+                    'attrvalue': 'whatevs',
+                    'sort_order': 111,
+                    'attrkey': 'bubbles',
+                }
+            ]
+        },
+        {
+            # 'word': 'dribble',
+            'quiz_id': 10,
+            'word_id': 10,
+            ATTRIBUTES: [
+                {
+                    'attribute_id': 10,
+                    'attrvalue': 'whatevs',
+                    'sort_order': 10,
+                    'attrkey': 'bubbles',
+                }
+            ]
+        },
+        {
+            'word': 'dribble',
             # 'quiz_id': 1,
             'word_id': 1,
             ATTRIBUTES: [
@@ -1061,6 +1090,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ]
         },
         {
+            'word': 'dribble',
             'quiz_id': 2,
             # 'word_id': 2,
             ATTRIBUTES: [
@@ -1073,6 +1103,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ]
         },
         {
+            'word': 'dribble',
             'quiz_id': 3,
             'word_id': 3,
             # ATTRIBUTES: [
@@ -1085,6 +1116,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             # ]
         },
         {
+            'word': 'dribble',
             'quiz_id': 4,
             'word_id': 4,
             ATTRIBUTES: [
@@ -1092,6 +1124,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ]
         },
         {
+            'word': 'dribble',
             'quiz_id': 55,
             'word_id': 55,
             ATTRIBUTES: [
@@ -1104,6 +1137,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ]
         },
         {
+            'word': 'dribble',
             'quiz_id': 5,
             'word_id': 5,
             ATTRIBUTES: [
@@ -1116,6 +1150,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ]
         },
         {
+            'word': 'dribble',
             'quiz_id': 55,
             'word_id': 55,
             ATTRIBUTES: [
@@ -1128,6 +1163,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ]
         },
         {
+            'word': 'dribble',
             'quiz_id': 6,
             'word_id': 6,
             ATTRIBUTES: [
@@ -1140,6 +1176,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ]
         },
         {
+            'word': 'dribble',
             'quiz_id': 7,
             'word_id': 7,
             ATTRIBUTES: [
@@ -1152,6 +1189,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ]
         },
         {
+            'word': 'dribble',
             'quiz_id': 77,
             'word_id': 77,
             ATTRIBUTES: [
@@ -1164,6 +1202,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ]
         },
         {
+            'word': 'dribble',
             'quiz_id': 8,
             'stowaway': 'eek',
             'word_id': 8,
@@ -1177,8 +1216,8 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ]
         },
         {
+            'word': 'dribble',
             'quiz_id': 88,
-            'stowaway': 'eek',
             'word_id': 88,
             ATTRIBUTES: [
                 {
@@ -1190,6 +1229,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ]
         },
         {
+            'word': 'dribble',
             'quiz_id': 9,
             'word_id': 9,
             ATTRIBUTES: [

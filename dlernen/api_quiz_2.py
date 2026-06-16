@@ -165,6 +165,7 @@ def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id, selector=None
 
     sql = """
         select
+            word,
             word_id,
             quiz_id,
             attribute_id,
@@ -209,6 +210,9 @@ def __build_results(quiz_id, rows):
 
         word_ids_seen.add(r['word_id'])
         word_ids_in_order.append(r['word_id'])
+
+    word_id_to_word = {r['word_id']: r['word'] for r in rows}
+
     word_id_to_attributes = {x: [] for x in word_ids_seen}
     for r in rows:
         word_id_to_attributes[r['word_id']].append(
@@ -223,6 +227,7 @@ def __build_results(quiz_id, rows):
         {
             'quiz_id': quiz_id,
             'word_id': x,
+            'word': word_id_to_word[x],
             ATTRIBUTES: sorted(word_id_to_attributes[x], key=lambda y: y['sort_order'])
         }
         for x in word_ids_in_order

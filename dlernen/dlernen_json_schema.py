@@ -731,12 +731,17 @@ QUIZ_RESPONSE_SCHEMA_2 = {
     """,
     "type": "object",
     "required": [
+        "word",
         "quiz_id",
         "word_id",
         ATTRIBUTES
     ],
     "additionalProperties": False,
     "properties": {
+        "word": {
+            "type": "string",
+            "pattern": WORD_PATTERN
+        },
         "word_id": {
             "type": "integer",
             "minimum": 1
