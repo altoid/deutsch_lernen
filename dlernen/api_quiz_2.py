@@ -1,5 +1,5 @@
 from flask import Blueprint, request, current_app, url_for
-import requests
+from datetime import datetime
 from mysql.connector import connect
 from contextlib import closing
 from dlernen import common
@@ -17,8 +17,10 @@ bp = Blueprint('api_quiz_2', __name__, url_prefix='/api/quiz/v2')
 
 DEFINED_QUERIES = {
     'random',
-    'oldest_first',
+    'oldest_first',  # sort by last_presentation
     'crappy_score',  # raw score < 0.8
+    'imperfect',     # raw score < 100%
+    'rare',          # presentation_count <= 5
 }
 
 
@@ -269,6 +271,10 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
         rows = __get_rows_for_candidates(cursor, complete_candidates, quiz_id)
 
         # apply client query (oldest_first, imperfect, etc.)  default is random.
+        if query == 'oldest_first':
+            urvalue = datetime.strptime('1970-01-01', '%Y-%m-%d')
+            rows = sorted(rows,
+                          key=lambda x: x['last_presentation'] if x['last_presentation'] else urvalue)
 
         results = __build_results(quiz_id, rows)
 
