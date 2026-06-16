@@ -1020,6 +1020,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word_id': 1,
             ATTRIBUTES: [
                 {
+                    'attrkey': 'bubbles',
                     'attribute_id': 1,
                     'attrvalue': 'whatevs',
                     'sort_order': 1
@@ -1031,11 +1032,13 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word_id': 2,
             ATTRIBUTES: [
                 {
+                    'attrkey': 'bubbles',
                     'attribute_id': 2,
                     'attrvalue': 'multiple attributes',
                     'sort_order': 2
                 },
                 {
+                    'attrkey': 'bubbles',
                     'attribute_id': 3,
                     'attrvalue': None,  # null values are kosher
                     'sort_order': 3
@@ -1052,7 +1055,8 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
                 {
                     'attribute_id': 1,
                     'attrvalue': 'whatevs',
-                    'sort_order': 1
+                    'sort_order': 1,
+                    'attrkey': 'bubbles',
                 }
             ]
         },
@@ -1061,6 +1065,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             # 'word_id': 2,
             ATTRIBUTES: [
                 {
+                    'attrkey': 'bubbles',
                     'attribute_id': 2,
                     'sort_order': 2,
                     'attrvalue': 'whatevs'
@@ -1072,6 +1077,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word_id': 3,
             # ATTRIBUTES: [
             #     {
+            #         'attrkey': 'bubbles',
             #         'attribute_id': 3,
             #         'sort_order': 3,
             #         'attrvalue': 'whatevs'
@@ -1086,10 +1092,23 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ]
         },
         {
+            'quiz_id': 55,
+            'word_id': 55,
+            ATTRIBUTES: [
+                {
+                    # 'attrkey': 'bubbles',
+                    'attribute_id': 5,
+                    'sort_order': 5,
+                    'attrvalue': 'whatevs'
+                }
+            ]
+        },
+        {
             'quiz_id': 5,
             'word_id': 5,
             ATTRIBUTES: [
                 {
+                    'attrkey': 'bubbles',
                     # 'attribute_id': 5,
                     'sort_order': 5,
                     'attrvalue': 'whatevs'
@@ -1101,6 +1120,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word_id': 55,
             ATTRIBUTES: [
                 {
+                    'attrkey': 'bubbles',
                     'attribute_id': 55,
                     # 'sort_order': 55,
                     'attrvalue': 'whatevs'
@@ -1112,6 +1132,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word_id': 6,
             ATTRIBUTES: [
                 {
+                    'attrkey': 'bubbles',
                     'attribute_id': 6,
                     'sort_order': 6,
                     # 'attrvalue': 'whatevs'
@@ -1123,6 +1144,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word_id': 7,
             ATTRIBUTES: [
                 {
+                    'attrkey': 'bubbles',
                     'attribute_id': 7,
                     'sort_order': 7,
                     'attrvalue': ''  # can't be empty
@@ -1134,6 +1156,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word_id': 77,
             ATTRIBUTES: [
                 {
+                    'attrkey': 'bubbles',
                     'attribute_id': 77,
                     'sort_order': 77,
                     'attrvalue': '      '  # whitespace-only not allowed
@@ -1146,8 +1169,22 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word_id': 8,
             ATTRIBUTES: [
                 {
+                    'attrkey': 'bubbles',
                     'attribute_id': 8,
                     'sort_order': 8,
+                    'attrvalue': 'aoeu'
+                }
+            ]
+        },
+        {
+            'quiz_id': 88,
+            'stowaway': 'eek',
+            'word_id': 88,
+            ATTRIBUTES: [
+                {
+                    'attrkey': '',  # must conform to ID_PATTERN
+                    'attribute_id': 88,
+                    'sort_order': 88,
                     'attrvalue': 'aoeu'
                 }
             ]
@@ -1157,6 +1194,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word_id': 9,
             ATTRIBUTES: [
                 {
+                    'attrkey': 'bubbles',
                     'attribute_id': 9,
                     'stowaway': 'bleep',
                     'sort_order': 9,
