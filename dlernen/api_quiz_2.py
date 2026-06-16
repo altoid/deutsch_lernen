@@ -15,7 +15,7 @@ from pprint import pprint
 
 bp = Blueprint('api_quiz_2', __name__, url_prefix='/api/quiz/v2')
 
-DEFINED_QUERIES = {
+SELECTORS = {
     'random',
     'oldest_first',  # sort by last_presentation
     'crappy_score',  # raw score < 0.8
@@ -146,7 +146,7 @@ def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id):
         where quiz_id = %%s 
         and word_id in (%(PLACEHOLDERS)s)
 
-        -- default query is random, stir the shit
+        -- default selector is random, stir the shit
         order by rand()
     """ % {
         'PLACEHOLDERS': __placeholder_string(candidate_word_ids)
@@ -196,9 +196,9 @@ def __build_results(quiz_id, rows):
 @bp.route('/<string:quiz_key>/candidates/wordlist/<int:wordlist_id>')
 def get_words_in_wordlist(quiz_key, wordlist_id):
     # returns ARRAY_QUIZ_RESPONSE_SCHEMA_2
-    # optional arguments:  query, tag (0 or more)
+    # optional arguments:  selector, tag (0 or more)
 
-    query = request.args.get('query', 'random')
+    selector = request.args.get('selector', 'random')
     tags = request.args.getlist('tag')
     tags = list(set(tags))  # remove dups
 
@@ -211,18 +211,18 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
     # the query works by finding all the rows in quiz_candidate_v for the word/quiz.  from those we get the word ids
     # for every row with a null attribute value.  finally we select rows that do NOT have those word ids.
     #
-    # to make the sql less awful, we will sort the rows here, not in the sql.  the query in the request determines the
+    # to make the sql less awful, we will sort the rows here, not in the sql.  the selector in the request determines the
     # how we sort.  the word_id in the first row thus obtained is the word that will be returned by the request.
 
     # checks:
-    # - query is valid
+    # - selector is valid
     # - quiz_key is valid
     # - wordlist exists
     # - tags not allowed for smart list
 
-    # - query is valid
-    if query not in DEFINED_QUERIES:
-        message = "unknown query:  %s" % query
+    # - selector is valid
+    if selector not in SELECTORS:
+        message = "unknown selector:  %s" % selector
         return message, 400
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
@@ -270,8 +270,8 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
 
         rows = __get_rows_for_candidates(cursor, complete_candidates, quiz_id)
 
-        # apply client query (oldest_first, imperfect, etc.)  default is random.
-        if query == 'oldest_first':
+        # apply client selector (oldest_first, imperfect, etc.)  default is random.
+        if selector == 'oldest_first':
             urvalue = datetime.strptime('1970-01-01', '%Y-%m-%d')
             rows = sorted(rows,
                           key=lambda x: x['last_presentation'] if x['last_presentation'] else urvalue)
