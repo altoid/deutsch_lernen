@@ -21,178 +21,143 @@ DEFINED_QUERIES = {
     'crappy_score',  # raw score < 0.8
 }
 
-SQL_WORD_IDS = """
-with candidate_word_id as
-(
-    select
-        qc.quiz_id,
-        qc.word_id,
-        qc.word,
-        qc.attribute_id,
-        qc.attrvalue,
-        qc.sort_order
 
-    from quiz_candidate_v qc
-
-    where quiz_key = %%s
-    and qc.word_id in (%(WORD_ID_PLACEHOLDERS)s)
-),
-incomplete_candidates as
-(
-    select distinct word_id
-    from candidate_word_id
-    where attrvalue is null
-),
-complete_candidates as
-(
-    select distinct word_id
-    from candidate_word_id
-    where word_id not in (select word_id from incomplete_candidates)
-)
-select distinct
-    candidate.quiz_id,
-    candidate.word_id,
-    candidate.word,
-    candidate.attribute_id,
-    candidate.attrvalue,
-    candidate.sort_order,
-    ifnull(score.last_presentation, '1970-01-01 00:00:00') last_presentation,
-    ifnull(score.correct_count, 0) correct_count,
-    ifnull(score.presentation_count, 0) presentation_count,
-    ifnull(score.correct_count / score.presentation_count, 0.0) raw_score
-
-from candidate_word_id candidate
-left join quiz_score_v score on score.quiz_id = candidate.quiz_id and score.word_id = candidate.word_id
-
-where candidate.word_id in
-    (select word_id from complete_candidates)
-
--- default query for client is 'random', so stir the shit
-order by rand()
-"""
-
-SQL_WORDLIST = """
-with candidate_word_id as
-(
-    select
-        qc.quiz_id,
-        qc.word_id,
-        qc.word,
-        qc.attribute_id,
-        qc.attrvalue,
-        qc.sort_order,
-        ww.wordlist_id
-
-    from quiz_candidate_v qc
-    inner join wordlist_word ww
-    on qc.word_id = ww.word_id
-
-    where quiz_key = %s
-    and ww.wordlist_id = %s
-),
-incomplete_candidates as
-(
-    select distinct word_id
-    from candidate_word_id
-    where attrvalue is null
-),
-complete_candidates as
-(
-    select distinct word_id, wordlist_id
-    from candidate_word_id
-    where word_id not in (select word_id from incomplete_candidates)
-)
-select distinct
-    candidate.quiz_id,
-    candidate.word_id,
-    candidate.word,
-    candidate.attribute_id,
-    candidate.attrvalue,
-    candidate.sort_order,
-    candidate.wordlist_id,
-    ifnull(score.last_presentation, '1970-01-01 00:00:00') last_presentation,
-    ifnull(score.correct_count, 0) correct_count,
-    ifnull(score.presentation_count, 0) presentation_count,
-    ifnull(score.correct_count / score.presentation_count, 0.0) raw_score
-
-from candidate_word_id candidate
-left join quiz_score_v score on score.quiz_id = candidate.quiz_id and score.word_id = candidate.word_id
-
-where candidate.word_id in
-    (select word_id from complete_candidates)
-
--- default query for client is 'random', so stir the shit
-order by rand()
-"""
-
-SQL_WORDLIST_TAGS = """
-with candidate_word_id as
-(
-    select
-        qc.quiz_id,
-        qc.word_id,
-        qc.word,
-        qc.attribute_id,
-        qc.attrvalue,
-        qc.sort_order,
-        ww.wordlist_id
-        -- tag is not selected.  we want to filter with it, not see it.
-
-    from quiz_candidate_v qc
-    inner join wordlist_word ww
-    on qc.word_id = ww.word_id
-
-    where quiz_key = %%s
-    and ww.wordlist_id = %%s
-),
-incomplete_candidates as
-(
-    select distinct word_id
-    from candidate_word_id
-    where attrvalue is null
-),
-complete_candidates as
-(
-    select distinct word_id, wordlist_id
-    from candidate_word_id
-    where word_id not in (select word_id from incomplete_candidates)
-),
-tagged_candidates as
-(
-    select distinct
-        cc.word_id,
-        cc.wordlist_id
-    from tag
-    inner join complete_candidates cc on cc.word_id = tag.word_id and cc.wordlist_id = tag.wordlist_id
-    where
-        tag.tag in (%(TAG_PLACEHOLDERS)s)
-)
-select distinct
-    candidate.quiz_id,
-    candidate.word_id,
-    candidate.word,
-    candidate.attribute_id,
-    candidate.attrvalue,
-    candidate.sort_order,
-    candidate.wordlist_id,
-    ifnull(score.last_presentation, '1970-01-01 00:00:00') last_presentation,
-    ifnull(score.correct_count, 0) correct_count,
-    ifnull(score.presentation_count, 0) presentation_count,
-    ifnull(score.correct_count / score.presentation_count, 0.0) raw_score
-
-from candidate_word_id candidate
-left join quiz_score_v score on score.quiz_id = candidate.quiz_id and score.word_id = candidate.word_id
-
-where candidate.word_id in
-    (select word_id from tagged_candidates)
-    
--- default query for client is 'random', so stir the shit
-order by rand()
-"""
+def __placeholder_string(itr):
+    return ','.join(['%s'] * len(itr))
 
 
 # for the various GET requests, we guarantee that all attributes returned for a word will have values for all
 # attributes defined for the quiz.
+#
+# a CANDIDATE word for a quiz is a part of speech whose attributes are a superset of the attributes defined for the
+# quiz.  for example, the definitions quiz has the single attribute 'definition.'  any part of speech with a
+# definition is a candidate for that quiz.  all of the verbs are candidates for the 'present_indicative' and
+# 'irregular_verbs' quizzes.  no noun is a candidate for either of these quizzes.
+#
+# a COMPLETE CANDIDATE for a quiz is a part of speech that has values for all attributes defined for the quiz.  an
+# INCOMPLETE CANDIDATE is a candidate with at least one null-valued attribute.
+#
+
+# the complete_and_incomplete_candidates functions return two sets of word ids: those that are complete
+# candidates for the quiz and those that are incomplete candidates.  the first set is the complete candidates; the
+# second is the incomplete ones.  these sets will be disjoint.
+
+
+def __complete_and_incomplete_candidates(cursor, quiz_key, word_ids=None):
+    # divide the list of word_ids into complete and incomplete candidates.  if word_ids is None, subdivide the whole
+    # dictionary.
+    #
+    # caller must check:
+    # - quiz_key is real.
+    # - word_ids is nonempty.
+    #
+
+    if word_ids:
+        sql = """
+        select distinct word_id
+        from quiz_candidate_v
+        where quiz_key = %%s
+        and word_id in (%(PLACEHOLDERS)s)
+        """ % {
+            'PLACEHOLDERS': __placeholder_string(word_ids)
+        }
+
+        query_args = [quiz_key] + word_ids
+
+    else:
+        sql = """
+        select distinct word_id
+        from quiz_candidate_v
+        where quiz_key = %s
+        """
+
+        query_args = [quiz_key]
+
+    cursor.execute(sql, query_args)
+    rows = cursor.fetchall()
+    if not rows:
+        return set(), set()
+
+    candidate_word_ids = {r['word_id'] for r in rows}
+
+    sql = """
+    select distinct word_id
+    from quiz_candidate_v
+    where quiz_key = %%s
+    and word_id in (%(PLACEHOLDERS)s)
+    and attrvalue is null
+    """ % {
+        'PLACEHOLDERS': __placeholder_string(candidate_word_ids)
+    }
+
+    cursor.execute(sql, [quiz_key] + list(candidate_word_ids))
+    rows = cursor.fetchall()
+
+    incomplete_candidates = {x['word_id'] for x in rows}
+    complete_candidates = candidate_word_ids - incomplete_candidates
+
+    return complete_candidates, incomplete_candidates
+
+
+def __complete_and_incomplete_candidates_in_wordlist(cursor, quiz_key, wordlist_id, tags=None):
+    # divide the candidate words in the given wordlist into complete/incomplete.  filter by the given tags.  it's up
+    # to the caller to ensure that the tags exist in the wordlist.
+    #
+    # the wordlist_id is assumed to point to a valid wordlist; caller must check this.
+
+    word_ids = common.get_word_ids_from_wordlists(cursor, [wordlist_id])
+    complete_candidates, incomplete_candidates = __complete_and_incomplete_candidates(cursor, quiz_key, word_ids)
+
+    if tags:
+        sql = """
+        select distinct word_id
+        from tag
+        where wordlist_id = %%s
+        and tag in (%(PLACEHOLDERS)s)
+        """ % {
+            'PLACEHOLDERS': __placeholder_string(tags)
+        }
+
+        cursor.execute(sql, [wordlist_id] + tags)
+        rows = cursor.fetchall()
+        tagged_word_ids = {r['word_id'] for r in rows}
+
+        complete_candidates = complete_candidates & tagged_word_ids
+        incomplete_candidates = incomplete_candidates & tagged_word_ids
+
+    return complete_candidates, incomplete_candidates
+
+
+def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id):
+    sql = """
+        select
+            word_id,
+            quiz_id,
+            attribute_id,
+            sort_order,
+            attrvalue,
+            last_presentation,
+            correct_count,
+            presentation_count,
+            raw_score
+        from quiz_candidate_v
+        where quiz_id = %%s 
+        and word_id in (%(PLACEHOLDERS)s)
+
+        -- default query is random, stir the shit
+        order by rand()
+    """ % {
+        'PLACEHOLDERS': __placeholder_string(candidate_word_ids)
+    }
+
+    cursor.execute(sql, [quiz_id] + list(candidate_word_ids))
+    rows = cursor.fetchall()
+
+    # the connector is returning the raw score as a Decimal, have to convert it to float
+    for r in rows:
+        r['raw_score'] = float(r['raw_score'])
+
+    return rows
 
 
 @js_validate_result(ARRAY_QUIZ_RESPONSE_SCHEMA_2)
@@ -281,49 +246,33 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
             return "wordlist %s not found" % wordlist_id, 404
 
         list_metadata = list_metadata[0]
+
         # tags verboten with smart lists
         if tags and list_metadata['list_type'] == 'smart':
             message = "tags are verboten with smart lists"
             return message, 400
 
         # checks complete, let's do this.
-        if tags:
-            placeholders = ','.join(['%s'] * len(tags))
-            sql = SQL_WORDLIST_TAGS % {
-                'TAG_PLACEHOLDERS': placeholders
-            }
-            cursor.execute(sql, [quiz_key, wordlist_id] + tags)
-        elif list_metadata['list_type'] == 'smart':
-            word_ids = common.get_word_ids_from_wordlists(cursor, [wordlist_id])
-            if not word_ids:
-                message = "no words in smart list %s" % wordlist_id
-                return message, 404
+        complete_candidates, incomplete_candidates = __complete_and_incomplete_candidates_in_wordlist(cursor,
+                                                                                                      quiz_key,
+                                                                                                      wordlist_id,
+                                                                                                      tags)
 
-            placeholders = ','.join(['%s'] * len(word_ids))
-            sql = SQL_WORD_IDS % {
-                'WORD_ID_PLACEHOLDERS': placeholders
-            }
-            cursor.execute(sql, [quiz_key] + word_ids)
+        if not complete_candidates:
+            if incomplete_candidates:
+                message = "missing attribute values for candidate words"
+                return message, 409
 
-        else:
-            sql = SQL_WORDLIST
-            cursor.execute(sql, [quiz_key, wordlist_id])
+            message = "no candidates for quiz %s" % quiz_key
+            return message, 400
 
-        rows = cursor.fetchall()
-        if not rows:
-            message = "no candidate words found"
-            return message, 409
+        rows = __get_rows_for_candidates(cursor, complete_candidates, quiz_id)
 
-        # the connector is returning the raw score as a Decimal, have to convert it to float
-        for r in rows:
-            r['raw_score'] = float(r['raw_score'])
+        # apply client query (oldest_first, imperfect, etc.)  default is random.
 
-        if query == 'oldest_first':
-            rows = sorted(rows, key=lambda x: x['last_presentation'])
+        results = __build_results(quiz_id, rows)
 
-        result = __build_results(quiz_id, rows)
-
-        return result
+        return results
 
 
 @bp.route('/<string:quiz_key>/candidate/<int:word_id>')
@@ -365,43 +314,20 @@ def get_single_word(quiz_key, word_id):
             message = "unknown word_id:  %s" % word_id
             return message, 404
 
-        # - word is a candidate for the quiz
-        sql = """
-            select
-                quiz_id,
-                word_id,
-                attribute_id,
-                attrvalue,
-                sort_order
-            from quiz_candidate_v
-            where 
-                quiz_key = %(quiz_key)s
-                and word_id = %(word_id)s
-            """
+        word_ids = [word_id]
 
-        cursor.execute(sql, {
-            'word_id': word_id,
-            'quiz_key': quiz_key
-        })
-        rows = cursor.fetchall()
-        if not rows:
+        # these are sets
+        complete_candidates, incomplete_candidates = __complete_and_incomplete_candidates(cursor, quiz_key, word_ids)
+
+        if not complete_candidates:
+            if incomplete_candidates:
+                message = "missing attribute values for word %s" % word_id
+                return message, 409
+
             message = "word_id %s not a candidate for quiz %s" % (word_id, quiz_key)
             return message, 400
 
-        word_ids = [word_id]
-        placeholders = ','.join(['%s'] * len(word_ids))
-        sql = SQL_WORD_IDS % {
-            'WORD_ID_PLACEHOLDERS': placeholders
-        }
-        cursor.execute(sql, [quiz_key] + word_ids)
-        rows = cursor.fetchall()
-        if not rows:
-            message = "missing attribute values for word %s" % word_id
-            return message, 409
-
-        # the connector is returning the raw score as a Decimal, have to convert it to float
-        for r in rows:
-            r['raw_score'] = float(r['raw_score'])
+        rows = __get_rows_for_candidates(cursor, complete_candidates, quiz_id)
 
         results = __build_results(quiz_id, rows)
 
