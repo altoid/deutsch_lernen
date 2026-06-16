@@ -170,6 +170,7 @@ def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id, selector=None
             attribute_id,
             sort_order,
             attrvalue,
+            attrkey,
             last_presentation,
             correct_count,
             presentation_count,
@@ -212,6 +213,7 @@ def __build_results(quiz_id, rows):
     for r in rows:
         word_id_to_attributes[r['word_id']].append(
             {
+                'attrkey': r['attrkey'],
                 'attribute_id': r['attribute_id'],
                 'sort_order': r['sort_order'],
                 'attrvalue': r['attrvalue']
