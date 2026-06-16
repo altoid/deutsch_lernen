@@ -1,9 +1,9 @@
-import random
-
 from flask import Blueprint, url_for
 from pprint import pprint, pformat
 import requests
-from dlernen import api_quiz
+from dlernen import api_quiz_2
+from dlernen.dlernen_json_schema import ATTRIBUTES
+
 import pickle
 
 bp = Blueprint('app_quiz_defs', __name__)
@@ -16,13 +16,13 @@ HINTED_TAG = '__hinted'
 class AppState(object):
     def __init__(self,
                  quiz_key='definitions',
-                 query='random',
+                 selector='random',
                  wordlists=None,
                  tags=None,
                  hints_requested=None,
                  missed=None):
         self.quiz_key = quiz_key
-        self.query = query
+        self.selector = selector
 
         # dict mapping wordlist_ids to wordlist names.
         if wordlists:
@@ -59,7 +59,7 @@ class AppState(object):
 
     def reset(self):
         self.wordlists.clear()
-        self.query = 'random'
+        self.selector = 'random'
         self.tags.clear()
         # self.cache.clear()  # no need to flush the cache on reset
         self.post_scores = False
@@ -191,8 +191,8 @@ def toggle_posting_scores():
     APPSTATE.post_scores = not APPSTATE.post_scores
 
     print("posting scores is now %s" % ("ON" if APPSTATE.post_scores else "OFF"))
-    if not APPSTATE.post_scores and APPSTATE.query == 'oldest_first':
-        APPSTATE.query = 'random'
+    if not APPSTATE.post_scores and APPSTATE.selector == 'oldest_first':
+        APPSTATE.selector = 'random'
 
 
 def select_lists():
@@ -295,7 +295,7 @@ Tags:""")
         print("** no tags")
 
     print("""
-Query:  %s""" % APPSTATE.query)
+Query:  %s""" % APPSTATE.selector)
 
     url = url_for('api_wordlist.get_word_ids_from_wordlists',
                   wordlist_id=list(APPSTATE.wordlists.keys()),
@@ -381,7 +381,7 @@ or enter list of tags, space separated
         print("current tags:  %s" % pformat(APPSTATE.tags))
 
 
-def select_query():
+def select_selector():
     global APPSTATE
 
     menu = """
@@ -390,13 +390,13 @@ s - show selection
 q - show possible queries
 m - show menu
 r - return to main menu
-or enter query name
+or enter selector name
 """
 
     print(menu)
-    print("current query:  %s" % APPSTATE.query)
-    possible_queries = set(api_quiz.DEFINED_QUERIES.keys())
-    possible_queries.add('random')
+    print("current selector:  %s" % APPSTATE.selector)
+    possible_queries = api_quiz_2.SELECTORS
+
     if not APPSTATE.post_scores:
         # posting scores changes the what the oldest is (by converting the oldest
         # to the newest, giving us a new oldest).  if we AREN'T posting scores, the oldest
@@ -404,18 +404,18 @@ or enter query name
         possible_queries.remove('oldest_first')
 
     while True:
-        prompt = '[select query] ---> '
+        prompt = '[select selector] ---> '
         answer = input(prompt).strip().casefold()
         if not answer:
             continue
 
         if answer == 'c':
-            APPSTATE.query = None
+            APPSTATE.selector = None
             print("selection cleared")
             continue
 
         if answer == 's':
-            print("selection:  %s" % APPSTATE.query)
+            print("selection:  %s" % APPSTATE.selector)
             continue
 
         if answer == 'q':
@@ -429,16 +429,16 @@ or enter query name
             continue
 
         if answer == 'r':
-            if not APPSTATE.query:
-                APPSTATE.query = 'oldest_first'
+            if not APPSTATE.selector:
+                APPSTATE.selector = 'oldest_first'
             break
 
         if answer not in possible_queries:
-            print("not a valid query:  %s" % answer)
+            print("not a valid selector:  %s" % answer)
             continue
 
-        APPSTATE.query = answer
-        print("selection:  %s" % APPSTATE.query)
+        APPSTATE.selector = answer
+        print("selection:  %s" % APPSTATE.selector)
 
 
 def show_missed_words():
@@ -483,57 +483,49 @@ def show_hinted_words():
         print("    %s (%s)" % (w['word'], w['pos_name']))
 
 
-def get_next_word(wordlist_ids, query):
-    # wordlist_ids and query are both lists and may be empty
+def get_next_word(wordlist_ids, selector):
+    # wordlist_ids is a list and may be empty
     global APPSTATE
 
-    url = url_for('api_quiz.get_word_to_test',
+    url = url_for('api_quiz_2.get_words',
                   wordlist_id=wordlist_ids,
                   quiz_key=APPSTATE.quiz_key,
-                  query=query)
+                  selector=selector)
 
-    while True:
-        r = requests.get(url)
-        if not r:
-            print("get_word_to_test failed:  [%s - %s]" % (r.text, r.status_code))
-            break
+    r = requests.get(url)
+    if r:
+        words_to_test = r.json()
+        i = 0
+        while True:
+            yield words_to_test[i]
+            i += 1
+            i = i % len(words_to_test)
 
-        attrs_to_test = r.json()
-        if not attrs_to_test:
-            print("attrs_to_test is bupkus")
-            break
-
-        yield attrs_to_test[0]
-        continue
-
+    print("get_words failed:  [%s - %s]" % (r.text, r.status_code))
     yield None
 
 
-def get_next_word_with_tags(wordlist_id, query, tags):
+def get_next_word_with_tags(wordlist_id, selector, tags):
     # wordlist_id is a single id, not a list.
 
     global APPSTATE
 
-    url = url_for('api_quiz.get_word_to_test_single_wordlist',
+    url = url_for('api_quiz_2.get_words_in_wordlist',
                   wordlist_id=wordlist_id,
-                  tag=tags,
                   quiz_key=APPSTATE.quiz_key,
-                  query=query)
+                  selector=selector,
+                  tag=tags)
 
-    while True:
-        r = requests.get(url)
-        if not r:
-            print("get_word_to_test_single_wordlist failed:  [%s - %s]" % (r.text, r.status_code))
-            break
+    r = requests.get(url)
+    if r:
+        words_to_test = r.json()
+        i = 0
+        while True:
+            yield words_to_test[i]
+            i += 1
+            i = i % len(words_to_test)
 
-        attrs_to_test = r.json()
-        if not attrs_to_test:
-            print("attrs_to_test is bupkus")
-            break
-
-        yield attrs_to_test[0]
-        continue
-
+    print("get_words_in_wordlist failed:  [%s - %s]" % (r.text, r.status_code))
     yield None
 
 
@@ -575,35 +567,6 @@ def decorate_if_noun(word_object):
     return word_object
 
 
-def get_random_next_word(wordlist_ids, tags):
-    r = requests.get(url_for('api_wordlist.get_word_ids_from_wordlists',
-                             wordlist_id=wordlist_ids,
-                             tag=tags))
-    obj = r.json()
-    word_ids = obj['word_ids']
-    if not word_ids:
-        print("no matching words:  wordlists:  %s, tags:  %s" % (pformat(wordlist_ids), pformat(tags)))
-        return
-
-    random.shuffle(word_ids)  # shuffle in place
-
-    word_ids_to_attrs = {}
-    i = 0
-    while True:
-        if word_ids[i] not in word_ids_to_attrs:
-            url = url_for('api_quiz.get_all_attr_values_for_quiz',
-                          quiz_key=APPSTATE.quiz_key,
-                          word_id=word_ids[i])
-            r = requests.get(url)
-            obj = r.json()
-            word_ids_to_attrs[word_ids[i]] = decorate_if_noun(obj[0])
-
-        yield word_ids_to_attrs[word_ids[i]]
-
-        i += 1
-        i = i % len(word_ids)
-
-
 def tag_word(word_id, tag):
     # for each wordlist in the app state, affix the HINTED tag to the word.
     # we will get a 400 if the word_id is not in a list, but we will ignore that condition.
@@ -637,15 +600,13 @@ def quiz_definitions():
     global APPSTATE
 
     wordlist_ids = list(APPSTATE.wordlists.keys())
-    query = APPSTATE.query
+    selector = APPSTATE.selector
     tags = list(APPSTATE.tags)
 
-    if APPSTATE.query == 'random':
-        function_and_args = make_triple(get_random_next_word, wordlist_ids, tags)
-    elif len(wordlist_ids) == 1:
-        function_and_args = make_triple(get_next_word_with_tags, wordlist_ids[0], query, tags)
+    if len(wordlist_ids) == 1:
+        function_and_args = make_triple(get_next_word_with_tags, wordlist_ids[0], selector, tags)
     else:
-        function_and_args = make_triple(get_next_word, wordlist_ids, query)
+        function_and_args = make_triple(get_next_word, wordlist_ids, selector)
 
     quiz_loop(function_and_args)
 
@@ -690,15 +651,17 @@ def quiz_loop(generating_function_and_args):
     function, args, kwargs = generating_function_and_args
 
     count = 1
-    for attr_to_test in function(*args, **kwargs):
-        if not attr_to_test:
+    for word_to_test in function(*args, **kwargs):
+        if not word_to_test:
             print("es gibt keine Welten mehr zu erobern")
             break
 
-        if 'article' in attr_to_test:
-            print("[%s] %s %s" % (count, attr_to_test['article'], attr_to_test['word']))
-        else:
-            print("[%s] %s" % (count, attr_to_test['word']))
+        word = "%s %s" % (word_to_test.get('article', ''), word_to_test['word'])
+        word = word.strip()
+        print("[%s] %s" % (count, word))
+
+        # no need to loop over the attributes.  there's only one we care about.  fish it out.
+        defn_attr = list(filter(lambda x: x['attrkey'] == 'definition', word_to_test[ATTRIBUTES]))[0]
 
         while True:
             prompt = "hit return for answer, r to return to main menu, h for hint:  --> "
@@ -711,13 +674,13 @@ def quiz_loop(generating_function_and_args):
                 break
 
             if answer.startswith('h'):
-                APPSTATE.hints_requested.add(attr_to_test['word_id'])
+                APPSTATE.hints_requested.add(word_to_test['word_id'])
 
                 # show wordlists this word is in.
                 r = requests.get(url_for('api_word.get_member_wordlists',
-                                         word_id=attr_to_test['word_id']))
+                                         word_id=word_to_test['word_id']))
                 if not r:
-                    message = "could not get wordlists for word id %s:  [%s, %s]" % (attr_to_test['word_id'], r.text,
+                    message = "could not get wordlists for word id %s:  [%s, %s]" % (word_to_test['word_id'], r.text,
                                                                                      r.status_code)
                     print(message)
                     return message, r.status_code
@@ -730,10 +693,10 @@ def quiz_loop(generating_function_and_args):
                 for n in wordlist_list_obj:
                     r = requests.get(url_for('api_wordlist_tag.get_tags',
                                              wordlist_id=n['wordlist_id'],
-                                             word_id=attr_to_test['word_id']))
+                                             word_id=word_to_test['word_id']))
                     if not r:
                         message = "could not get tags for word id %s:  [%s, %s]" % (
-                            attr_to_test['word_id'], r.text,
+                            word_to_test['word_id'], r.text,
                             r.status_code)
                         print(message)
                         return message, r.status_code
@@ -745,8 +708,8 @@ def quiz_loop(generating_function_and_args):
                     else:
                         print("%s [%s]" % (n['name'], n['wordlist_id']))
 
-                tag_hinted_word(attr_to_test['word_id'])
-                APPSTATE.missed.add(attr_to_test['word_id'])
+                tag_hinted_word(word_to_test['word_id'])
+                APPSTATE.missed.add(word_to_test['word_id'])
                 continue
 
             print("unknown response:  %s" % answer)
@@ -754,7 +717,7 @@ def quiz_loop(generating_function_and_args):
         if answer.startswith('r'):
             break
 
-        print(attr_to_test['attrvalue'])
+        print(defn_attr['attrvalue'])
 
         if APPSTATE.post_scores:
             prompt = "correct? --> "
@@ -766,13 +729,12 @@ def quiz_loop(generating_function_and_args):
             correct = answer.startswith('y')
 
             payload = {
-                "quiz_id": attr_to_test['quiz_id'],
-                "word_id": attr_to_test['word_id'],
-                "attribute_id": attr_to_test['attribute_id'],
+                "word_id": word_to_test['word_id'],
+                "attribute_id": defn_attr['attribute_id'],
                 'correct': correct
             }
 
-            r = requests.post(url_for('api_quiz.post_quiz_answer',
+            r = requests.post(url_for('api_quiz_2.post_quiz_score',
                                       quiz_key=APPSTATE.quiz_key),
                               json=payload)
 
@@ -782,8 +744,8 @@ def quiz_loop(generating_function_and_args):
                 break
 
             if not correct:
-                tag_missed_word(attr_to_test['word_id'])
-                APPSTATE.missed.add(attr_to_test['word_id'])
+                tag_missed_word(word_to_test['word_id'])
+                APPSTATE.missed.add(word_to_test['word_id'])
 
         count += 1
 
@@ -812,7 +774,7 @@ CALLBACKS = {
     'k': {
         'tagline': 'select query',
         'display_order': 8,
-        'callback': select_query
+        'callback': select_selector
     },
     'go': {
         'tagline': 'start quiz',
