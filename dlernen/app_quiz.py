@@ -2,7 +2,7 @@ from flask import Blueprint, url_for
 from pprint import pprint, pformat
 import requests
 import click
-
+from dlernen.dlernen_json_schema import ATTRIBUTES
 bp = Blueprint('app_quiz', __name__)
 
 QUIZ_KEY = 'definitions'
@@ -10,16 +10,21 @@ QUIZ_KEY = 'definitions'
 
 @bp.cli.command('quiz')
 @click.argument('quiz_key')
-@click.option('--wordlist_ids', '-l', multiple=True)
-@click.option('--queries', '-q', multiple=True)
+@click.option('--wordlist_id', '-l')
+@click.option('--selector', '-s')
 @click.option('--tags', '-t', multiple=True)
-def quiz(quiz_key, wordlist_ids, queries, tags):
-    print("quiz_key = |%s|, wordlist_ids = |%s|, queries = |%s|, tags = |%s|" % (
+def quiz(quiz_key, wordlist_id, selector, tags):
+    print("quiz_key = |%s|, wordlist_id = |%s|, selector = |%s|, tags = |%s|" % (
         quiz_key,
-        pformat(wordlist_ids),
-        pformat(queries),
+        pformat(wordlist_id),
+        pformat(selector),
         pformat(tags)
     ))
+
+    if not wordlist_id:
+        print("wordlist id is required for now")
+        return "OK", 200
+
     # to run this, use the command:
     #   python -m flask --app run app_quiz quiz <quiz_key> [-l id -l id -l id ...]
     #
@@ -27,48 +32,38 @@ def quiz(quiz_key, wordlist_ids, queries, tags):
     # need -l for each list id because click sucks but we can't use argparse.
 
     tags = list(set(tags))
-    if tags and wordlist_ids:
-        if len(wordlist_ids) > 1:
-            print("only one list permitted if filtering by tags")
-            return "OK", 200
 
     counter = 0
-    if len(wordlist_ids) > 1:
-        url = url_for('api_quiz.get_word_to_test',
-                      wordlist_id=wordlist_ids,
-                      quiz_key=quiz_key,
-                      query=queries,
-                      _external=True)
-    else:
-        url = url_for('api_quiz.get_word_to_test_single_wordlist',
-                      wordlist_id=wordlist_ids[0],
-                      tag=tags,
-                      quiz_key=quiz_key,
-                      query=queries,
-                      _external=True)
+    url = url_for('api_quiz_2.get_words_in_wordlist',
+                  quiz_key=quiz_key,
+                  wordlist_id=wordlist_id,
+                  tag=tags,
+                  selector=selector,
+                  _external=True)
 
-    while True:
-        r = requests.get(url)
-        if not r:
-            message = "%s [%s]" % (r.text, r.status_code)
-            print(message)
-            return r.text, r.status_code
+    r = requests.get(url)
+    if not r:
+        message = "%s [%s]" % (r.text, r.status_code)
+        print(message)
+        return r.text, r.status_code
 
-        attrs_to_test = r.json()
+    words_to_test = r.json()
+    if not words_to_test:
+        print("es gibt keine Welten mehr zu erobern")
+        return "OK", 200
 
-        if not attrs_to_test:
-            print("es gibt keine Welten mehr zu erobern")
+    print("testing %s words" % len(words_to_test))
+
+    stop_i_want_to_get_off = False
+
+    for candidate in words_to_test:
+        if stop_i_want_to_get_off:
             break
 
-        pprint(attrs_to_test)
-        for attr in attrs_to_test:
-            counter += 1
-            if 'article' in attr:
-                word = "%s %s" % (attr['article'], attr['word'])
-            else:
-                word = "%s" % (attr['word'])
+        counter += 1
 
-            print("############ %s ###########" % word)
+        print("############ %s ###########" % candidate['word'])
+        for attr in candidate[ATTRIBUTES]:
             prompt = "[%s] ===== %s ====> " % (counter, attr['attrkey'])
 
             answer = input(prompt).strip().casefold()
@@ -76,6 +71,7 @@ def quiz(quiz_key, wordlist_ids, queries, tags):
                 answer = input(prompt).strip().casefold()
 
             if answer == 'q':
+                stop_i_want_to_get_off = True
                 break
 
             correct = answer == attr['attrvalue'].casefold()
@@ -86,13 +82,12 @@ def quiz(quiz_key, wordlist_ids, queries, tags):
                 print("######## falsch: %s" % attr['attrvalue'])
 
             payload = {
-                "quiz_id": attr['quiz_id'],
-                "word_id": attr['word_id'],
+                "word_id": candidate['word_id'],
                 "attribute_id": attr['attribute_id'],
                 "correct": correct,
             }
 
-            r = requests.post(url_for('api_quiz.post_quiz_answer',
+            r = requests.post(url_for('api_quiz_2.post_quiz_score',
                                       quiz_key=quiz_key,
                                       _external=True), json=payload)
 
