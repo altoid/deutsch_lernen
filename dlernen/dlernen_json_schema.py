@@ -764,7 +764,7 @@ QUIZ_RESPONSE_SCHEMA_2 = {
                         "type": "integer",
                     },
                     "attrvalue": {
-                        "type": "string",
+                        "type": ["string", "null"],
                         "pattern": STRING_PATTERN
                     },
                 }

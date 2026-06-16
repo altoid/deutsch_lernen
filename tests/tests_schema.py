@@ -1037,7 +1037,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
                 },
                 {
                     'attribute_id': 3,
-                    'attrvalue': 'bleep',
+                    'attrvalue': None,  # null values are kosher
                     'sort_order': 3
                 },
             ]
@@ -1126,6 +1126,17 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
                     'attribute_id': 7,
                     'sort_order': 7,
                     'attrvalue': ''  # can't be empty
+                }
+            ]
+        },
+        {
+            'quiz_id': 77,
+            'word_id': 77,
+            ATTRIBUTES: [
+                {
+                    'attribute_id': 77,
+                    'sort_order': 77,
+                    'attrvalue': '      '  # whitespace-only not allowed
                 }
             ]
         },
