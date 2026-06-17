@@ -9,9 +9,6 @@ import pickle
 bp = Blueprint('app_quiz_defs', __name__)
 
 STATE_FILE = '.quiz_defs'
-MISSED_TAG = '__missed'
-HINTED_TAG = '__hinted'
-
 
 class AppState(object):
     def __init__(self,
@@ -19,8 +16,8 @@ class AppState(object):
                  selector='random',
                  wordlists=None,
                  tags=None,
-                 hints_requested=None,
-                 missed=None):
+                 words_hinted=None,
+                 words_missed=None):
         self.quiz_key = quiz_key
         self.selector = selector
 
@@ -35,19 +32,19 @@ class AppState(object):
         else:
             self.tags = set()
 
-        # set of word ids for which hints were requested.
-        if hints_requested:
-            self.hints_requested = hints_requested
+        # word ids for which hints were requested, mapped to corresponding QUIZ_RESPONSE_SCHEMA_2 object.
+        if words_hinted:
+            self.words_hinted = words_hinted
         else:
-            self.hints_requested = set()
+            self.words_hinted = {}
 
-        # ... and words which were missed.
-        if missed:
-            self.missed = missed
+        # same, but with word ids for words marked as missed.
+        if words_missed:
+            self.words_missed = words_missed
         else:
-            self.missed = set()
+            self.words_missed = {}
 
-        # general-purpose mapping of word ids to word objects, so that we can retrieve word info
+        # general-purpose mapping of word ids to WORD_RESPONSE_SCHEMA objects, so that we can retrieve word info
         # when we want it.
         self.cache = dict()
 
@@ -65,8 +62,8 @@ class AppState(object):
         self.post_scores = False
 
         self.clear_hinted_and_missed_tags()
-        self.load_hinted_and_missed_tags()
 
+    # fetch the WORD_RESPONSE_SCHEMA object for the word id and cache it.
     def get_word_info(self, word_id):
         if word_id not in self.cache:
             r = requests.get(url_for('api_word.get_word_by_id', word_id=word_id))
@@ -77,25 +74,8 @@ class AppState(object):
     def clear_hinted_and_missed_tags(self):
         # clear the missed and hinted word id sets, but do not mess with the hinted and missed tags.
 
-        self.missed.clear()
-        self.hints_requested.clear()
-
-    def load_hinted_and_missed_tags(self):
-        # client should clear hinted and missed sets first.
-
-        ids = list(self.wordlists.keys())
-        if ids:
-            r = requests.get(url_for('api_words.get_words', tag=[MISSED_TAG], wordlist_id=ids))
-            obj = r.json()
-            for w in obj:
-                self.cache[w['word_id']] = w
-                self.missed.add(w['word_id'])
-
-            r = requests.get(url_for('api_words.get_words', tag=[HINTED_TAG], wordlist_id=ids))
-            obj = r.json()
-            for w in obj:
-                self.cache[w['word_id']] = w
-                self.hints_requested.add(w['word_id'])
+        self.words_missed.clear()
+        self.words_hinted.clear()
 
 
 APPSTATE = AppState()
@@ -253,7 +233,6 @@ lists selected:
 """)
         for v in APPSTATE.wordlists.values():
             print(v)
-        APPSTATE.load_hinted_and_missed_tags()
     else:
         print("""
 ** no lists selected; using entire dictionary **
@@ -311,31 +290,20 @@ Word count:  %s""" % len(obj['word_ids']))
     print("""
 Words missed:
 """)
-    for w_id in APPSTATE.missed:
+    for w_id in APPSTATE.words_missed.keys():
         w = APPSTATE.get_word_info(w_id)
         print("    %s (%s)" % (w['word'], w['pos_name']))
 
     print("""
 Words where hints requested:
 """)
-    for w_id in APPSTATE.hints_requested:
+    for w_id in APPSTATE.words_hinted.keys():
         w = APPSTATE.get_word_info(w_id)
         print("    %s (%s)" % (w['word'], w['pos_name']))
 
 
 def clear_hinted_and_missed_tags():
     global APPSTATE
-
-    ids = list(APPSTATE.wordlists.keys())
-
-    # clear the __missed and __hinted tags from appstate word lists
-    r = requests.delete(url_for('api_wordlist_tag.delete_tag',
-                                wordlist_id=ids,
-                                tag=MISSED_TAG))
-
-    r = requests.delete(url_for('api_wordlist_tag.delete_tag',
-                                wordlist_id=ids,
-                                tag=HINTED_TAG))
 
     APPSTATE.clear_hinted_and_missed_tags()
 
@@ -387,7 +355,7 @@ def select_selector():
     menu = """
 c - clear selection
 s - show selection
-q - show possible queries
+h - show possible selectors
 m - show menu
 r - return to main menu
 or enter selector name
@@ -395,13 +363,7 @@ or enter selector name
 
     print(menu)
     print("current selector:  %s" % APPSTATE.selector)
-    possible_queries = api_quiz_2.SELECTORS
-
-    if not APPSTATE.post_scores:
-        # posting scores changes the what the oldest is (by converting the oldest
-        # to the newest, giving us a new oldest).  if we AREN'T posting scores, the oldest
-        # never changes.  so remove this as an option.
-        possible_queries.remove('oldest_first')
+    possible_selectors = api_quiz_2.SELECTORS
 
     while True:
         prompt = '[select selector] ---> '
@@ -418,9 +380,9 @@ or enter selector name
             print("selection:  %s" % APPSTATE.selector)
             continue
 
-        if answer == 'q':
-            print("possible queries:")
-            for q in possible_queries:
+        if answer == 'h':
+            print("possible selectors:")
+            for q in possible_selectors:
                 print("    %s" % q)
             continue
 
@@ -433,7 +395,7 @@ or enter selector name
                 APPSTATE.selector = 'oldest_first'
             break
 
-        if answer not in possible_queries:
+        if answer not in possible_selectors:
             print("not a valid selector:  %s" % answer)
             continue
 
@@ -444,7 +406,7 @@ or enter selector name
 def show_missed_words():
     global APPSTATE
 
-    if not APPSTATE.missed:
+    if not APPSTATE.words_missed:
         print("""
     ********************************
     * no words missed this session *
@@ -457,7 +419,7 @@ def show_missed_words():
     * words missed this session *
     *****************************
     """)
-    for w_id in APPSTATE.missed:
+    for w_id in APPSTATE.words_missed.keys():
         w = APPSTATE.get_word_info(w_id)
         print("    %s (%s)" % (w['word'], w['pos_name']))
 
@@ -465,7 +427,7 @@ def show_missed_words():
 def show_hinted_words():
     global APPSTATE
 
-    if not APPSTATE.hints_requested:
+    if not APPSTATE.words_hinted:
         print("""
     ***********************************
     * no hints requested this session *
@@ -478,14 +440,17 @@ def show_hinted_words():
     * hints requested this session *
     ********************************
     """)
-    for w_id in APPSTATE.hints_requested:
+    for w_id in APPSTATE.words_hinted.keys():
         w = APPSTATE.get_word_info(w_id)
         print("    %s (%s)" % (w['word'], w['pos_name']))
 
 
 def get_next_word(wordlist_ids, selector):
-    # wordlist_ids is a list and may be empty
+    # wordlist_ids is a list and may be empty.
     global APPSTATE
+
+    # the quiz api works by getting ALL candidates in one go.  even if it's the whole dictionary.  subsequent calls
+    # here (and to similar functions) will just loop over the list forever.
 
     url = url_for('api_quiz_2.get_words',
                   wordlist_id=wordlist_ids,
@@ -537,63 +502,20 @@ def dummy_get_next_word(wordlist_ids, queries):
     yield None
 
 
-def get_next_saved_word(saved_word_ids, word_ids_to_attrs):
-    if not saved_word_ids:
+# candidates is a list of QUIZ_RESPONSE_SCHEMA_2 objects.  loop through them ad nauseum
+def get_next_word_from_list(candidates):
+    if not candidates:
         yield None
 
     i = 0
     while True:
-        yield word_ids_to_attrs[saved_word_ids[i]]
+        yield candidates[i]
         i += 1
-        i = i % len(saved_word_ids)
+        i = i % len(candidates)
 
 
 def make_triple(function, *args, **kwargs):
     return function, args, kwargs
-
-
-def decorate_if_noun(word_object):
-    # if this is a noun, add its article to the object.
-    url = url_for('api_word.get_word_by_id', word_id=word_object['word_id'])
-
-    r = requests.get(url)
-    # if not r, deal with it later, i'm tired.
-
-    obj = r.json()
-    if obj['pos_name'].casefold() == 'noun':
-        article = list(filter(lambda x: x['attrkey'] == 'article', obj['attributes']))
-        word_object['article'] = article[0]['attrvalue']
-
-    return word_object
-
-
-def tag_word(word_id, tag):
-    # for each wordlist in the app state, affix the HINTED tag to the word.
-    # we will get a 400 if the word_id is not in a list, but we will ignore that condition.
-
-    global APPSTATE
-
-    for wordlist_id in APPSTATE.wordlists:
-        payload = [
-            {
-                'word_id': word_id,
-                'tags': [tag]
-            }
-        ]
-        r = requests.post(url_for('api_wordlist_tag.add_tags',
-                                  wordlist_id=wordlist_id),
-                          json=payload)
-
-        if r.status_code == 400:
-            pass
-
-
-def tag_hinted_word(word_id):
-    tag_word(word_id, HINTED_TAG)
-
-
-def tag_missed_word(word_id):
-    tag_word(word_id, MISSED_TAG)
 
 
 def quiz_definitions():
@@ -614,16 +536,7 @@ def quiz_definitions():
 def quiz_hinted_words():
     global APPSTATE
 
-    word_ids_to_attrs = {}
-    for word_id in APPSTATE.hints_requested:
-        url = url_for('api_quiz.get_all_attr_values_for_quiz',
-                      quiz_key=APPSTATE.quiz_key,
-                      word_id=word_id)
-        r = requests.get(url)
-        obj = r.json()
-        word_ids_to_attrs[word_id] = decorate_if_noun(obj[0])
-
-    function_and_args = make_triple(get_next_saved_word, list(APPSTATE.hints_requested), word_ids_to_attrs)
+    function_and_args = make_triple(get_next_word_from_list, list(APPSTATE.words_hinted.values()))
 
     quiz_loop(function_and_args)
 
@@ -631,16 +544,7 @@ def quiz_hinted_words():
 def quiz_missed_words():
     global APPSTATE
 
-    word_ids_to_attrs = {}
-    for word_id in APPSTATE.missed:
-        url = url_for('api_quiz.get_all_attr_values_for_quiz',
-                      quiz_key=APPSTATE.quiz_key,
-                      word_id=word_id)
-        r = requests.get(url)
-        obj = r.json()
-        word_ids_to_attrs[word_id] = decorate_if_noun(obj[0])
-
-    function_and_args = make_triple(get_next_saved_word, list(APPSTATE.missed), word_ids_to_attrs)
+    function_and_args = make_triple(get_next_word_from_list, list(APPSTATE.words_missed.values()))
 
     quiz_loop(function_and_args)
 
@@ -674,7 +578,7 @@ def quiz_loop(generating_function_and_args):
                 break
 
             if answer.startswith('h'):
-                APPSTATE.hints_requested.add(word_to_test['word_id'])
+                APPSTATE.words_hinted[word_to_test['word_id']] = word_to_test
 
                 # show wordlists this word is in.
                 r = requests.get(url_for('api_word.get_member_wordlists',
@@ -708,8 +612,6 @@ def quiz_loop(generating_function_and_args):
                     else:
                         print("%s [%s]" % (n['name'], n['wordlist_id']))
 
-                tag_hinted_word(word_to_test['word_id'])
-                APPSTATE.missed.add(word_to_test['word_id'])
                 continue
 
             print("unknown response:  %s" % answer)
@@ -744,8 +646,7 @@ def quiz_loop(generating_function_and_args):
                 break
 
             if not correct:
-                tag_missed_word(word_to_test['word_id'])
-                APPSTATE.missed.add(word_to_test['word_id'])
+                APPSTATE.words_missed[word_to_test['word_id']] = word_to_test
 
         count += 1
 
@@ -772,7 +673,7 @@ CALLBACKS = {
         'callback': clear_hinted_and_missed_tags,
     },
     'k': {
-        'tagline': 'select query',
+        'tagline': 'choose selector',
         'display_order': 8,
         'callback': select_selector
     },
@@ -845,7 +746,6 @@ def quiz_words():
     except FileNotFoundError as e:
         APPSTATE = AppState()
 
-    APPSTATE.load_hinted_and_missed_tags()
     status()
 
     while True:
