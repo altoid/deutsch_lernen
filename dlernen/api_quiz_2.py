@@ -30,6 +30,8 @@ bp = Blueprint('api_quiz_2', __name__, url_prefix='/api/quiz/v2')
 #                 or presentation_count <= 5   -- without this, if we get it right the
 #                                              -- first time we never see it again
 #                 order by raw_score, presentation_count, last_presentation
+# never         - where FALSE                  -- for testing; always causes 0 results to be returned
+#                 order by 1
 
 
 SELECTORS = {
@@ -38,6 +40,7 @@ SELECTORS = {
     'crappy_score',  # raw score < 0.8
     'imperfect',  # raw score < 100%
     'rare',  # presentation_count <= 5
+    'never',  # for testing, always causes 0 results to be returned
 }
 
 
@@ -151,6 +154,8 @@ def __complete_and_incomplete_candidates_in_wordlists(cursor, quiz_key, wordlist
 
 def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id, selector=None):
     where = ''
+    order_by = 'rand()'
+
     if selector == 'oldest_first':
         order_by = 'last_presentation'
     elif selector == 'imperfect':
@@ -162,8 +167,9 @@ def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id, selector=None
     elif selector == 'crappy_score':
         order_by = 'raw_score, presentation_count, last_presentation'
         where = 'AND (raw_score < 0.8 or presentation_count <= 5)'
-    else:
-        order_by = 'rand()'
+    elif selector == 'never':
+        where = 'and FALSE'
+        order_by = '1'
 
     sql = """
         select

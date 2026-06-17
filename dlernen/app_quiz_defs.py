@@ -460,6 +460,9 @@ def get_next_word(wordlist_ids, selector):
     r = requests.get(url)
     if r:
         words_to_test = r.json()
+        if not words_to_test:
+            yield None
+
         i = 0
         while True:
             yield words_to_test[i]
@@ -484,6 +487,9 @@ def get_next_word_with_tags(wordlist_id, selector, tags):
     r = requests.get(url)
     if r:
         words_to_test = r.json()
+        if not words_to_test:
+            yield None
+
         i = 0
         while True:
             yield words_to_test[i]
