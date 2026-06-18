@@ -65,6 +65,17 @@ TODO - permit multiple definitions for a word.  this would make the above featur
 FIXME - stop clipping leading/trailing spaces in wordlist notes (and elsewhere)
 
 TODO - top-level api request for get_displayable_words
+
+TODO - how to deal with verbs that are both separable and inseparable - e.g. umfassen, umgehen
+
+FIXME - the verb wiederherstellen (stellt wieder her) is causing problems re verb prefixes.
+
+TODO - change the selectors to be a class derived from enum.StrEnum.
+    add the comment # noinspection PyArgumentList
+    can use this for other things too, like POS_NAMEs, ATTRKEYs, QUIZ_KEYs, etc.
+
+TODO - break dlernen_json_schema into multiple modules.  but don't delete it because that's where the registry is
+
 -----------
 
 dlernen.word_editor takes a redirect_to argument
