@@ -553,7 +553,10 @@ def __get_report(cursor, quiz_id, candidate_word_ids, wordlist_id, quiz_key):
         attr_score = {k: r[k] for k in attr_keys_to_copy if k in r}
         word_id_to_word_result[r['word_id']]['attributes'].append(attr_score)
 
-    result['words'] = list(word_id_to_word_result.values())
+    for k, v in word_id_to_word_result.items():
+        v['attributes'] = sorted(v['attributes'], key=lambda x: x['sort_order'])
+
+    result['words'] = list(sorted(word_id_to_word_result.values(), key=lambda x: x['word'].lower()))
 
     return result
 
