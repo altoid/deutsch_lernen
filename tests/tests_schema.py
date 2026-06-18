@@ -70,14 +70,14 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
 
     valid_docs = [
         {
-            'quiz_key': 'quirky',
+            'quiz_key': 'jerky',
             'quiz_id': 1,
             'wordlist_id': 1,
             'words': [
                 {
                     'word': 'wat',
                     'word_id': 1,
-                    'attributes': [   # minItems is 1
+                    'attributes': [  # minItems is 1
                         {
                             'attrkey': 'aoeu',
                             'attribute_id': 1,
@@ -85,7 +85,7 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                             'correct_count': 1,  # >= 0
                             'presentation_count': 1,
                             'raw_score': 1.11,  # type is 'number'
-                            'last_presentation':  'string-valued'  # ifnull(last_presentation, '--') in sql
+                            'last_presentation': 'string-valued'  # ifnull(last_presentation, '--') in sql
                         },
                         {
                             'attrkey': 'blabla',
@@ -123,10 +123,417 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                     ]
                 },
             ]
+        },
+        {
+            'quiz_key': 'herky',
+            'quiz_id': 2,
+            'wordlist_id': 2,
+            'words': [
+                # ok to have no words
+            ]
         }
     ]
 
     invalid_docs = [
+        # missing fields
+        {
+            # 'quiz_key': 'number1',
+            'quiz_id': 1,
+            'wordlist_id': 1,
+            'words': [
+                {
+                    'word': 'wat',
+                    'word_id': 1,
+                    'attributes': [  # minItems is 1
+                        {
+                            'attrkey': 'blabla',
+                            'attribute_id': 2,
+                            'sort_order': 2,
+                            'correct_count': 0,  # >= 0
+                            'presentation_count': 18,  # just forgetful i guess
+                            'raw_score': 0.0,  # type is 'number'
+                            'last_presentation': 'string-valued'
+                        },
+                    ]
+                },
+            ]
+        },
+        {
+            'quiz_key': 'number2',
+            # 'quiz_id': 1,
+            'wordlist_id': 1,
+            'words': [
+                {
+                    'word': 'wat',
+                    'word_id': 1,
+                    'attributes': [  # minItems is 1
+                        {
+                            'attrkey': 'blabla',
+                            'attribute_id': 2,
+                            'sort_order': 2,
+                            'correct_count': 0,  # >= 0
+                            'presentation_count': 18,  # just forgetful i guess
+                            'raw_score': 0.0,  # type is 'number'
+                            'last_presentation': 'string-valued'
+                        },
+                    ]
+                },
+            ]
+        },
+        {
+            'quiz_key': 'number3',
+            'quiz_id': 1,
+            # 'wordlist_id': 1,
+            'words': [
+                {
+                    'word': 'wat',
+                    'word_id': 1,
+                    'attributes': [  # minItems is 1
+                        {
+                            'attrkey': 'blabla',
+                            'attribute_id': 2,
+                            'sort_order': 2,
+                            'correct_count': 0,  # >= 0
+                            'presentation_count': 18,  # just forgetful i guess
+                            'raw_score': 0.0,  # type is 'number'
+                            'last_presentation': 'string-valued'
+                        },
+                    ]
+                },
+            ]
+        },
+        {
+            'quiz_key': 'number4',
+            'quiz_id': 1,
+            'wordlist_id': 1,
+            # 'words': [
+            #     {
+            #         'word': 'wat',
+            #         'word_id': 1,
+            #         'attributes': [  # minItems is 1
+            #             {
+            #                 'attrkey': 'blabla',
+            #                 'attribute_id': 2,
+            #                 'sort_order': 2,
+            #                 'correct_count': 0,  # >= 0
+            #                 'presentation_count': 18,  # just forgetful i guess
+            #                 'raw_score': 0.0,  # type is 'number'
+            #                 'last_presentation': 'string-valued'
+            #             },
+            #         ]
+            #     },
+            # ]
+        },
+        {
+            'quiz_key': 'number5',
+            'quiz_id': 1,
+            'wordlist_id': 1,
+            'words': [
+                {
+                    # 'word': 'wat',
+                    'word_id': 1,
+                    'attributes': [  # minItems is 1
+                        {
+                            'attrkey': 'blabla',
+                            'attribute_id': 2,
+                            'sort_order': 2,
+                            'correct_count': 0,  # >= 0
+                            'presentation_count': 18,  # just forgetful i guess
+                            'raw_score': 0.0,  # type is 'number'
+                            'last_presentation': 'string-valued'
+                        },
+                    ]
+                },
+            ]
+        },
+        {
+            'quiz_key': 'number6',
+            'quiz_id': 1,
+            'wordlist_id': 1,
+            'words': [
+                {
+                    'word': 'wat',
+                    # 'word_id': 1,
+                    'attributes': [  # minItems is 1
+                        {
+                            'attrkey': 'blabla',
+                            'attribute_id': 2,
+                            'sort_order': 2,
+                            'correct_count': 0,  # >= 0
+                            'presentation_count': 18,  # just forgetful i guess
+                            'raw_score': 0.0,  # type is 'number'
+                            'last_presentation': 'string-valued'
+                        },
+                    ]
+                },
+            ]
+        },
+        {
+            'quiz_key': 'number7',
+            'quiz_id': 1,
+            'wordlist_id': 1,
+            'words': [
+                {
+                    'word': 'wat',
+                    'word_id': 1,
+                    # 'attributes': [  # minItems is 1
+                    #     {
+                    #         'attrkey': 'blabla',
+                    #         'attribute_id': 2,
+                    #         'sort_order': 2,
+                    #         'correct_count': 0,  # >= 0
+                    #         'presentation_count': 18,  # just forgetful i guess
+                    #         'raw_score': 0.0,  # type is 'number'
+                    #         'last_presentation': 'string-valued'
+                    #     },
+                    # ]
+                },
+            ]
+        },
+        {
+            'quiz_key': 'number8',
+            'quiz_id': 1,
+            'wordlist_id': 1,
+            'words': [
+                {
+                    'word': 'wat',
+                    'word_id': 1,
+                    'attributes': [  # minItems is 1
+                        {
+                            # 'attrkey': 'blabla',
+                            'attribute_id': 2,
+                            'sort_order': 2,
+                            'correct_count': 0,  # >= 0
+                            'presentation_count': 18,  # just forgetful i guess
+                            'raw_score': 0.0,  # type is 'number'
+                            'last_presentation': 'string-valued'
+                        },
+                    ]
+                },
+            ]
+        },
+        {
+            'quiz_key': 'number9',
+            'quiz_id': 1,
+            'wordlist_id': 1,
+            'words': [
+                {
+                    'word': 'wat',
+                    'word_id': 1,
+                    'attributes': [  # minItems is 1
+                        {
+                            'attrkey': 'blabla',
+                            # 'attribute_id': 2,
+                            'sort_order': 2,
+                            'correct_count': 0,  # >= 0
+                            'presentation_count': 18,  # just forgetful i guess
+                            'raw_score': 0.0,  # type is 'number'
+                            'last_presentation': 'string-valued'
+                        },
+                    ]
+                },
+            ]
+        },
+        {
+            'quiz_key': 'number10',
+            'quiz_id': 1,
+            'wordlist_id': 1,
+            'words': [
+                {
+                    'word': 'wat',
+                    'word_id': 1,
+                    'attributes': [  # minItems is 1
+                        {
+                            'attrkey': 'blabla',
+                            'attribute_id': 2,
+                            # 'sort_order': 2,
+                            'correct_count': 0,  # >= 0
+                            'presentation_count': 18,  # just forgetful i guess
+                            'raw_score': 0.0,  # type is 'number'
+                            'last_presentation': 'string-valued'
+                        },
+                    ]
+                },
+            ]
+        },
+        {
+            'quiz_key': 'number11',
+            'quiz_id': 1,
+            'wordlist_id': 1,
+            'words': [
+                {
+                    'word': 'wat',
+                    'word_id': 1,
+                    'attributes': [  # minItems is 1
+                        {
+                            'attrkey': 'blabla',
+                            'attribute_id': 2,
+                            'sort_order': 2,
+                            # 'correct_count': 0,  # >= 0
+                            'presentation_count': 18,  # just forgetful i guess
+                            'raw_score': 0.0,  # type is 'number'
+                            'last_presentation': 'string-valued'
+                        },
+                    ]
+                },
+            ]
+        },
+        {
+            'quiz_key': 'number12',
+            'quiz_id': 1,
+            'wordlist_id': 1,
+            'words': [
+                {
+                    'word': 'wat',
+                    'word_id': 1,
+                    'attributes': [  # minItems is 1
+                        {
+                            'attrkey': 'blabla',
+                            'attribute_id': 2,
+                            'sort_order': 2,
+                            'correct_count': 0,  # >= 0
+                            # 'presentation_count': 18,  # just forgetful i guess
+                            'raw_score': 0.0,  # type is 'number'
+                            'last_presentation': 'string-valued'
+                        },
+                    ]
+                },
+            ]
+        },
+        {
+            'quiz_key': 'number13',
+            'quiz_id': 1,
+            'wordlist_id': 1,
+            'words': [
+                {
+                    'word': 'wat',
+                    'word_id': 1,
+                    'attributes': [  # minItems is 1
+                        {
+                            'attrkey': 'blabla',
+                            'attribute_id': 2,
+                            'sort_order': 2,
+                            'correct_count': 0,  # >= 0
+                            'presentation_count': 18,  # just forgetful i guess
+                            # 'raw_score': 0.0,  # type is 'number'
+                            'last_presentation': 'string-valued'
+                        },
+                    ]
+                },
+            ]
+        },
+        {
+            'quiz_key': 'number14',
+            'quiz_id': 1,
+            'wordlist_id': 1,
+            'words': [
+                {
+                    'word': 'wat',
+                    'word_id': 1,
+                    'attributes': [  # minItems is 1
+                        {
+                            'attrkey': 'blabla',
+                            'attribute_id': 2,
+                            'sort_order': 2,
+                            'correct_count': 0,  # >= 0
+                            'presentation_count': 18,  # just forgetful i guess
+                            'raw_score': 0.0,  # type is 'number'
+                            # 'last_presentation': 'string-valued'
+                        },
+                    ]
+                },
+            ]
+        },
+
+        # must have at least one attribute for a word
+        {
+            'quiz_key': 'number15',
+            'quiz_id': 1,
+            'wordlist_id': 1,
+            'words': [
+                {
+                    'word': 'wat',
+                    'word_id': 1,
+                    'attributes': [  # minItems is 1
+                    ]
+                },
+            ]
+        },
+
+        # stowaway in top-level doc
+        {
+            'quiz_key': 'number16',
+            'quiz_id': 1,
+            'gotAnyGrapes': True,
+            'wordlist_id': 1,
+            'words': [
+                {
+                    'word': 'wat',
+                    'word_id': 1,
+                    'attributes': [  # minItems is 1
+                        {
+                            'attrkey': 'blabla',
+                            'attribute_id': 2,
+                            'sort_order': 2,
+                            'correct_count': 0,  # >= 0
+                            'presentation_count': 18,  # just forgetful i guess
+                            'raw_score': 0.0,  # type is 'number'
+                            'last_presentation': 'string-valued'
+                        },
+                    ]
+                },
+            ]
+        },
+
+        # stowaway in word
+        {
+            'quiz_key': 'number17',
+            'quiz_id': 1,
+            'wordlist_id': 1,
+            'words': [
+                {
+                    'gotAnyGrapes': True,
+                    'word': 'wat',
+                    'word_id': 1,
+                    'attributes': [  # minItems is 1
+                        {
+                            'attrkey': 'blabla',
+                            'attribute_id': 2,
+                            'sort_order': 2,
+                            'correct_count': 0,  # >= 0
+                            'presentation_count': 18,  # just forgetful i guess
+                            'raw_score': 0.0,  # type is 'number'
+                            'last_presentation': 'string-valued'
+                        },
+                    ]
+                },
+            ]
+        },
+
+        # stowaway in attribute
+        {
+            'quiz_key': 'number18',
+            'quiz_id': 1,
+            'wordlist_id': 1,
+            'words': [
+                {
+                    'word': 'wat',
+                    'word_id': 1,
+                    'attributes': [  # minItems is 1
+                        {
+                            'gotAnyGrapes': True,
+                            'attrkey': 'blabla',
+                            'attribute_id': 2,
+                            'sort_order': 2,
+                            'correct_count': 0,  # >= 0
+                            'presentation_count': 18,  # just forgetful i guess
+                            'raw_score': 0.0,  # type is 'number'
+                            'last_presentation': 'string-valued'
+                        },
+                    ]
+                },
+            ]
+        },
     ]
 
     def test_valid_docs(self):

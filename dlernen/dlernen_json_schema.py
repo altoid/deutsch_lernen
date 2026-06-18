@@ -695,6 +695,7 @@ QUIZ_REPORT_RESPONSE_SCHEMA_2 = {
         "wordlist_id",
         "words",
     ],
+    "additionalProperties": False,
     "properties": {
         "wordlist_id": {
             "type": "integer",
@@ -716,6 +717,7 @@ QUIZ_REPORT_RESPONSE_SCHEMA_2 = {
                     'word_id',
                     'attributes'
                 ],
+                "additionalProperties": False,
                 "properties": {
                     'word': {
                         'type': 'string',
@@ -739,6 +741,7 @@ QUIZ_REPORT_RESPONSE_SCHEMA_2 = {
                                 "raw_score",
                                 "last_presentation"
                             ],
+                            "additionalProperties": False,
                             "properties": {
                                 "attrkey": {
                                     "type": "string",
