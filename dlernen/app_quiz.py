@@ -2,7 +2,7 @@ from flask import Blueprint, url_for
 from pprint import pprint, pformat
 import requests
 import click
-from dlernen import api_quiz_2
+from dlernen import api_quiz
 from dlernen.dlernen_json_schema import ATTRIBUTES
 bp = Blueprint('app_quiz', __name__)
 
@@ -26,7 +26,7 @@ def quiz(quiz_key, wordlist_id, selector, tags):
         print("wordlist id is required for now")
         return "OK", 200
 
-    if selector and selector not in api_quiz_2.SELECTORS:
+    if selector and selector not in api_quiz.SELECTORS:
         print("invalid selector:  %s" % selector)
         return "OK", 200
     
@@ -39,7 +39,7 @@ def quiz(quiz_key, wordlist_id, selector, tags):
     tags = list(set(tags))
 
     counter = 0
-    url = url_for('api_quiz_2.get_words_in_wordlist',
+    url = url_for('api_quiz.get_words_in_wordlist',
                   quiz_key=quiz_key,
                   wordlist_id=wordlist_id,
                   tag=tags,
@@ -96,7 +96,7 @@ def quiz(quiz_key, wordlist_id, selector, tags):
                 "correct": correct,
             }
 
-            r = requests.post(url_for('api_quiz_2.post_quiz_score',
+            r = requests.post(url_for('api_quiz.post_quiz_score',
                                       quiz_key=quiz_key,
                                       _external=True), json=payload)
 

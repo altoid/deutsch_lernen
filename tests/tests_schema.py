@@ -9,9 +9,9 @@ from dlernen.dlernen_json_schema import get_validator, ATTRIBUTES, \
     WORDLIST_TAG_PAYLOAD_SCHEMA, \
     POS_STRUCTURE_RESPONSE_SCHEMA, \
     PREFIX_VERB_RESPONSE_SCHEMA, \
-    QUIZ_ANSWER_PAYLOAD_SCHEMA_2, \
-    QUIZ_REPORT_RESPONSE_SCHEMA_2, \
-    QUIZ_RESPONSE_SCHEMA_2, \
+    QUIZ_ANSWER_PAYLOAD_SCHEMA, \
+    QUIZ_REPORT_RESPONSE_SCHEMA, \
+    QUIZ_RESPONSE_SCHEMA, \
     RELATION_RESPONSE_SCHEMA, \
     ARRAY_RELATION_RESPONSE_SCHEMA, \
     WORD_RESPONSE_SCHEMA, \
@@ -63,7 +63,7 @@ class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
 
 
 class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
-    schema = QUIZ_REPORT_RESPONSE_SCHEMA_2
+    schema = QUIZ_REPORT_RESPONSE_SCHEMA
 
     valid_docs = [
         {
@@ -1045,7 +1045,7 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
 
 
 class Test_QUIZ_ANSWER_PAYLOAD_SCHEMA_2(unittest.TestCase):
-    schema = QUIZ_ANSWER_PAYLOAD_SCHEMA_2
+    schema = QUIZ_ANSWER_PAYLOAD_SCHEMA
 
     valid_docs = [
         {
@@ -1105,7 +1105,7 @@ class Test_QUIZ_ANSWER_PAYLOAD_SCHEMA_2(unittest.TestCase):
 
 
 class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
-    schema = QUIZ_RESPONSE_SCHEMA_2
+    schema = QUIZ_RESPONSE_SCHEMA
 
     valid_docs = [
         {

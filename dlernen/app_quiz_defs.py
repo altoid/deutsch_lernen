@@ -1,7 +1,7 @@
 from flask import Blueprint, url_for
 from pprint import pprint, pformat
 import requests
-from dlernen.api_quiz_2 import Selector
+from dlernen.api_quiz import Selector
 from dlernen.dlernen_json_schema import ATTRIBUTES
 
 import pickle
@@ -33,7 +33,7 @@ class AppState(object):
         else:
             self.tags = set()
 
-        # word ids for which hints were requested, mapped to corresponding QUIZ_RESPONSE_SCHEMA_2 object.
+        # word ids for which hints were requested, mapped to corresponding QUIZ_RESPONSE_SCHEMA object.
         if words_hinted:
             self.words_hinted = words_hinted
         else:
@@ -450,7 +450,7 @@ def get_next_word(wordlist_ids, selector):
     # the quiz api works by getting ALL candidates in one go.  even if it's the whole dictionary.  subsequent calls
     # here (and to similar functions) will just loop over the list forever.
 
-    url = url_for('api_quiz_2.get_words',
+    url = url_for('api_quiz.get_words',
                   wordlist_id=wordlist_ids,
                   quiz_key=APPSTATE.quiz_key,
                   selector=selector)
@@ -476,7 +476,7 @@ def get_next_word_with_tags(wordlist_id, selector, tags):
 
     global APPSTATE
 
-    url = url_for('api_quiz_2.get_words_in_wordlist',
+    url = url_for('api_quiz.get_words_in_wordlist',
                   wordlist_id=wordlist_id,
                   quiz_key=APPSTATE.quiz_key,
                   selector=selector,
@@ -506,7 +506,7 @@ def dummy_get_next_word(wordlist_ids, queries):
     yield None
 
 
-# candidates is a list of QUIZ_RESPONSE_SCHEMA_2 objects.  loop through them ad nauseum
+# candidates is a list of QUIZ_RESPONSE_SCHEMA objects.  loop through them ad nauseum
 def get_next_word_from_list(candidates):
     if not candidates:
         yield None
@@ -640,7 +640,7 @@ def quiz_loop(generating_function_and_args):
                 'correct': correct
             }
 
-            r = requests.post(url_for('api_quiz_2.post_quiz_score',
+            r = requests.post(url_for('api_quiz.post_quiz_score',
                                       quiz_key=APPSTATE.quiz_key),
                               json=payload)
 

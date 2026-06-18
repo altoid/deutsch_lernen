@@ -541,7 +541,7 @@ ARRAY_PREFIX_VERB_RESPONSE_SCHEMA = {
     }
 }
 
-QUIZ_ANSWER_PAYLOAD_SCHEMA_2 = {
+QUIZ_ANSWER_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/quiz_answer_payload_2.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Quiz Data List",
@@ -568,18 +568,18 @@ QUIZ_ANSWER_PAYLOAD_SCHEMA_2 = {
     }
 }
 
-ARRAY_QUIZ_ANSWER_PAYLOAD_SCHEMA_2 = {
+ARRAY_QUIZ_ANSWER_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/array_quiz_answer_payload_2.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Array of QUIZ_ANSWER_PAYLOAD_SCHEMA_2",
-    "description": "array of QUIZ_ANSWER_PAYLOAD_SCHEMA_2",
+    "title": "Array of QUIZ_ANSWER_PAYLOAD_SCHEMA",
+    "description": "array of QUIZ_ANSWER_PAYLOAD_SCHEMA",
     "type": "array",
     "items": {
-        "$ref": QUIZ_ANSWER_PAYLOAD_SCHEMA_2["$id"]
+        "$ref": QUIZ_ANSWER_PAYLOAD_SCHEMA["$id"]
     }
 }
 
-QUIZ_REPORT_RESPONSE_SCHEMA_2 = {
+QUIZ_REPORT_RESPONSE_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/quiz_report_response_2.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Quiz Report",
@@ -675,7 +675,7 @@ QUIZ_REPORT_RESPONSE_SCHEMA_2 = {
     }
 }
 
-QUIZ_RESPONSE_SCHEMA_2 = {
+QUIZ_RESPONSE_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/quiz_response_2.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Gives candidate word ids and attributes for a quiz",
@@ -739,11 +739,11 @@ QUIZ_RESPONSE_SCHEMA_2 = {
 ARRAY_QUIZ_RESPONSE_SCHEMA_2 = {
     "$id": "https://deutsch-lernen.doug/schemas/array_quiz_response_2.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Array of QUIZ_RESPONSE_SCHEMA_2",
-    "description": "array of QUIZ_RESPONSE_SCHEMA_2",
+    "title": "Array of QUIZ_RESPONSE_SCHEMA",
+    "description": "array of QUIZ_RESPONSE_SCHEMA",
     "type": "array",
     "items": {
-        "$ref": QUIZ_RESPONSE_SCHEMA_2["$id"]
+        "$ref": QUIZ_RESPONSE_SCHEMA["$id"]
     }
 }
 
@@ -1034,31 +1034,32 @@ ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA = {
 }
 
 ALL_SCHEMAS = [
-    RELATION_PAYLOAD_SCHEMA,
-    WORD_ADD_PAYLOAD_SCHEMA,
-    WORD_UPDATE_PAYLOAD_SCHEMA,
-    WORDLISTS_DELETE_PAYLOAD_SCHEMA,
-    WORDLIST_TAG_PAYLOAD_SCHEMA,
-    POS_STRUCTURE_RESPONSE_SCHEMA,
-    QUIZ_ANSWER_PAYLOAD_SCHEMA_2,
-    ARRAY_QUIZ_ANSWER_PAYLOAD_SCHEMA_2,
-    QUIZ_RESPONSE_SCHEMA_2,
+    ARRAY_PREFIX_VERB_RESPONSE_SCHEMA,
+    ARRAY_QUIZ_ANSWER_PAYLOAD_SCHEMA,
     ARRAY_QUIZ_RESPONSE_SCHEMA_2,
-    RELATION_RESPONSE_SCHEMA,
     ARRAY_RELATION_RESPONSE_SCHEMA,
-    WORD_TAG_RESPONSE_SCHEMA,
-    WORDLIST_METADATA_RESPONSE_SCHEMA,
     ARRAY_WORDLIST_METADATA_RESPONSE_SCHEMA,
-    WORDLIST_RESPONSE_SCHEMA,
+    ARRAY_WORD_RESPONSE_SCHEMA,
+    ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA,
     DISPLAYABLE_WORD_SCHEMA,
+    POS_STRUCTURE_RESPONSE_SCHEMA,
+    PREFIX_VERB_RESPONSE_SCHEMA,
+    QUIZ_ANSWER_PAYLOAD_SCHEMA,
+    QUIZ_REPORT_RESPONSE_SCHEMA,
+    QUIZ_RESPONSE_SCHEMA,
+    RELATION_PAYLOAD_SCHEMA,
+    RELATION_RESPONSE_SCHEMA,
+    WORDLISTS_DELETE_PAYLOAD_SCHEMA,
+    WORDLIST_METADATA_RESPONSE_SCHEMA,
+    WORDLIST_PAYLOAD_SCHEMA,
+    WORDLIST_RESPONSE_SCHEMA,
+    WORDLIST_TAG_PAYLOAD_SCHEMA,
+    WORD_ADD_PAYLOAD_SCHEMA,
     WORD_ATTRIBUTES_SCHEMA,
     WORD_RESPONSE_SCHEMA,
-    ARRAY_WORD_RESPONSE_SCHEMA,
+    WORD_TAG_RESPONSE_SCHEMA,
+    WORD_UPDATE_PAYLOAD_SCHEMA,
     WORD_WORDLIST_METADATA_MAP_SCHEMA,
-    ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA,
-    WORDLIST_PAYLOAD_SCHEMA,
-    PREFIX_VERB_RESPONSE_SCHEMA,
-    ARRAY_PREFIX_VERB_RESPONSE_SCHEMA
 ]
 
 # build the registry ONCE at module level

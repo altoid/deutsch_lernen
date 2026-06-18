@@ -921,7 +921,7 @@ def quiz_report(quiz_key, wordlist_id):
 
     wordlist_obj = r.json()
 
-    r = requests.get(url_for('api_quiz_2.get_report',
+    r = requests.get(url_for('api_quiz.get_report',
                              quiz_key=quiz_key,
                              wordlist_id=wordlist_id,
                              _external=True))

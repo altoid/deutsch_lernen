@@ -78,7 +78,7 @@ class APIPostQuizAnswer(unittest.TestCase):
         payload = {
             'snaoteuh': 'bstaeohusa'
         }
-        r = self.client.post(url_for('api_quiz_2.post_quiz_score', quiz_key='definitions'), json=payload)
+        r = self.client.post(url_for('api_quiz.post_quiz_score', quiz_key='definitions'), json=payload)
         self.assertEqual(400, r.status_code)
 
     # test that posting a score works
@@ -90,7 +90,7 @@ class APIPostQuizAnswer(unittest.TestCase):
             'correct': True,
             'attribute_id': self.keyword_mappings['attribute_names_to_ids']['definition']
         }
-        r = self.client.post(url_for('api_quiz_2.post_quiz_score', quiz_key=quiz_key), json=payload)
+        r = self.client.post(url_for('api_quiz.post_quiz_score', quiz_key=quiz_key), json=payload)
         self.assertEqual(201, r.status_code)
 
     # bad quiz_key
@@ -102,7 +102,7 @@ class APIPostQuizAnswer(unittest.TestCase):
             'correct': True,
             'attribute_id': self.keyword_mappings['attribute_names_to_ids']['definition']
         }
-        r = self.client.post(url_for('api_quiz_2.post_quiz_score', quiz_key=quiz_key), json=payload)
+        r = self.client.post(url_for('api_quiz.post_quiz_score', quiz_key=quiz_key), json=payload)
         self.assertEqual(400, r.status_code)
 
     # not a candidate
@@ -114,7 +114,7 @@ class APIPostQuizAnswer(unittest.TestCase):
             'correct': True,
             'attribute_id': self.keyword_mappings['attribute_names_to_ids']['first_person_singular']
         }
-        r = self.client.post(url_for('api_quiz_2.post_quiz_score', quiz_key=quiz_key), json=payload)
+        r = self.client.post(url_for('api_quiz.post_quiz_score', quiz_key=quiz_key), json=payload)
         self.assertEqual(400, r.status_code)
 
     # invalid attribute
@@ -126,7 +126,7 @@ class APIPostQuizAnswer(unittest.TestCase):
             'correct': True,
             'attribute_id': self.keyword_mappings['attribute_names_to_ids']['first_person_singular']
         }
-        r = self.client.post(url_for('api_quiz_2.post_quiz_score', quiz_key=quiz_key), json=payload)
+        r = self.client.post(url_for('api_quiz.post_quiz_score', quiz_key=quiz_key), json=payload)
         self.assertEqual(400, r.status_code)
 
 
@@ -250,14 +250,14 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
         quiz_key = 'bullshit'
         _, word_id = self.create_adjective()
 
-        r = self.client.get(url_for('api_quiz_2.get_single_word',
+        r = self.client.get(url_for('api_quiz.get_single_word',
                                     quiz_key=quiz_key,
                                     word_id=word_id))
         self.assertEqual(404, r.status_code)
 
     # invalid word id -> 404
     def test2(self):
-        r = self.client.get(url_for('api_quiz_2.get_single_word',
+        r = self.client.get(url_for('api_quiz.get_single_word',
                                     quiz_key=self.QUIZ_KEY,
                                     word_id=8675309))
         self.assertEqual(404, r.status_code)
@@ -266,7 +266,7 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
     def test3(self):
         _, word_id = self.create_adjective()
 
-        r = self.client.get(url_for('api_quiz_2.get_single_word',
+        r = self.client.get(url_for('api_quiz.get_single_word',
                                     quiz_key=self.QUIZ_KEY,
                                     word_id=word_id))
         self.assertEqual(400, r.status_code)
@@ -275,7 +275,7 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
     def test4(self):
         _, word_id = self.create_incomplete_verb()
 
-        r = self.client.get(url_for('api_quiz_2.get_single_word',
+        r = self.client.get(url_for('api_quiz.get_single_word',
                                     quiz_key=self.QUIZ_KEY,
                                     word_id=word_id))
         self.assertEqual(409, r.status_code)
@@ -284,7 +284,7 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
     def test5(self):
         _, word_id = self.create_complete_verb()
 
-        r = self.client.get(url_for('api_quiz_2.get_single_word',
+        r = self.client.get(url_for('api_quiz.get_single_word',
                                     quiz_key=self.QUIZ_KEY,
                                     word_id=word_id))
         self.assertEqual(200, r.status_code)

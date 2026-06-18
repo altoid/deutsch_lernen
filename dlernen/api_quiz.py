@@ -5,15 +5,15 @@ from contextlib import closing
 from dlernen import common
 from dlernen.dlernen_json_schema import \
     ATTRIBUTES, \
-    QUIZ_ANSWER_PAYLOAD_SCHEMA_2, \
-    QUIZ_REPORT_RESPONSE_SCHEMA_2, \
-    QUIZ_RESPONSE_SCHEMA_2, \
+    QUIZ_ANSWER_PAYLOAD_SCHEMA, \
+    QUIZ_REPORT_RESPONSE_SCHEMA, \
+    QUIZ_RESPONSE_SCHEMA, \
     ARRAY_QUIZ_RESPONSE_SCHEMA_2, \
-    ARRAY_QUIZ_ANSWER_PAYLOAD_SCHEMA_2
+    ARRAY_QUIZ_ANSWER_PAYLOAD_SCHEMA
 from dlernen.decorators import js_validate_result, js_validate_payload
 from pprint import pprint
 
-bp = Blueprint('api_quiz_2', __name__, url_prefix='/api/quiz/v2')
+bp = Blueprint('api_quiz', __name__, url_prefix='/api/quiz')
 
 #
 # SELECTORS
@@ -461,7 +461,7 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
 
 @bp.route('/<string:quiz_key>/candidate/<int:word_id>')
 def get_single_word(quiz_key, word_id):
-    # returns a single instance of QUIZ_RESPONSE_SCHEMA_2
+    # returns a single instance of QUIZ_RESPONSE_SCHEMA
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         # checks:
@@ -519,7 +519,7 @@ def get_single_word(quiz_key, word_id):
         return results[0]
 
 
-@js_validate_result(QUIZ_REPORT_RESPONSE_SCHEMA_2)
+@js_validate_result(QUIZ_REPORT_RESPONSE_SCHEMA)
 def __get_report(cursor, quiz_id, candidate_word_ids, wordlist_id, quiz_key):
 
     rows = __get_rows_for_report(cursor, candidate_word_ids, quiz_id)
@@ -605,7 +605,7 @@ def get_report(quiz_key, wordlist_id):
 
 
 @bp.route('/<string:quiz_key>/score', methods=['POST'])
-@js_validate_payload(QUIZ_ANSWER_PAYLOAD_SCHEMA_2)
+@js_validate_payload(QUIZ_ANSWER_PAYLOAD_SCHEMA)
 def post_quiz_score(quiz_key):
     payload = request.get_json()
 
