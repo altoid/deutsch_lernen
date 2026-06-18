@@ -9,7 +9,7 @@ Quiz Report:  {{ wordlist.name }}
 <div class="quiz_report">
     {% include 'header.html' %}
     <h1>Quiz Report: {{ wordlist.name }} ({{ wordlist.wordlist_id }})</h1>
-    {{ scores|length }} Wörter
+    {{ words|length }} Wörter
     <h2>{{ quiz_key }}</h2>
     <table class="quiz_report">
         <tr>
@@ -32,15 +32,26 @@ Quiz Report:  {{ wordlist.name }}
                 last_presentation
             </th>
         </tr>
-        {% for r in scores %}
+        {% for r in words %}
+        {% for attr in r.attributes[:1] %}
         <tr>
-            <td class="quiz_report">{{ r['word'] }}</td>
-            <td class="quiz_report">{{ r['attrkey'] }}</td>
-            <td class="quiz_report numeric">{{ r['correct_count'] }}</td>
-            <td class="quiz_report numeric">{{ r['presentation_count'] }}</td>
-            <td class="quiz_report numeric">{{ r['raw_score'] }}</td>
-            <td class="quiz_report numeric">{{ r['last_presentation'] }}</td>
+            <td class="quiz_report" rowspan="{{ r.attributes|length}}">{{ r.word }}</td>
+            <td class="quiz_report">{{ attr.attrkey }}</td>
+            <td class="quiz_report numeric">{{ attr.correct_count }}</td>
+            <td class="quiz_report numeric">{{ attr.presentation_count }}</td>
+            <td class="quiz_report numeric">{{ attr.raw_score }}</td>
+            <td class="quiz_report numeric">{{ attr.last_presentation }}</td>
         </tr>
+        {% endfor %}
+        {% for attr in r.attributes[1:] %}
+        <tr>
+            <td class="quiz_report">{{ attr.attrkey }}</td>
+            <td class="quiz_report numeric">{{ attr.correct_count }}</td>
+            <td class="quiz_report numeric">{{ attr.presentation_count }}</td>
+            <td class="quiz_report numeric">{{ attr.raw_score }}</td>
+            <td class="quiz_report numeric">{{ attr.last_presentation }}</td>
+        </tr>
+        {% endfor %}
         {% endfor %}
     </table>
 </div>

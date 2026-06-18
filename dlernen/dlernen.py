@@ -921,10 +921,9 @@ def quiz_report(quiz_key, wordlist_id):
 
     wordlist_obj = r.json()
 
-    r = requests.get(url_for('api_quiz.get_report',
+    r = requests.get(url_for('api_quiz_2.get_report',
                              quiz_key=quiz_key,
                              wordlist_id=wordlist_id,
-                             tag=selected_tags,
                              _external=True))
     if not r:
         abort(r.status_code, response=r)
@@ -934,7 +933,7 @@ def quiz_report(quiz_key, wordlist_id):
                            quiz_key=report['quiz_key'],
                            wordlist=wordlist_obj,
                            tag_state=tag_state,
-                           scores=report['scores'])
+                           words=report['words'])
 
 
 @bp.route('/study_guide/<int:wordlist_id>')
