@@ -1,7 +1,7 @@
 from flask import Blueprint, url_for
 from pprint import pprint, pformat
 import requests
-from dlernen import api_quiz_2
+from dlernen.api_quiz_2 import Selector
 from dlernen.dlernen_json_schema import ATTRIBUTES
 
 import pickle
@@ -10,10 +10,11 @@ bp = Blueprint('app_quiz_defs', __name__)
 
 STATE_FILE = '.quiz_defs'
 
+
 class AppState(object):
     def __init__(self,
                  quiz_key='definitions',
-                 selector='random',
+                 selector=Selector.RANDOM,
                  wordlists=None,
                  tags=None,
                  words_hinted=None,
@@ -56,7 +57,7 @@ class AppState(object):
 
     def reset(self):
         self.wordlists.clear()
-        self.selector = 'random'
+        self.selector = Selector.RANDOM
         self.tags.clear()
         # self.cache.clear()  # no need to flush the cache on reset
         self.post_scores = False
@@ -171,8 +172,6 @@ def toggle_posting_scores():
     APPSTATE.post_scores = not APPSTATE.post_scores
 
     print("posting scores is now %s" % ("ON" if APPSTATE.post_scores else "OFF"))
-    if not APPSTATE.post_scores and APPSTATE.selector == 'oldest_first':
-        APPSTATE.selector = 'random'
 
 
 def select_lists():
@@ -274,7 +273,7 @@ Tags:""")
         print("** no tags")
 
     print("""
-Query:  %s""" % APPSTATE.selector)
+Selector:  %s""" % APPSTATE.selector)
 
     url = url_for('api_wordlist.get_word_ids_from_wordlists',
                   wordlist_id=list(APPSTATE.wordlists.keys()),
@@ -363,7 +362,6 @@ or enter selector name
 
     print(menu)
     print("current selector:  %s" % APPSTATE.selector)
-    possible_selectors = api_quiz_2.SELECTORS
 
     while True:
         prompt = '[select selector] ---> '
@@ -382,7 +380,7 @@ or enter selector name
 
         if answer == 'h':
             print("possible selectors:")
-            for q in possible_selectors:
+            for q in Selector:
                 print("    %s" % q)
             continue
 
@@ -392,10 +390,10 @@ or enter selector name
 
         if answer == 'r':
             if not APPSTATE.selector:
-                APPSTATE.selector = 'oldest_first'
+                APPSTATE.selector = Selector.RANDOM
             break
 
-        if answer not in possible_selectors:
+        if answer not in Selector:
             print("not a valid selector:  %s" % answer)
             continue
 

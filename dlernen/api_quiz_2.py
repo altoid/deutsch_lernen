@@ -1,5 +1,5 @@
-from flask import Blueprint, request, current_app, url_for
-from datetime import datetime
+from flask import Blueprint, request, current_app
+from enum import StrEnum, auto
 from mysql.connector import connect
 from contextlib import closing
 from dlernen import common
@@ -34,14 +34,16 @@ bp = Blueprint('api_quiz_2', __name__, url_prefix='/api/quiz/v2')
 #                 order by 1
 
 
-SELECTORS = {
-    'random',
-    'oldest_first',  # sort by last_presentation
-    'crappy_score',  # raw score < 0.8
-    'imperfect',  # raw score < 100%
-    'rare',  # presentation_count <= 5
-    'never',  # for testing, always causes 0 results to be returned
-}
+# noinspection PyArgumentList
+# this comment keeps pycharm from bitching about auto()
+class Selector(StrEnum):
+    RANDOM = auto()          # value will be 'random', i.e. lowercase only
+    OLDEST_FIRST = auto()
+    CRAPPY_SCORE = auto()
+    IMPERFECT = auto()
+    RARE = auto()
+    NEVER = auto()
+    DEFAULT = OLDEST_FIRST
 
 
 def __placeholder_string(itr):
@@ -155,21 +157,23 @@ def __complete_and_incomplete_candidates_in_wordlists(cursor, quiz_key, wordlist
 def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id, selector=None):
     where = ''
     order_by = 'rand()'
-
-    if selector == 'oldest_first':
+    if selector == Selector.OLDEST_FIRST:
         order_by = 'last_presentation'
-    elif selector == 'imperfect':
+    elif selector == Selector.IMPERFECT:
         order_by = 'last_presentation'
         where = 'AND raw_score < 1.00'
-    elif selector == 'rare':
+    elif selector == Selector.RARE:
         order_by = 'presentation_count, last_presentation'
         where = 'AND presentation_count <= 5'
-    elif selector == 'crappy_score':
+    elif selector == Selector.CRAPPY_SCORE:
         order_by = 'raw_score, presentation_count, last_presentation'
         where = 'AND (raw_score < 0.8 or presentation_count <= 5)'
-    elif selector == 'never':
+    elif selector == Selector.NEVER:
         where = 'and FALSE'
         order_by = '1'
+    elif selector == Selector.RANDOM:
+        where = ''
+        order_by = 'rand()'
 
     sql = """
         select
@@ -287,7 +291,7 @@ def get_words(quiz_key):
     # returns ARRAY_QUIZ_RESPONSE_SCHEMA_2
     # optional arguments:  selector, wordlist_ids (multiple.  if none given use whole dictionary.)
 
-    selector = request.args.get('selector', 'random')
+    selector = request.args.get('selector', Selector.DEFAULT)
     wordlist_ids = request.args.getlist('wordlist_id')
     wordlist_ids = list(set(wordlist_ids))  # remove dups
 
@@ -296,7 +300,7 @@ def get_words(quiz_key):
     # - quiz_key is valid
 
     # - selector is valid
-    if selector not in SELECTORS:
+    if selector not in Selector:
         message = "unknown selector:  %s" % selector
         return message, 400
 
@@ -346,7 +350,7 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
     # returns ARRAY_QUIZ_RESPONSE_SCHEMA_2
     # optional arguments:  selector, tag (0 or more)
 
-    selector = request.args.get('selector', 'random')
+    selector = request.args.get('selector', Selector.DEFAULT)
     tags = request.args.getlist('tag')
     tags = list(set(tags))  # remove dups
 
@@ -369,7 +373,7 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
     # - tags not allowed for smart list
 
     # - selector is valid
-    if selector not in SELECTORS:
+    if selector not in Selector:
         message = "unknown selector:  %s" % selector
         return message, 400
 
