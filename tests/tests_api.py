@@ -1,8 +1,6 @@
 import unittest
-import jsonschema
 from dlernen import create_app
 from dlernen.dlernen_json_schema import get_validator, \
-    QUIZ_RESPONSE_SCHEMA, \
     WORD_RESPONSE_SCHEMA, \
     ARRAY_WORD_RESPONSE_SCHEMA
 from flask import url_for
@@ -31,14 +29,6 @@ class APITests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.app_context.pop()
-
-    def test_real_quiz_data(self):
-        url = url_for('api_quiz.get_word_to_test', quiz_key='plurals')
-        r = self.client.get(url)
-        self.assertEqual(200, r.status_code)
-        quiz_data = json.loads(r.data)
-
-        get_validator(QUIZ_RESPONSE_SCHEMA).validate(quiz_data)
 
     def test_get_word_by_word_exact(self):
         url = url_for('api_word.get_word', word='verderben')

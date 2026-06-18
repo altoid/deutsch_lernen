@@ -541,38 +541,6 @@ ARRAY_PREFIX_VERB_RESPONSE_SCHEMA = {
     }
 }
 
-QUIZ_ANSWER_PAYLOAD_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/quiz_answer_payload.json",
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Quiz Data List",
-    "description": "payload for posting a quiz answer",
-    "type": "object",
-    "required": [
-        "quiz_id",
-        "word_id",
-        "attribute_id",
-        "correct"
-    ],
-    "additionalProperties": False,
-    "properties": {
-        "quiz_id": {
-            "type": "integer",
-            "minimum": 1
-        },
-        "word_id": {
-            "type": "integer",
-            "minimum": 1
-        },
-        "correct": {
-            "type": "boolean"
-        },
-        "attribute_id": {
-            "type": "integer",
-            "minimum": 1
-        }
-    }
-}
-
 QUIZ_ANSWER_PAYLOAD_SCHEMA_2 = {
     "$id": "https://deutsch-lernen.doug/schemas/quiz_answer_payload_2.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
@@ -608,76 +576,6 @@ ARRAY_QUIZ_ANSWER_PAYLOAD_SCHEMA_2 = {
     "type": "array",
     "items": {
         "$ref": QUIZ_ANSWER_PAYLOAD_SCHEMA_2["$id"]
-    }
-}
-
-QUIZ_REPORT_RESPONSE_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/quiz_report_response.json",
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Quiz Report",
-    "description": """
-    data for displaying quiz results for a wordlist.
-    """,
-    "type": "object",
-    "required": [
-        "quiz_key",
-        "quiz_id",
-        "wordlist_id",
-        "scores"
-    ],
-    "properties": {
-        "wordlist_id": {
-            "type": "integer",
-            "minimum": 1
-        },
-        "quiz_key": {
-            "type": "string",
-        },
-        "quiz_id": {
-            "type": "integer",
-            "minimum": 1
-        },
-        "scores": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "required": [
-                    "word",
-                    "attrkey",
-                    "word_id",
-                    "presentation_count",
-                    "correct_count",
-                    "raw_score",
-                    "last_presentation"
-                ],
-                "properties": {
-                    "word": {
-                        "type": "string",
-                    },
-                    "attrkey": {
-                        "type": "string",
-                    },
-                    "word_id": {
-                        "type": "integer",
-                    },
-                    # TODO: can we validate correct_count <= presentation_count?
-                    "correct_count": {
-                        "type": "integer",
-                        "minimum": 0
-                    },
-                    "presentation_count": {
-                        "type": "integer",
-                        "minimum": 0
-                    },
-                    "raw_score": {
-                        "type": "number",
-                    },
-                    "last_presentation": {
-                        "type": "string"
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -772,47 +670,6 @@ QUIZ_REPORT_RESPONSE_SCHEMA_2 = {
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-QUIZ_RESPONSE_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/quiz_response.json",
-    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Quiz Data List",
-    "description": "word attribute value to be quizzed",
-    "type": "array",
-    "items": {
-        "required": [
-            "quiz_id",
-            "word_id",
-            "attribute_id",
-            "attrkey",
-            "word",
-            "attrvalue"
-        ],
-        "properties": {
-            "quiz_id": {
-                "type": "integer",
-                "minimum": 1
-            },
-            "word_id": {
-                "type": "integer",
-                "minimum": 1
-            },
-            "attribute_id": {
-                "type": "integer",
-                "minimum": 1
-            },
-            "word": {
-                "type": "string"
-            },
-            "attrkey": {
-                "type": "string"
-            },
-            "attrvalue": {
-                "type": ["string", "null"]
             }
         }
     }
@@ -1183,11 +1040,8 @@ ALL_SCHEMAS = [
     WORDLISTS_DELETE_PAYLOAD_SCHEMA,
     WORDLIST_TAG_PAYLOAD_SCHEMA,
     POS_STRUCTURE_RESPONSE_SCHEMA,
-    QUIZ_ANSWER_PAYLOAD_SCHEMA,
     QUIZ_ANSWER_PAYLOAD_SCHEMA_2,
     ARRAY_QUIZ_ANSWER_PAYLOAD_SCHEMA_2,
-    QUIZ_REPORT_RESPONSE_SCHEMA,
-    QUIZ_RESPONSE_SCHEMA,
     QUIZ_RESPONSE_SCHEMA_2,
     ARRAY_QUIZ_RESPONSE_SCHEMA_2,
     RELATION_RESPONSE_SCHEMA,
