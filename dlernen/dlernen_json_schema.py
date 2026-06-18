@@ -501,7 +501,7 @@ PREFIX_VERB_RESPONSE_SCHEMA = {
     "required": [
         "grundverb_word_id",
         "word_id",
-        "prefix_word_id", # required but might be null
+        "prefix_word_id",  # required but might be null
         "prefix",  # required and cannot be null
         "prefix_pos_name"
     ],
@@ -674,6 +674,99 @@ QUIZ_REPORT_RESPONSE_SCHEMA = {
                     },
                     "last_presentation": {
                         "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}
+
+QUIZ_REPORT_RESPONSE_SCHEMA_2 = {
+    "$id": "https://deutsch-lernen.doug/schemas/quiz_report_response_2.json",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Quiz Report",
+    "description": """
+    spec for a report for a quiz
+    """,
+    "type": "object",
+    "required": [
+        "quiz_key",
+        "quiz_id",
+        "wordlist_id",
+        "words",
+    ],
+    "properties": {
+        "wordlist_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "quiz_key": {
+            "type": "string",
+        },
+        "quiz_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "words": {
+            "type": "array",  # 0-length is ok
+            "items": {
+                'type': 'object',
+                "required": [
+                    'word',
+                    'word_id',
+                    'attributes'
+                ],
+                "properties": {
+                    'word': {
+                        'type': 'string',
+                        'pattern': WORD_PATTERN
+                    },
+                    'word_id': {
+                        'type': 'integer',
+                        'minimum': 1
+                    },
+                    'attributes': {
+                        'type': 'array',
+                        'minItems': 1,
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "attrkey",
+                                'attribute_id',
+                                'sort_order',
+                                "correct_count",
+                                "presentation_count",
+                                "raw_score",
+                                "last_presentation"
+                            ],
+                            "properties": {
+                                "attrkey": {
+                                    "type": "string",
+                                    'pattern': ID_PATTERN
+                                },
+                                "attribute_id": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                },
+                                "sort_order": {
+                                    "type": "integer"
+                                },
+                                "correct_count": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "presentation_count": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                "raw_score": {
+                                    "type": "number",
+                                },
+                                "last_presentation": {
+                                    "type": "string"
+                                }
+                            }
+                        }
                     }
                 }
             }

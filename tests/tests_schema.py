@@ -12,6 +12,7 @@ from dlernen.dlernen_json_schema import get_validator, ATTRIBUTES, \
     QUIZ_ANSWER_PAYLOAD_SCHEMA, \
     QUIZ_ANSWER_PAYLOAD_SCHEMA_2, \
     QUIZ_REPORT_RESPONSE_SCHEMA, \
+    QUIZ_REPORT_RESPONSE_SCHEMA_2, \
     QUIZ_RESPONSE_SCHEMA, \
     QUIZ_RESPONSE_SCHEMA_2, \
     RELATION_RESPONSE_SCHEMA, \
@@ -48,6 +49,85 @@ class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
     # https://python-jsonschema.readthedocs.io/en/stable/api/#jsonschema.validate
     #
     #############################################################
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                get_validator(self.schema).validate(jdoc)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    get_validator(self.schema).validate(jdoc)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
+class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
+    schema = QUIZ_REPORT_RESPONSE_SCHEMA_2
+
+    valid_docs = [
+        {
+            'quiz_key': 'quirky',
+            'quiz_id': 1,
+            'wordlist_id': 1,
+            'words': [
+                {
+                    'word': 'wat',
+                    'word_id': 1,
+                    'attributes': [   # minItems is 1
+                        {
+                            'attrkey': 'aoeu',
+                            'attribute_id': 1,
+                            'sort_order': 1,
+                            'correct_count': 1,  # >= 0
+                            'presentation_count': 1,
+                            'raw_score': 1.11,  # type is 'number'
+                            'last_presentation':  'string-valued'  # ifnull(last_presentation, '--') in sql
+                        },
+                        {
+                            'attrkey': 'blabla',
+                            'attribute_id': 2,
+                            'sort_order': 2,
+                            'correct_count': 0,  # >= 0
+                            'presentation_count': 18,  # just forgetful i guess
+                            'raw_score': 0.0,  # type is 'number'
+                            'last_presentation': 'string-valued'
+                        },
+                    ]
+                },
+                {
+                    'word': 'fooble',
+                    'word_id': 12,
+                    'attributes': [  # minItems is 1
+                        {
+                            'attrkey': 'aoeu',
+                            'attribute_id': 1,
+                            'sort_order': 1,
+                            'correct_count': 1,  # >= 0
+                            'presentation_count': 1,
+                            'raw_score': 1.11,  # type is 'number'
+                            'last_presentation': '--'
+                        },
+                        {
+                            'attrkey': 'blabla',
+                            'attribute_id': 2,
+                            'sort_order': 2,
+                            'correct_count': 0,  # >= 0
+                            'presentation_count': 18,  # just forgetful i guess
+                            'raw_score': 0.0,  # type is 'number'
+                            'last_presentation': 'string-valued'
+                        },
+                    ]
+                },
+            ]
+        }
+    ]
+
+    invalid_docs = [
+    ]
 
     def test_valid_docs(self):
         for jdoc in self.valid_docs:
