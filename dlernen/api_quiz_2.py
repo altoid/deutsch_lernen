@@ -6,7 +6,7 @@ from dlernen import common
 from dlernen.dlernen_json_schema import \
     ATTRIBUTES, \
     QUIZ_ANSWER_PAYLOAD_SCHEMA_2, \
-    QUIZ_REPORT_RESPONSE_SCHEMA, \
+    QUIZ_REPORT_RESPONSE_SCHEMA_2, \
     QUIZ_RESPONSE_SCHEMA_2, \
     ARRAY_QUIZ_RESPONSE_SCHEMA_2, \
     ARRAY_QUIZ_ANSWER_PAYLOAD_SCHEMA_2
@@ -154,7 +154,7 @@ def __complete_and_incomplete_candidates_in_wordlists(cursor, quiz_key, wordlist
     return complete_candidates, incomplete_candidates
 
 
-def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id, selector=None):
+def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id, selector=Selector.DEFAULT):
     where = ''
     order_by = 'rand()'
     if selector == Selector.OLDEST_FIRST:
@@ -198,6 +198,37 @@ def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id, selector=None
         'PLACEHOLDERS': __placeholder_string(candidate_word_ids),
         'ORDER_BY': order_by,
         'WHERE': where
+    }
+
+    cursor.execute(sql, [quiz_id] + list(candidate_word_ids))
+    rows = cursor.fetchall()
+
+    # the connector is returning the raw score as a Decimal, have to convert it to float
+    for r in rows:
+        r['raw_score'] = float(r['raw_score'])
+
+    return rows
+
+
+def __get_rows_for_report(cursor, candidate_word_ids, quiz_id):
+    sql = """
+        select
+            word,
+            word_id,
+            quiz_id,
+            attribute_id,
+            sort_order,
+            attrvalue,
+            attrkey,
+            ifnull(last_presentation, '--') last_presentation,
+            correct_count,
+            presentation_count,
+            raw_score * 100 as raw_score
+        from quiz_candidate_v
+        where quiz_id = %%s 
+        and word_id in (%(PLACEHOLDERS)s)
+    """ % {
+        'PLACEHOLDERS': __placeholder_string(candidate_word_ids),
     }
 
     cursor.execute(sql, [quiz_id] + list(candidate_word_ids))
@@ -486,6 +517,88 @@ def get_single_word(quiz_key, word_id):
         results = __build_results(quiz_id, rows, word_ids_to_articles)
 
         return results[0]
+
+
+@js_validate_result(QUIZ_REPORT_RESPONSE_SCHEMA_2)
+def __get_report(cursor, quiz_id, candidate_word_ids, wordlist_id, quiz_key):
+
+    rows = __get_rows_for_report(cursor, candidate_word_ids, quiz_id)
+
+    result = {
+        'wordlist_id': wordlist_id,
+        'quiz_key': quiz_key,
+        'quiz_id': quiz_id,
+        'words': []
+    }
+
+    word_id_to_word_result = {}
+
+    attr_keys_to_copy = {
+        'attrkey',
+        'attribute_id',
+        'sort_order',
+        'correct_count',
+        'presentation_count',
+        'last_presentation',
+        'raw_score'
+    }
+
+    for r in rows:
+        if r['word_id'] not in word_id_to_word_result:
+            word_id_to_word_result[r['word_id']] = {
+                'word': r['word'],
+                'word_id': r['word_id'],
+                'attributes': []
+            }
+        attr_score = {k: r[k] for k in attr_keys_to_copy if k in r}
+        word_id_to_word_result[r['word_id']]['attributes'].append(attr_score)
+
+    result['words'] = list(word_id_to_word_result.values())
+
+    return result
+
+
+@bp.route('/<string:quiz_key>/<int:wordlist_id>/report')
+def get_report(quiz_key, wordlist_id):
+    # checks:
+    #
+    # - quiz_key is valid
+    # - wordlist exists
+
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        # - quiz key is valid
+        sql = """
+        select id quiz_id
+        from quiz
+        where quiz_key = %(quiz_key)s
+        """
+
+        cursor.execute(sql, {'quiz_key': quiz_key})
+        rows = cursor.fetchall()
+        if not rows:
+            message = "unknown quiz:  %s" % quiz_key
+            return message, 404
+
+        quiz_id = rows[0]['quiz_id']
+
+        # wordlist exists
+        list_metadata = common.get_wordlist_metadata(cursor, [wordlist_id])
+        if not list_metadata:
+            return "wordlist %s not found" % wordlist_id, 404
+
+        completes, incompletes = __complete_and_incomplete_candidates_in_wordlists(cursor, quiz_key, [wordlist_id])
+
+        if not completes:
+            if incompletes:
+                message = "missing attribute values for candidate words"
+                return message, 409
+
+            message = "no candidates for quiz %s" % quiz_key
+            return message, 400
+
+        result = __get_report(cursor, quiz_id, completes, wordlist_id, quiz_key)
+
+        return result
 
 
 @bp.route('/<string:quiz_key>/score', methods=['POST'])
