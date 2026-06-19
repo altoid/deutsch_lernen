@@ -26,7 +26,7 @@ def quiz(quiz_key, wordlist_id, selector, tags):
         print("wordlist id is required for now")
         return "OK", 200
 
-    if selector and selector not in api_quiz.SELECTORS:
+    if selector and selector not in api_quiz.Selector:
         print("invalid selector:  %s" % selector)
         return "OK", 200
     
