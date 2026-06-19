@@ -10,6 +10,42 @@ from contextlib import closing
 bp = Blueprint('api_words', __name__, url_prefix='/api/words')
 
 
+@bp.route('/incomplete')
+def get_incomplete_words():
+    # get all of the words for which at least one attribute is not set.  we can pass these to an editing utility.
+    wordlist_ids = request.args.getlist('wordlist_id')
+    wordlist_ids = list(set(wordlist_ids))  # remove dups
+
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+        sql = """
+        select distinct word_id
+        from mashup_v
+        where attrvalue is null
+        """
+
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+        word_ids = [x['word_id'] for x in rows]
+
+        if wordlist_ids and word_ids:
+            sql = """
+            select distinct word_id
+            from wordlist_word
+            where wordlist_id in (%(WORDLIST_ID_PLACEHOLDER)s)
+            and word_id in (%(WORD_ID_PLACEHOLDER)s)
+            """ % {
+                'WORD_ID_PLACEHOLDER': common.placeholder_string(word_ids),
+                'WORDLIST_ID_PLACEHOLDER': common.placeholder_string(wordlist_ids)
+            }
+            cursor.execute(sql, wordlist_ids + word_ids)
+            rows = cursor.fetchall()
+            word_ids = [x['word_id'] for x in rows]
+
+        result = common.get_words_from_word_ids(cursor, word_ids)
+
+        return result
+
+
 @bp.route('', methods=['GET'])
 def get_words():
     """
