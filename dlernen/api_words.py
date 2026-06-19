@@ -23,8 +23,8 @@ def get_words():
     tags = request.args.getlist('tag')
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         if wordlist_ids and tags:
-            tag_args = ', '.join(['%s'] * len(tags))
-            id_args = ', '.join(['%s'] * len(wordlist_ids))
+            tag_args = common.placeholder_string(tags)
+            id_args = common.placeholder_string(wordlist_ids)
 
             sql = """
             select distinct word_id
@@ -45,14 +45,11 @@ def get_words():
             word_ids = common.get_word_ids_from_wordlists(cursor, wordlist_ids)
 
         elif tags:
-            tag_args = ['%s'] * len(tags)
-            tag_args = ', '.join(tag_args)
-
             sql = """
             select distinct word_id
             from tag
             where tag in (%(tag_args)s)
-            """ % {'tag_args': tag_args}
+            """ % {'tag_args': common.placeholder_string(tags)}
 
             cursor.execute(sql, tags)
             rows = cursor.fetchall()

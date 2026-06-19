@@ -397,7 +397,7 @@ def __get_member_wordlists(cursor, word_ids):
 
     word_ids = list(set(word_ids))  # remove dups
 
-    args = ','.join(['%s'] * len(word_ids))
+    args = common.placeholder_string(word_ids)
 
     # find standard lists that these words are in
     sql = """

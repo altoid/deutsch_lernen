@@ -6,6 +6,9 @@ from dlernen.dlernen_json_schema import ARRAY_WORD_RESPONSE_SCHEMA, \
 
 # no view functions here, just utilities needed by more than one blueprint.
 
+def placeholder_string(itr):
+    return ','.join(['%s'] * len(itr))
+
 
 # returns two lists:  the word_ids that exist in the database and those that don't.
 # it is guaranteed that:
@@ -17,12 +20,11 @@ def check_word_ids(cursor, word_ids):
     if not word_ids:
         return [], []
 
-    id_args = ', '.join(['%s'] * len(word_ids))
     sql = """
     select distinct id word_id
     from word
     where id in (%(id_args)s)
-    """ % {'id_args': id_args}
+    """ % {'id_args': placeholder_string(word_ids)}
 
     cursor.execute(sql, word_ids)
     rows = cursor.fetchall()
@@ -41,8 +43,6 @@ def get_displayable_words(cursor, word_ids):
     if word_ids:
         word_ids = list(set(word_ids))  # remove dups
 
-        args = ','.join(['%s'] * len(word_ids))
-
         sql = """
         select
             m1.word word,
@@ -59,7 +59,7 @@ def get_displayable_words(cursor, word_ids):
         and   m2.attrkey = 'article'
         where m1.word_id in (%(args)s)
         order by m1.word        
-        """ % {'args': args}
+        """ % {'args': placeholder_string(word_ids)}
 
         cursor.execute(sql, word_ids)
         rows = cursor.fetchall()
@@ -103,7 +103,7 @@ def get_words_from_word_ids(cursor, word_ids):
         mashup_v
     where word_id in (%(args)s)
     """ % {
-        'args': ','.join(['%s'] * len(word_ids))
+        'args': placeholder_string(word_ids)
     }
 
     cursor.execute(sql, word_ids)
@@ -152,8 +152,7 @@ def get_word_ids_from_wordlists(cursor, wordlist_ids):
     if not wordlist_ids:
         return []
 
-    wordlist_args = ['%s'] * len(wordlist_ids)
-    wordlist_args = ', '.join(wordlist_args)
+    wordlist_args = placeholder_string(wordlist_ids)
 
     sql_for_standard_lists = [
         """
@@ -192,8 +191,8 @@ def get_word_ids_from_wordlists(cursor, wordlist_ids):
 def get_wordlist_metadata(cursor, wordlist_ids):
     # empty wordlist_ids means GET ALL
 
-    where_clause = """where wordlist.id in (%(args)s)""" % {'args': ','.join(['%s'] * len(wordlist_ids))} \
-        if wordlist_ids else ''
+    where_clause = """where wordlist.id in (%(args)s)""" % {'args': placeholder_string(wordlist_ids)} if wordlist_ids \
+        else ''
 
     sql = """
         with wordlist_counts as

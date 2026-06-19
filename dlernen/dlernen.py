@@ -153,7 +153,7 @@ def get_related_verbs(verbobject):
     wordobjects = r.json()
     word_ids_to_words = {x['word_id']: x for x in wordobjects}
 
-    # decorate the verb respons info with the word objects
+    # decorate the verb response info with the word objects
     for x in verbinfo_arr:
         x['grundverb_word_obj'] = word_ids_to_words[x['grundverb_word_id']]
         x['word_obj'] = word_ids_to_words[x['word_id']]

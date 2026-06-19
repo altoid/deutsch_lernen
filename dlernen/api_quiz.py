@@ -7,9 +7,7 @@ from dlernen.dlernen_json_schema import \
     ATTRIBUTES, \
     QUIZ_ANSWER_PAYLOAD_SCHEMA, \
     QUIZ_REPORT_RESPONSE_SCHEMA, \
-    QUIZ_RESPONSE_SCHEMA, \
-    ARRAY_QUIZ_RESPONSE_SCHEMA_2, \
-    ARRAY_QUIZ_ANSWER_PAYLOAD_SCHEMA
+    ARRAY_QUIZ_RESPONSE_SCHEMA
 from dlernen.decorators import js_validate_result, js_validate_payload
 from pprint import pprint
 
@@ -46,10 +44,6 @@ class Selector(StrEnum):
     DEFAULT = OLDEST_FIRST
 
 
-def __placeholder_string(itr):
-    return ','.join(['%s'] * len(itr))
-
-
 # for the various GET requests, we guarantee that all attributes returned for a word will have values for all
 # attributes defined for the quiz.
 #
@@ -83,7 +77,7 @@ def __complete_and_incomplete_candidates(cursor, quiz_key, word_ids=None):
         where quiz_key = %%s
         and word_id in (%(PLACEHOLDERS)s)
         """ % {
-            'PLACEHOLDERS': __placeholder_string(word_ids)
+            'PLACEHOLDERS': common.placeholder_string(word_ids)
         }
 
         query_args = [quiz_key] + word_ids
@@ -111,7 +105,7 @@ def __complete_and_incomplete_candidates(cursor, quiz_key, word_ids=None):
     and word_id in (%(PLACEHOLDERS)s)
     and attrvalue is null
     """ % {
-        'PLACEHOLDERS': __placeholder_string(candidate_word_ids)
+        'PLACEHOLDERS': common.placeholder_string(candidate_word_ids)
     }
 
     cursor.execute(sql, [quiz_key] + list(candidate_word_ids))
@@ -141,7 +135,7 @@ def __complete_and_incomplete_candidates_in_wordlists(cursor, quiz_key, wordlist
         where wordlist_id = %%s
         and tag in (%(PLACEHOLDERS)s)
         """ % {
-            'PLACEHOLDERS': __placeholder_string(tags)
+            'PLACEHOLDERS': common.placeholder_string(tags)
         }
 
         cursor.execute(sql, [wordlist_ids[0]] + tags)
@@ -195,7 +189,7 @@ def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id, selector=Sele
 
         order by %(ORDER_BY)s
     """ % {
-        'PLACEHOLDERS': __placeholder_string(candidate_word_ids),
+        'PLACEHOLDERS': common.placeholder_string(candidate_word_ids),
         'ORDER_BY': order_by,
         'WHERE': where
     }
@@ -228,7 +222,7 @@ def __get_rows_for_report(cursor, candidate_word_ids, quiz_id):
         where quiz_id = %%s 
         and word_id in (%(PLACEHOLDERS)s)
     """ % {
-        'PLACEHOLDERS': __placeholder_string(candidate_word_ids),
+        'PLACEHOLDERS': common.placeholder_string(candidate_word_ids),
     }
 
     cursor.execute(sql, [quiz_id] + list(candidate_word_ids))
@@ -267,7 +261,7 @@ def __get_articles_for_word_ids(cursor, quiz_key, word_ids):
         where word_id in (%(PLACEHOLDERS)s)
         and attrkey='article'
         """ % {
-            'PLACEHOLDERS': __placeholder_string(word_ids)
+            'PLACEHOLDERS': common.placeholder_string(word_ids)
         }
         cursor.execute(sql, list(word_ids))
         rows = cursor.fetchall()
@@ -276,7 +270,7 @@ def __get_articles_for_word_ids(cursor, quiz_key, word_ids):
     return result
 
 
-@js_validate_result(ARRAY_QUIZ_RESPONSE_SCHEMA_2)
+@js_validate_result(ARRAY_QUIZ_RESPONSE_SCHEMA)
 def __build_results(quiz_id, rows, word_ids_to_articles):
     # get the unique word ids in the order in which they appear in the query result.
     word_ids_in_order = []
@@ -319,7 +313,7 @@ def __build_results(quiz_id, rows, word_ids_to_articles):
 
 @bp.route('/<string:quiz_key>/candidates')
 def get_words(quiz_key):
-    # returns ARRAY_QUIZ_RESPONSE_SCHEMA_2
+    # returns ARRAY_QUIZ_RESPONSE_SCHEMA
     # optional arguments:  selector, wordlist_ids (multiple.  if none given use whole dictionary.)
 
     selector = request.args.get('selector', Selector.DEFAULT)
@@ -378,7 +372,7 @@ def get_words(quiz_key):
 
 @bp.route('/<string:quiz_key>/candidates/wordlist/<int:wordlist_id>')
 def get_words_in_wordlist(quiz_key, wordlist_id):
-    # returns ARRAY_QUIZ_RESPONSE_SCHEMA_2
+    # returns ARRAY_QUIZ_RESPONSE_SCHEMA
     # optional arguments:  selector, tag (0 or more)
 
     selector = request.args.get('selector', Selector.DEFAULT)

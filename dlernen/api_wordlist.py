@@ -304,7 +304,7 @@ def __get_wordlist(wordlist_id, cursor, tags=None):
     else:
         if tags:
             tags = set(tags)  # remove any dups
-            tag_args = ', '.join(["%s"] * len(tags))
+
             words_sql = """
             select
                 m.word,
@@ -327,7 +327,7 @@ def __get_wordlist(wordlist_id, cursor, tags=None):
             and tag.tag in (%(tag_args)s)
             order by m.word
             """ % {
-                "tag_args": tag_args
+                "tag_args": common.placeholder_string(tags)
             }
             cursor.execute(words_sql, (wordlist_id, *tags))
             words = cursor.fetchall()
@@ -492,14 +492,12 @@ def get_word_ids_from_wordlists():
             if not wordlist_ids or len(wordlist_ids) != 1:
                 return "need exactly one wordlist id when searching by tags", 400
 
-            arglist = ['%s'] * len(tags)
-            arglist = ', '.join(arglist)
             sql = """
             select distinct word_id
             from tag
             where wordlist_id = %%s
             and tag in (%(arglist)s)
-            """ % {'arglist': arglist}
+            """ % {'arglist': common.placeholder_string(tags)}
 
             args = [wordlist_ids[0]] + tags
             cursor.execute(sql, args)
@@ -525,12 +523,11 @@ def get_word_ids_from_wordlists():
 
 @js_validate_result(ARRAY_RELATION_RESPONSE_SCHEMA)
 def __get_relations(cursor, word_ids):
-    args = ','.join(['%s'] * len(word_ids))
     sql = """
     select distinct relation_id
     from word_id_relation
     where word_id in (%(args)s)
-    """ % {'args': args}
+    """ % {'args': common.placeholder_string(word_ids)}
 
     result = []
     cursor.execute(sql, word_ids)
