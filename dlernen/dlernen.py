@@ -4,10 +4,7 @@ import json
 
 from dlernen.tagstate import TagState
 from dlernen.dlernen_json_schema import ATTRIBUTES
-from dlernen.api_pos import \
-    VERB_POS_NAME, \
-    SEPARABLE_PREFIX_POS_NAME, \
-    INSEPARABLE_PREFIX_POS_NAME
+from dlernen.api_pos import POSName
 from pprint import pprint, pformat
 
 bp = Blueprint('dlernen', __name__, url_prefix='/dlernen')
@@ -114,11 +111,11 @@ def lookup_word(word):
 
 def get_related_verbs(verbobject):
     url = None
-    if verbobject['pos_name'] == VERB_POS_NAME:
+    if verbobject['pos_name'] == POSName.VERB:
         url = url_for('api_verbs.get_verbs_by_grundverb', grundverb=verbobject['word'], _external=True)
-    elif verbobject['pos_name'] == SEPARABLE_PREFIX_POS_NAME:
+    elif verbobject['pos_name'] == POSName.SEPARABLE_PREFIX:
         url = url_for('api_verbs.get_verbs_by_prefix', prefix=verbobject['word'], _external=True)
-    elif verbobject['pos_name'] == INSEPARABLE_PREFIX_POS_NAME:
+    elif verbobject['pos_name'] == POSName.INSEPARABLE_PREFIX:
         url = url_for('api_verbs.get_verbs_by_prefix', prefix=verbobject['word'], _external=True)
 
     if not url:

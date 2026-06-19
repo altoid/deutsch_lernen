@@ -3,10 +3,7 @@ import json
 from dlernen import create_app
 from dlernen.dlernen_json_schema import ATTRIBUTES
 from flask import url_for
-from dlernen.api_pos import \
-    VERB_POS_NAME, \
-    NOUN_POS_NAME, \
-    ADJECTIVE_POS_NAME
+from dlernen.api_pos import POSName
 from pprint import pprint
 import random
 import string
@@ -51,7 +48,7 @@ class TestAPIWordNotes(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN],
             "notes": None,
             ATTRIBUTES: [
                 {
@@ -76,7 +73,7 @@ class TestAPIWordNotes(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN],
             "notes": None,
             ATTRIBUTES: [
                 {
@@ -112,7 +109,7 @@ class TestAPIWordNotes(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN],
             "notes": notes,
             ATTRIBUTES: [
                 {
@@ -138,7 +135,7 @@ class TestAPIWordNotes(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN],
             "notes": old_notes,
             ATTRIBUTES: [
                 {
@@ -174,7 +171,7 @@ class TestAPIWordNotes(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN],
             "notes": old_notes,
             ATTRIBUTES: [
                 {
@@ -208,7 +205,7 @@ class TestAPIWordNotes(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN],
             "notes": old_notes,
             ATTRIBUTES: [
                 {
@@ -230,7 +227,7 @@ class TestAPIWordNotes(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN],
             "notes": old_notes,
             ATTRIBUTES: [
                 {
@@ -298,7 +295,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         # construct a fake verb, setting values for all the attributes.  we derive the attributes from the POS
         # structure for verbs.
 
-        verb_structure = list(filter(lambda x: x['pos_name'] == VERB_POS_NAME, obj))[0]
+        verb_structure = list(filter(lambda x: x['pos_name'] == POSName.VERB, obj))[0]
         attributes = [
             {
                 'attribute_id': x['attribute_id'],
@@ -327,7 +324,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word + 'ss',
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -343,7 +340,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word + 'ß',
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -360,7 +357,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -393,7 +390,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
             ATTRIBUTES: [
                 {
                     "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
@@ -435,7 +432,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
 
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME]
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN]
         }
 
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
@@ -453,7 +450,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         attrkey = 'plural'
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN],
             ATTRIBUTES: [
                 {
                     "attribute_id": self.keyword_mappings['attribute_names_to_ids'][attrkey],
@@ -481,7 +478,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         attribute_id = self.keyword_mappings['attribute_names_to_ids']['plural']
         payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN],
             ATTRIBUTES: [
                 {
                     "attribute_id": attribute_id,
@@ -525,7 +522,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN],
             ATTRIBUTES: [
             ]
         }
@@ -548,7 +545,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -570,7 +567,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -656,7 +653,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         word = "test_add_twice_%s" % ''.join(random.choices(string.ascii_lowercase, k=10))
         payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN],
             ATTRIBUTES: [
                 {
                     "attribute_id": self.keyword_mappings['attribute_names_to_ids']['article'],
@@ -694,7 +691,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         word = "test_add_twice_%s" % ''.join(random.choices(string.ascii_lowercase, k=10))
         payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN],
             ATTRIBUTES: [
                 {
                     "attribute_id": self.keyword_mappings['attribute_names_to_ids']['article'],
@@ -718,7 +715,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
 
         payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
             ATTRIBUTES: [
                 {
                     "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
@@ -782,7 +779,7 @@ class TestAPIWordPOST(unittest.TestCase):
     # word not in payload
     def test_word_not_in_payload(self):
         payload = {
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN],
             ATTRIBUTES: [
                 {
                     "attribute_id": self.keyword_mappings['attribute_names_to_ids']['article'],
@@ -833,7 +830,7 @@ class TestAPIWordPOST(unittest.TestCase):
     def test_bullshit_attribute_ids(self):
         payload = {
             "word": "aoeiaoueaou",
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN],
             ATTRIBUTES: [
                 {
                     "attribute_id": 5346345,
@@ -900,7 +897,7 @@ class TestAPIWordPUT(unittest.TestCase):
         self.word = '%s_%s' % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=10)))
         add_payload = {
             "word": self.word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][NOUN_POS_NAME]
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.NOUN]
         }
 
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
@@ -1099,7 +1096,7 @@ class TestAPIWordUpdate(unittest.TestCase):
         self.verb = ''.join(random.choices(string.ascii_lowercase, k=11))
         add_payload = {
             "word": self.verb,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][VERB_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.VERB],
         }
 
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)

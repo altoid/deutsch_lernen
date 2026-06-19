@@ -5,9 +5,7 @@ from dlernen import create_app
 from dlernen.dlernen_json_schema import ATTRIBUTES
 from flask import url_for
 import json
-from dlernen.api_pos import \
-    VERB_POS_NAME, \
-    ADJECTIVE_POS_NAME
+from dlernen.api_pos import POSName
 from pprint import pprint
 
 
@@ -57,7 +55,7 @@ class APIPostQuizAnswer(unittest.TestCase):
         ]
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
             ATTRIBUTES: attributes
         }
 
@@ -169,7 +167,7 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
         ]
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
             ATTRIBUTES: attributes
         }
 
@@ -196,7 +194,7 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
         ]
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][VERB_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.VERB],
             ATTRIBUTES: attributes
         }
 
@@ -229,7 +227,7 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
         ]
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][VERB_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.VERB],
             ATTRIBUTES: attributes
         }
 

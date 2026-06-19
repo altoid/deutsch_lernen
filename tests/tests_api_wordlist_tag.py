@@ -4,7 +4,7 @@ from flask import url_for
 import json
 import random
 import string
-from dlernen.api_pos import ADJECTIVE_POS_NAME
+from dlernen.api_pos import POSName
 from pprint import pprint
 
 
@@ -60,7 +60,7 @@ class TestAPIWordlistTagMultiList(unittest.TestCase):
 
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -298,7 +298,7 @@ class TestAPIWordlistTagSmartList(unittest.TestCase):
 
         add_payload = {
             "word": self.word1,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -307,7 +307,7 @@ class TestAPIWordlistTagSmartList(unittest.TestCase):
 
         add_payload = {
             "word": self.word2,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -424,7 +424,7 @@ class TestAPIWordlistTag(unittest.TestCase):
 
         add_payload = {
             "word": self.word1,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -433,7 +433,7 @@ class TestAPIWordlistTag(unittest.TestCase):
 
         add_payload = {
             "word": self.word2,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -442,7 +442,7 @@ class TestAPIWordlistTag(unittest.TestCase):
 
         add_payload = {
             "word": self.word3,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -543,7 +543,7 @@ class TestAPIWordlistTagStandardList(unittest.TestCase):
 
         add_payload = {
             "word": self.word1,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -552,7 +552,7 @@ class TestAPIWordlistTagStandardList(unittest.TestCase):
 
         add_payload = {
             "word": self.word2,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -561,7 +561,7 @@ class TestAPIWordlistTagStandardList(unittest.TestCase):
 
         add_payload = {
             "word": self.word3,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][ADJECTIVE_POS_NAME],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
