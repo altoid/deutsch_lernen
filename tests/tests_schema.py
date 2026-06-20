@@ -1521,7 +1521,8 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
                 {
                     'attrkey': 'definition',
                     'sort_order': 5,
-                    'attrvalue': 'to spoil, deteriorate, go bad'
+                    'attrvalue': 'to spoil, deteriorate, go bad',
+                    'attribute_id': 5,
                 },
             ],
         },
@@ -1538,7 +1539,7 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
     invalid_docs = [
         {
             "word": "saoethus",
-            "word_id": "1234",
+            "word_id": "1234",   # should be int
             "pos_name": "eoui",
             "notes": "this is a cool word",
             "attributes": [
@@ -1556,6 +1557,7 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "notes": "this is a cool word",
             "attributes": [
                 {
+                    'attribute_id': 22,
                     'attrkey': 'definition',
                     'sort_order': 5,
                     'attrvalue': 'to spoil, deteriorate, go bad'
@@ -1569,6 +1571,7 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "notes": "this is a cool word",
             "attributes": [
                 {
+                    'attribute_id': 22,
                     'attrkey': 'definition',
                     'sort_order': 5,
                     'attrvalue': 'to spoil, deteriorate, go bad'
@@ -1582,6 +1585,7 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "notes": "this is a cool word",
             "attributes": [
                 {
+                    'attribute_id': 22,
                     'attrkey': 'definition',
                     'sort_order': 5,
                     'attrvalue': 'to spoil, deteriorate, go bad'
@@ -1595,6 +1599,7 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             # "notes": "this is a cool word",
             "attributes": [
                 {
+                    'attribute_id': 22,
                     'attrkey': 'definition',
                     'sort_order': 5,
                     'attrvalue': 'to spoil, deteriorate, go bad'
@@ -1608,6 +1613,7 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "notes": "this is a cool word",
             # "attributes": [
             #     {
+            #         'attribute_id': 22,
             #         'attrkey': 'definition',
             #         'sort_order': 5,
             #         'attrvalue': 'to spoil, deteriorate, go bad'
@@ -1621,6 +1627,21 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "notes": "this is a cool word",
             "attributes": [
                 {
+                    # 'attribute_id': 22,
+                    'attrkey': 'definition',
+                    'sort_order': 5,
+                    'attrvalue': 'to spoil, deteriorate, go bad'
+                },
+            ],
+        },
+        {
+            "word": "saoethus",
+            "word_id": 1234,
+            "pos_name": "eoui",
+            "notes": "this is a cool word",
+            "attributes": [
+                {
+                    'attribute_id': 22,
                     # 'attrkey': 'definition',
                     'sort_order': 5,
                     'attrvalue': 'to spoil, deteriorate, go bad'
@@ -1634,6 +1655,7 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "notes": "this is a cool word",
             "attributes": [
                 {
+                    'attribute_id': 22,
                     'attrkey': 'definition',
                     # 'sort_order': 5,
                     'attrvalue': 'to spoil, deteriorate, go bad'
@@ -1647,6 +1669,7 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "notes": "this is a cool word",
             "attributes": [
                 {
+                    'attribute_id': 22,
                     'attrkey': 'definition',
                     'sort_order': 5,
                     # 'attrvalue': 'to spoil, deteriorate, go bad'

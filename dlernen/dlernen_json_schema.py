@@ -970,7 +970,13 @@ WORD_RESPONSE_SCHEMA = {
             "type": "array",
             "items": {
                 "type": "object",
-                "required": ["attrkey", "sort_order", "attrvalue"],
+                "required": [
+                    "attrkey",
+                    "sort_order",
+                    "attrvalue",
+                    "attribute_id"
+                ],
+                "additionalProperties": False,
                 "properties": {
                     "attrkey": {
                         "type": "string"
@@ -978,6 +984,10 @@ WORD_RESPONSE_SCHEMA = {
                     "sort_order": {
                         "type": "integer",
                         "minimum": 0
+                    },
+                    "attribute_id": {
+                        "type": "integer",
+                        "minimum": 1
                     },
                     "attrvalue": {
                         "type": ["string", "null"]
