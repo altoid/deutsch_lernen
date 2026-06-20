@@ -176,26 +176,33 @@ def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id, selector=Sele
     if not candidate_word_ids:
         return []
 
-    where = ''
-    order_by = 'rand()'
-    if selector == Selector.OLDEST_FIRST:
-        order_by = 'last_presentation'
-    elif selector == Selector.IMPERFECT:
-        order_by = 'last_presentation'
-        where = 'AND raw_score < 1.00'
-    elif selector == Selector.RARE:
-        order_by = 'presentation_count, last_presentation'
-        where = 'AND presentation_count <= 5'
-    elif selector == Selector.CRAPPY_SCORE:
-        order_by = 'raw_score, presentation_count, last_presentation'
-        where = 'AND (raw_score < 0.8 or presentation_count <= 5)'
-    elif selector == Selector.NEVER:
-        where = 'and FALSE'
-        order_by = '1'
-    elif selector == Selector.RANDOM:
-        where = ''
-        order_by = 'rand()'
-
+    flavor = {
+        Selector.OLDEST_FIRST: {
+            'where': '',
+            'order_by': 'last_presentation'
+        },
+        Selector.IMPERFECT: {
+            'where': 'AND raw_score < 1.00',
+            'order_by': 'last_presentation'
+        },
+        Selector.RARE: {
+            'where': 'AND presentation_count <= 5',
+            'order_by': 'presentation_count, last_presentation'
+        },
+        Selector.CRAPPY_SCORE: {
+            'where': 'AND (raw_score < 0.8 or presentation_count <= 5)',
+            'order_by': 'raw_score, presentation_count, last_presentation'
+        },
+        Selector.RANDOM: {
+            'where': '',
+            'order_by': 'rand()'
+        },
+        Selector.NEVER: {
+            'where': 'and FALSE',
+            'order_by': '1'
+        },
+    }
+    
     sql = """
         select
             word,
@@ -217,8 +224,8 @@ def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id, selector=Sele
         order by %(ORDER_BY)s
     """ % {
         'PLACEHOLDERS': common.placeholder_string(candidate_word_ids),
-        'ORDER_BY': order_by,
-        'WHERE': where
+        'ORDER_BY': flavor[selector]['order_by'],
+        'WHERE': flavor[selector]['where']
     }
 
     cursor.execute(sql, [quiz_id] + list(candidate_word_ids))
