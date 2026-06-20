@@ -44,7 +44,8 @@ def patch_words(wordlist_id, quiz_key):
         counter += 1
         remaining -= 1
 
-        print("[%s/%s] ============================= %s" % (counter, remaining, w['word']))
+        print("[%s/%s] ============================= %s (%s) [%s]" % (counter, remaining, w['word'], w['pos_name'],
+                                                                      w['word_id']))
         for attr in w['attributes']:
             if attr['attrvalue']:
                 continue
