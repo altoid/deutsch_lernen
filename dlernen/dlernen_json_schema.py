@@ -191,6 +191,43 @@ WORD_ATTRIBUTES_SCHEMA = {
     }
 }
 
+WORD_ATTRIBUTE_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/word_attribute_response.json",
+    "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
+    "title": "Word Attributes for Responses",
+    "description": """
+    describes the structure of a single word attribute in a response object.
+    this is not intended to be used by itself in responses, it just describes the
+    structure of word attributes common to various response types where individual words are returned,
+    e.g. WORD_RESPONSE_SCHEMA, QUIZ_RESPONSE_SCHEMA
+    """,
+
+    "type": "object",
+    "required": [
+        "attrkey",
+        "sort_order",
+        "attrvalue",
+        "attribute_id"
+    ],
+    "additionalProperties": False,
+    "properties": {
+        "attrkey": {
+            "type": "string",
+            "pattern": ID_PATTERN
+        },
+        "attribute_id": {
+            "type": "integer",
+        },
+        "sort_order": {
+            "type": "integer",
+        },
+        "attrvalue": {
+            "type": ["string", "null"],
+            "pattern": STRING_PATTERN
+        },
+    }
+}
+
 WORD_ADD_PAYLOAD_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/word_add_payload.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
@@ -707,30 +744,7 @@ QUIZ_RESPONSE_SCHEMA = {
             "type": "array",
             "minItems": 1,
             "items": {
-                "type": "object",
-                "required": [
-                    "attrkey",
-                    "attribute_id",
-                    "attrvalue",
-                    "sort_order"
-                ],
-                "additionalProperties": False,
-                "properties": {
-                    "attrkey": {
-                        "type": "string",
-                        "pattern": ID_PATTERN
-                    },
-                    "attribute_id": {
-                        "type": "integer",
-                    },
-                    "sort_order": {
-                        "type": "integer",
-                    },
-                    "attrvalue": {
-                        "type": ["string", "null"],
-                        "pattern": STRING_PATTERN
-                    },
-                }
+                "$ref": WORD_ATTRIBUTE_RESPONSE_SCHEMA["$id"]
             }
         }
     }
@@ -969,30 +983,7 @@ WORD_RESPONSE_SCHEMA = {
         ATTRIBUTES: {
             "type": "array",
             "items": {
-                "type": "object",
-                "required": [
-                    "attrkey",
-                    "sort_order",
-                    "attrvalue",
-                    "attribute_id"
-                ],
-                "additionalProperties": False,
-                "properties": {
-                    "attrkey": {
-                        "type": "string"
-                    },
-                    "sort_order": {
-                        "type": "integer",
-                        "minimum": 0
-                    },
-                    "attribute_id": {
-                        "type": "integer",
-                        "minimum": 1
-                    },
-                    "attrvalue": {
-                        "type": ["string", "null"]
-                    }
-                }
+                "$ref": WORD_ATTRIBUTE_RESPONSE_SCHEMA["$id"]
             }
         }
     }
@@ -1065,6 +1056,7 @@ ALL_SCHEMAS = [
     WORDLIST_RESPONSE_SCHEMA,
     WORDLIST_TAG_PAYLOAD_SCHEMA,
     WORD_ADD_PAYLOAD_SCHEMA,
+    WORD_ATTRIBUTE_RESPONSE_SCHEMA,
     WORD_ATTRIBUTES_SCHEMA,
     WORD_RESPONSE_SCHEMA,
     WORD_TAG_RESPONSE_SCHEMA,
