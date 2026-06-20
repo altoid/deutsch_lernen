@@ -1,5 +1,5 @@
 from flask import Blueprint, url_for
-from pprint import pprint
+from pprint import pprint, pformat
 import click
 import requests
 
@@ -7,83 +7,49 @@ bp = Blueprint('app_patch_words', __name__)
 
 
 @bp.cli.command('patch_words')
-@click.option('--wordlist_ids', '-l', multiple=True)
-@click.option('--attributes', '-a', multiple=True)
-def patch_words(wordlist_ids, attributes):
+@click.option('--wordlist_id', '-l', multiple=True)
+@click.option('--quiz_key', '-k')
+def patch_words(wordlist_id, quiz_key):
     # to run this, use the command:  python -m flask --app run app_patch_words patch_words [-l id -l id -l id ...]
     # it has to be invoked from the dlernen directory.
     # need -l for each list id because click sucks but we can't use argparse.
 
-    url = url_for('api_pos.get_pos', _external=True)
-    r = requests.get(url)
+    wordlist_ids = list(set(map(int, wordlist_id)))
+
+    if quiz_key:
+        r = requests.get(url_for('api_quiz.get_incomplete_words',
+                                 quiz_key=quiz_key,
+                                 wordlist_id=wordlist_ids,
+                                 _external=True))
+    else:
+        r = requests.get(url_for('api_words.get_incomplete_words',
+                                 wordlist_id=wordlist_ids,
+                                 _external=True))
+
     if not r:
+        print(r.text)
         return r.text, r.status_code
 
-    pos_structure = r.json()
-    verb_structure = list(filter(lambda x: x['pos_name'].casefold() == 'verb', pos_structure))[0]
+    words_to_patch = r.json()
 
-    verb_attrs = {x['attrkey'] for x in verb_structure['attributes']}
-    sort_order_to_attrid = {x['sort_order']: x['attribute_id'] for x in verb_structure['attributes']}
-    wordlist_ids = list(wordlist_ids)
-
-    attrkeys_to_patch = set(attributes) if attributes else verb_attrs
-
-    unknown_attrs = attrkeys_to_patch - verb_attrs
-    if unknown_attrs:
-        message = "unknown attributes:  %s" % unknown_attrs
-        print(message)
-        return message, 400
-
-    url = url_for('api_words.get_words', wordlist_id=wordlist_ids, _external=True)
-
-    r = requests.get(url)
-    if not r:
-        return r.text, r.status_code
-
-    result = r.json()
-
-    words_to_patch = []
-
-    result = list(filter(lambda x: x['pos_name'] == 'Verb', result))
-    for w in result:
-        tpp = list(filter(lambda x: x['attrkey'] in attrkeys_to_patch and x['attrvalue'] is None, w['attributes']))
-        if tpp:
-            words_to_patch.append(w)
-
-    remaining = len(words_to_patch)
-    print("found %s verbs to patch" % (len(words_to_patch)))
-
+    print("found %s words to patch" % (len(words_to_patch)))
     if not words_to_patch:
         print("nothing to do")
         return 'OK', 200
 
-    payload = {
-        "attributes": []
-    }
-
     counter = 0
-    for p in words_to_patch:
+    remaining = len(words_to_patch)
+
+    for w in words_to_patch:
         counter += 1
         remaining -= 1
-        attrs_to_patch = list(filter(lambda x: x['attrkey'] in attrkeys_to_patch and x['attrvalue'] is None,
-                                     p['attributes']))
 
-        keys_to_values = {x['attrkey']: x['attrvalue'] for x in attrs_to_patch}
-        sort_order_to_attrkey = {x['sort_order']: x['attrkey'] for x in attrs_to_patch}
-        ordering = sorted(list(sort_order_to_attrkey.keys()))
-
-        payload['attributes'].clear()
-
-        print("[%s/%s] ============================= %s" % (counter, remaining, p['word']))
-        for i in ordering:
-            k = sort_order_to_attrkey[i]
-            v = keys_to_values[k]
-
-            if v:
-                # don't bash an already-set value
+        print("[%s/%s] ============================= %s" % (counter, remaining, w['word']))
+        for attr in w['attributes']:
+            if attr['attrvalue']:
                 continue
 
-            answer = input("[%s] ---> " % (k))
+            answer = input("[%s] ---> " % attr['attrkey'])
             answer = answer.strip()
 
             if not answer:
@@ -91,18 +57,21 @@ def patch_words(wordlist_ids, attributes):
                 continue
 
             if answer == 'q':
+                print('bis bald')
                 return 'OK', 200
 
-            d = {
-                "attrvalue": answer,
-                "attribute_id": sort_order_to_attrid[i]
+            payload = {
+                'attributes': [
+                    {
+                        "attrvalue": answer,
+                        "attribute_id": attr['attribute_id']
+                    }
+                ]
             }
-            payload["attributes"].append(d)
 
-        url = url_for("api_word.update_word", word_id=p['word_id'], _external=True)
-        r = requests.put(url, json=payload)
-        if not r:
-            pprint(p)
-            print(r.text)
-            return 'BAD', r.status_code
-
+            url = url_for("api_word.update_word", word_id=w['word_id'], _external=True)
+            r = requests.put(url, json=payload)
+            if not r:
+                pprint(w)
+                print(r.text)
+                return 'BAD', r.status_code
