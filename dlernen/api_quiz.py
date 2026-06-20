@@ -13,6 +13,7 @@ from pprint import pprint
 
 bp = Blueprint('api_quiz', __name__, url_prefix='/api/quiz')
 
+
 #
 # SELECTORS
 #
@@ -35,7 +36,7 @@ bp = Blueprint('api_quiz', __name__, url_prefix='/api/quiz')
 # noinspection PyArgumentList
 # this comment keeps pycharm from bitching about auto()
 class Selector(StrEnum):
-    RANDOM = auto()          # value will be 'random', i.e. lowercase only
+    RANDOM = auto()  # value will be 'random', i.e. lowercase only
     OLDEST_FIRST = auto()
     CRAPPY_SCORE = auto()
     IMPERFECT = auto()
@@ -98,6 +99,7 @@ def __complete_and_incomplete_candidates(cursor, quiz_key, word_ids=None):
 
     candidate_word_ids = {r['word_id'] for r in rows}
 
+    # from the word_ids for potential candidates, look for words with at least one null attrvalue.
     sql = """
     select distinct word_id
     from quiz_candidate_v
@@ -125,20 +127,42 @@ def __complete_and_incomplete_candidates_in_wordlists(cursor, quiz_key, wordlist
     #
     # tags will be ignored if there is more than one wordlist_id.
 
-    word_ids = common.get_word_ids_from_wordlists(cursor, wordlist_ids)
+    word_ids = common.get_word_ids_from_wordlists(cursor, wordlist_ids)  # returns [] if wordlist_ids is degenerate
     complete_candidates, incomplete_candidates = __complete_and_incomplete_candidates(cursor, quiz_key, word_ids)
 
-    if tags and len(wordlist_ids) == 1:
+    if wordlist_ids and word_ids:
+        sql = """
+        select distinct word_id
+        from wordlist_word
+        where wordlist_id in (%(WORDLIST_ID_PLACEHOLDERS)s)
+        and word_id in (%(WORD_ID_PLACEHOLDERS)s)
+        """ % {
+            'WORDLIST_ID_PLACEHOLDERS': common.placeholder_string(wordlist_ids),
+            'WORD_ID_PLACEHOLDERS': common.placeholder_string(word_ids)
+        }
+
+        cursor.execute(sql, wordlist_ids + word_ids)
+        rows = cursor.fetchall()
+        filtered_word_ids = {r['word_id'] for r in rows}
+
+        complete_candidates = complete_candidates & filtered_word_ids
+        incomplete_candidates = incomplete_candidates & filtered_word_ids
+        word_ids = list(complete_candidates | incomplete_candidates)
+
+    if wordlist_ids and word_ids and tags:
         sql = """
         select distinct word_id
         from tag
-        where wordlist_id = %%s
-        and tag in (%(PLACEHOLDERS)s)
+        where wordlist_id in (%(WORDLIST_ID_PLACEHOLDERS)s)
+        and word_id in (%(WORD_ID_PLACEHOLDERS)s)
+        and tag in (%(TAG_PLACEHOLDERS)s)
         """ % {
-            'PLACEHOLDERS': common.placeholder_string(tags)
+            'WORDLIST_ID_PLACEHOLDERS': common.placeholder_string(wordlist_ids),
+            'WORD_ID_PLACEHOLDERS': common.placeholder_string(word_ids),
+            'TAG_PLACEHOLDERS': common.placeholder_string(tags)
         }
 
-        cursor.execute(sql, [wordlist_ids[0]] + tags)
+        cursor.execute(sql, wordlist_ids + word_ids + tags)
         rows = cursor.fetchall()
         tagged_word_ids = {r['word_id'] for r in rows}
 
@@ -149,6 +173,9 @@ def __complete_and_incomplete_candidates_in_wordlists(cursor, quiz_key, wordlist
 
 
 def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id, selector=Selector.DEFAULT):
+    if not candidate_word_ids:
+        return []
+
     where = ''
     order_by = 'rand()'
     if selector == Selector.OLDEST_FIRST:
@@ -284,15 +311,16 @@ def __build_results(quiz_id, rows, word_ids_to_articles):
 
     word_id_to_word = {r['word_id']: r['word'] for r in rows}
 
+    attr_keys_to_copy = {
+        'attrkey',
+        'attribute_id',
+        'sort_order',
+        'attrvalue'
+    }
     word_id_to_attributes = {x: [] for x in word_ids_seen}
     for r in rows:
         word_id_to_attributes[r['word_id']].append(
-            {
-                'attrkey': r['attrkey'],
-                'attribute_id': r['attribute_id'],
-                'sort_order': r['sort_order'],
-                'attrvalue': r['attrvalue']
-            }
+            {k: r[k] for k in attr_keys_to_copy if k in r}
         )
     results = [
         {
@@ -318,7 +346,7 @@ def get_words(quiz_key):
 
     selector = request.args.get('selector', Selector.DEFAULT)
     wordlist_ids = request.args.getlist('wordlist_id')
-    wordlist_ids = list(set(wordlist_ids))  # remove dups
+    wordlist_ids = list(set(map(int, wordlist_ids)))  # convert to int and remove dups
 
     # checks:
     # - selector is valid
@@ -364,6 +392,50 @@ def get_words(quiz_key):
 
         rows = __get_rows_for_candidates(cursor, complete_candidates, quiz_id, selector)
         word_ids_to_articles = __get_articles_for_word_ids(cursor, quiz_key, complete_candidates)
+
+        results = __build_results(quiz_id, rows, word_ids_to_articles)
+
+        return results
+
+
+@bp.route('/<string:quiz_key>/incomplete_candidates')
+def get_incomplete_words(quiz_key):
+    # returns ARRAY_QUIZ_RESPONSE_SCHEMA.  returns empty list if nothing found.
+    # optional arguments:  wordlist_ids (multiple.  if none given use whole dictionary.)
+
+    wordlist_ids = request.args.getlist('wordlist_id')
+    wordlist_ids = list(set(map(int, wordlist_ids)))  # convert to int and remove dups
+
+    # checks:
+    # - quiz_key is valid
+
+    with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
+
+        # - quiz key is valid
+        sql = """
+        select id quiz_id
+        from quiz
+        where quiz_key = %(quiz_key)s
+        """
+
+        cursor.execute(sql, {'quiz_key': quiz_key})
+        rows = cursor.fetchall()
+        if not rows:
+            message = "unknown quiz:  %s" % quiz_key
+            return message, 404
+
+        quiz_id = rows[0]['quiz_id']
+
+        # checks complete, let's do this.
+        if wordlist_ids:
+            _, incomplete_candidates = __complete_and_incomplete_candidates_in_wordlists(cursor,
+                                                                                         quiz_key,
+                                                                                         wordlist_ids)
+        else:
+            _, incomplete_candidates = __complete_and_incomplete_candidates(cursor, quiz_key)
+
+        rows = __get_rows_for_candidates(cursor, incomplete_candidates, quiz_id)
+        word_ids_to_articles = __get_articles_for_word_ids(cursor, quiz_key, incomplete_candidates)
 
         results = __build_results(quiz_id, rows, word_ids_to_articles)
 
@@ -515,7 +587,6 @@ def get_single_word(quiz_key, word_id):
 
 @js_validate_result(QUIZ_REPORT_RESPONSE_SCHEMA)
 def __get_report(cursor, quiz_id, candidate_word_ids, wordlist_id, quiz_key):
-
     rows = __get_rows_for_report(cursor, candidate_word_ids, quiz_id)
 
     result = {
@@ -555,7 +626,7 @@ def __get_report(cursor, quiz_id, candidate_word_ids, wordlist_id, quiz_key):
     return result
 
 
-@bp.route('/<string:quiz_key>/<int:wordlist_id>/report')
+@bp.route('/<string:quiz_key>/report/<int:wordlist_id>')
 def get_report(quiz_key, wordlist_id):
     # checks:
     #
