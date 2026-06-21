@@ -1104,7 +1104,7 @@ class Test_QUIZ_ANSWER_PAYLOAD_SCHEMA_2(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
-class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
+class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
     schema = QUIZ_RESPONSE_SCHEMA
 
     valid_docs = [
@@ -1112,6 +1112,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'quiz_id': 1,
             'word_id': 1,
             'word': 'assdribble',
+            'pos_name': 'pozz',
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
@@ -1125,6 +1126,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'quiz_id': 2,
             'word_id': 2,
             'word': 'assdribble',
+            'pos_name': 'pozz',
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
@@ -1144,9 +1146,10 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
 
     invalid_docs = [
         {
-            'word': '',  # must conform to WORD_PATTERN
+            'word': 'nthedunaethdu',
             'quiz_id': 111,
             'word_id': 111,
+            'pos_name': '',   # must conform to STRING_PATTERN
             ATTRIBUTES: [
                 {
                     'attribute_id': 111,
@@ -1157,9 +1160,25 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             ]
         },
         {
+            'word': '',  # must conform to WORD_PATTERN
+            'quiz_id': 111,
+            'word_id': 111,
+            'pos_name': 'pozz',
+            ATTRIBUTES: [
+                {
+                    'attribute_id': 111,
+                    'attrvalue': 'whatevs',
+                    'sort_order': 111,
+                    'attrkey': 'bubbles',
+                }
+            ]
+        },
+        # all the missing fields
+        {
             # 'word': 'dribble',
             'quiz_id': 10,
             'word_id': 10,
+            'pos_name': 'pozz',
             ATTRIBUTES: [
                 {
                     'attribute_id': 10,
@@ -1173,6 +1192,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word': 'dribble',
             # 'quiz_id': 1,
             'word_id': 1,
+            'pos_name': 'pozz',
             ATTRIBUTES: [
                 {
                     'attribute_id': 1,
@@ -1186,6 +1206,21 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word': 'dribble',
             'quiz_id': 2,
             # 'word_id': 2,
+            'pos_name': 'pozz',
+            ATTRIBUTES: [
+                {
+                    'attrkey': 'bubbles',
+                    'attribute_id': 2,
+                    'sort_order': 2,
+                    'attrvalue': 'whatevs'
+                }
+            ]
+        },
+        {
+            'word': 'dribble',
+            'quiz_id': 2,
+            'word_id': 2,
+            # 'pos_name': 'pozz',
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
@@ -1199,6 +1234,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word': 'dribble',
             'quiz_id': 3,
             'word_id': 3,
+            'pos_name': 'pozz',
             # ATTRIBUTES: [
             #     {
             #         'attrkey': 'bubbles',
@@ -1212,6 +1248,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word': 'dribble',
             'quiz_id': 4,
             'word_id': 4,
+            'pos_name': 'pozz',
             ATTRIBUTES: [
                 # need at least 1
             ]
@@ -1220,6 +1257,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word': 'dribble',
             'quiz_id': 55,
             'word_id': 55,
+            'pos_name': 'pozz',
             ATTRIBUTES: [
                 {
                     # 'attrkey': 'bubbles',
@@ -1233,6 +1271,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word': 'dribble',
             'quiz_id': 5,
             'word_id': 5,
+            'pos_name': 'pozz',
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
@@ -1246,6 +1285,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word': 'dribble',
             'quiz_id': 55,
             'word_id': 55,
+            'pos_name': 'pozz',
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
@@ -1259,6 +1299,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word': 'dribble',
             'quiz_id': 6,
             'word_id': 6,
+            'pos_name': 'pozz',
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
@@ -1272,6 +1313,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word': 'dribble',
             'quiz_id': 7,
             'word_id': 7,
+            'pos_name': 'pozz',
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
@@ -1285,6 +1327,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word': 'dribble',
             'quiz_id': 77,
             'word_id': 77,
+            'pos_name': 'pozz',
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
@@ -1298,6 +1341,7 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word': 'dribble',
             'quiz_id': 88,
             'word_id': 88,
+            'pos_name': 'pozz',
             ATTRIBUTES: [
                 {
                     'attrkey': '',  # must conform to ID_PATTERN
@@ -1311,6 +1355,22 @@ class Test_QUIZ_RESPONSE_SCHEMA_2(unittest.TestCase):
             'word': 'dribble',
             'quiz_id': 9,
             'word_id': 9,
+            'pos_name': 'pozz',
+            'stowaway': 'aoeu',
+            ATTRIBUTES: [
+                {
+                    'attrkey': 'bubbles',
+                    'attribute_id': 9,
+                    'sort_order': 9,
+                    'attrvalue': 'aoeu'
+                }
+            ]
+        },
+        {
+            'word': 'dribble',
+            'quiz_id': 9,
+            'word_id': 9,
+            'pos_name': 'pozz',
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
