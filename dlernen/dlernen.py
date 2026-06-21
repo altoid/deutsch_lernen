@@ -816,19 +816,6 @@ def word_editor_submit():
                                 redirect_to=redirect_to,
                                 _external=True))
 
-    # if there is a wordlist_id, add all the word ids to the wordlist.  just add all of them; adding a word id that
-    # is already there does nothing.
-
-    if wordlist_id:
-        payload = {
-            'word_ids': word_ids
-        }
-        r = requests.put(url_for('api_wordlist.update_wordlist', wordlist_id=wordlist_id, _external=True),
-                         json=payload)
-        if not r:
-            message = "could not update wordlist %s:  %s [%s]" % (wordlist_id, r.status_code, r.text)
-            abort(r.status_code, message=message, response=r)
-
     # if there is a relation id, add all the word ids to the relation.
 
     if relation_id:
