@@ -27,9 +27,9 @@ def get_incomplete_words():
         rows = cursor.fetchall()
         incomplete_word_ids = {x['word_id'] for x in rows}
 
-        wordlist_members = set(common.get_word_ids_from_wordlists(cursor, wordlist_ids))
-
-        incomplete_word_ids = incomplete_word_ids & wordlist_members
+        if wordlist_ids:
+            wordlist_members = set(common.get_word_ids_from_wordlists(cursor, wordlist_ids))
+            incomplete_word_ids = incomplete_word_ids & wordlist_members
 
         result = common.get_words_from_word_ids(cursor, incomplete_word_ids)
 
