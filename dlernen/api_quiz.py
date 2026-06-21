@@ -130,25 +130,6 @@ def __complete_and_incomplete_candidates_in_wordlists(cursor, quiz_key, wordlist
     word_ids = common.get_word_ids_from_wordlists(cursor, wordlist_ids)  # returns [] if wordlist_ids is degenerate
     complete_candidates, incomplete_candidates = __complete_and_incomplete_candidates(cursor, quiz_key, word_ids)
 
-    if wordlist_ids and word_ids:
-        sql = """
-        select distinct word_id
-        from wordlist_word
-        where wordlist_id in (%(WORDLIST_ID_PLACEHOLDERS)s)
-        and word_id in (%(WORD_ID_PLACEHOLDERS)s)
-        """ % {
-            'WORDLIST_ID_PLACEHOLDERS': common.placeholder_string(wordlist_ids),
-            'WORD_ID_PLACEHOLDERS': common.placeholder_string(word_ids)
-        }
-
-        cursor.execute(sql, wordlist_ids + word_ids)
-        rows = cursor.fetchall()
-        filtered_word_ids = {r['word_id'] for r in rows}
-
-        complete_candidates = complete_candidates & filtered_word_ids
-        incomplete_candidates = incomplete_candidates & filtered_word_ids
-        word_ids = list(complete_candidates | incomplete_candidates)
-
     if wordlist_ids and word_ids and tags:
         sql = """
         select distinct word_id
@@ -212,6 +193,7 @@ def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id, selector=Sele
             sort_order,
             attrvalue,
             attrkey,
+            pos_name,
             last_presentation,
             correct_count,
             presentation_count,
@@ -316,7 +298,7 @@ def __build_results(quiz_id, rows, word_ids_to_articles):
         word_ids_seen.add(r['word_id'])
         word_ids_in_order.append(r['word_id'])
 
-    word_id_to_word = {r['word_id']: r['word'] for r in rows}
+    word_id_to_word_pos_name = {r['word_id']: (r['word'], r['pos_name']) for r in rows}
 
     attr_keys_to_copy = {
         'attrkey',
@@ -333,7 +315,8 @@ def __build_results(quiz_id, rows, word_ids_to_articles):
         {
             'quiz_id': quiz_id,
             'word_id': x,
-            'word': word_id_to_word[x],
+            'word': word_id_to_word_pos_name[x][0],
+            'pos_name': word_id_to_word_pos_name[x][1],
             ATTRIBUTES: sorted(word_id_to_attributes[x], key=lambda y: y['sort_order'])
         }
         for x in word_ids_in_order

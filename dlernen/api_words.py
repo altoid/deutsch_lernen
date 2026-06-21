@@ -25,23 +25,13 @@ def get_incomplete_words():
 
         cursor.execute(sql)
         rows = cursor.fetchall()
-        word_ids = [x['word_id'] for x in rows]
+        incomplete_word_ids = {x['word_id'] for x in rows}
 
-        if wordlist_ids and word_ids:
-            sql = """
-            select distinct word_id
-            from wordlist_word
-            where wordlist_id in (%(WORDLIST_ID_PLACEHOLDER)s)
-            and word_id in (%(WORD_ID_PLACEHOLDER)s)
-            """ % {
-                'WORD_ID_PLACEHOLDER': common.placeholder_string(word_ids),
-                'WORDLIST_ID_PLACEHOLDER': common.placeholder_string(wordlist_ids)
-            }
-            cursor.execute(sql, wordlist_ids + word_ids)
-            rows = cursor.fetchall()
-            word_ids = [x['word_id'] for x in rows]
+        wordlist_members = set(common.get_word_ids_from_wordlists(cursor, wordlist_ids))
 
-        result = common.get_words_from_word_ids(cursor, word_ids)
+        incomplete_word_ids = incomplete_word_ids & wordlist_members
+
+        result = common.get_words_from_word_ids(cursor, incomplete_word_ids)
 
         return result
 

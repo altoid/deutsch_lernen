@@ -725,12 +725,18 @@ QUIZ_RESPONSE_SCHEMA = {
         "word",
         "quiz_id",
         "word_id",
+        "pos_name",
         ATTRIBUTES
     ],
+    "additionalProperties": False,
     "properties": {
         "word": {
             "type": "string",
             "pattern": WORD_PATTERN
+        },
+        "pos_name": {
+            "type": "string",
+            "pattern": STRING_PATTERN
         },
         "word_id": {
             "type": "integer",
@@ -975,7 +981,8 @@ WORD_RESPONSE_SCHEMA = {
             "minimum": 1
         },
         "pos_name": {
-            "type": "string"
+            "type": "string",
+            "pattern": STRING_PATTERN
         },
         "notes": {
             "type": ["string", "null"]
