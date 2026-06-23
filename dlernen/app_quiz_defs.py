@@ -45,15 +45,8 @@ class AppState(object):
         else:
             self.words_missed = {}
 
-        # general-purpose mapping of word ids to WORD_RESPONSE_SCHEMA objects, so that we can retrieve word info
-        # when we want it.
-        self.cache = dict()
-
         # if false, do not write quiz results to database.
         self.post_scores = False
-
-    def flush_cache(self):
-        self.cache.clear()
 
     def reset(self):
         self.wordlists.clear()
@@ -64,14 +57,6 @@ class AppState(object):
 
         self.clear_hinted_and_missed_tags()
 
-    # fetch the WORD_RESPONSE_SCHEMA object for the word id and cache it.
-    def get_word_info(self, word_id):
-        if word_id not in self.cache:
-            r = requests.get(url_for('api_word.get_word_by_id', word_id=word_id))
-            obj = r.json()
-            self.cache[word_id] = obj
-        return self.cache[word_id]
-
     def clear_hinted_and_missed_tags(self):
         # clear the missed and hinted word id sets, but do not mess with the hinted and missed tags.
 
@@ -80,6 +65,38 @@ class AppState(object):
 
 
 APPSTATE = AppState()
+
+
+#######################################
+#
+# this is the entry point
+#
+#
+@bp.cli.command('quiz_definitions')
+def quiz_words():
+    global STATE_FILE
+    global APPSTATE
+
+    try:
+        with open(STATE_FILE, 'rb') as f:
+            APPSTATE = pickle.load(f)
+    except FileNotFoundError as e:
+        APPSTATE = AppState()
+
+    status()
+
+    while True:
+        callback = main_menu()
+
+        if callback == quit_program:
+            break
+
+        if callback == main_menu:
+            continue
+
+        callback()
+
+    callback()
 
 
 def unimplemented():
@@ -158,12 +175,6 @@ def reset():
     global APPSTATE
 
     APPSTATE.reset()
-
-
-def flush_cache():
-    global APPSTATE
-
-    APPSTATE.flush_cache()
 
 
 def toggle_posting_scores():
@@ -289,15 +300,13 @@ Word count:  %s""" % len(obj['word_ids']))
     print("""
 Words missed:
 """)
-    for w_id in APPSTATE.words_missed.keys():
-        w = APPSTATE.get_word_info(w_id)
+    for w in APPSTATE.words_missed.values():
         print("    %s (%s)" % (w['word'], w['pos_name']))
 
     print("""
 Words where hints requested:
 """)
-    for w_id in APPSTATE.words_hinted.keys():
-        w = APPSTATE.get_word_info(w_id)
+    for w in APPSTATE.words_hinted.values():
         print("    %s (%s)" % (w['word'], w['pos_name']))
 
 
@@ -417,8 +426,7 @@ def show_missed_words():
     * words missed this session *
     *****************************
     """)
-    for w_id in APPSTATE.words_missed.keys():
-        w = APPSTATE.get_word_info(w_id)
+    for w in APPSTATE.words_missed.values():
         print("    %s (%s)" % (w['word'], w['pos_name']))
 
 
@@ -438,8 +446,7 @@ def show_hinted_words():
     * hints requested this session *
     ********************************
     """)
-    for w_id in APPSTATE.words_hinted.keys():
-        w = APPSTATE.get_word_info(w_id)
+    for w in APPSTATE.words_hinted.values():
         print("    %s (%s)" % (w['word'], w['pos_name']))
 
 
@@ -726,41 +733,9 @@ CALLBACKS = {
         'display_order': 40,
         'callback': reset
     },
-    'flush': {
-        'tagline': 'flush the cache',
-        'display_order': 40,
-        'callback': flush_cache
-    },
     'q': {
         'tagline': 'quit',
         'display_order': 45,
         'callback': quit_program
     },
 }
-
-
-@bp.cli.command('quiz_definitions')
-def quiz_words():
-    global STATE_FILE
-    global APPSTATE
-
-    try:
-        with open(STATE_FILE, 'rb') as f:
-            APPSTATE = pickle.load(f)
-    except FileNotFoundError as e:
-        APPSTATE = AppState()
-
-    status()
-
-    while True:
-        callback = main_menu()
-
-        if callback == quit_program:
-            break
-
-        if callback == main_menu:
-            continue
-
-        callback()
-
-    callback()
