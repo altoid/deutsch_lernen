@@ -41,19 +41,18 @@ def __create_selector_class():
     class_dict = EnumType.__prepare__(class_name, bases)
 
     # 2. Inject your database or static enum members
-    class_dict['RANDOM'] = 'random'
-    class_dict['OLDEST_FIRST'] = 'oldest_first'
-    class_dict['RARE'] = 'rare'
-    class_dict['CRAPPY_SCORE'] = 'crappy_score'
-    class_dict['IMPERFECT'] = 'imperfect'
-    class_dict['NEVER'] = 'never'
-    class_dict['DEFAULT'] = class_dict['OLDEST_FIRST']
+    selector_dict = {
+        'RANDOM': 'random',
+        'OLDEST_FIRST': 'oldest_first',
+        'RARE': 'rare',
+        'CRAPPY_SCORE': 'crappy_score',
+        'IMPERFECT': 'imperfect',
+        'NEVER': 'never',
+    }
+    selector_dict['DEFAULT'] = selector_dict['OLDEST_FIRST']
 
-    # NOTE:  doing this won't work:
-    #
-    # class_dict |= some_other_dict
-    #
-    # so it looks like we have to operate on class_dict directly.
+    # note:  class_dict is an _EnumDict.  the |= operator won't work, but .update() works fine.
+    class_dict.update(selector_dict)
 
     # 3. Define and inject your custom class methods or properties
     # def welcome(self):
