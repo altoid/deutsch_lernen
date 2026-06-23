@@ -14,7 +14,7 @@ STATE_FILE = '.quiz_defs'
 class AppState(object):
     def __init__(self,
                  quiz_key='definitions',
-                 selector=Selector.RANDOM,
+                 selector=Selector.DEFAULT,
                  wordlists=None,
                  tags=None,
                  words_hinted=None,
@@ -50,16 +50,9 @@ class AppState(object):
 
     def reset(self):
         self.wordlists.clear()
-        self.selector = Selector.RANDOM
+        self.selector = Selector.DEFAULT
         self.tags.clear()
-        # self.cache.clear()  # no need to flush the cache on reset
         self.post_scores = False
-
-        self.clear_hinted_and_missed_tags()
-
-    def clear_hinted_and_missed_tags(self):
-        # clear the missed and hinted word id sets, but do not mess with the hinted and missed tags.
-
         self.words_missed.clear()
         self.words_hinted.clear()
 
@@ -361,7 +354,6 @@ def select_selector():
     global APPSTATE
 
     menu = """
-c - clear selection
 s - show selection
 h - show possible selectors
 m - show menu
@@ -376,11 +368,6 @@ or enter selector name
         prompt = '[select selector] ---> '
         answer = input(prompt).strip().casefold()
         if not answer:
-            continue
-
-        if answer == 'c':
-            APPSTATE.selector = None
-            print("selection cleared")
             continue
 
         if answer == 's':
@@ -399,7 +386,7 @@ or enter selector name
 
         if answer == 'r':
             if not APPSTATE.selector:
-                APPSTATE.selector = Selector.RANDOM
+                APPSTATE.selector = Selector.DEFAULT
             break
 
         if answer not in Selector:
