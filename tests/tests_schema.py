@@ -1356,21 +1356,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             'quiz_id': 9,
             'word_id': 9,
             'pos_name': 'pozz',
-            'stowaway': 'aoeu',
-            ATTRIBUTES: [
-                {
-                    'attrkey': 'bubbles',
-                    'attribute_id': 9,
-                    'sort_order': 9,
-                    'attrvalue': 'aoeu'
-                }
-            ]
-        },
-        {
-            'word': 'dribble',
-            'quiz_id': 9,
-            'word_id': 9,
-            'pos_name': 'pozz',
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',

@@ -728,7 +728,6 @@ QUIZ_RESPONSE_SCHEMA = {
         "pos_name",
         ATTRIBUTES
     ],
-    "additionalProperties": False,
     "properties": {
         "word": {
             "type": "string",
