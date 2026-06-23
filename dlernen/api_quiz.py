@@ -49,6 +49,12 @@ def __create_selector_class():
     class_dict['NEVER'] = 'never'
     class_dict['DEFAULT'] = class_dict['OLDEST_FIRST']
 
+    # NOTE:  doing this won't work:
+    #
+    # class_dict |= some_other_dict
+    #
+    # so it looks like we have to operate on class_dict directly.
+
     # 3. Define and inject your custom class methods or properties
     # def welcome(self):
     #     return f"Access granted for role: {self.value}"
