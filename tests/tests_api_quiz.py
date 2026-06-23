@@ -23,8 +23,15 @@ class APIQuizSelector(unittest.TestCase):
 
     def test1(self):
         self.assertEqual('oldest_first', Selector.OLDEST_FIRST)
+
+    def test2(self):
         self.assertTrue(Selector.OLDEST_FIRST, Selector.DEFAULT)
+
+    def test3(self):
         self.assertTrue('rare' in Selector)
+
+    def test4(self):
+        self.assertTrue(Selector.RARE in Selector)
 
 
 class APIPostQuizAnswer(unittest.TestCase):
