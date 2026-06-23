@@ -7,6 +7,7 @@ from flask import url_for
 import json
 from dlernen.api_pos import POSName
 from pprint import pprint
+from dlernen.api_quiz import Selector
 
 
 def cleanupWordID(client, word_id):
@@ -15,6 +16,15 @@ def cleanupWordID(client, word_id):
 
 def cleanupWordlistID(client, wordlist_id):
     client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id))
+
+
+class APIQuizSelector(unittest.TestCase):
+    # make sure dynamically-created Selector Enum class is well-behaved
+
+    def test1(self):
+        self.assertEqual('oldest_first', Selector.OLDEST_FIRST)
+        self.assertTrue(Selector.OLDEST_FIRST, Selector.DEFAULT)
+        self.assertTrue('rare' in Selector)
 
 
 class APIPostQuizAnswer(unittest.TestCase):

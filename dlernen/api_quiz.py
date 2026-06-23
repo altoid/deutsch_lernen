@@ -1,5 +1,5 @@
 from flask import Blueprint, request, current_app
-from enum import StrEnum, auto
+from enum import StrEnum, EnumType, auto
 from mysql.connector import connect
 from contextlib import closing
 from dlernen import common
@@ -33,17 +33,35 @@ bp = Blueprint('api_quiz', __name__, url_prefix='/api/quiz')
 #                 order by 1
 
 
-# noinspection PyArgumentList
-# this comment keeps pycharm from bitching about auto()
-class Selector(StrEnum):
-    RANDOM = auto()  # value will be 'random', i.e. lowercase only
-    OLDEST_FIRST = auto()
-    CRAPPY_SCORE = auto()
-    IMPERFECT = auto()
-    RARE = auto()
-    NEVER = auto()
-    DEFAULT = OLDEST_FIRST
+def __create_selector_class():
+    class_name = "Selector"
+    bases = (StrEnum,)  # Base classes must be inside a tuple
 
+    # 1. Prepare the specialized EnumDict namespace required by EnumType
+    class_dict = EnumType.__prepare__(class_name, bases)
+
+    # 2. Inject your database or static enum members
+    class_dict['RANDOM'] = 'random'
+    class_dict['OLDEST_FIRST'] = 'oldest_first'
+    class_dict['RARE'] = 'rare'
+    class_dict['CRAPPY_SCORE'] = 'crappy_score'
+    class_dict['IMPERFECT'] = 'imperfect'
+    class_dict['NEVER'] = 'never'
+    class_dict['DEFAULT'] = class_dict['OLDEST_FIRST']
+
+    # 3. Define and inject your custom class methods or properties
+    # def welcome(self):
+    #     return f"Access granted for role: {self.value}"
+    #
+    # class_dict["welcome"] = welcome
+
+    # 4. Construct the class safely using EnumType
+    selector_class = EnumType(class_name, bases, class_dict)
+
+    return selector_class
+
+
+Selector = __create_selector_class()
 
 # for the various GET requests, we guarantee that all attributes returned for a word will have values for all
 # attributes defined for the quiz.
