@@ -5,7 +5,6 @@ from dlernen import create_app
 from dlernen.dlernen_json_schema import ATTRIBUTES
 from flask import url_for
 import json
-from dlernen.api_pos import POSName
 from pprint import pprint
 from dlernen.api_quiz import Selector
 
@@ -41,7 +40,8 @@ class APIQuizKey(unittest.TestCase):
     app_context = None
     client = None
     QuizKey = None
-
+    POSName = None
+    
     @classmethod
     def setUpClass(cls):
         cls.app = create_app()
@@ -50,6 +50,7 @@ class APIQuizKey(unittest.TestCase):
         )
 
         cls.QuizKey = cls.app.extensions.get('QuizKey')
+        cls.POSName = cls.app.extensions.get('POSName')
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
@@ -69,7 +70,8 @@ class APIPostQuizAnswer(unittest.TestCase):
     app = None
     app_context = None
     client = None
-
+    POSName = None
+    
     @classmethod
     def setUpClass(cls):
         cls.app = create_app()
@@ -77,6 +79,7 @@ class APIPostQuizAnswer(unittest.TestCase):
             TESTING=True,
         )
 
+        cls.POSName = cls.app.extensions.get('POSName')
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
@@ -103,7 +106,7 @@ class APIPostQuizAnswer(unittest.TestCase):
         ]
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.ADJECTIVE],
             ATTRIBUTES: attributes
         }
 
@@ -180,7 +183,8 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
     app = None
     app_context = None
     client = None
-    QUIZ_KEY = 'present_indicative'
+    POSName = None
+    QUIZ_KEY = None
 
     @classmethod
     def setUpClass(cls):
@@ -189,6 +193,9 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
             TESTING=True,
         )
 
+        cls.POSName = cls.app.extensions.get('POSName')
+        QuizKey = cls.app.extensions.get('QuizKey')
+        cls.QUIZ_KEY = QuizKey.PRESENT_INDICATIVE
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
@@ -215,7 +222,7 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
         ]
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.ADJECTIVE],
             ATTRIBUTES: attributes
         }
 
@@ -242,7 +249,7 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
         ]
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.VERB],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.VERB],
             ATTRIBUTES: attributes
         }
 
@@ -275,7 +282,7 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
         ]
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.VERB],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.VERB],
             ATTRIBUTES: attributes
         }
 

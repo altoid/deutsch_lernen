@@ -4,7 +4,6 @@ import json
 
 from dlernen.tagstate import TagState
 from dlernen.dlernen_json_schema import ATTRIBUTES
-from dlernen.api_pos import POSName
 from pprint import pprint, pformat
 
 bp = Blueprint('dlernen', __name__, url_prefix='/dlernen')

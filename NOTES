@@ -21,6 +21,8 @@ TODO - import word lists
 TODO - Nouns should be three separate parts of speech, one for each gender
     would have to update wordlists and quiz data.
 
+TODO - deal with nouns that exist only in singular (Gleichgewicht) and only in plural.
+
 TODO - autosave word list notes.
     https://www.google.com/search?q=html+textarea+auto+save&newwindow=1&sca_esv=d160e5e212cd680a&ei=6TYeafOSLJvE0PEPiJingAU&ved=0ahUKEwizq5_LlP-QAxUbIjQIHQjMCVAQ4dUDCBE&uact=5&oq=html+textarea+auto+save&gs_lp=Egxnd3Mtd2l6LXNlcnAiF2h0bWwgdGV4dGFyZWEgYXV0byBzYXZlMgUQIRigATIFECEYoAEyBRAhGKABMgUQIRigATIFECEYoAEyBRAhGJ8FMgUQIRifBUiyZlCcHFj2YXABeAGQAQCYAaACoAH7E6oBBzEyLjEwLjG4AQPIAQD4AQGYAhigAvwUwgIKEAAYsAMY1gQYR8ICERAuGIAEGLEDGNEDGIMBGMcBwgIOEAAYgAQYsQMYgwEYigXCAgoQABiABBhDGIoFwgIIEAAYgAQYsQPCAg4QLhiABBixAxjRAxjHAcICCxAAGIAEGLEDGIMBwgIQEAAYgAQYsQMYQxiDARiKBcICERAAGIAEGLEDGIMBGIoFGI0GwgINEAAYgAQYsQMYQxiKBcICBRAAGIAEwgIGEAAYFhgewgIIEAAYFhgKGB7CAgUQABjvBcICCBAAGIAEGKIEwgIIEAAYogQYiQXCAgUQIRirApgDAIgGAZAGCJIHBzEyLjExLjGgB76CAbIHBzExLjExLjG4B_UUwgcIMC4xLjIyLjHIB2E&sclient=gws-wiz-serp
 
@@ -75,6 +77,23 @@ TODO - change the selectors to be a class derived from enum.StrEnum.
     can use this for other things too, like POS_NAMEs, ATTRKEYs, QUIZ_KEYs, etc.
 
 TODO - break dlernen_json_schema into multiple modules.  but don't delete it because that's where the registry is
+
+TODO - enhance /api/verbs as in app notes google doc
+
+TODO - integrate all quizzes into quiz_defs, special case for definitions
+---------------
+
+new patch program:
+
+patch [no args] - fill in every incomplete word in the dictionary   -- needs new endpoint
+
+patch -quizkey - fill in every incomplete word in the dictionary that is a candidate for the quiz  -- needs new endpoint
+
+patch -wordlist -wordlist -wordlist -- just these wordlists
+
+patch -lists -quiz -- candidate words in these lists for this quiz
+
+won't care about tags, that would be stupid.
 
 -----------
 

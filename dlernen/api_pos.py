@@ -1,5 +1,4 @@
 from flask import Blueprint, current_app
-from enum import StrEnum, auto
 from mysql.connector import connect
 from dlernen.dlernen_json_schema import POS_STRUCTURE_RESPONSE_SCHEMA
 from dlernen.decorators import js_validate_result
@@ -9,21 +8,6 @@ from contextlib import closing
 
 bp = Blueprint('api_pos', __name__, url_prefix='/api/pos')
 
-
-# noinspection PyArgumentList
-# this comment keeps pycharm from bitching about auto()
-class POSName(StrEnum):
-    # these are the part-of-speech names as they appear in the database.
-    NOUN = "Noun"
-    ADJECTIVE = "Adjective"
-    ADVERB = "Adverb"
-    VERB = "Verb"
-    PREPOSITION = "Preposition"
-    PLACE = "Place"
-    OTHER = "other"
-    CONJUNCTION = "Conjunction"
-    SEPARABLE_PREFIX = "Separable Prefix"
-    INSEPARABLE_PREFIX = "Inseparable Prefix"
 
 ##########################################################################################
 #

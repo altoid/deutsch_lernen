@@ -43,3 +43,38 @@ class APITests(unittest.TestCase):
 
         self.assertEqual(0, len(obj))
 
+
+class APIPosName(unittest.TestCase):
+    # make sure dynamically-created POSName Enum class is well-behaved
+
+    app = None
+    app_context = None
+    client = None
+    POSName = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
+            TESTING=True,
+        )
+
+        cls.POSName = cls.app.extensions.get('POSName')
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
+
+    def test1(self):
+        self.assertEqual('Noun', self.POSName.NOUN)
+
+    def test2(self):
+        self.assertTrue(self.POSName.SEPARABLE_PREFIX in self.POSName)
+
+    def test3(self):
+        self.assertTrue('Separable Prefix' in self.POSName)
+
+

@@ -3,7 +3,6 @@ import random
 import string
 import json
 from flask import url_for
-from dlernen.api_pos import POSName
 from dlernen import create_app
 
 
@@ -68,7 +67,8 @@ class TestAPIWordlistMetadataCreate(unittest.TestCase):
     app = None
     app_context = None
     client = None
-
+    POSName = None
+    
     @classmethod
     def setUpClass(cls):
         cls.app = create_app()
@@ -76,6 +76,7 @@ class TestAPIWordlistMetadataCreate(unittest.TestCase):
             TESTING=True,
         )
 
+        cls.POSName = cls.app.extensions.get('POSName')
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
@@ -92,7 +93,7 @@ class TestAPIWordlistMetadataCreate(unittest.TestCase):
 
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.ADJECTIVE],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -218,7 +219,8 @@ class TestAPIWordlistMetadataUpdate(unittest.TestCase):
     app = None
     app_context = None
     client = None
-
+    POSName = None
+    
     @classmethod
     def setUpClass(cls):
         cls.app = create_app()
@@ -226,6 +228,7 @@ class TestAPIWordlistMetadataUpdate(unittest.TestCase):
             TESTING=True,
         )
 
+        cls.POSName = cls.app.extensions.get('POSName')
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
@@ -242,7 +245,7 @@ class TestAPIWordlistMetadataUpdate(unittest.TestCase):
 
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.ADJECTIVE],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)

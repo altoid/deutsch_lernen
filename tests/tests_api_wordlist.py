@@ -4,7 +4,6 @@ from flask import url_for
 import json
 import random
 import string
-from dlernen.api_pos import POSName
 from pprint import pprint
 
 
@@ -152,6 +151,7 @@ class TestAPIWordlist(unittest.TestCase):
     app = None
     app_context = None
     client = None
+    POSName = None
 
     @classmethod
     def setUpClass(cls):
@@ -160,6 +160,7 @@ class TestAPIWordlist(unittest.TestCase):
             TESTING=True,
         )
 
+        cls.POSName = cls.app.extensions.get('POSName')
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
@@ -189,7 +190,7 @@ class TestAPIWordlist(unittest.TestCase):
 
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.ADJECTIVE],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -683,7 +684,8 @@ class TestAPIWordlistGetWordIDs(unittest.TestCase):
     app = None
     app_context = None
     client = None
-
+    POSName = None
+    
     @classmethod
     def setUpClass(cls):
         cls.app = create_app()
@@ -691,6 +693,7 @@ class TestAPIWordlistGetWordIDs(unittest.TestCase):
             TESTING=True,
         )
 
+        cls.POSName = cls.app.extensions.get('POSName')
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
@@ -737,7 +740,7 @@ class TestAPIWordlistGetWordIDs(unittest.TestCase):
 
         add_payload = {
             "word": self.word1,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.ADJECTIVE],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -746,7 +749,7 @@ class TestAPIWordlistGetWordIDs(unittest.TestCase):
 
         add_payload = {
             "word": self.word2,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.ADJECTIVE],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)
@@ -755,7 +758,7 @@ class TestAPIWordlistGetWordIDs(unittest.TestCase):
 
         add_payload = {
             "word": self.word3,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][POSName.ADJECTIVE],
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.ADJECTIVE],
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)

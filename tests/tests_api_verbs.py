@@ -3,7 +3,6 @@ import json
 from dlernen import create_app
 from flask import url_for
 from dlernen.dlernen_json_schema import ATTRIBUTES
-from dlernen.api_pos import POSName
 from pprint import pprint
 import random
 import string
@@ -28,7 +27,8 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
     app_context = None
     keyword_mappings = None
     client = None
-
+    POSName = None
+    
     @classmethod
     def setUpClass(cls):
         cls.app = create_app()
@@ -36,6 +36,7 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
             TESTING=True,
         )
 
+        cls.POSName = cls.app.extensions.get('POSName')
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
@@ -50,7 +51,7 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
     def add_prefix(self, prefix):
         payload = {
             'word': prefix,
-            'pos_id': self.keyword_mappings['pos_names_to_ids'][POSName.SEPARABLE_PREFIX]
+            'pos_id': self.keyword_mappings['pos_names_to_ids'][self.POSName.SEPARABLE_PREFIX]
         }
         r = self.client.post(url_for('api_word.add_word'), json=payload)
         self.assertEqual(201, r.status_code)
@@ -63,7 +64,7 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
     def add_verb(self, verb, prefix=""):
         payload = {
             'word': prefix + verb,
-            'pos_id': self.keyword_mappings['pos_names_to_ids'][POSName.VERB],
+            'pos_id': self.keyword_mappings['pos_names_to_ids'][self.POSName.VERB],
         }
 
         if prefix:
@@ -104,7 +105,7 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
             'prefix': prefix,
             'word_id': word_id,
             'grundverb_word_id': grundverb_word_id,
-            'prefix_pos_name': POSName.SEPARABLE_PREFIX
+            'prefix_pos_name': self.POSName.SEPARABLE_PREFIX
         }
         self.assertEqual(1, len(obj))
         self.assertDictEqual(control, s)
@@ -127,7 +128,7 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
             'prefix': prefix,
             'word_id': word_id,
             'grundverb_word_id': grundverb_word_id,
-            'prefix_pos_name': POSName.SEPARABLE_PREFIX
+            'prefix_pos_name': self.POSName.SEPARABLE_PREFIX
         }
         self.assertEqual(1, len(obj))
         self.assertDictEqual(control, s)
@@ -150,7 +151,7 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
             'prefix': prefix,
             'word_id': word_id,
             'grundverb_word_id': grundverb_word_id,
-            'prefix_pos_name': POSName.SEPARABLE_PREFIX
+            'prefix_pos_name': self.POSName.SEPARABLE_PREFIX
         }
         self.assertEqual(1, len(obj))
         self.assertDictEqual(control, s)
@@ -173,7 +174,7 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
             'prefix': prefix,
             'word_id': word_id,
             'grundverb_word_id': grundverb_word_id,
-            'prefix_pos_name': POSName.SEPARABLE_PREFIX
+            'prefix_pos_name': self.POSName.SEPARABLE_PREFIX
         }
         self.assertEqual(1, len(obj))
         self.assertDictEqual(control, s)
@@ -218,7 +219,8 @@ class TestVerbsInseparablePrefixes(unittest.TestCase):
     app_context = None
     keyword_mappings = None
     client = None
-
+    POSName = None
+    
     @classmethod
     def setUpClass(cls):
         cls.app = create_app()
@@ -226,6 +228,7 @@ class TestVerbsInseparablePrefixes(unittest.TestCase):
             TESTING=True,
         )
 
+        cls.POSName = cls.app.extensions.get('POSName')
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
@@ -240,7 +243,7 @@ class TestVerbsInseparablePrefixes(unittest.TestCase):
     def add_prefix(self, prefix):
         payload = {
             'word': prefix,
-            'pos_id': self.keyword_mappings['pos_names_to_ids'][POSName.INSEPARABLE_PREFIX]
+            'pos_id': self.keyword_mappings['pos_names_to_ids'][self.POSName.INSEPARABLE_PREFIX]
         }
         r = self.client.post(url_for('api_word.add_word'), json=payload)
         self.assertEqual(201, r.status_code)
@@ -253,7 +256,7 @@ class TestVerbsInseparablePrefixes(unittest.TestCase):
     def add_verb(self, verb, prefix=""):
         payload = {
             'word': prefix + verb,
-            'pos_id': self.keyword_mappings['pos_names_to_ids'][POSName.VERB],
+            'pos_id': self.keyword_mappings['pos_names_to_ids'][self.POSName.VERB],
             ATTRIBUTES: [
                 {
                     "attribute_id": self.keyword_mappings['attribute_names_to_ids']['third_person_singular'],
@@ -292,7 +295,7 @@ class TestVerbsInseparablePrefixes(unittest.TestCase):
             'prefix': prefix,
             'word_id': word_id,
             'grundverb_word_id': grundverb_word_id,
-            'prefix_pos_name': POSName.INSEPARABLE_PREFIX
+            'prefix_pos_name': self.POSName.INSEPARABLE_PREFIX
         }
         self.assertEqual(1, len(obj))
         self.assertDictEqual(control, s)
@@ -315,7 +318,7 @@ class TestVerbsInseparablePrefixes(unittest.TestCase):
             'prefix': prefix,
             'word_id': word_id,
             'grundverb_word_id': grundverb_word_id,
-            'prefix_pos_name': POSName.INSEPARABLE_PREFIX
+            'prefix_pos_name': self.POSName.INSEPARABLE_PREFIX
         }
         self.assertEqual(1, len(obj))
         self.assertDictEqual(control, s)

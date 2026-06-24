@@ -30,6 +30,7 @@ VALID_RESPONSE = {
     "attributes": [
         {
             'attrkey': 'definition',
+            'attribute_id': 234,
             'sort_order': 5,
             'attrvalue': 'to spoil, deteriorate, go bad'
         },
