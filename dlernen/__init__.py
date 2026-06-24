@@ -1,6 +1,8 @@
 import werkzeug.exceptions
 from flask import Flask, render_template
 from dlernen import config
+from dlernen.enums import create_quizkey_class
+
 from dlernen.dlernen import bp as dlernen_bp
 from dlernen.dlernen_relation import bp as dlernen_relation_bp
 from dlernen.dlernen_bulk_add import bp as dlernen_bulk_add_bp
@@ -36,6 +38,8 @@ def create_app():
     app = Flask(__name__)
     app.secret_key = "ap.i*&(^ap1."
     app.config.from_object(config.Config)
+
+    app.extensions['QuizKey'] = create_quizkey_class(app)
 
     app.register_blueprint(dlernen_bp)
     app.register_blueprint(dlernen_relation_bp)
