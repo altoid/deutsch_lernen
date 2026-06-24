@@ -109,6 +109,9 @@ def lookup_word(word):
 
 
 def get_related_verbs(verbobject):
+    # enum class holding all of the POS names.
+    POSName = current_app.extensions.get('POSName')
+
     url = None
     if verbobject['pos_name'] == POSName.VERB:
         url = url_for('api_verbs.get_verbs_by_grundverb', grundverb=verbobject['word'], _external=True)
