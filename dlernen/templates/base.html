@@ -44,13 +44,15 @@
     ] and tag_state and tag_state.list_type != 'smart')
     or request.endpoint == 'dlernen.wordlists'
     %}
+    {% set redirect_to = 'dlernen.wordlist' if request.endpoint == 'dlernen.lookup_word' else request.endpoint %}
+    {# because right now i don't want to deal with adding the looked-up word to app state #}
     <div>
         <form action="{{ url_for('dlernen_bulk_add.editor_page') }}" method="post">
             <label for="bulk_add_submit">Worte hinzufügen</label>
             {% if serialized_tag_state %}
             <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
             {% endif %}
-            <input type="hidden" value="{{ request.endpoint }}" name="redirect_to"/>
+            <input type="hidden" value="{{ redirect_to }}" name="redirect_to"/>
             <textarea class="bulk_add_submit" id="bulk_add_submit" name="bulk_add_submit" rows="8" cols="15"></textarea>
             <input type="submit" value="Submit"/>
         </form>
