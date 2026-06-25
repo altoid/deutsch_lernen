@@ -181,7 +181,7 @@ def toggle_posting_scores():
 def select_lists():
     global APPSTATE
 
-    wordlist_ids = []
+    wordlist_ids = set()
     menu = """
 c - clear selection
 s - show selection
@@ -205,7 +205,6 @@ or enter list of wordlist_ids, space separated
         if answer == 'c':
             APPSTATE.wordlists.clear()
             APPSTATE.tags.clear()
-            APPSTATE.clear_hinted_and_missed_tags()
             print("selection cleared")
             continue
 
@@ -221,7 +220,7 @@ or enter list of wordlist_ids, space separated
             break
 
         try:
-            wordlist_ids += list(map(int, answer.split()))
+            wordlist_ids |= set(map(int, answer.split()))
         except ValueError as e:
             print("bad dog:  %s" % str(e))
             continue
@@ -229,6 +228,7 @@ or enter list of wordlist_ids, space separated
         unknown_wordlist_ids = set_wordlists(wordlist_ids)
         if unknown_wordlist_ids:
             print("unknown wordlist_ids:  %s" % pformat(set(unknown_wordlist_ids)))
+            wordlist_ids -= unknown_wordlist_ids
 
     if APPSTATE.wordlists:
         print("""
@@ -301,12 +301,6 @@ Words where hints requested:
 """)
     for w in APPSTATE.words_hinted.values():
         print("    %s (%s)" % (w['word'], w['pos_name']))
-
-
-def clear_hinted_and_missed_tags():
-    global APPSTATE
-
-    APPSTATE.clear_hinted_and_missed_tags()
 
 
 def select_tags():
@@ -664,11 +658,6 @@ CALLBACKS = {
         'tagline': 'select tags',
         'display_order': 4,
         'callback': select_tags
-    },
-    'e': {
-        'tagline': 'clear missed and hinted tags',
-        'display_order': 6,
-        'callback': clear_hinted_and_missed_tags,
     },
     'k': {
         'tagline': 'choose selector',
