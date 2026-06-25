@@ -50,11 +50,18 @@ word id.
     </table>
     {% if member_wordlists %}
     <h2>Wortlisten, die dieses Wort enthalten</h2>
-    <ul>
+    <table>
         {% for wl in member_wordlists %}
-        <li><a href="{{ url_for('dlernen.wordlist', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a></li>
+        <tr>
+            <td>
+                {% if wl.list_type == 'smart' %}
+                (*)
+                {% endif %}
+            </td>
+            <td><a href="{{ url_for('dlernen.wordlist', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a></td>
+        </tr>
         {% endfor %}
-    </ul>
+    </table>
     {% else %}
     <h2>(no member wordlists)</h2>
     {% endif %}
@@ -112,7 +119,7 @@ word id.
             </td>
             <td>&bull;</td>
             <td class="grundverb">
-               {{ v.grundverb_word_obj.word }}
+                {{ v.grundverb_word_obj.word }}
             </td>
         </tr>
         {% endfor %}

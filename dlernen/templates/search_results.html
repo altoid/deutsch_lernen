@@ -17,18 +17,18 @@ Lookup {{ word }}
     {% include 'header.html' %}
 
     {% if tag_state %}
-        {% set serialized_tag_state = tag_state.serialize() %}
+    {% set serialized_tag_state = tag_state.serialize() %}
     {% endif %}
     {% if not exact_match_found %}
-        {% if tag_state %}
-            {% if tag_state.list_type != 'smart' %}
-                {{ word }} not found. Click <a
-                    href="{{ url_for('dlernen.word_editor', serialized_tag_state=serialized_tag_state, word=word) }}">here</a>
-                to define it.
-            {% endif %}
-        {% else %}
-            {{ word }} not found. Click <a href="{{ url_for('dlernen.word_editor', word=word) }}">here</a> to define it.
-        {% endif %}
+    {% if tag_state %}
+    {% if tag_state.list_type != 'smart' %}
+    {{ word }} not found. Click <a
+        href="{{ url_for('dlernen.word_editor', serialized_tag_state=serialized_tag_state, word=word) }}">here</a>
+    to define it.
+    {% endif %}
+    {% else %}
+    {{ word }} not found. Click <a href="{{ url_for('dlernen.word_editor', word=word) }}">here</a> to define it.
+    {% endif %}
     {% endif %}
 
     {% if search_results %}
@@ -106,11 +106,18 @@ Lookup {{ word }}
     </table>
     {% if r.wordlist_metadata_list %}
     <h2>Wortlisten, die dieses Wort enthalten</h2>
-    <ul>
+    <table>
         {% for wl in r.wordlist_metadata_list %}
-        <li><a href="{{ url_for('dlernen.wordlist', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a></li>
+        <tr>
+            <td>
+                {% if wl.list_type == 'smart' %}
+                (*)
+                {% endif %}
+            </td>
+            <td><a href="{{ url_for('dlernen.wordlist', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a></td>
+        </tr>
         {% endfor %}
-    </ul>
+    </table>
     {% else %}
     <h2>(no member wordlists)</h2>
     {% endif %}
