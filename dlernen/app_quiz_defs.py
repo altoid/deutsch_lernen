@@ -431,7 +431,7 @@ def show_hinted_words():
         print("    %s (%s)" % (w['word'], w['pos_name']))
 
 
-def get_next_word(wordlist_ids, selector):
+def get_next_word(wordlist_ids):
     # wordlist_ids is a list and may be empty.
     global APPSTATE
 
@@ -441,7 +441,7 @@ def get_next_word(wordlist_ids, selector):
     url = url_for('api_quiz.get_words',
                   wordlist_id=wordlist_ids,
                   quiz_key=APPSTATE.quiz_key,
-                  selector=selector)
+                  selector=APPSTATE.selector)
 
     r = requests.get(url)
     if r:
@@ -459,7 +459,7 @@ def get_next_word(wordlist_ids, selector):
     yield None
 
 
-def get_next_word_with_tags(wordlist_id, selector, tags):
+def get_next_word_with_tags(wordlist_id, tags):
     # wordlist_id is a single id, not a list.
 
     global APPSTATE
@@ -467,7 +467,7 @@ def get_next_word_with_tags(wordlist_id, selector, tags):
     url = url_for('api_quiz.get_words_in_wordlist',
                   wordlist_id=wordlist_id,
                   quiz_key=APPSTATE.quiz_key,
-                  selector=selector,
+                  selector=APPSTATE.selector,
                   tag=tags)
 
     r = requests.get(url)
@@ -486,10 +486,10 @@ def get_next_word_with_tags(wordlist_id, selector, tags):
     yield None
 
 
-def dummy_get_next_word(wordlist_ids, queries):
+def dummy_get_next_word(wordlist_ids, selector):
     # for testing
     pprint(wordlist_ids)
-    pprint(queries)
+    pprint(selector)
 
     yield None
 
@@ -514,13 +514,12 @@ def quiz_definitions():
     global APPSTATE
 
     wordlist_ids = list(APPSTATE.wordlists.keys())
-    selector = APPSTATE.selector
     tags = list(APPSTATE.tags)
 
-    if len(wordlist_ids) == 1:
-        function_and_args = make_triple(get_next_word_with_tags, wordlist_ids[0], selector, tags)
+    if tags and len(wordlist_ids) == 1:
+        function_and_args = make_triple(get_next_word_with_tags, wordlist_ids[0], tags)
     else:
-        function_and_args = make_triple(get_next_word, wordlist_ids, selector)
+        function_and_args = make_triple(get_next_word, wordlist_ids)
 
     quiz_loop(function_and_args)
 
