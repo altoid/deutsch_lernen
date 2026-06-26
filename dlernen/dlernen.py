@@ -599,15 +599,6 @@ def word_editor(word):
         member_word_ids = {x['word_id'] for x in wordlist_obj['words']}
 
     for p in pos_structure:
-        if wordlist_obj and wordlist_obj['list_type'] == 'smart':
-            # if this is a smart list, do not even render any part of speech for a word that is
-            # not in it.
-            if not p['word_id']:
-                continue
-
-            if p['word_id'] not in member_word_ids:
-                continue
-
         form_data[p['pos_name']] = []
         for a in p[ATTRIBUTES]:
             t = ['attr', p['pos_id'], a['attribute_id']]
