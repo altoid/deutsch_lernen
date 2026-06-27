@@ -589,14 +589,12 @@ def word_editor(word):
     form_data = {}
 
     wordlist_obj = None
-    member_word_ids = set()
     if wordlist_id:
         url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
         r = requests.get(url)
         if not r:
             abort(r.status_code, response=r)
         wordlist_obj = r.json()
-        member_word_ids = {x['word_id'] for x in wordlist_obj['words']}
 
     for p in pos_structure:
         form_data[p['pos_name']] = []
