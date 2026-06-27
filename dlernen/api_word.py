@@ -191,15 +191,19 @@ def add_word():
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
             cursor.execute('start transaction')
+            sql = "insert into word (word, pos_id) values (%s, %s)"
+            cursor.execute(sql, (word, pos_id))
+            cursor.execute("select last_insert_id() word_id")
+            result = cursor.fetchone()
+            word_id = result['word_id']
 
             if notes is not None and not notes.strip():
                 notes = None
 
-            sql = "insert into word (word, notes, pos_id) values (%s, %s, %s)"
-            cursor.execute(sql, (word, notes, pos_id))
-            cursor.execute("select last_insert_id() word_id")
-            result = cursor.fetchone()
-            word_id = result['word_id']
+            sql = """
+            insert into word_notes (word_id, notes) values (%s, %s)
+            """
+            cursor.execute(sql, (word_id, notes))
 
             save_attributes(word_id, attributes_adding, None, cursor)
             cursor.execute('commit')
@@ -208,7 +212,8 @@ def add_word():
 
         except Exception as e:
             cursor.execute('rollback')
-            return "%s:  error, transaction rolled back:  %s" % (request.endpoint, (str(e))), 500
+            message = "%s:  error, transaction rolled back:  %s" % (request.endpoint, (str(e)))
+            return message, 500
 
 
 @bp.route('/<int:word_id>', methods=['PUT'])
@@ -311,8 +316,9 @@ def update_word(word_id):
                     notes = None
 
                 sql = """
-                    update word set notes = %(notes)s
-                    where id = %(word_id)s
+                    insert into word_notes (word_id, notes)
+                    values (%(word_id)s, %(notes)s)
+                    on duplicate key update notes=VALUES(notes)
                     """
                 d = {
                     'notes': notes,

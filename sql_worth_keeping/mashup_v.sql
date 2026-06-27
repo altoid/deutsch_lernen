@@ -5,7 +5,7 @@ select
 	w.id AS word_id,
 	w.word AS word,
 	w.added AS added,
-	w.notes AS notes,
+	wn.notes AS notes,
 	pos.id AS pos_id,
 	pos.name AS pos_name,
 	a.id AS attribute_id,
@@ -18,4 +18,5 @@ join pos_form pf on pos.id = pf.pos_id
 join attribute a on a.id = pf.attribute_id
 left join word w on w.pos_id = pos.id
 left join word_attribute wa on wa.attribute_id = a.id and wa.word_id = w.id
+left join word_notes wn on wn.word_id = w.id
 ;
