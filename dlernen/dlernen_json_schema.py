@@ -951,7 +951,15 @@ WORD_RESPONSE_SCHEMA = {
     returned by api_word.get_word_by_id.
     """,
     "type": "object",
-    "required": ["word", "word_id", "pos_name", "attributes", "notes"],
+    "required": [
+        "word",
+        "word_id",
+        "pos_name",
+        "attributes",
+        "notes",
+        "definition"
+    ],
+    "additionalProperties": False,
     "properties": {
         "word": {
             "type": "string"
@@ -963,6 +971,9 @@ WORD_RESPONSE_SCHEMA = {
         "pos_name": {
             "type": "string",
             "pattern": STRING_PATTERN
+        },
+        "definition": {
+            "type": ["string", "null"]
         },
         "notes": {
             "type": ["string", "null"]

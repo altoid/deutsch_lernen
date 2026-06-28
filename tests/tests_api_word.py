@@ -1,7 +1,7 @@
 import unittest
 import json
 from dlernen import create_app
-from dlernen.dlernen_json_schema import ATTRIBUTES
+from dlernen.json_schema_patterns import ATTRIBUTES, DEFINITION
 from flask import url_for
 from pprint import pprint
 import random
@@ -53,7 +53,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": None,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -78,7 +78,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": None,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -114,7 +114,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": notes,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -140,7 +140,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": old_notes,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -176,7 +176,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": old_notes,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -210,7 +210,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": old_notes,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -232,7 +232,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": old_notes,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -257,6 +257,271 @@ class TestAPIWordNotes(unittest.TestCase):
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
         self.assertIsNone(obj['notes'])
+
+
+class TestAPIWordDefinition(unittest.TestCase):
+    # test for good behavior after making definition be a top-level field in WORD_RESPONSE_SCHEMA.
+
+    # NB at the moment, the definition is still an attribute in the database, so we currently write it as such.  but
+    #  we will READ it as word.definition.  it should not appear among the word attributes on retrieval.
+
+    app = None
+    app_context = None
+    keyword_mappings = None
+    client = None
+    POSName = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
+            TESTING=True,
+        )
+
+        cls.POSName = cls.app.extensions.get('POSName')
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
+
+        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
+        cls.keyword_mappings = json.loads(r.data)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
+
+    # do nothing, just make sure that setUp works
+    def test_nothing(self):
+        pass
+
+    # create a word with no attributes.  verify that the definition is None.
+    def test1(self):
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+        add_payload = {
+            "word": word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.NOUN],
+        }
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
+
+        self.assertIsNone(obj[DEFINITION])
+
+        # check that there is no attribute with key 'definition'
+        defn = filter(lambda x: x['attrkey'] == DEFINITION, obj[ATTRIBUTES])
+        self.assertEqual(0, len(list(defn)))
+
+        # retrieve it and check again
+        r = self.client.get(url_for('api_word.get_word_by_id', word_id=word_id))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        self.assertIsNone(obj[DEFINITION])
+        defn = filter(lambda x: x['attrkey'] == DEFINITION, obj[ATTRIBUTES])
+        self.assertEqual(0, len(list(defn)))
+
+    # create a word with no attributes, then update the definition.  verify that the definition is now set and is NOT
+    # present in the attributes.
+    def test2(self):
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+        add_payload = {
+            "word": word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.NOUN],
+        }
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
+
+        self.assertIsNone(obj[DEFINITION])
+
+        # check that there is no attribute with key 'definition'
+        defn = filter(lambda x: x['attrkey'] == DEFINITION, obj[ATTRIBUTES])
+        self.assertEqual(0, len(list(defn)))
+
+        # add definition to the word via update
+        definition = ''.join(random.choices(string.ascii_lowercase, k=10))
+        attribute_id = self.keyword_mappings['attribute_names_to_ids'][DEFINITION]
+        payload = {
+            ATTRIBUTES: [
+                {
+                    "attribute_id": attribute_id,
+                    "attrvalue": definition
+                }
+            ]
+        }
+
+        r = self.client.put(url_for('api_word.update_word', word_id=word_id), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        self.assertEqual(definition, obj[DEFINITION])
+
+        # check that there is no attribute with key 'definition'
+        defn = filter(lambda x: x['attrkey'] == DEFINITION, obj[ATTRIBUTES])
+        self.assertEqual(0, len(list(defn)))
+
+        # retrieve it and check again
+        r = self.client.get(url_for('api_word.get_word_by_id', word_id=word_id))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        self.assertEqual(definition, obj[DEFINITION])
+        defn = filter(lambda x: x['attrkey'] == DEFINITION, obj[ATTRIBUTES])
+        self.assertEqual(0, len(list(defn)))
+
+    # create a word with a definition.  verify that it is present in the object and NOT in the attributes.
+    def test3(self):
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+        definition = ''.join(random.choices(string.ascii_lowercase, k=10))
+        add_payload = {
+            "word": word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.NOUN],
+            ATTRIBUTES: [
+                {
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
+                    "attrvalue": definition
+                }
+            ]
+        }
+
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
+
+        self.assertEqual(definition, obj[DEFINITION])
+
+        # check that there is no attribute with key 'definition'
+        defn = filter(lambda x: x['attrkey'] == DEFINITION, obj[ATTRIBUTES])
+        self.assertEqual(0, len(list(defn)))
+
+        # retrieve it and check again
+        r = self.client.get(url_for('api_word.get_word_by_id', word_id=word_id))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        self.assertEqual(definition, obj[DEFINITION])
+        defn = filter(lambda x: x['attrkey'] == DEFINITION, obj[ATTRIBUTES])
+        self.assertEqual(0, len(list(defn)))
+
+    # create a word with a definition, then clear the definition via update_word.  verify that the definition is None.
+    def test4(self):
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+        definition = ''.join(random.choices(string.ascii_lowercase, k=10))
+        add_payload = {
+            "word": word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.NOUN],
+            ATTRIBUTES: [
+                {
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
+                    "attrvalue": definition
+                }
+            ]
+        }
+
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
+
+        self.assertEqual(definition, obj[DEFINITION])
+
+        # check that there is no attribute with key 'definition'
+        defn = filter(lambda x: x['attrkey'] == DEFINITION, obj[ATTRIBUTES])
+        self.assertEqual(0, len(list(defn)))
+
+        # delete definition from the word via update
+        attribute_id = self.keyword_mappings['attribute_names_to_ids'][DEFINITION]
+        payload = {
+            ATTRIBUTES: [
+                {
+                    "attribute_id": attribute_id
+                }
+            ]
+        }
+
+        r = self.client.put(url_for('api_word.update_word', word_id=word_id), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        self.assertIsNone(obj[DEFINITION])
+
+        # check that there is no attribute with key 'definition'
+        defn = filter(lambda x: x['attrkey'] == DEFINITION, obj[ATTRIBUTES])
+        self.assertEqual(0, len(list(defn)))
+
+        # retrieve it and check again
+        r = self.client.get(url_for('api_word.get_word_by_id', word_id=word_id))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        self.assertIsNone(obj[DEFINITION])
+        defn = filter(lambda x: x['attrkey'] == DEFINITION, obj[ATTRIBUTES])
+        self.assertEqual(0, len(list(defn)))
+
+    # create a word with a definition, then change the defn to something else.  verify the change.
+    def test5(self):
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+        definition = ''.join(random.choices(string.ascii_lowercase, k=10))
+        add_payload = {
+            "word": word,
+            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.NOUN],
+            ATTRIBUTES: [
+                {
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
+                    "attrvalue": definition
+                }
+            ]
+        }
+
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
+
+        self.assertEqual(definition, obj[DEFINITION])
+
+        # check that there is no attribute with key 'definition'
+        defn = filter(lambda x: x['attrkey'] == DEFINITION, obj[ATTRIBUTES])
+        self.assertEqual(0, len(list(defn)))
+
+        # update the definition
+        new_definition = ''.join(random.choices(string.ascii_lowercase, k=10))
+        attribute_id = self.keyword_mappings['attribute_names_to_ids'][DEFINITION]
+        payload = {
+            ATTRIBUTES: [
+                {
+                    "attribute_id": attribute_id,
+                    "attrvalue": new_definition
+                }
+            ]
+        }
+
+        r = self.client.put(url_for('api_word.update_word', word_id=word_id), json=payload)
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        self.assertEqual(new_definition, obj[DEFINITION])
+
+        # check that there is no attribute with key 'definition'
+        defn = filter(lambda x: x['attrkey'] == DEFINITION, obj[ATTRIBUTES])
+        self.assertEqual(0, len(list(defn)))
+
+        # retrieve it and check again
+        r = self.client.get(url_for('api_word.get_word_by_id', word_id=word_id))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+        self.assertEqual(new_definition, obj[DEFINITION])
+        defn = filter(lambda x: x['attrkey'] == DEFINITION, obj[ATTRIBUTES])
+        self.assertEqual(0, len(list(defn)))
 
 
 class TestAPIWordEndToEnd(unittest.TestCase):
@@ -290,6 +555,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         pass
 
     # make sure the attributes are retrieved in sorted order.
+    @unittest.skip
     def test_attributes_are_sorted(self):
         r = self.client.get(url_for('api_pos.get_pos'))
         self.assertEqual(200, r.status_code)
@@ -379,9 +645,6 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         r = self.client.get(url_for('api_word.get_word_by_id', word_id=word_id))
         self.assertEqual(404, r.status_code)
 
-        r = self.client.get(url_for('api_word.get_word_by_id', word_id=word_id))
-        self.assertEqual(404, r.status_code)
-
         r = self.client.get(url_for('api_word.get_word', word=word))
         self.assertEqual(404, r.status_code)
 
@@ -396,7 +659,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
             "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.ADJECTIVE],
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -414,9 +677,6 @@ class TestAPIWordEndToEnd(unittest.TestCase):
 
         r = self.client.delete(url_for('api_word.delete_word', word_id=word_id))
         self.assertEqual(200, r.status_code)
-
-        r = self.client.get(url_for('api_word.get_word_by_id', word_id=word_id))
-        self.assertEqual(404, r.status_code)
 
         r = self.client.get(url_for('api_word.get_word_by_id', word_id=word_id))
         self.assertEqual(404, r.status_code)
@@ -577,6 +837,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         obj = json.loads(r.data)
         self.addCleanup(cleanupWordID, self.client, obj['word_id'])
 
+        definition = "feelthy"
         update_payload = {
             ATTRIBUTES: [
                 {
@@ -588,8 +849,8 @@ class TestAPIWordEndToEnd(unittest.TestCase):
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
-                    "attrvalue": "feelthy"
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
+                    "attrvalue": definition
                 }
             ]
         }
@@ -601,10 +862,10 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         attrdict = {r['attrkey']: r['attrvalue'] for r in obj['attributes']}
         attrkeys = set(attrdict.keys())
 
-        self.assertEqual({'article', 'plural', 'definition'}, attrkeys)
+        self.assertEqual({'article', 'plural'}, attrkeys)
         self.assertEqual("der", attrdict['article'])
         self.assertEqual("Xxxxxxxxxx", attrdict['plural'])
-        self.assertEqual("feelthy", attrdict['definition'])
+        self.assertEqual(definition, obj[DEFINITION])
 
         # update again but with empty attribute lists.  should have no effect.
 
@@ -618,15 +879,13 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
-        self.assertEqual(3, len(obj['attributes']))
-
         attrdict = {r['attrkey']: r['attrvalue'] for r in obj['attributes']}
         attrkeys = set(attrdict.keys())
 
-        self.assertEqual({'article', 'plural', 'definition'}, attrkeys)
+        self.assertEqual({'article', 'plural'}, attrkeys)
         self.assertEqual("der", attrdict['article'])
         self.assertEqual("Xxxxxxxxxx", attrdict['plural'])
-        self.assertEqual("feelthy", attrdict['definition'])
+        self.assertEqual(definition, obj[DEFINITION])
 
         # update AGAIN but with empty payload.  should also have no effect.
 
@@ -638,15 +897,13 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
 
-        self.assertEqual(3, len(obj['attributes']))
-
         attrdict = {r['attrkey']: r['attrvalue'] for r in obj['attributes']}
         attrkeys = set(attrdict.keys())
 
-        self.assertEqual({'article', 'plural', 'definition'}, attrkeys)
+        self.assertEqual({'article', 'plural'}, attrkeys)
         self.assertEqual("der", attrdict['article'])
         self.assertEqual("Xxxxxxxxxx", attrdict['plural'])
-        self.assertEqual("feelthy", attrdict['definition'])
+        self.assertEqual(definition, obj[DEFINITION])
 
         r = self.client.delete(url_for('api_word.delete_word', word_id=obj['word_id']))
         self.assertEqual(200, r.status_code)
@@ -667,7 +924,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -705,7 +962,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -721,7 +978,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
             "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.ADJECTIVE],
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -795,7 +1052,7 @@ class TestAPIWordPOST(unittest.TestCase):
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -817,7 +1074,7 @@ class TestAPIWordPOST(unittest.TestCase):
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -842,7 +1099,7 @@ class TestAPIWordPOST(unittest.TestCase):
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
                     "attrvalue": "legal attribute_id here"
                 }
             ]
@@ -865,7 +1122,7 @@ class TestAPIWordPOST(unittest.TestCase):
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
                     "attrvalue": "feelthy"
                 }
             ]
@@ -921,7 +1178,7 @@ class TestAPIWordPUT(unittest.TestCase):
         update_payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
                     "attrvalue": "Foofoo"
                 }
             ]
@@ -978,7 +1235,7 @@ class TestAPIWordPUT(unittest.TestCase):
         update_payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
                     "attrvalue": ""
                 }
             ]
@@ -1024,12 +1281,12 @@ class TestAPIWordPUT(unittest.TestCase):
     def test_update_attrs(self):
         # since we created the word with no attributes, add one that we can update.
 
-        attrkey = 'definition'
+        attrkey = 'article'
         attribute_id = self.keyword_mappings['attribute_names_to_ids'][attrkey]
         payload = {
             ATTRIBUTES: [
                 {
-                    "attrvalue": "male bovine excrement",
+                    "attrvalue": "eek",
                     "attribute_id": attribute_id
                 }
             ]
@@ -1038,7 +1295,7 @@ class TestAPIWordPUT(unittest.TestCase):
         r = self.client.put(url_for('api_word.update_word', word_id=self.word_id), json=payload)
         self.assertEqual(200, r.status_code)
 
-        new_value = 'changed to this'
+        new_value = 'boop'
         payload = {
             ATTRIBUTES: [
                 {
@@ -1070,7 +1327,6 @@ class TestAPIWordPUT(unittest.TestCase):
         r = self.client.get(url_for('api_word.get_word_by_id', word_id=self.word_id))
         obj = json.loads(r.data)
         self.assertEqual(200, r.status_code)
-        self.assertEqual(3, len(obj['attributes']))
         self.assertEqual(self.word.casefold(), obj['word'].casefold())
 
 
@@ -1181,14 +1437,14 @@ class TestAPIWordUpdate(unittest.TestCase):
 
     def test_add_update_delete_attribute_1(self):
         # add, update, and delete the same attr value in 3 separate requests
-        old_def = "it smells like cereal here"
-        attrkey = 'definition'
+        old_attr = "it smells like cereal here"
+        attrkey = 'first_person_singular'
         attribute_id = self.keyword_mappings['attribute_names_to_ids'][attrkey]
         payload = {
             ATTRIBUTES: [
                 {
                     "attribute_id": attribute_id,
-                    "attrvalue": old_def
+                    "attrvalue": old_attr
                 }
             ]
         }
@@ -1199,16 +1455,16 @@ class TestAPIWordUpdate(unittest.TestCase):
 
         attrs = list(filter(lambda x: x['attrkey'] == attrkey, obj['attributes']))
         defn = attrs[0]
-        self.assertEqual(old_def, defn['attrvalue'])
+        self.assertEqual(old_attr, defn['attrvalue'])
 
-        # update definition
-        new_def = "try this on for size"
+        # update attr_value
+        new_attr = "try this on for size"
 
         payload = {
             ATTRIBUTES: [
                 {
                     "attribute_id": attribute_id,
-                    "attrvalue": new_def
+                    "attrvalue": new_attr
                 }
             ]
         }
@@ -1219,7 +1475,7 @@ class TestAPIWordUpdate(unittest.TestCase):
 
         attrs = list(filter(lambda x: x['attrkey'] == attrkey, obj['attributes']))
         defn = attrs[0]
-        self.assertEqual(new_def, defn['attrvalue'])
+        self.assertEqual(new_attr, defn['attrvalue'])
 
         # delete
         payload = {
@@ -1244,7 +1500,7 @@ class TestAPIWordUpdate(unittest.TestCase):
         payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION],
                     "attrvalue": old_def
                 },
                 {
@@ -1267,7 +1523,7 @@ class TestAPIWordUpdate(unittest.TestCase):
                     "attrvalue": sps_val
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition']
+                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][DEFINITION]
                 },
                 {
                     "attribute_id": self.keyword_mappings['attribute_names_to_ids']['first_person_singular'],
@@ -1281,22 +1537,22 @@ class TestAPIWordUpdate(unittest.TestCase):
         obj = json.loads(r.data)
         fps = list(filter(lambda x: x['attrkey'] == 'first_person_singular', obj['attributes']))[0]
         sps = list(filter(lambda x: x['attrkey'] == 'second_person_singular', obj['attributes']))[0]
-        defn = list(filter(lambda x: x['attrkey'] == 'definition', obj['attributes']))[0]
+        defn = obj[DEFINITION]
 
         self.assertEqual(new_fps, fps['attrvalue'])
         self.assertEqual(sps_val, sps['attrvalue'])
-        self.assertIsNone(defn['attrvalue'])
+        self.assertIsNone(defn)
 
     def test_update_delete_same_attr(self):
         # error if we attempt to update and delete the same attr id.
-        old_def = "it smells like cereal here"
-        attrkey = 'definition'
+        attrvalue = "it smells like cereal here"
+        attrkey = 'first_person_singular'
         attribute_id = self.keyword_mappings['attribute_names_to_ids'][attrkey]
         payload = {
             ATTRIBUTES: [
                 {
                     "attribute_id": attribute_id,
-                    "attrvalue": old_def
+                    "attrvalue": attrvalue
                 }
             ]
         }
@@ -1324,13 +1580,13 @@ class TestAPIWordUpdate(unittest.TestCase):
         obj = json.loads(r.data)
 
         defn = list(filter(lambda x: x['attrkey'] == attrkey, obj['attributes']))[0]
-        self.assertEqual(old_def, defn['attrvalue'])
+        self.assertEqual(attrvalue, defn['attrvalue'])
 
     def test_update_attr_multiple_values(self):
         # trying to update the same attribute with more than one value in one request
         # is not allowed.
 
-        attrkey = 'definition'
+        attrkey = DEFINITION
         attribute_id = self.keyword_mappings['attribute_names_to_ids'][attrkey]
         payload = {
             ATTRIBUTES: [

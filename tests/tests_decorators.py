@@ -27,9 +27,10 @@ VALID_RESPONSE = {
     "word_id": 1234,
     "pos_name": "eoui",
     "notes": "this is a cool word",
+    "definition": "what it means",
     "attributes": [
         {
-            'attrkey': 'definition',
+            'attrkey': 'article',
             'attribute_id': 234,
             'sort_order': 5,
             'attrvalue': 'to spoil, deteriorate, go bad'

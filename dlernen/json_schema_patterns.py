@@ -19,4 +19,5 @@ ID_PATTERN = WORD_PATTERN
 MULTILINE_STRING_PATTERN = r"""\S"""
 
 ATTRIBUTES = 'attributes'
+DEFINITION = 'definition'
 
