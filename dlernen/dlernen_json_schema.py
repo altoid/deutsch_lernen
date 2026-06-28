@@ -387,7 +387,8 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
             "pos_id",
             "attributes",
             "word",
-            "word_id"
+            "word_id",
+            "definition"
         ],
         "anyOf": [
             {"$ref": "#/$defs/word_info_null"},
@@ -409,6 +410,9 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
                     "type": "null",
                 },
                 "word_id": {
+                    "type": "null",
+                },
+                "definition": {
                     "type": "null",
                 },
                 "attributes": {
@@ -442,6 +446,9 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
                 },
                 "word": {
                     "type": "string"
+                },
+                "definition": {
+                    "type": ["string", "null"],
                 },
                 "word_id": {
                     "type": "integer",

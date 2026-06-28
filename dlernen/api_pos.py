@@ -1,6 +1,7 @@
 from flask import Blueprint, current_app
 from mysql.connector import connect
 from dlernen.dlernen_json_schema import POS_STRUCTURE_RESPONSE_SCHEMA
+from dlernen.json_schema_patterns import DEFINITION
 from dlernen.decorators import js_validate_result
 from pprint import pprint
 from contextlib import closing
@@ -28,6 +29,8 @@ def __get_pos(sql, args):
         pos_name_to_attrs = {}
         pos_name_to_ids = {x['pos_name']: x['pos_id'] for x in rows}
         pos_to_word_info = {x['pos_name']: (x['word'], x['word_id']) for x in rows}
+        defn_rows = filter(lambda x: x['attrkey'] == DEFINITION, rows)
+        word_id_to_defn = {x['word_id']: x['attrvalue'] for x in defn_rows}
 
         for r in rows:
             if r['pos_name'] not in pos_name_to_attrs:
@@ -45,12 +48,15 @@ def __get_pos(sql, args):
         for pos_name, attrs in pos_name_to_attrs.items():
             # sort the attributes by sort_order
             attrs = sorted(attrs, key=lambda x: x['sort_order'])
+            word, word_id = pos_to_word_info[pos_name]  # either of these can be None
+            defn = word_id_to_defn if word_id and word_id in word_id_to_defn else None
             result.append(
                 {
                     "pos_name": pos_name,
                     "pos_id": pos_name_to_ids[pos_name],
-                    "word": pos_to_word_info[pos_name][0],  # might be None
-                    "word_id": pos_to_word_info[pos_name][1],  # might be None
+                    "word": word,  # might be None
+                    "word_id": word_id,  # might be None
+                    "definition": defn,
                     "attributes": attrs
                 }
             )
