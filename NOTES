@@ -47,9 +47,6 @@ FIXME - in quiz app, if you go to the main menu in the middle of a quiz where al
     state is lost and you lose your place.  should keep state until list is changed or app is reset.  this state
     should be saved to disk on program exit.
 
-TODO - in quiz app, imperfect query should prefetch all candidate words, not use the sql
-    for one-at-a-time queries
-
 FIXME - in the sidebar, show the name/id of the prevailing list
 
 FIXME - overhaul json schema
@@ -73,8 +70,10 @@ TODO - how to deal with verbs that are both separable and inseparable - e.g. umf
 FIXME - the verb wiederherstellen (stellt wieder her) is causing problems re verb prefixes.
 
 TODO - change the selectors to be a class derived from enum.StrEnum.
-    add the comment # noinspection PyArgumentList
-    can use this for other things too, like POS_NAMEs, ATTRKEYs, QUIZ_KEYs, etc.
+    POSName done
+    QuizKey done
+    Selector done
+    attrkeys
 
 TODO - break dlernen_json_schema into multiple modules.  but don't delete it because that's where the registry is
 
