@@ -774,13 +774,12 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "pos_id": 1234,
                 "word": "aoeu",
                 "word_id": 1234,
-                "definition": "what does it all mean",
 
                 # required but can be empty
                 "attributes": [
                     {
                         # all of these are required
-                        "attrkey": "aoeu",
+                        "attrkey": "definition",
                         "attribute_id": 1234,
                         "sort_order": 5,
                         "attrvalue": "aoeu",
@@ -798,7 +797,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "pos_id": 1234,
                 "word": "aoeu",
                 "word_id": 1234,
-                "definition": None,  # can be none
                 "attributes": [
                     {
                         "attrkey": "definition",
@@ -815,10 +813,9 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "pos_id": 1234,
                 "word": None,
                 "word_id": None,
-                "definition": None,
                 "attributes": [
                     {
-                        "attrkey": "oaeaoeu",
+                        "attrkey": "definition",
                         "attribute_id": 1234,
                         "sort_order": 0,
                         "attrvalue": None
@@ -835,7 +832,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "pos_id": 1234,
                 "word": "aoeu",
                 "word_id": 1234,
-                "definition": "anhoteud",
                 "attributes": [],  # can't be empty
             }
         ],
@@ -845,7 +841,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "pos_id": 1234,
                 "word": "aoeu",
                 "word_id": 1234,
-                "definition": "anhoteud",
                 "attributes": [
                     {
                         # "attrkey": "whatevs",
@@ -862,7 +857,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "pos_id": 1234,
                 "word": "aoeu",
                 "word_id": 1234,
-                "definition": "anhoteud",
                 "attributes": [
                     {
                         "attrkey": "whatevs",
@@ -879,7 +873,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "pos_id": 1234,
                 "word": "aoeu",
                 "word_id": 1234,
-                "definition": "anhoteud",
                 "attributes": [
                     {
                         "attrkey": "whatevs",
@@ -896,7 +889,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "pos_id": 1234,
                 "word": "aoeu",
                 "word_id": 1234,
-                "definition": "anhoteud",
                 "attributes": [
                     {
                         "attrkey": "whatevs",
@@ -913,7 +905,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "pos_id": 1234,
                 "word": "aoeu",
                 "word_id": 1234,
-                "definition": "anhoteud",
                 # "attributes": [
                 #     {
                 #         "attrkey": "whatevs",
@@ -930,7 +921,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "pos_id": 1234,
                 "word": "aoeu",
                 "word_id": 1234,
-                "definition": "anhoteud",
                 "attributes": [
                     {
                         "attrkey": "missing_pos",
@@ -947,7 +937,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 # "pos_id": 1234,
                 "word": "aoeu",
                 "word_id": 1234,
-                "definition": "anhoteud",
                 "attributes": [
                     {
                         "attrkey": "missing_pos",
@@ -964,7 +953,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "pos_id": 1234,
                 # "word": "aoeu",
                 "word_id": 1234,
-                "definition": "anhoteud",
                 "attributes": [
                     {
                         "attrkey": "missing_pos",
@@ -981,24 +969,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "pos_id": 1234,
                 "word": "aoeu",
                 # "word_id": 1234,
-                "definition": "anhoteud",
-                "attributes": [
-                    {
-                        "attrkey": "missing_pos",
-                        "attribute_id": 1234,
-                        "sort_order": 11,
-                        "attrvalue": "aoeu",
-                    }
-                ]
-            }
-        ],
-        [
-            {
-                "pos_name": "voib",
-                "pos_id": 1234,
-                "word": "aoeu",
-                "word_id": 1234,
-                # "definition": "anhoteud",
                 "attributes": [
                     {
                         "attrkey": "missing_pos",
@@ -1015,10 +985,9 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "pos_id": 1234,
                 "word": "aoeu",
                 "word_id": None,
-                "definition": "anhoteud",
                 "attributes": [
                     {
-                        "attrkey": "what",
+                        "attrkey": "missing_pos",
                         "attribute_id": 1234,
                         "sort_order": 11,
                         "attrvalue": "word and word id must be both null or not null",
@@ -1032,10 +1001,9 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "pos_id": 1234,
                 "word": None,
                 "word_id": 1234,
-                "definition": "anhoteud",
                 "attributes": [
                     {
-                        "attrkey": "aoeueaue",
+                        "attrkey": "missing_pos",
                         "attribute_id": 1234,
                         "sort_order": 11,
                         "attrvalue": "word and word id must be both null or not null",
@@ -1049,30 +1017,12 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "pos_id": 1234,
                 "word": None,
                 "word_id": None,
-                "definition": None,
                 "attributes": [
                     {
-                        "attrkey": "malformed",
+                        "attrkey": "missing_pos",
                         "attribute_id": 1234,
                         "sort_order": 11,
                         "attrvalue": "if word info is null then there should be nulls for attrs too",
-                    }
-                ]
-            }
-        ],
-        [
-            {
-                "pos_name": "voib",
-                "pos_id": 1234,
-                "word": None,
-                "word_id": None,
-                "definition": "if word info is null then defn must also be null",
-                "attributes": [
-                    {
-                        "attrkey": "malformed",
-                        "attribute_id": 1234,
-                        "sort_order": 11,
-                        "attrvalue": None,
                     }
                 ]
             }
