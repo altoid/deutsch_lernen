@@ -2,11 +2,9 @@ from dlernen.decorators import js_validate_result
 from dlernen.dlernen_json_schema import ARRAY_WORD_RESPONSE_SCHEMA, \
     ARRAY_DISPLAYABLE_WORD_SCHEMA, \
     ARRAY_WORDLIST_METADATA_RESPONSE_SCHEMA
-from dlernen.json_schema_patterns import DEFINITION, ATTRIBUTES
-from pprint import pprint
+
 
 # no view functions here, just utilities needed by more than one blueprint.
-
 
 def placeholder_string(itr):
     return ','.join(['%s'] * len(itr))
@@ -121,7 +119,7 @@ def get_words_from_word_ids(cursor, word_ids):
     for r in rows:
         if r['word_id'] not in temp_result:
             temp_result[r['word_id']] = {
-                ATTRIBUTES: [],
+                'attributes': []
             }
 
         attr = {
@@ -134,12 +132,7 @@ def get_words_from_word_ids(cursor, word_ids):
         temp_result[r['word_id']]['word'] = r['word']
         temp_result[r['word_id']]['word_id'] = r['word_id']
         temp_result[r['word_id']]['notes'] = r['notes']
-
-        # do not send the definition back as an attribute:  it is now a top-level field in WORD_RESPONSE.
-        if r['attrkey'] == DEFINITION:
-            temp_result[r['word_id']][DEFINITION] = r['attrvalue']
-        else:
-            temp_result[r['word_id']][ATTRIBUTES].append(attr)
+        temp_result[r['word_id']]['attributes'].append(attr)
 
     result = list(temp_result.values())
     for r in result:

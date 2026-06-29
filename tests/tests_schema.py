@@ -1,6 +1,6 @@
 import unittest
 import jsonschema
-from dlernen.dlernen_json_schema import get_validator, \
+from dlernen.dlernen_json_schema import get_validator, ATTRIBUTES, \
     NULL_SCHEMA, \
     WORDLIST_PAYLOAD_SCHEMA, \
     WORD_ADD_PAYLOAD_SCHEMA, \
@@ -19,7 +19,7 @@ from dlernen.dlernen_json_schema import get_validator, \
     WORD_TAG_RESPONSE_SCHEMA, \
     WORDLIST_METADATA_RESPONSE_SCHEMA, \
     WORDLIST_RESPONSE_SCHEMA
-from dlernen.json_schema_patterns import ATTRIBUTES
+
 from pprint import pprint
 
 
@@ -1562,7 +1562,6 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "word_id": 1234,
             "pos_name": "eoui",
             "notes": "this is a cool word",
-            "definition": "by definition it is cool",
             "attributes": [
                 {
                     'attrkey': 'definition',
@@ -1577,7 +1576,6 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "word_id": 1234,
             "pos_name": "eoui",
             "notes": None,
-            "definition": None,   # weird, but kosher
             "attributes": [
             ],
         },
@@ -1589,7 +1587,6 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "word_id": "1234",   # should be int
             "pos_name": "eoui",
             "notes": "this is a cool word",
-            "definition": "what it means",
             "attributes": [
                 {
                     'attrkey': 'definition',
@@ -1598,14 +1595,11 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
                 },
             ],
         },
-
-        # missing fields
         {
             # "word": "saoethus",
             "word_id": 1234,
             "pos_name": "eoui",
             "notes": "this is a cool word",
-            "definition": "what it means",
             "attributes": [
                 {
                     'attribute_id': 22,
@@ -1620,7 +1614,6 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             # "word_id": 1234,
             "pos_name": "eoui",
             "notes": "this is a cool word",
-            "definition": "what it means",
             "attributes": [
                 {
                     'attribute_id': 22,
@@ -1635,7 +1628,6 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "word_id": 1234,
             # "pos_name": "eoui",
             "notes": "this is a cool word",
-            "definition": "what it means",
             "attributes": [
                 {
                     'attribute_id': 22,
@@ -1650,7 +1642,6 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "word_id": 1234,
             "pos_name": "eoui",
             # "notes": "this is a cool word",
-            "definition": "what it means",
             "attributes": [
                 {
                     'attribute_id': 22,
@@ -1665,22 +1656,6 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "word_id": 1234,
             "pos_name": "eoui",
             "notes": "this is a cool word",
-            # "definition": "what it means",
-            "attributes": [
-                {
-                    'attribute_id': 22,
-                    'attrkey': 'definition',
-                    'sort_order': 5,
-                    'attrvalue': 'to spoil, deteriorate, go bad'
-                },
-            ],
-        },
-        {
-            "word": "saoethus",
-            "word_id": 1234,
-            "pos_name": "eoui",
-            "notes": "this is a cool word",
-            "definition": "what it means",
             # "attributes": [
             #     {
             #         'attribute_id': 22,
@@ -1695,7 +1670,6 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "word_id": 1234,
             "pos_name": "eoui",
             "notes": "this is a cool word",
-            "definition": "what it means",
             "attributes": [
                 {
                     # 'attribute_id': 22,
@@ -1710,7 +1684,6 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "word_id": 1234,
             "pos_name": "eoui",
             "notes": "this is a cool word",
-            "definition": "what it means",
             "attributes": [
                 {
                     'attribute_id': 22,
@@ -1725,7 +1698,6 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "word_id": 1234,
             "pos_name": "eoui",
             "notes": "this is a cool word",
-            "definition": "what it means",
             "attributes": [
                 {
                     'attribute_id': 22,
@@ -1740,31 +1712,12 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "word_id": 1234,
             "pos_name": "eoui",
             "notes": "this is a cool word",
-            "definition": "what it means",
             "attributes": [
                 {
                     'attribute_id': 22,
                     'attrkey': 'definition',
                     'sort_order': 5,
                     # 'attrvalue': 'to spoil, deteriorate, go bad'
-                },
-            ],
-        },
-
-        # additional fields are verboten
-        {
-            "word": "saoethus",
-            "word_id": 1234,
-            "stowaway": "surprise",
-            "pos_name": "eoui",
-            "notes": "this is a cool word",
-            "definition": "what it means",
-            "attributes": [
-                {
-                    'attribute_id': 22,
-                    'attrkey': 'definition',
-                    'sort_order': 5,
-                    'attrvalue': 'to spoil, deteriorate, go bad'
                 },
             ],
         },

@@ -204,6 +204,7 @@ def add_word():
             insert into word_notes (word_id, notes) values (%s, %s)
             """
             cursor.execute(sql, (word_id, notes))
+
             save_attributes(word_id, attributes_adding, None, cursor)
             cursor.execute('commit')
 
