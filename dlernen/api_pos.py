@@ -49,14 +49,14 @@ def __get_pos(sql, args):
             # sort the attributes by sort_order
             attrs = sorted(attrs, key=lambda x: x['sort_order'])
             word, word_id = pos_to_word_info[pos_name]  # either of these can be None
-            defn = word_id_to_defn[word_id] if word_id and word_id in word_id_to_defn else None
+            defn = word_id_to_defn if word_id and word_id in word_id_to_defn else None
             result.append(
                 {
                     "pos_name": pos_name,
                     "pos_id": pos_name_to_ids[pos_name],
                     "word": word,  # might be None
                     "word_id": word_id,  # might be None
-                    "definition": defn,  # might be None
+                    "definition": defn,
                     "attributes": attrs
                 }
             )
