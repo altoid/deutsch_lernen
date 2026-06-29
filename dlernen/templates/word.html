@@ -24,31 +24,25 @@ word id.
 
     <h1>
         {% if serialized_tag_state %}
-        <a name="{{ wordobject.word }}"
-           href="{{ url_for('dlernen.word_editor', serialized_tag_state=serialized_tag_state, word=wordobject.word) }}">
-            {{ wordobject.word }}
+        <a name="{{ wordobject['word'] }}"
+           href="{{ url_for('dlernen.word_editor', serialized_tag_state=serialized_tag_state, word=wordobject['word']) }}">
+            {{ wordobject['word'] }}
         </a>
         {% else %}
-        <a name="{{ wordobject.word }}"
-           href="{{ url_for('dlernen.word_editor', word=wordobject.word) }}">
-            {{ wordobject.word }}
+        <a name="{{ wordobject['word'] }}"
+           href="{{ url_for('dlernen.word_editor', word=wordobject['word']) }}">
+            {{ wordobject['word'] }}
         </a>
         {% endif %}
     </h1>
-    <h3>{{ wordobject.pos_name }}</h3>
+    <h3>{{ wordobject['pos_name'] }}</h3>
     <table>
+        {% for attr in wordobject['attributes'] %}
         <tr>
-            <td class="word_attributes">Bedeutung</td>
+            <td class="word_attributes">{{ attr['attrkey'] }}</td>
             <td>
-                {{ wordobject.definition }}
-            </td>
-        </tr>
-        {% for attr in wordobject.attributes %}
-        <tr>
-            <td class="word_attributes">{{ attr.attrkey }}</td>
-            <td>
-                {% if attr.attrvalue != None %}
-                {{ attr.attrvalue }}
+                {% if attr['attrvalue'] != None %}
+                {{ attr['attrvalue'] }}
                 {% endif %}
             </td>
         </tr>

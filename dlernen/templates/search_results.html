@@ -93,12 +93,6 @@ Lookup {{ word }}
     </h1>
     <h3>{{ r.word.pos_name }}</h3>
     <table>
-        <tr>
-            <td class="word_attributes">Bedeutung</td>
-            <td>
-                {{ r.word.definition }}
-            </td>
-        </tr>
         {% for attr in r.word.attributes %}
         <tr>
             <td class="word_attributes">{{ attr.attrkey }}</td>
