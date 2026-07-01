@@ -617,6 +617,8 @@ def word_editor(word):
         form_data[p['pos_name']] = sorted(form_data[p['pos_name']], key=lambda x: x['sort_order'])
 
     # get tags for any words that have them.  join them as a single space-separated string.
+    # a text field for tags is only provided for a POS that is a member of the list, and then only if the list is not
+    # a smart list.
     if wordlist_obj and wordlist_obj['list_type'] != 'smart':
         # the wordlist object already has the tags for the words.  traverse the wordlist and create a map of word_ids
         # to tag strings.
