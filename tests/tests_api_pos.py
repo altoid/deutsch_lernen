@@ -79,7 +79,7 @@ class APIPosName(unittest.TestCase):
 
 
 class APIAttrKey(unittest.TestCase):
-    # make sure dynamically-created POSName Enum class is well-behaved
+    # make sure dynamically-created AttrKey Enum class is well-behaved
 
     app = None
     app_context = None
