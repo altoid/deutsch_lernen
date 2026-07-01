@@ -227,7 +227,7 @@ WORD_ADD_PAYLOAD_SCHEMA = {
         },
         "pos_name": {
             "type": "string",
-            "pattern": NAME_PATTERN
+            "pattern": ID_PATTERN
         },
         "notes": {
             "type": ["string", 'null']
