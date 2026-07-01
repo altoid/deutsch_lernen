@@ -49,9 +49,6 @@ class TestAPIRelation(unittest.TestCase):
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
 
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
-        cls.keyword_mappings = json.loads(r.data)
-
     @classmethod
     def tearDownClass(cls):
         cls.app_context.pop()

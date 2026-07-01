@@ -36,9 +36,6 @@ class TestAPIWordlistTagMultiList(unittest.TestCase):
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
 
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
-        cls.keyword_mappings = json.loads(r.data)
-
     @classmethod
     def tearDownClass(cls):
         cls.app_context.pop()
@@ -286,10 +283,6 @@ class TestAPIWordlistTagSmartList(unittest.TestCase):
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
 
-        with cls.app.test_request_context():
-            r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
-            cls.keyword_mappings = json.loads(r.data)
-
     @classmethod
     def tearDownClass(cls):
         cls.app_context.pop()
@@ -396,10 +389,6 @@ class TestAPIWordlistTag(unittest.TestCase):
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
-
-        with cls.app.test_request_context():
-            r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
-            cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
     def tearDownClass(cls):
@@ -517,10 +506,6 @@ class TestAPIWordlistTagStandardList(unittest.TestCase):
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
-
-        with cls.app.test_request_context():
-            r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
-            cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
     def tearDownClass(cls):
