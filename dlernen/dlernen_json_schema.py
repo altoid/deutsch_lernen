@@ -217,7 +217,7 @@ WORD_ADD_PAYLOAD_SCHEMA = {
     "type": "object",
     "required": [
         "word",
-        "pos_id"
+        "pos_name"
     ],
     "additionalProperties": False,
     "properties": {
@@ -225,9 +225,9 @@ WORD_ADD_PAYLOAD_SCHEMA = {
             "type": "string",
             "pattern": WORD_PATTERN
         },
-        "pos_id": {
-            "type": "integer",
-            "minimum": 1
+        "pos_name": {
+            "type": "string",
+            "pattern": NAME_PATTERN
         },
         "notes": {
             "type": ["string", 'null']

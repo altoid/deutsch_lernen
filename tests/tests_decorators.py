@@ -6,7 +6,7 @@ import jsonschema
 VALID_PAYLOAD = {
     # fully specified payload
     "word": "werd",
-    "pos_id": 1234,
+    "pos_name": "boobs",
     "notes": "do re mi",
     ATTRIBUTES: [
         {

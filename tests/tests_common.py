@@ -43,7 +43,7 @@ class TestCommon(unittest.TestCase):
 
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.ADJECTIVE],
+            "pos_name": self.POSName.ADJECTIVE,
         }
         r = self.client.post(url_for('api_word.add_word'), json=add_payload)
         self.assertEqual(201, r.status_code)

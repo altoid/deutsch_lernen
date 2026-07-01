@@ -106,7 +106,7 @@ class APIPostQuizAnswer(unittest.TestCase):
         ]
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.ADJECTIVE],
+            "pos_name": self.POSName.ADJECTIVE,
             ATTRIBUTES: attributes
         }
 
@@ -222,7 +222,7 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
         ]
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.ADJECTIVE],
+            "pos_name": self.POSName.ADJECTIVE,
             ATTRIBUTES: attributes
         }
 
@@ -249,7 +249,7 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
         ]
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.VERB],
+            "pos_name": self.POSName.VERB,
             ATTRIBUTES: attributes
         }
 
@@ -282,7 +282,7 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
         ]
         add_payload = {
             "word": word,
-            "pos_id": self.keyword_mappings['pos_names_to_ids'][self.POSName.VERB],
+            "pos_name": self.POSName.VERB,
             ATTRIBUTES: attributes
         }
 

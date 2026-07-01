@@ -1756,7 +1756,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
         {
             # fully specified payload
             "word": "werd",
-            "pos_id": 1234,
+            "pos_name": "boobs",
             "notes": "do re mi",
             ATTRIBUTES: [
                 {
@@ -1772,13 +1772,13 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
         {
             # without any attribute values is valid
             "word": "valid",
-            "pos_id": 23,
+            "pos_name": "boobs",
             "notes": None,
         },
         {
             # empty attribute list is valid
             "word": "valid",
-            "pos_id": 23,
+            "pos_name": "boobs",
             "notes": "whatevs",
             ATTRIBUTES: []
         }
@@ -1790,32 +1790,32 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
         },
         {
             # "word": "aoeu",
-            "pos_id": 123,
+            "pos_name": "boobs",
             "notes": "boo boo",
         },
         {
             "word": "aoeu",
-            # "pos_id": 123,
+            # "pos_name": "boobs",
             "notes": "boo boo",
         },
         {
             "word": "",
-            "pos_id": 1234,
+            "pos_name": "boobs",
             "notes": "boo boo",
         },
         {
             "word": " ",
-            "pos_id": 1234,
+            "pos_name": "boobs",
             "notes": "",
         },
         {
             "word": "cannot have whitespace",
-            "pos_id": 234,
+            "pos_name": "boobs",
             "notes": "boo boo",
         },
         {
             "word": "aoeu",
-            "pos_id": 234,
+            "pos_name": "boobs",
             "notes": "boo boo",
             ATTRIBUTES: [
                 {
@@ -1825,7 +1825,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
         },
         {
             "word": "aoeu",
-            "pos_id": 234,
+            "pos_name": "boobs",
             "notes": "boo boo",
             ATTRIBUTES: [
                 {
@@ -1835,7 +1835,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
         },
         {
             "word": "aoeu",
-            "pos_id": 234,
+            "pos_name": "boobs",
             "notes": "boo boo",
             ATTRIBUTES: [
                 {
@@ -1846,7 +1846,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
         },
         {
             "word": "aoeu",
-            "pos_id": 234,
+            "pos_name": "boobs",
             "notes": "boo boo",
             ATTRIBUTES: [
                 {
@@ -1857,7 +1857,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
         },
         {
             "word": "aoeu",
-            "pos_id": 234,
+            "pos_name": "boobs",
             "notes": "boo boo",
             ATTRIBUTES: [
                 {
@@ -1868,7 +1868,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
         },
         {
             "word": "aoeu",
-            "pos_id": 234,
+            "pos_name": "boobs",
             "notes": "boo boo",
             ATTRIBUTES: [
                 {

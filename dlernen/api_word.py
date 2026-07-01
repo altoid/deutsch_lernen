@@ -123,15 +123,15 @@ def add_word():
 
     payload = request.get_json()
 
-    # (word, pos_id) are required fields in the json schema.  so if the payload passes validation we know these
+    # (word, pos_name) are required fields in the json schema.  so if the payload passes validation we know these
     # are present.  notes are optional.
 
     word = payload['word']
-    pos_id = payload['pos_id']
+    pos_name = payload['pos_name']
     notes = payload.get('notes')
 
     # checks:
-    # - pos_id is valid
+    # - pos_name is valid
     # - attribute ids are valid for the POS
     # - attribute ids are unique; we don't provide multiple values for the same attribute
     #
@@ -146,10 +146,10 @@ def add_word():
         return r.text, r.status_code
 
     pos_structures = r.json()
-    pos_structure = list(filter(lambda x: x['pos_id'] == pos_id, pos_structures))
+    pos_structure = list(filter(lambda x: x['pos_name'] == pos_name, pos_structures))
     if not pos_structure:
-        # pos_id is bogus
-        message = "%s:  unknown part of speech:  %s" % (request.endpoint, pos_id)
+        # pos_name is bogus
+        message = "%s:  unknown part of speech:  %s" % (request.endpoint, pos_name)
         return message, 404
 
     # pos_structure is a length-1 array, get the first element
@@ -161,6 +161,7 @@ def add_word():
     if pos_structure['pos_name'].casefold() == 'noun':
         word = word.capitalize()
 
+    pos_id = pos_structure['pos_id']
     defined_attribute_ids = {x['attribute_id'] for x in pos_structure['attributes']}
     attr_ids_to_keys = {x['attribute_id']: x['attrkey'] for x in pos_structure['attributes']}
     attributes = payload.get(ATTRIBUTES)
