@@ -612,45 +612,41 @@ def word_editor(word):
                 'label': a['attrkey'],
                 'sort_order': a['sort_order'],
                 'enlightened': 'enlightened' if p['word_id'] else '',  # tell CSS to color the text field
-                'disabled': False
             }
             form_data[p['pos_name']].append(d)
         form_data[p['pos_name']] = sorted(form_data[p['pos_name']], key=lambda x: x['sort_order'])
 
     # get tags for any words that have them.  join them as a single space-separated string.
-    if wordlist_obj:
+    if wordlist_obj and wordlist_obj['list_type'] != 'smart':
         # the wordlist object already has the tags for the words.  traverse the wordlist and create a map of word_ids
         # to tag strings.
         word_id_to_tag_string = {w['word_id']: ' '.join(w['tags']) for w in wordlist_obj['words']}
 
         for p in pos_structure:
-            field_disabled = False
-            tags = ''
-            if p['word_id']:
-                if p['word_id'] not in word_id_to_tag_string:
-                    # p['word_id'] is not in the word list.  no big deal.
-                    field_disabled = True
-                else:
-                    tags = word_id_to_tag_string[p['word_id']]
-                field_name_parts = ['tag', str(p['pos_name']), str(p['word_id'])]  # convert to str so join won't choke
-            else:
-                field_name_parts = ['tag', str(p['pos_name'])]  # convert to str so join won't choke
+            if not p['word_id']:
+                # don't add a tags field for a POS that isn't in the dictionary.
+                continue
 
+            if p['word_id'] not in word_id_to_tag_string:
+                # don't add a tags field for a POS that isn't in the list either.
+                continue
+
+            tags = word_id_to_tag_string[p['word_id']]
+
+            field_name_parts = ['tag', p['pos_name'], str(p['word_id'])]  # convert to str so join won't choke
             field_name = '-'.join(field_name_parts)
 
             # tags aren't attributes, so they don't have a sort order per POS.  fake one by finding the max
             # sort order for this POS and adding 1 to it.
-            if wordlist_obj['list_type'] != 'smart':
-                d = {
-                    'field_name': field_name,
-                    'field_value': tags,
-                    'label': 'tags',
-                    'sort_order': max([x['sort_order'] for x in p[ATTRIBUTES]]) + 1,
-                    'enlightened': 'enlightened' if p['word_id'] else '',  # tell CSS to color the text field
-                    'disabled': field_disabled
-                }
+            d = {
+                'field_name': field_name,
+                'field_value': tags,
+                'label': 'tags',
+                'sort_order': max([x['sort_order'] for x in p[ATTRIBUTES]]) + 1,
+                'enlightened': 'enlightened' if p['word_id'] else '',  # tell CSS to color the text field
+            }
 
-                form_data[p['pos_name']].append(d)
+            form_data[p['pos_name']].append(d)
 
     return render_template('word_editor.html',
                            word=word,
