@@ -123,7 +123,7 @@ def add_word():
 
     payload = request.get_json()
 
-    # word pos_id are required fields in the json schema.  so if the payload passes validation we know these
+    # (word, pos_id) are required fields in the json schema.  so if the payload passes validation we know these
     # are present.  notes are optional.
 
     word = payload['word']
