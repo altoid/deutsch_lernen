@@ -30,12 +30,12 @@ inner join mashup_v m2
 on m2.word = extracted_prefix.grundverb and m2.pos_name = 'verb'
 
 left join mashup_v m1
-on m1.word = extracted_prefix.prefix and m1.pos_name = 'separable prefix'
+on m1.word = extracted_prefix.prefix and m1.pos_name = 'separable_prefix'
 ),
 pos_info as (
     select id pos_id, name pos_name
     from pos
-    where name = 'Separable Prefix'
+    where name = 'Separable_Prefix'
 )
 select
     word, word_id,                -- verb with prefix and its id.

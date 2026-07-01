@@ -75,6 +75,6 @@ class APIPosName(unittest.TestCase):
         self.assertTrue(self.POSName.SEPARABLE_PREFIX in self.POSName)
 
     def test3(self):
-        self.assertTrue('Separable Prefix' in self.POSName)
+        self.assertTrue('Separable_Prefix' in self.POSName)
 
 

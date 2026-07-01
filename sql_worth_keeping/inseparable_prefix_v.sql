@@ -27,7 +27,7 @@ with inseparable_prefix as
 pos_info as (
     select id pos_id, name pos_name
     from pos
-    where name = 'Inseparable Prefix'
+    where name = 'Inseparable_Prefix'
 )
 select
     word, word_id,
