@@ -1,4 +1,4 @@
-from flask import Blueprint, request, render_template, redirect, url_for, flash, abort
+from flask import Blueprint, request, render_template, redirect, url_for, flash, abort, current_app
 import requests
 
 from dlernen.tagstate import TagState
@@ -46,7 +46,7 @@ def get_bulk_add_form_data(raw_list, wordlist_id=None):
                 tag_field_value = ''
                 tag_field_name = None
                 label = p['pos_name']
-                common_field_parts = [w, p['pos_id'], attr['attribute_id']]
+                common_field_parts = [w, p['pos_name'], attr['attribute_id']]
                 if p['word_id']:
                     common_field_parts.append(p['word_id'])
 
@@ -81,7 +81,7 @@ def get_bulk_add_form_data(raw_list, wordlist_id=None):
                     'attribute': attr['attrkey']
                 })
 
-                # tag_field_name will be None for articles, tag+word+pos_id+attribute_id for definitions.  that way
+                # tag_field_name will be None for articles, tag+word+pos_name+attribute_id for definitions.  that way
                 # when we have a tag field name, we will also have an attr field name (for definitions) and we will
                 # know what the attr field name is:  the two fields will be the same except for the FIELD_PREFIX.
 
@@ -109,9 +109,9 @@ def update_tags(word_pos_to_word_id, wordlist_id):
             continue
 
         word = parts[1]
-        pos_id = int(parts[2])
+        pos_name = parts[2]
 
-        if (word, pos_id) not in word_pos_to_word_id:
+        if (word, pos_name) not in word_pos_to_word_id:
             # don't add tags if we didn't create a dictionary entry.
             continue
 
@@ -121,7 +121,7 @@ def update_tags(word_pos_to_word_id, wordlist_id):
 
         payload.append(
             {
-                'word_id': word_pos_to_word_id[(word, pos_id)],
+                'word_id': word_pos_to_word_id[(word, pos_name)],
                 'tags': tags
             }
         )
@@ -184,6 +184,7 @@ def bulk_add_submit():
     # this will work by dropping all the definitions for extant words, then adding them back with what we pull from
     # the form.  even if the definition is unchanged.  clunky but better than diffing.
 
+    POSName = current_app.extensions.get('POSName')
     serialized_tag_state = request.form.get('serialized_tag_state')
     redirect_to = request.form.get('redirect_to')
 
@@ -200,10 +201,10 @@ def bulk_add_submit():
     word_ids_to_update_payloads = {}
     word_ids_to_delete_payloads = {}
 
-    # maps (word, pos_id) pairs to WORD_ADD_PAYLOAD_SCHEMA docs
+    # maps (word, pos_name) pairs to WORD_ADD_PAYLOAD_SCHEMA docs
     word_pos_to_add_payloads = {}
 
-    # mapping of (word, pos_id) to word_id.  this will be used for extant words as well as new ones we create.
+    # mapping of (word, pos_name) to word_id.  this will be used for extant words as well as new ones we create.
     word_pos_to_word_id = {}
 
     for field_name, value_unstripped in request.form.items():
@@ -213,11 +214,11 @@ def bulk_add_submit():
 
         value = value_unstripped.strip()
         word = parts[1]
-        pos_id = int(parts[2])
+        pos_name = parts[2]
         attribute_id = int(parts[3])
         word_id = int(parts[4]) if len(parts) > 4 else None
 
-        t = (word, pos_id)
+        t = (word, pos_name)
         if word_id:
             word_pos_to_word_id[t] = word_id
 
@@ -249,7 +250,7 @@ def bulk_add_submit():
             if t not in word_pos_to_add_payloads:
                 word_pos_to_add_payloads[t] = {
                     'word': word,
-                    'pos_id': t[1],
+                    'pos_name': t[1],
                     ATTRIBUTES: []
                 }
             payload = word_pos_to_add_payloads[t]
@@ -271,8 +272,8 @@ def bulk_add_submit():
     messages = []
     nouns_missing_attributes = []
     for k, payload in word_pos_to_add_payloads.items():
-        word, pos_id = k
-        if pos_id != 1:  # noun POS id
+        word, pos_name = k
+        if pos_name != POSName.NOUN:
             continue
 
         article_attr = list(filter(lambda x: x['attribute_id'] == 1, payload[ATTRIBUTES]))  # attr id for article
@@ -350,7 +351,7 @@ def bulk_add_submit():
             flash("could not update word_id %s [%s]:  %s" % (word_id, r.status_code, r.text))
 
     for t, payload in word_pos_to_add_payloads.items():
-        word, pos_id = t
+        word, pos_name = t
         url = url_for('api_word.add_word', _external=True)
         r = requests.post(url, json=payload)
         if not r:
@@ -358,7 +359,7 @@ def bulk_add_submit():
             abort(r.status_code, message=message, response=r)
 
         obj = r.json()
-        word_pos_to_word_id[(word, pos_id)] = obj['word_id']
+        word_pos_to_word_id[(word, pos_name)] = obj['word_id']
 
     # this is *all* of the words in the bulk add operation, both extant and newly-created.
     word_ids = list(word_pos_to_word_id.values())

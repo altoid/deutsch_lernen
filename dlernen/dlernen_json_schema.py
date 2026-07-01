@@ -77,7 +77,8 @@ DISPLAYABLE_WORD_SCHEMA = {
             "type": "string"
         },
         "pos_name": {
-            "type": "string"
+            "type": "string",
+            "pattern": ID_PATTERN,
         },
         "word_id": {
             "type": "integer",
@@ -399,7 +400,8 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
         "word_info_null": {
             "properties": {
                 "pos_name": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": ID_PATTERN,
                 },
                 "pos_id": {
                     "type": "integer",
@@ -434,7 +436,8 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
         "word_info_not_null": {
             "properties": {
                 "pos_name": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": ID_PATTERN,
                 },
                 "pos_id": {
                     "type": "integer",
@@ -716,7 +719,7 @@ QUIZ_RESPONSE_SCHEMA = {
         },
         "pos_name": {
             "type": "string",
-            "pattern": STRING_PATTERN
+            "pattern": ID_PATTERN
         },
         "word_id": {
             "type": "integer",
@@ -962,7 +965,7 @@ WORD_RESPONSE_SCHEMA = {
         },
         "pos_name": {
             "type": "string",
-            "pattern": STRING_PATTERN
+            "pattern": ID_PATTERN
         },
         "notes": {
             "type": ["string", "null"]

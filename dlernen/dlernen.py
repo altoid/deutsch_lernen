@@ -599,7 +599,7 @@ def word_editor(word):
     for p in pos_structure:
         form_data[p['pos_name']] = []
         for a in p[ATTRIBUTES]:
-            t = ['attr', p['pos_id'], a['attribute_id']]
+            t = ['attr', p['pos_name'], a['attribute_id']]
             if p['word_id']:
                 t.append(p['word_id'])
 
@@ -632,9 +632,9 @@ def word_editor(word):
                     field_disabled = True
                 else:
                     tags = word_id_to_tag_string[p['word_id']]
-                field_name_parts = ['tag', str(p['pos_id']), str(p['word_id'])]  # convert to str so join won't choke
+                field_name_parts = ['tag', str(p['pos_name']), str(p['word_id'])]  # convert to str so join won't choke
             else:
-                field_name_parts = ['tag', str(p['pos_id'])]  # convert to str so join won't choke
+                field_name_parts = ['tag', str(p['pos_name'])]  # convert to str so join won't choke
 
             field_name = '-'.join(field_name_parts)
 
@@ -705,10 +705,10 @@ def word_editor_submit():
     word_ids_to_update_payloads = {}
     word_ids_to_delete_payloads = {}
 
-    # maps (word, pos_id) pairs to WORD_ADD_PAYLOAD_SCHEMA docs
+    # maps (word, pos_name) pairs to WORD_ADD_PAYLOAD_SCHEMA docs
     word_pos_to_add_payloads = {}
 
-    # mapping of (word, pos_id) to word_id.
+    # mapping of (word, pos_name) to word_id.
     word_pos_to_word_id = {}
 
     for field_name, value_unstripped in request.form.items():
@@ -717,11 +717,11 @@ def word_editor_submit():
             continue
 
         value = value_unstripped.strip()
-        pos_id = int(parts[1])
+        pos_name = parts[1]
         attribute_id = int(parts[2])
         word_id = int(parts[3]) if len(parts) > 3 else None
 
-        t = (word, pos_id)
+        t = (word, pos_name)
         # if there is a word_id, we are updating; otherwise we are adding.
         if word_id:
             if word_id not in word_ids_to_update_payloads:
@@ -755,7 +755,7 @@ def word_editor_submit():
             if t not in word_pos_to_add_payloads:
                 word_pos_to_add_payloads[t] = {
                     'word': word,
-                    'pos_id': t[1],
+                    'pos_name': t[1],
                     ATTRIBUTES: []
                 }
             payload = word_pos_to_add_payloads[t]
@@ -784,7 +784,7 @@ def word_editor_submit():
             flash("could not update word_id %s [%s]:  %s" % (word_id, r.status_code, r.text))
 
     for t, payload in word_pos_to_add_payloads.items():
-        _, pos_id = t
+        _, pos_name = t
         url = url_for('api_word.add_word', _external=True)
         r = requests.post(url, json=payload)
         if not r:
@@ -792,7 +792,7 @@ def word_editor_submit():
             abort(r.status_code, message=message, response=r)
 
         obj = r.json()
-        word_pos_to_word_id[(word, pos_id)] = obj['word_id']
+        word_pos_to_word_id[(word, pos_name)] = obj['word_id']
 
     word_ids = list(word_pos_to_word_id.values())
 
@@ -841,8 +841,8 @@ def word_editor_submit():
             if parts[0] != 'tag':
                 continue
 
-            pos_id = int(parts[1])
-            if (word, pos_id) not in word_pos_to_word_id:
+            pos_name = parts[1]
+            if (word, pos_name) not in word_pos_to_word_id:
                 # don't add tags if we didn't create a dictionary entry.
                 continue
 
@@ -853,7 +853,7 @@ def word_editor_submit():
 
             payload.append(
                 {
-                    'word_id': word_pos_to_word_id[(word, pos_id)],
+                    'word_id': word_pos_to_word_id[(word, pos_name)],
                     'tags': tags
                 }
             )
@@ -883,12 +883,11 @@ def word_editor_submit():
 @bp.route('/quiz_report/<string:quiz_key>/<int:wordlist_id>')
 def quiz_report(quiz_key, wordlist_id):
     serialized_tag_state = request.args.get('serialized_tag_state')
-    selected_tags = []
+
     if not serialized_tag_state:
         tag_state = TagState(wordlist_id)
     else:
         tag_state = TagState.deserialize(serialized_tag_state)
-        selected_tags = tag_state.selected_tags()
 
     r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True))
     if not r:
