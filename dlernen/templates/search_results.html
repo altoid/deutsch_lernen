@@ -61,6 +61,9 @@ Lookup {{ word }}
                            value="{{ r.word.tags }}"
                            name="tag-{{ r.word.word_id }}"/>
                 </td>
+                <td>
+                    {{ r.word.pos_name }}
+                </td>
             </tr>
             {% endfor %}
         </table>
