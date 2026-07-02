@@ -115,3 +115,7 @@ class APIAttrKey(unittest.TestCase):
 
     def test4(self):
         self.assertEqual(self.AttrKey.DEFINITION.attribute_id, self.AttrKey.get_id('definition'))
+
+    def test5(self):
+        with self.assertRaises(ValueError):
+            x = self.AttrKey.get_id('theudietuhnid')

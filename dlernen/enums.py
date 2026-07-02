@@ -81,13 +81,12 @@ def create_attrkey_class(app):
         Pass a raw string value (e.g., 'definition').
         Returns the database ID if found, or None if it doesn't exist.
         """
-        try:
-            # Enums natively allow looking up a member by its value: cls("Color")
-            member = cls(value)
-            return member.attribute_id
-        except ValueError:
-            # If the string value isn't a valid enum member, return None
-            return None
+
+        # throws ValueError if the string value isn't an enum member!
+
+        # Enums natively allow looking up a member by its value: cls("Color")
+        member = cls(value)
+        return member.attribute_id
 
     # wrap it in classmethod() explicitly when assigning it to the dict
     class_dict["get_id"] = classmethod(get_id)
