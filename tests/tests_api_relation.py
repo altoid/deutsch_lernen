@@ -31,6 +31,47 @@ def cleanupRelationID(client, relation_id):
     client.delete(url_for('api_relation.delete_relation', relation_id=relation_id))
 
 
+class TestAPIRelationDelete(unittest.TestCase):
+    app = None
+    app_context = None
+    client = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
+            TESTING=True,
+        )
+
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
+
+    # null test.  do nothing, just make sure setup works.
+    def test_nothing(self):
+        pass
+
+    # create an empty relation and then delete it.  make sure it's gone.
+    #
+    # this is the only test that sends DELETE requests.  the rest of the tests will use addCleanup.
+    def test_delete(self):
+        payload = {}
+        r = self.client.post(url_for('api_relation.create_relation'), json=payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        relation_id = obj['relation_id']  # json schema validation ensures this is > 0
+
+        r = self.client.delete(url_for('api_relation.delete_relation', relation_id=relation_id))
+        self.assertEqual(200, r.status_code)
+
+        r = self.client.get(url_for('api_relation.get_relation', relation_id=relation_id))
+        self.assertEqual(404, r.status_code)
+
+
 class TestAPIRelation(unittest.TestCase):
     app = None
     app_context = None
@@ -64,6 +105,7 @@ class TestAPIRelation(unittest.TestCase):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
 
         return word, word_id
 
@@ -76,6 +118,7 @@ class TestAPIRelation(unittest.TestCase):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         relation_id = obj['relation_id']
+        self.addCleanup(cleanupRelationID, self.client, relation_id)
 
         return relation_id
 
@@ -84,35 +127,14 @@ class TestAPIRelation(unittest.TestCase):
     #
     def setUp(self):
         self.word1, self.word1_id = self.createWord()
-        self.addCleanup(cleanupWordID, self.client, self.word1_id)
-
         self.word2, self.word2_id = self.createWord()
-        self.addCleanup(cleanupWordID, self.client, self.word2_id)
-
         self.word3, self.word3_id = self.createWord()
-        self.addCleanup(cleanupWordID, self.client, self.word3_id)
 
 
 class TestAPIRelationCreate(TestAPIRelation):
     # null test.  do nothing, just make sure setup works.
     def test_nothing(self):
         pass
-
-    # create an empty relation and then delete it.  make sure it's gone.
-    #
-    # this is the only test that sends DELETE requests.  the rest of the tests will use addCleanup.
-    def test_delete(self):
-        payload = {}
-        r = self.client.post(url_for('api_relation.create_relation'), json=payload)
-        self.assertEqual(201, r.status_code)
-        obj = json.loads(r.data)
-        relation_id = obj['relation_id']  # json schema validation ensures this is > 0
-
-        r = self.client.delete(url_for('api_relation.delete_relation', relation_id=relation_id))
-        self.assertEqual(200, r.status_code)
-
-        r = self.client.get(url_for('api_relation.get_relation', relation_id=relation_id))
-        self.assertEqual(404, r.status_code)
 
     # make sure an invalid payload returns a 400
     def test_garbage_payload(self):
@@ -642,7 +664,6 @@ class TestAPIRelationWordlist(TestAPIRelation):
         for _ in range(7):
             _, word_id = self.createWord()
             word_ids.append(word_id)
-            self.addCleanup(cleanupWordID, self.client, word_id)
 
         # add the words to the word list
         payload = {
@@ -655,13 +676,8 @@ class TestAPIRelationWordlist(TestAPIRelation):
 
         # create the relations
         relation1_id = self.createRelation(word_ids[0:3])
-        self.addCleanup(cleanupRelationID, self.client, relation1_id)
-
         relation2_id = self.createRelation(word_ids[4:7])
-        self.addCleanup(cleanupRelationID, self.client, relation2_id)
-
         relation3_id = self.createRelation(word_ids[5:8])
-        self.addCleanup(cleanupRelationID, self.client, relation3_id)
 
         # do the stuff
         r = self.client.get(url_for('api_wordlist.get_relations', wordlist_id=wordlist_id))
@@ -682,7 +698,6 @@ class TestAPIRelationWordlist(TestAPIRelation):
         for _ in range(7):
             _, word_id = self.createWord()
             word_ids.append(word_id)
-            self.addCleanup(cleanupWordID, self.client, word_id)
 
         # create the (smart) list
         word_id_args = word_ids[0:6]
@@ -706,13 +721,8 @@ class TestAPIRelationWordlist(TestAPIRelation):
 
         # create the relations
         relation1_id = self.createRelation(word_ids[0:3])
-        self.addCleanup(cleanupRelationID, self.client, relation1_id)
-
         relation2_id = self.createRelation(word_ids[4:7])
-        self.addCleanup(cleanupRelationID, self.client, relation2_id)
-
         relation3_id = self.createRelation(word_ids[5:8])
-        self.addCleanup(cleanupRelationID, self.client, relation3_id)
 
         # do the stuff
         r = self.client.get(url_for('api_wordlist.get_relations', wordlist_id=wordlist_id))
@@ -749,10 +759,7 @@ class TestAPIRelationWord(TestAPIRelation):
 
     def test3(self):
         relation1_id = self.createRelation([self.word1_id])
-        self.addCleanup(cleanupRelationID, self.client, relation1_id)
-
         relation2_id = self.createRelation([self.word1_id])
-        self.addCleanup(cleanupRelationID, self.client, relation2_id)
 
         r = self.client.get(url_for('api_word.get_relations', word_id=self.word1_id))
         self.assertEqual(200, r.status_code)
