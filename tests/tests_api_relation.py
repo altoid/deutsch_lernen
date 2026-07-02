@@ -642,6 +642,7 @@ class TestAPIRelationWordlist(TestAPIRelation):
         for _ in range(7):
             _, word_id = self.createWord()
             word_ids.append(word_id)
+            self.addCleanup(cleanupWordID, self.client, word_id)
 
         # add the words to the word list
         payload = {
@@ -681,6 +682,7 @@ class TestAPIRelationWordlist(TestAPIRelation):
         for _ in range(7):
             _, word_id = self.createWord()
             word_ids.append(word_id)
+            self.addCleanup(cleanupWordID, self.client, word_id)
 
         # create the (smart) list
         word_id_args = word_ids[0:6]
