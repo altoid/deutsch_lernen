@@ -1,5 +1,5 @@
 from flask import Blueprint, request, current_app
-from enum import StrEnum, EnumType, auto
+from enum import StrEnum, EnumType
 from mysql.connector import connect
 from contextlib import closing
 from dlernen import common
@@ -473,7 +473,7 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
     # the query works by finding all the rows in quiz_candidate_v for the word/quiz.  from those we get the word ids
     # for every row with a null attribute value.  finally we select rows that do NOT have those word ids.
     #
-    # to make the sql less awful, we will sort the rows here, not in the sql.  the selector in the request determines the
+    # to make the sql less awful, we will sort the rows here, not in the sql.  the selector in the request determines
     # how we sort.  the word_id in the first row thus obtained is the word that will be returned by the request.
 
     # checks:

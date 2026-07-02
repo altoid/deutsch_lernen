@@ -1,6 +1,5 @@
 import unittest
 
-import dlernen.enums
 from dlernen import create_app
 from flask import url_for
 import json
