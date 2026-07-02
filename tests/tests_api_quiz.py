@@ -41,7 +41,7 @@ class APIQuizKey(unittest.TestCase):
     client = None
     QuizKey = None
     POSName = None
-    
+
     @classmethod
     def setUpClass(cls):
         cls.app = create_app()
@@ -71,7 +71,8 @@ class APIPostQuizAnswer(unittest.TestCase):
     app_context = None
     client = None
     POSName = None
-    
+    AttrKey = None
+
     @classmethod
     def setUpClass(cls):
         cls.app = create_app()
@@ -80,12 +81,10 @@ class APIPostQuizAnswer(unittest.TestCase):
         )
 
         cls.POSName = cls.app.extensions.get('POSName')
+        cls.AttrKey = cls.app.extensions.get('AttrKey')
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
-
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
-        cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
     def tearDownClass(cls):
@@ -99,7 +98,7 @@ class APIPostQuizAnswer(unittest.TestCase):
         ]
         attributes = [
             {
-                "attribute_id": self.keyword_mappings['attribute_names_to_ids'][k],
+                "attribute_id": self.AttrKey.get_id(k),
                 "attrvalue": k,
             }
             for k in attrkeys
@@ -137,7 +136,7 @@ class APIPostQuizAnswer(unittest.TestCase):
         payload = {
             'word_id': word_id,
             'correct': True,
-            'attribute_id': self.keyword_mappings['attribute_names_to_ids']['definition']
+            'attribute_id': self.AttrKey.DEFINITION.attribute_id,
         }
         r = self.client.post(url_for('api_quiz.post_quiz_score', quiz_key=quiz_key), json=payload)
         self.assertEqual(201, r.status_code)
@@ -149,7 +148,7 @@ class APIPostQuizAnswer(unittest.TestCase):
         payload = {
             'word_id': word_id,
             'correct': True,
-            'attribute_id': self.keyword_mappings['attribute_names_to_ids']['definition']
+            'attribute_id': self.AttrKey.DEFINITION.attribute_id
         }
         r = self.client.post(url_for('api_quiz.post_quiz_score', quiz_key=quiz_key), json=payload)
         self.assertEqual(400, r.status_code)
@@ -161,7 +160,7 @@ class APIPostQuizAnswer(unittest.TestCase):
         payload = {
             'word_id': word_id,
             'correct': True,
-            'attribute_id': self.keyword_mappings['attribute_names_to_ids']['first_person_singular']
+            'attribute_id': self.AttrKey.FIRST_PERSON_SINGULAR.attribute_id
         }
         r = self.client.post(url_for('api_quiz.post_quiz_score', quiz_key=quiz_key), json=payload)
         self.assertEqual(400, r.status_code)
@@ -173,7 +172,7 @@ class APIPostQuizAnswer(unittest.TestCase):
         payload = {
             'word_id': word_id,
             'correct': True,
-            'attribute_id': self.keyword_mappings['attribute_names_to_ids']['first_person_singular']
+            'attribute_id': self.AttrKey.FIRST_PERSON_SINGULAR.attribute_id
         }
         r = self.client.post(url_for('api_quiz.post_quiz_score', quiz_key=quiz_key), json=payload)
         self.assertEqual(400, r.status_code)
@@ -185,6 +184,7 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
     client = None
     POSName = None
     QUIZ_KEY = None
+    AttrKey = None
 
     @classmethod
     def setUpClass(cls):
@@ -194,14 +194,12 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
         )
 
         cls.POSName = cls.app.extensions.get('POSName')
+        cls.AttrKey = cls.app.extensions.get('AttrKey')
         QuizKey = cls.app.extensions.get('QuizKey')
         cls.QUIZ_KEY = QuizKey.PRESENT_INDICATIVE
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
-
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
-        cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
     def tearDownClass(cls):
@@ -215,7 +213,7 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
         ]
         attributes = [
             {
-                "attribute_id": self.keyword_mappings['attribute_names_to_ids'][k],
+                "attribute_id": self.AttrKey.get_id(k),
                 "attrvalue": k,
             }
             for k in attrkeys
@@ -242,7 +240,7 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
         ]
         attributes = [
             {
-                "attribute_id": self.keyword_mappings['attribute_names_to_ids'][k],
+                "attribute_id": self.AttrKey.get_id(k),
                 "attrvalue": k,
             }
             for k in attrkeys
@@ -275,7 +273,7 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
         ]
         attributes = [
             {
-                "attribute_id": self.keyword_mappings['attribute_names_to_ids'][k],
+                "attribute_id": self.AttrKey.get_id(k),
                 "attrvalue": k,
             }
             for k in attrkeys

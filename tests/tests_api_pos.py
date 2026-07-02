@@ -113,3 +113,5 @@ class APIAttrKey(unittest.TestCase):
     def test3(self):
         self.assertTrue('past_participle' in self.AttrKey)
 
+    def test4(self):
+        self.assertEqual(self.AttrKey.DEFINITION.attribute_id, self.AttrKey.get_id('definition'))

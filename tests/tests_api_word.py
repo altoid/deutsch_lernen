@@ -20,6 +20,7 @@ class TestAPIWordNotes(unittest.TestCase):
     keyword_mappings = None
     client = None
     POSName = None
+    AttrKey = None
 
     @classmethod
     def setUpClass(cls):
@@ -29,12 +30,10 @@ class TestAPIWordNotes(unittest.TestCase):
         )
 
         cls.POSName = cls.app.extensions.get('POSName')
+        cls.AttrKey = cls.app.extensions.get('AttrKey')
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
-
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
-        cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
     def tearDownClass(cls):
@@ -53,7 +52,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": None,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -78,7 +77,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": None,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -114,7 +113,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": notes,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -140,7 +139,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": old_notes,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -176,7 +175,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": old_notes,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -210,7 +209,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": old_notes,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -232,7 +231,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": old_notes,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -265,6 +264,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
     keyword_mappings = None
     client = None
     POSName = None
+    AttrKey = None
 
     @classmethod
     def setUpClass(cls):
@@ -274,12 +274,10 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         )
 
         cls.POSName = cls.app.extensions.get('POSName')
+        cls.AttrKey = cls.app.extensions.get('AttrKey')
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
-
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
-        cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
     def tearDownClass(cls):
@@ -396,7 +394,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
             "pos_name": self.POSName.ADJECTIVE,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -456,7 +454,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
             "pos_name": self.POSName.NOUN,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids'][attrkey],
+                    "attribute_id": self.AttrKey.get_id(attrkey),
                     "attrvalue": word
                 },
             ]
@@ -478,7 +476,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         word_capitalized = word.capitalize()
         attrkey = 'plural'
-        attribute_id = self.keyword_mappings['attribute_names_to_ids']['plural']
+        attribute_id = self.AttrKey.PLURAL.attribute_id
         payload = {
             "word": word,
             "pos_name": self.POSName.NOUN,
@@ -580,15 +578,15 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         update_payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['article'],
+                    "attribute_id": self.AttrKey.ARTICLE.attribute_id,
                     "attrvalue": "der"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['plural'],
+                    "attribute_id": self.AttrKey.PLURAL.attribute_id,
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -659,15 +657,15 @@ class TestAPIWordEndToEnd(unittest.TestCase):
             "pos_name": self.POSName.NOUN,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['article'],
+                    "attribute_id": self.AttrKey.ARTICLE.attribute_id,
                     "attrvalue": "der"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['plural'],
+                    "attribute_id": self.AttrKey.PLURAL.attribute_id,
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -697,15 +695,15 @@ class TestAPIWordEndToEnd(unittest.TestCase):
             "pos_name": self.POSName.NOUN,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['article'],
+                    "attribute_id": self.AttrKey.ARTICLE.attribute_id,
                     "attrvalue": "der"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['plural'],
+                    "attribute_id": self.AttrKey.PLURAL.attribute_id,
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -721,7 +719,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
             "pos_name": self.POSName.ADJECTIVE,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -757,6 +755,7 @@ class TestAPIWordPOST(unittest.TestCase):
     app_context = None
     keyword_mappings = None
     POSName = None
+    AttrKey = None
 
     @classmethod
     def setUpClass(cls):
@@ -766,12 +765,10 @@ class TestAPIWordPOST(unittest.TestCase):
         )
 
         cls.POSName = cls.app.extensions.get('POSName')
+        cls.AttrKey = cls.app.extensions.get('AttrKey')
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
-
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
-        cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
     def tearDownClass(cls):
@@ -787,15 +784,15 @@ class TestAPIWordPOST(unittest.TestCase):
             "pos_name": self.POSName.NOUN,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['article'],
+                    "attribute_id": self.AttrKey.ARTICLE.attribute_id,
                     "attrvalue": "der"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['plural'],
+                    "attribute_id": self.AttrKey.PLURAL.attribute_id,
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -809,15 +806,15 @@ class TestAPIWordPOST(unittest.TestCase):
             "word": "aonsetuhasoentuh",
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['article'],
+                    "attribute_id": self.AttrKey.ARTICLE.attribute_id,
                     "attrvalue": "der"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['plural'],
+                    "attribute_id": self.AttrKey.PLURAL.attribute_id,
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -842,7 +839,7 @@ class TestAPIWordPOST(unittest.TestCase):
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": "legal attribute_id here"
                 }
             ]
@@ -857,15 +854,15 @@ class TestAPIWordPOST(unittest.TestCase):
             "pos_id": 92378456,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['article'],
+                    "attribute_id": self.AttrKey.ARTICLE.attribute_id,
                     "attrvalue": "der"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['plural'],
+                    "attribute_id": self.AttrKey.PLURAL.attribute_id,
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -880,6 +877,7 @@ class TestAPIWordPUT(unittest.TestCase):
     client = None
     keyword_mappings = None
     POSName = None
+    AttrKey = None
 
     @classmethod
     def setUpClass(cls):
@@ -889,12 +887,10 @@ class TestAPIWordPUT(unittest.TestCase):
         )
 
         cls.POSName = cls.app.extensions.get('POSName')
+        cls.AttrKey = cls.app.extensions.get('AttrKey')
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
-
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
-        cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
     def tearDownClass(cls):
@@ -921,7 +917,7 @@ class TestAPIWordPUT(unittest.TestCase):
         update_payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": "Foofoo"
                 }
             ]
@@ -963,7 +959,7 @@ class TestAPIWordPUT(unittest.TestCase):
             "word": "",
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['article'],
+                    "attribute_id": self.AttrKey.ARTICLE.attribute_id,
                     "attrvalue": "der"
                 }
             ]
@@ -978,7 +974,7 @@ class TestAPIWordPUT(unittest.TestCase):
         update_payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": ""
                 }
             ]
@@ -1025,7 +1021,7 @@ class TestAPIWordPUT(unittest.TestCase):
         # since we created the word with no attributes, add one that we can update.
 
         attrkey = 'definition'
-        attribute_id = self.keyword_mappings['attribute_names_to_ids'][attrkey]
+        attribute_id = self.AttrKey.get_id(attrkey)
         payload = {
             ATTRIBUTES: [
                 {
@@ -1080,6 +1076,7 @@ class TestAPIWordUpdate(unittest.TestCase):
     client = None
     keyword_mappings = None
     POSName = None
+    AttrKey = None
 
     @classmethod
     def setUpClass(cls):
@@ -1089,12 +1086,10 @@ class TestAPIWordUpdate(unittest.TestCase):
         )
 
         cls.POSName = cls.app.extensions.get('POSName')
+        cls.AttrKey = cls.app.extensions.get('AttrKey')
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
-
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
-        cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
     def tearDownClass(cls):
@@ -1183,7 +1178,7 @@ class TestAPIWordUpdate(unittest.TestCase):
         # add, update, and delete the same attr value in 3 separate requests
         old_def = "it smells like cereal here"
         attrkey = 'definition'
-        attribute_id = self.keyword_mappings['attribute_names_to_ids'][attrkey]
+        attribute_id = self.AttrKey.get_id(attrkey)
         payload = {
             ATTRIBUTES: [
                 {
@@ -1244,11 +1239,11 @@ class TestAPIWordUpdate(unittest.TestCase):
         payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition'],
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                     "attrvalue": old_def
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['first_person_singular'],
+                    "attribute_id": self.AttrKey.FIRST_PERSON_SINGULAR.attribute_id,
                     "attrvalue": "mr_lonely"
                 }
             ]
@@ -1263,14 +1258,14 @@ class TestAPIWordUpdate(unittest.TestCase):
         payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['second_person_singular'],
+                    "attribute_id": self.AttrKey.SECOND_PERSON_SINGULAR.attribute_id,
                     "attrvalue": sps_val
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['definition']
+                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
                 },
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['first_person_singular'],
+                    "attribute_id": self.AttrKey.FIRST_PERSON_SINGULAR.attribute_id,
                     "attrvalue": new_fps
                 }
             ]
@@ -1291,7 +1286,7 @@ class TestAPIWordUpdate(unittest.TestCase):
         # error if we attempt to update and delete the same attr id.
         old_def = "it smells like cereal here"
         attrkey = 'definition'
-        attribute_id = self.keyword_mappings['attribute_names_to_ids'][attrkey]
+        attribute_id = self.AttrKey.get_id(attrkey)
         payload = {
             ATTRIBUTES: [
                 {
@@ -1331,7 +1326,7 @@ class TestAPIWordUpdate(unittest.TestCase):
         # is not allowed.
 
         attrkey = 'definition'
-        attribute_id = self.keyword_mappings['attribute_names_to_ids'][attrkey]
+        attribute_id = self.AttrKey.get_id(attrkey)
         payload = {
             ATTRIBUTES: [
                 {

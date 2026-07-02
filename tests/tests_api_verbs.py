@@ -28,7 +28,8 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
     keyword_mappings = None
     client = None
     POSName = None
-    
+    AttrKey = None
+
     @classmethod
     def setUpClass(cls):
         cls.app = create_app()
@@ -37,12 +38,10 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
         )
 
         cls.POSName = cls.app.extensions.get('POSName')
+        cls.AttrKey = cls.app.extensions.get('AttrKey')
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
-
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
-        cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
     def tearDownClass(cls):
@@ -70,7 +69,7 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
         if prefix:
             payload[ATTRIBUTES] = [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['third_person_singular'],
+                    "attribute_id": self.AttrKey.THIRD_PERSON_SINGULAR.attribute_id,
                     "attrvalue": "%s %s" % (verb, prefix)
                 }
             ]
@@ -220,7 +219,8 @@ class TestVerbsInseparablePrefixes(unittest.TestCase):
     keyword_mappings = None
     client = None
     POSName = None
-    
+    AttrKey = None
+
     @classmethod
     def setUpClass(cls):
         cls.app = create_app()
@@ -229,12 +229,10 @@ class TestVerbsInseparablePrefixes(unittest.TestCase):
         )
 
         cls.POSName = cls.app.extensions.get('POSName')
+        cls.AttrKey = cls.app.extensions.get('AttrKey')
         cls.client = cls.app.test_client()
         cls.app_context = cls.app.app_context()
         cls.app_context.push()
-
-        r = cls.client.get(url_for('api_pos.get_pos_keyword_mappings'))
-        cls.keyword_mappings = json.loads(r.data)
 
     @classmethod
     def tearDownClass(cls):
@@ -259,7 +257,7 @@ class TestVerbsInseparablePrefixes(unittest.TestCase):
             "pos_name": self.POSName.VERB,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.keyword_mappings['attribute_names_to_ids']['third_person_singular'],
+                    "attribute_id": self.AttrKey.THIRD_PERSON_SINGULAR.attribute_id,
                     "attrvalue": prefix + verb
                 }
             ]
