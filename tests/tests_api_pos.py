@@ -1,4 +1,6 @@
 import unittest
+
+import dlernen.enums
 from dlernen import create_app
 from flask import url_for
 import json
@@ -110,5 +112,4 @@ class APIAttrKey(unittest.TestCase):
 
     def test3(self):
         self.assertTrue('past_participle' in self.AttrKey)
-
 

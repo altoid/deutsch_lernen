@@ -58,22 +58,41 @@ def create_attrkey_class(app):
     class_name = "AttrKey"
     bases = (StrEnum,)  # Base classes must be inside a tuple
 
-    # 1. Prepare the specialized EnumDict namespace required by EnumType
     class_dict = EnumType.__prepare__(class_name, bases)
 
-    # 2. Inject values from database as static enum members
+    # 2. Inject the custom __new__ method directly
+    def __new__(cls, value, attr_id=None):
+        obj = str.__new__(cls, value)
+        obj._value_ = value
+        obj._attribute_id = attr_id
+        return obj
+
+    class_dict["__new__"] = __new__
+
+    # 3. Inject the custom db_id property directly
+    @property
+    def attribute_id(self):
+        return self._attribute_id
+
+    class_dict["attribute_id"] = attribute_id
+
+    # Inject values from database as static enum members
     with app.app_context():
         with closing(connect(**app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
             sql = """
-                select attrkey
+                select attrkey, id attribute_id
                 from attribute
             """
             cursor.execute(sql)
             rows = cursor.fetchall()
-            values_dict = {x['attrkey'].replace(' ', '_').upper(): x['attrkey'] for x in rows}
 
-            # note:  class_dict is an _EnumDict, so the |= operator won't work.  but .update() works fine.
-            class_dict.update(values_dict)
+            # 4. Populate the database enum members
+            # EnumDict will catch duplicate keys or invalid names here natively.
+            for row in rows:
+                key = row["attrkey"].upper().replace(" ", "_")
+                # Map the key to a tuple: (string_value, integer_id)
+                class_dict[key] = (row["attrkey"], row["attribute_id"])
 
             # Construct the class safely using EnumType
             return EnumType(class_name, bases, class_dict)
+
