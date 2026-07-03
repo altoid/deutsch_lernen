@@ -93,6 +93,7 @@ class TestAPIWordlistMetadataCreate(unittest.TestCase):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
 
         return word, word_id
 
@@ -141,7 +142,6 @@ class TestAPIWordlistMetadataCreate(unittest.TestCase):
     # create a smart list with citation.  construct the list so that it has one word.  verify the count.
     def test_create_2(self):
         word, word_id = self.createWord()
-        self.addCleanup(cleanupWordID, self.client, word_id)
 
         list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
         citation = 'speeding'
@@ -242,6 +242,7 @@ class TestAPIWordlistMetadataUpdate(unittest.TestCase):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
 
         return word, word_id
 
@@ -464,7 +465,7 @@ class TestAPIWordlistMetadataUpdate(unittest.TestCase):
         # first, make sure the list has stuff in it.
 
         word, word_id = self.createWord()
-        self.addCleanup(cleanupWordID, self.client, word_id)
+
         payload = {
             'word_ids': [
                 word_id

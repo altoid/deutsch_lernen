@@ -179,6 +179,7 @@ class TestAPIWordlist(unittest.TestCase):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         wordlist_id = obj['wordlist_id']
+        self.addCleanup(cleanupWordlistID, self.client, wordlist_id)
 
         return list_name, wordlist_id
 
@@ -193,6 +194,7 @@ class TestAPIWordlist(unittest.TestCase):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
 
         return word, word_id
 
@@ -200,13 +202,8 @@ class TestAPIWordlist(unittest.TestCase):
     # no tearDown method is needed thanks to our friend addCleanup
     def setUp(self):
         self.list_name, self.wordlist_id = self.createWordlist()
-        self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
-
         self.word1, self.word1_id = self.createWord()
-        self.addCleanup(cleanupWordID, self.client, self.word1_id)
-
         self.word2, self.word2_id = self.createWord()
-        self.addCleanup(cleanupWordID, self.client, self.word2_id)
 
     # do nothing, just make sure that setUp works
     def test_nothing(self):

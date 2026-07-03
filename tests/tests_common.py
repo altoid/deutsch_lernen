@@ -46,6 +46,7 @@ class TestCommon(unittest.TestCase):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
 
         return word, word_id
 
@@ -56,10 +57,7 @@ class TestCommon(unittest.TestCase):
     # test that validation happens on get_displayable_words.
     def test_get_displayable_words(self):
         word1, word1_id = self.createWord()
-        self.addCleanup(cleanupWordID, self.client, word1_id)
-
         word2, word2_id = self.createWord()
-        self.addCleanup(cleanupWordID, self.client, word2_id)
 
         with closing(connect(**self.app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
             result = common.get_displayable_words(cursor, [word1_id, word2_id])

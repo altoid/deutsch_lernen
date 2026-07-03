@@ -23,7 +23,7 @@ class TestAPIWordlistTagMultiList(unittest.TestCase):
     app_context = None
     client = None
     POSName = None
-    
+
     @classmethod
     def setUpClass(cls):
         cls.app = create_app()
@@ -50,6 +50,7 @@ class TestAPIWordlistTagMultiList(unittest.TestCase):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         wordlist_id = obj['wordlist_id']
+        self.addCleanup(cleanupWordlistID, self.client, wordlist_id)
 
         return list_name, wordlist_id
 
@@ -64,6 +65,7 @@ class TestAPIWordlistTagMultiList(unittest.TestCase):
         self.assertEqual(201, r.status_code)
         obj = json.loads(r.data)
         word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
 
         return word, word_id
 
@@ -108,11 +110,6 @@ class TestAPIWordlistTagMultiList(unittest.TestCase):
         list_name_2, self.wordlist2_id = self.createWordlist()
         list_name_3, self.wordlist3_id = self.createWordlist()
 
-        self.addCleanup(cleanupWordlistID, self.client, self.wordlist0_id)
-        self.addCleanup(cleanupWordlistID, self.client, self.wordlist1_id)
-        self.addCleanup(cleanupWordlistID, self.client, self.wordlist2_id)
-        self.addCleanup(cleanupWordlistID, self.client, self.wordlist3_id)
-
         ############################
         #
         # create the words
@@ -122,10 +119,6 @@ class TestAPIWordlistTagMultiList(unittest.TestCase):
         self.word1, self.word1_id = self.createWord()
         self.word2, self.word2_id = self.createWord()
         self.word3, self.word3_id = self.createWord()
-
-        self.addCleanup(cleanupWordID, self.client, self.word1_id)
-        self.addCleanup(cleanupWordID, self.client, self.word2_id)
-        self.addCleanup(cleanupWordID, self.client, self.word3_id)
 
         ############################
         #
@@ -270,7 +263,7 @@ class TestAPIWordlistTagSmartList(unittest.TestCase):
     app_context = None
     client = None
     POSName = None
-    
+
     @classmethod
     def setUpClass(cls):
         cls.app = create_app()
@@ -377,7 +370,7 @@ class TestAPIWordlistTag(unittest.TestCase):
     app_context = None
     client = None
     POSName = None
-    
+
     @classmethod
     def setUpClass(cls):
         cls.app = create_app()
@@ -494,7 +487,7 @@ class TestAPIWordlistTagStandardList(unittest.TestCase):
     app_context = None
     client = None
     POSName = None
-    
+
     @classmethod
     def setUpClass(cls):
         cls.app = create_app()
