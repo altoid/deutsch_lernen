@@ -690,6 +690,9 @@ def post_quiz_score(quiz_key):
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         cursor.execute('start transaction')
 
+        # FIXME - make explicit check for quiz_key and return 400 if it is not legitimate.  do not silently fail by
+        #  returning 0 results.
+
         # make sure the payload makes sense
         sql = """
         select quiz_id, word_id, attribute_id

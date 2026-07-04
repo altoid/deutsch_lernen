@@ -1,8 +1,38 @@
 import unittest
 from dlernen import create_app
+from dlernen.api_quiz import Selector
 
 
-class APIPosName(unittest.TestCase):
+class SelectorTests(unittest.TestCase):
+    # make sure dynamically-created Selector Enum class is well-behaved
+
+    app = None
+    app_context = None
+    client = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
+            TESTING=True,
+        )
+
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
+
+    def test1(self):
+        self.assertTrue('random' in Selector)
+
+    def test2(self):
+        self.assertEqual('random', str(Selector.RANDOM))
+
+
+class PosName(unittest.TestCase):
     # make sure dynamically-created POSName Enum class is well-behaved
 
     app = None
@@ -36,7 +66,7 @@ class APIPosName(unittest.TestCase):
         self.assertTrue('Separable_Prefix' in self.POSName)
 
 
-class APIAttrKey(unittest.TestCase):
+class AttrKey(unittest.TestCase):
     # make sure dynamically-created AttrKey Enum class is well-behaved
 
     app = None

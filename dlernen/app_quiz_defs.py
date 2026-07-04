@@ -14,11 +14,12 @@ STATE_FILE = '.quiz_defs'
 class AppState(object):
     def __init__(self,
                  quiz_key='definitions',
-                 selector=Selector.DEFAULT,
+                 selector=str(Selector.DEFAULT),  # has to be a string because pickle can't serialize the class
                  wordlists=None,
                  tags=None,
                  words_hinted=None,
                  words_missed=None):
+
         self.quiz_key = quiz_key
         self.selector = selector
 
@@ -50,7 +51,7 @@ class AppState(object):
 
     def reset(self):
         self.wordlists.clear()
-        self.selector = Selector.DEFAULT
+        self.selector = str(Selector.DEFAULT)
         self.tags.clear()
         self.post_scores = False
         self.words_missed.clear()
@@ -380,7 +381,7 @@ or enter selector name
 
         if answer == 'r':
             if not APPSTATE.selector:
-                APPSTATE.selector = Selector.DEFAULT
+                APPSTATE.selector = str(Selector.DEFAULT)
             break
 
         if answer not in Selector:
