@@ -32,7 +32,9 @@ def patch_words(wordlist_id, quiz_key):
         return r.text, r.status_code
 
     words_to_patch = r.json()
-    # random.shuffle(words_to_patch)
+
+    # scramble the presentation order of the words.  https://youtu.be/i6nEiXtwfT4
+    random.shuffle(words_to_patch)
 
     print("found %s words to patch" % (len(words_to_patch)))
     if not words_to_patch:
