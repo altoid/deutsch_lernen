@@ -179,11 +179,11 @@ td.relation_definition {
 }
 
 .wordlist_editor .wortart {
-    padding-left: 44px;
+    padding-left: 10px;
 }
 
 input[type="text"].list_editor_text {
-    width: 200px
+    width: 120px
 }
 
 .study_guide {

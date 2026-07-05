@@ -9,6 +9,7 @@ Manage List:  {{ wordlist.name }}
 
 {# there must always be a tag state object when rendering this page #}
 {% set serialized_tag_state = tag_state.serialize() %}
+{% set wdz = wordlist.words %}
 
 <div class="wordlist_editor">
     {% include 'header.html' %}
@@ -20,23 +21,28 @@ Manage List:  {{ wordlist.name }}
         <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
         <table>
             <tr>
+                {% for k in range(ncolumns) %}
                 <th colspan="3">Word</th>
                 <th>Tags</th>
                 <th>Add Tags</th>
                 <th class="wortart">Wortart</th>
+                {% endfor %}
             </tr>
-            {% for w in wordlist.words %}
+            {% set i = 0 %}
+            {% for i in range(upto) if i < upto %}
             <tr>
+                {% for k in range(ncolumns) %}
+                {% if k * upto + i < wordlist.words|length %}
                 <td>
-                    <input type="checkbox" name="removing" value="{{ w.word_id }}">
+                    <input type="checkbox" name="removing" value="{{ wdz[k * upto + i].word_id }}">
                 </td>
-                <td>{{ w.article }}</td>
-                <td>{{ w.word }}</td>
+                <td>{{ wdz[k * upto + i].article }}</td>
+                <td>{{ wdz[k * upto + i].word }}</td>
                 <td>
-                    {% for t in w.tags %}
+                    {% for t in wdz[k * upto + i].tags %}
                     <input type="checkbox"
-                           name="untag-{{ w.word_id }}-{{ t }}"
-                           id="untag-{{ w.word_id }}-{{ t }}"
+                           name="untag-{{ wdz[k * upto + i].word_id }}-{{ t }}"
+                           id="untag-{{ wdz[k * upto + i].word_id }}-{{ t }}"
                            value="{{ t }}">
                     {{ t }}
                     {% endfor %}
@@ -44,10 +50,13 @@ Manage List:  {{ wordlist.name }}
                 <td>
                     <input class="list_editor_text"
                            type="text"
-                           name="tag-{{ w.word_id }}"
+                           name="tag-{{ wdz[k * upto + i].word_id }}"
                            placeholder="space-separated list of tags"/>
                 </td>
-                <td class="wortart">{{ w.pos_name }}</td>
+                <td class="wortart">{{ wdz[k * upto + i].pos_name }}</td>
+                {% endif %}
+                {% set i = i + 1 %}
+                {% endfor %}
             </tr>
             {% endfor %}
         </table>
