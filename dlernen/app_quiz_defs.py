@@ -1,4 +1,4 @@
-from flask import Blueprint, url_for
+from flask import Blueprint, url_for, current_app
 from pprint import pprint, pformat
 import requests
 from dlernen.api_quiz import Selector
@@ -543,6 +543,7 @@ def quiz_missed_words():
 
 def quiz_loop(generating_function_and_args):
     global APPSTATE
+    global AttrKey
 
     function, args, kwargs = generating_function_and_args
 
@@ -624,7 +625,7 @@ def quiz_loop(generating_function_and_args):
 
             payload = {
                 "word_id": word_to_test['word_id'],
-                "attribute_id": defn_attr['attribute_id'],
+                "attrkey": defn_attr['attrkey'],
                 'correct': correct
             }
 

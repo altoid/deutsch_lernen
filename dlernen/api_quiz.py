@@ -685,6 +685,8 @@ def get_report(quiz_key, wordlist_id):
 @bp.route('/<string:quiz_key>/score', methods=['POST'])
 @js_validate_payload(QUIZ_ANSWER_PAYLOAD_SCHEMA)
 def post_quiz_score(quiz_key):
+    attrkey_enum = current_app.extensions.get('AttrKey')
+
     payload = request.get_json()
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
@@ -704,7 +706,7 @@ def post_quiz_score(quiz_key):
         cursor.execute(sql, {
             'QUIZ_KEY': quiz_key,
             'WORD_ID': payload['word_id'],
-            'ATTRIBUTE_ID': payload['attribute_id']
+            'ATTRIBUTE_ID': attrkey_enum.get_id(payload['attrkey'])
         })
         rows = cursor.fetchall()
         if not rows:
@@ -720,7 +722,12 @@ def post_quiz_score(quiz_key):
             (%(quiz_id)s, %(word_id)s, %(attribute_id)s, %(correct)s)
             """
 
-        cursor.execute(update, payload)
+        cursor.execute(update, {
+            'quiz_id': payload['quiz_id'],
+            'word_id': payload['word_id'],
+            'attribute_id': attrkey_enum.get_id(payload['attrkey']),
+            'correct': payload['correct']
+        })
         cursor.execute('commit')
 
         return 'OK', 201

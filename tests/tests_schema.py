@@ -1044,18 +1044,18 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
-class Test_QUIZ_ANSWER_PAYLOAD_SCHEMA_2(unittest.TestCase):
+class Test_QUIZ_ANSWER_PAYLOAD_SCHEMA(unittest.TestCase):
     schema = QUIZ_ANSWER_PAYLOAD_SCHEMA
 
     valid_docs = [
         {
             'word_id': 1,
-            'attribute_id': 1,
+            'attrkey': 'bubbles',
             'correct': True
         },
         {
             'word_id': 2,
-            'attribute_id': 2,
+            'attrkey': 'bubbles',
             'correct': False
         },
     ]
@@ -1064,27 +1064,27 @@ class Test_QUIZ_ANSWER_PAYLOAD_SCHEMA_2(unittest.TestCase):
         {
             'extra_field': 8,
             'word_id': 8,
-            'attribute_id': 8,
+            'attrkey': 'bubbles',
             'correct': True,
         },
         {
             # 'word_id': 3,
-            'attribute_id': 3,
+            'attrkey': 'bubbles',
             'correct': True,
         },
         {
             'word_id': 5,
-            # 'attribute_id': 5,
+            # 'attrkey': 'teh',
             'correct': True,
         },
         {
             'word_id': 6,
-            'attribute_id': 6,
+            'attrkey': 'bubbles',
             # 'correct': True,
         },
         {
             'word_id': 7,
-            'attribute_id': 7,
+            'attrkey': 'bubbles',
             'correct': 0,  # wrong type
         },
     ]

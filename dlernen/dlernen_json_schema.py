@@ -570,7 +570,7 @@ QUIZ_ANSWER_PAYLOAD_SCHEMA = {
     "type": "object",
     "required": [
         "word_id",
-        "attribute_id",
+        "attrkey",
         "correct"
     ],
     "additionalProperties": False,
@@ -582,9 +582,9 @@ QUIZ_ANSWER_PAYLOAD_SCHEMA = {
         "correct": {
             "type": "boolean"
         },
-        "attribute_id": {
-            "type": "integer",
-            "minimum": 1
+        "attrkey": {
+            "type": "string",
+            "pattern": ID_PATTERN
         }
     }
 }

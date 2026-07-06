@@ -136,7 +136,7 @@ class APIPostQuizAnswer(unittest.TestCase):
         payload = {
             'word_id': word_id,
             'correct': True,
-            "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+            "attrkey": self.AttrKey.DEFINITION,
         }
         r = self.client.post(url_for('api_quiz.post_quiz_score', quiz_key=quiz_key), json=payload)
         self.assertEqual(201, r.status_code)
@@ -148,7 +148,7 @@ class APIPostQuizAnswer(unittest.TestCase):
         payload = {
             'word_id': word_id,
             'correct': True,
-            "attribute_id": self.AttrKey.DEFINITION.attribute_id
+            "attrkey": self.AttrKey.DEFINITION
         }
         r = self.client.post(url_for('api_quiz.post_quiz_score', quiz_key=quiz_key), json=payload)
         self.assertEqual(400, r.status_code)
@@ -160,7 +160,7 @@ class APIPostQuizAnswer(unittest.TestCase):
         payload = {
             'word_id': word_id,
             'correct': True,
-            "attribute_id": self.AttrKey.FIRST_PERSON_SINGULAR.attribute_id
+            "attrkey": self.AttrKey.FIRST_PERSON_SINGULAR
         }
         r = self.client.post(url_for('api_quiz.post_quiz_score', quiz_key=quiz_key), json=payload)
         self.assertEqual(400, r.status_code)
@@ -172,7 +172,7 @@ class APIPostQuizAnswer(unittest.TestCase):
         payload = {
             'word_id': word_id,
             'correct': True,
-            "attribute_id": self.AttrKey.FIRST_PERSON_SINGULAR.attribute_id
+            "attrkey": self.AttrKey.FIRST_PERSON_SINGULAR
         }
         r = self.client.post(url_for('api_quiz.post_quiz_score', quiz_key=quiz_key), json=payload)
         self.assertEqual(400, r.status_code)
