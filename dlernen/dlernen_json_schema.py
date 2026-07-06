@@ -148,7 +148,7 @@ RELATION_PAYLOAD_SCHEMA = {
     }
 }
 
-WORD_ATTRIBUTES_SCHEMA = {
+WORD_ATTRIBUTE_SCHEMA = {
     "$id": "https://deutsch-lernen.doug/schemas/word_attributes.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Schema for word attributes in a payload",
@@ -236,7 +236,7 @@ WORD_ADD_PAYLOAD_SCHEMA = {
         ATTRIBUTES: {
             "type": "array",
             "items": {
-                "$ref": WORD_ATTRIBUTES_SCHEMA["$id"]
+                "$ref": WORD_ATTRIBUTE_SCHEMA["$id"]
             }
         }
     }
@@ -264,7 +264,7 @@ WORD_UPDATE_PAYLOAD_SCHEMA = {
         ATTRIBUTES: {
             "type": "array",
             "items": {
-                "$ref": WORD_ATTRIBUTES_SCHEMA["$id"]
+                "$ref": WORD_ATTRIBUTE_SCHEMA["$id"]
             }
         }
     }
@@ -1047,7 +1047,7 @@ ALL_SCHEMAS = [
     WORDLIST_TAG_PAYLOAD_SCHEMA,
     WORD_ADD_PAYLOAD_SCHEMA,
     WORD_ATTRIBUTE_RESPONSE_SCHEMA,
-    WORD_ATTRIBUTES_SCHEMA,
+    WORD_ATTRIBUTE_SCHEMA,
     WORD_RESPONSE_SCHEMA,
     WORD_TAG_RESPONSE_SCHEMA,
     WORD_UPDATE_PAYLOAD_SCHEMA,

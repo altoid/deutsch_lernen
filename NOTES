@@ -80,6 +80,7 @@ FIXME - contents of bulk-add text area should persist when notes are updated.  o
 FIXME - POST or PUT payloads for attributes should take attrkey not attr_id.  we should do the conversion on the
     server side.
     WORD_ATTRIBUTE_RESPONSE_SCHEMA? - has attrkey and id both
+    - used by QUIZ_RESPONSE and WORD_RESPONSE
     POS_STRUCTURE_RESPONSE_SCHEMA? - has attrkey and id both
 
 ---------------
