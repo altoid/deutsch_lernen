@@ -254,16 +254,14 @@ def wordlist_editor(wordlist_id):
 
     wordlist_obj = r.json()
 
-    # if the list is 'long,' then the word editor will scroll.  in that case divide the list into 2 columns.
-    # the fulcrum will be the index of the first item displayed on the right side.  the list might be so long that it
-    # will still scroll, but whatever.
+    # if the list is 'long,' then the word editor will scroll.  in that case divide the list into multiple columns.
+    # the list might be so long that it will still scroll, but whatever.
 
-    ncolumns = 1
+    column_height = 45
     nwords = len(wordlist_obj['words'])
-    upto = nwords
-    if nwords > 40:
-        ncolumns = 2
-        upto = (nwords + ncolumns - 1) // ncolumns
+    ncolumns = (nwords + column_height - 1) // column_height
+    ncolumns = min(ncolumns, 3)  # meh.  if we have to scroll at all then scroll vertically.
+    upto = (nwords + ncolumns - 1) // ncolumns
 
     return render_template('wordlist_editor.html',
                            tag_state=tag_state,
