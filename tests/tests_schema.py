@@ -1116,7 +1116,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
-                    'attribute_id': 1,
                     'attrvalue': 'whatevs',
                     'sort_order': 1
                 }
@@ -1130,13 +1129,11 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
-                    'attribute_id': 2,
                     'attrvalue': 'multiple attributes',
                     'sort_order': 2
                 },
                 {
                     'attrkey': 'bubbles',
-                    'attribute_id': 3,
                     'attrvalue': None,  # null values are kosher
                     'sort_order': 3
                 },
@@ -1152,7 +1149,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             'pos_name': '',   # must conform to STRING_PATTERN
             ATTRIBUTES: [
                 {
-                    'attribute_id': 111,
                     'attrvalue': 'whatevs',
                     'sort_order': 111,
                     'attrkey': 'bubbles',
@@ -1166,7 +1162,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             'pos_name': 'pozz',
             ATTRIBUTES: [
                 {
-                    'attribute_id': 111,
                     'attrvalue': 'whatevs',
                     'sort_order': 111,
                     'attrkey': 'bubbles',
@@ -1181,7 +1176,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             'pos_name': 'pozz',
             ATTRIBUTES: [
                 {
-                    'attribute_id': 10,
                     'attrvalue': 'whatevs',
                     'sort_order': 10,
                     'attrkey': 'bubbles',
@@ -1195,7 +1189,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             'pos_name': 'pozz',
             ATTRIBUTES: [
                 {
-                    'attribute_id': 1,
                     'attrvalue': 'whatevs',
                     'sort_order': 1,
                     'attrkey': 'bubbles',
@@ -1210,7 +1203,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
-                    'attribute_id': 2,
                     'sort_order': 2,
                     'attrvalue': 'whatevs'
                 }
@@ -1224,7 +1216,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
-                    'attribute_id': 2,
                     'sort_order': 2,
                     'attrvalue': 'whatevs'
                 }
@@ -1237,8 +1228,7 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             'pos_name': 'pozz',
             # ATTRIBUTES: [
             #     {
-            #         'attrkey': 'bubbles',
-            #         'attribute_id': 3,
+            #         'attrkey': 'bubbles',,
             #         'sort_order': 3,
             #         'attrvalue': 'whatevs'
             #     }
@@ -1261,21 +1251,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     # 'attrkey': 'bubbles',
-                    'attribute_id': 5,
-                    'sort_order': 5,
-                    'attrvalue': 'whatevs'
-                }
-            ]
-        },
-        {
-            'word': 'dribble',
-            'quiz_id': 5,
-            'word_id': 5,
-            'pos_name': 'pozz',
-            ATTRIBUTES: [
-                {
-                    'attrkey': 'bubbles',
-                    # 'attribute_id': 5,
                     'sort_order': 5,
                     'attrvalue': 'whatevs'
                 }
@@ -1289,7 +1264,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
-                    'attribute_id': 55,
                     # 'sort_order': 55,
                     'attrvalue': 'whatevs'
                 }
@@ -1303,7 +1277,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
-                    'attribute_id': 6,
                     'sort_order': 6,
                     # 'attrvalue': 'whatevs'
                 }
@@ -1317,7 +1290,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
-                    'attribute_id': 7,
                     'sort_order': 7,
                     'attrvalue': ''  # can't be empty
                 }
@@ -1331,7 +1303,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
-                    'attribute_id': 77,
                     'sort_order': 77,
                     'attrvalue': '      '  # whitespace-only not allowed
                 }
@@ -1345,7 +1316,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     'attrkey': '',  # must conform to ID_PATTERN
-                    'attribute_id': 88,
                     'sort_order': 88,
                     'attrvalue': 'aoeu'
                 }
@@ -1359,7 +1329,6 @@ class Test_QUIZ_RESPONSE_SCHEMA(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     'attrkey': 'bubbles',
-                    'attribute_id': 9,
                     'stowaway': 'bleep',
                     'sort_order': 9,
                     'attrvalue': 'aoeu'
@@ -1567,7 +1536,6 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
                     'attrkey': 'definition',
                     'sort_order': 5,
                     'attrvalue': 'to spoil, deteriorate, go bad',
-                    'attribute_id': 5,
                 },
             ],
         },
@@ -1583,26 +1551,12 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
 
     invalid_docs = [
         {
-            "word": "saoethus",
-            "word_id": "1234",   # should be int
-            "pos_name": "eoui",
-            "notes": "this is a cool word",
-            "attributes": [
-                {
-                    'attrkey': 'definition',
-                    'sort_order': 5,
-                    'attrvalue': 'to spoil, deteriorate, go bad'
-                },
-            ],
-        },
-        {
             # "word": "saoethus",
             "word_id": 1234,
             "pos_name": "eoui",
             "notes": "this is a cool word",
             "attributes": [
                 {
-                    'attribute_id': 22,
                     'attrkey': 'definition',
                     'sort_order': 5,
                     'attrvalue': 'to spoil, deteriorate, go bad'
@@ -1616,7 +1570,6 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "notes": "this is a cool word",
             "attributes": [
                 {
-                    'attribute_id': 22,
                     'attrkey': 'definition',
                     'sort_order': 5,
                     'attrvalue': 'to spoil, deteriorate, go bad'
@@ -1630,7 +1583,6 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "notes": "this is a cool word",
             "attributes": [
                 {
-                    'attribute_id': 22,
                     'attrkey': 'definition',
                     'sort_order': 5,
                     'attrvalue': 'to spoil, deteriorate, go bad'
@@ -1644,7 +1596,6 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             # "notes": "this is a cool word",
             "attributes": [
                 {
-                    'attribute_id': 22,
                     'attrkey': 'definition',
                     'sort_order': 5,
                     'attrvalue': 'to spoil, deteriorate, go bad'
@@ -1658,7 +1609,6 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "notes": "this is a cool word",
             # "attributes": [
             #     {
-            #         'attribute_id': 22,
             #         'attrkey': 'definition',
             #         'sort_order': 5,
             #         'attrvalue': 'to spoil, deteriorate, go bad'
@@ -1672,21 +1622,6 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "notes": "this is a cool word",
             "attributes": [
                 {
-                    # 'attribute_id': 22,
-                    'attrkey': 'definition',
-                    'sort_order': 5,
-                    'attrvalue': 'to spoil, deteriorate, go bad'
-                },
-            ],
-        },
-        {
-            "word": "saoethus",
-            "word_id": 1234,
-            "pos_name": "eoui",
-            "notes": "this is a cool word",
-            "attributes": [
-                {
-                    'attribute_id': 22,
                     # 'attrkey': 'definition',
                     'sort_order': 5,
                     'attrvalue': 'to spoil, deteriorate, go bad'
@@ -1700,7 +1635,6 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "notes": "this is a cool word",
             "attributes": [
                 {
-                    'attribute_id': 22,
                     'attrkey': 'definition',
                     # 'sort_order': 5,
                     'attrvalue': 'to spoil, deteriorate, go bad'
@@ -1714,7 +1648,6 @@ class Test_WORD_RESPONSE_SCHEMA(unittest.TestCase):
             "notes": "this is a cool word",
             "attributes": [
                 {
-                    'attribute_id': 22,
                     'attrkey': 'definition',
                     'sort_order': 5,
                     # 'attrvalue': 'to spoil, deteriorate, go bad'

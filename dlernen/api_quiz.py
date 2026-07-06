@@ -325,7 +325,6 @@ def __build_results(quiz_id, rows, word_ids_to_articles):
 
     attr_keys_to_copy = {
         'attrkey',
-        'attribute_id',
         'sort_order',
         'attrvalue'
     }

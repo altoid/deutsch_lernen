@@ -149,7 +149,7 @@ RELATION_PAYLOAD_SCHEMA = {
 }
 
 WORD_ATTRIBUTE_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/word_attributes.json",
+    "$id": "https://deutsch-lernen.doug/schemas/word_attribute.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
     "title": "Schema for word attributes in a payload",
     "description": """describes the structure of word attributes in an add or update
@@ -188,17 +188,13 @@ WORD_ATTRIBUTE_RESPONSE_SCHEMA = {
     "required": [
         "attrkey",
         "sort_order",
-        "attrvalue",
-        "attribute_id"
+        "attrvalue"
     ],
     "additionalProperties": False,
     "properties": {
         "attrkey": {
             "type": "string",
             "pattern": ID_PATTERN
-        },
-        "attribute_id": {
-            "type": "integer",
         },
         "sort_order": {
             "type": "integer",

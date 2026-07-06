@@ -97,7 +97,6 @@ def get_words_from_word_ids(cursor, word_ids):
         word_id,
         notes,
         attrkey,
-        attribute_id,
         attrvalue,
         sort_order
     from
@@ -125,7 +124,6 @@ def get_words_from_word_ids(cursor, word_ids):
         attr = {
             "attrkey": r['attrkey'],
             "attrvalue": r['attrvalue'],
-            "attribute_id": r['attribute_id'],
             "sort_order": r['sort_order']
         }
         temp_result[r['word_id']]['pos_name'] = r['pos_name']
