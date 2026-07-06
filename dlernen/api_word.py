@@ -80,12 +80,12 @@ def get_word(word):
         return result
 
 
-def save_attributes(word_id, attributes_adding, attributes_deleting, cursor):
+def __save_attributes(word_id, attributes_adding, attributes_deleting, cursor, attrkey_enum):
     if attributes_adding:
         args = [
             {
                 "word_id": word_id,
-                "attribute_id": a['attribute_id'],
+                "attribute_id": attrkey_enum.get_id(a['attrkey']),
                 "attrvalue": a['attrvalue']
             }
             for a in attributes_adding
@@ -107,7 +107,7 @@ def save_attributes(word_id, attributes_adding, attributes_deleting, cursor):
         args = [
             {
                 'word_id': word_id,
-                'attribute_id': a['attribute_id']
+                'attribute_id': attrkey_enum.get_id(a['attrkey'])
             }
             for a in attributes_deleting
         ]
@@ -118,6 +118,8 @@ def save_attributes(word_id, attributes_adding, attributes_deleting, cursor):
 @bp.route('', methods=['POST'])
 @js_validate_payload(WORD_ADD_PAYLOAD_SCHEMA)
 def add_word():
+    attrkey_enum = current_app.extensions.get('AttrKey')
+
     # add a single word to the dictionary.  the word's part-of-speech must be specified.  if successful, this
     # operation creates a single word id.
 
@@ -162,21 +164,20 @@ def add_word():
         word = word.capitalize()
 
     pos_id = pos_structure['pos_id']
-    defined_attribute_ids = {x['attribute_id'] for x in pos_structure['attributes']}
-    attr_ids_to_keys = {x['attribute_id']: x['attrkey'] for x in pos_structure['attributes']}
+    defined_attrkeys = {x['attrkey'] for x in pos_structure['attributes']}
     attributes = payload.get(ATTRIBUTES)
     attributes_adding = None
     if attributes:
-        request_attribute_ids = {a['attribute_id'] for a in attributes}
-        undefined_attribute_ids = request_attribute_ids - defined_attribute_ids
-        if len(undefined_attribute_ids) > 0:
+        request_attrkeys = {a['attrkey'] for a in attributes}
+        undefined_attrkeys = request_attrkeys - defined_attrkeys
+        if len(undefined_attrkeys) > 0:
             message = "%s:  attribute ids not defined:  %s" % \
                       (request.endpoint,
-                       ', '.join(list(map(str, undefined_attribute_ids))))
+                       ', '.join(list(map(str, undefined_attrkeys))))
             return message, 400
 
-        request_attribute_ids_list = [a['attribute_id'] for a in attributes]
-        if len(request_attribute_ids_list) != len(request_attribute_ids):
+        request_attrkeys_list = [a['attrkey'] for a in attributes]
+        if len(request_attrkeys_list) != len(request_attrkeys):
             message = "%s:  multiple values provided for the same attribute" % request.endpoint, 400
             return message, 400
 
@@ -186,7 +187,7 @@ def add_word():
                 attributes_adding.append(a)
 
         for a in attributes_adding:
-            if attr_ids_to_keys[a['attribute_id']].casefold() == 'plural':
+            if a['attrkey'] == attrkey_enum.PLURAL:
                 a['attrvalue'] = a['attrvalue'].capitalize()
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
@@ -206,7 +207,7 @@ def add_word():
             """
             cursor.execute(sql, (word_id, notes))
 
-            save_attributes(word_id, attributes_adding, None, cursor)
+            __save_attributes(word_id, attributes_adding, None, cursor, attrkey_enum)
             cursor.execute('commit')
 
             return get_word_by_id(word_id), 201  # this is already validated and jsonified
@@ -220,6 +221,8 @@ def add_word():
 @bp.route('/<int:word_id>', methods=['PUT'])
 @js_validate_payload(WORD_UPDATE_PAYLOAD_SCHEMA)
 def update_word(word_id):
+    attrkey_enum = current_app.extensions.get('AttrKey')
+
     payload = request.get_json()
 
     # checks:
@@ -246,13 +249,13 @@ def update_word(word_id):
     # pos_structure is a length-1 array, get the first element
     pos_structure = pos_structure[0]
 
-    defined_attribute_ids = {a['attribute_id'] for a in pos_structure['attributes']}
+    defined_attrkeys = {a['attrkey'] for a in pos_structure['attributes']}
 
-    given_attribute_ids = {a['attribute_id'] for a in payload.get(ATTRIBUTES, set())}
-    undefined_attribute_ids = given_attribute_ids - defined_attribute_ids
-    if len(undefined_attribute_ids) > 0:
-        ids = list(map(str, undefined_attribute_ids))
-        message = "%s:  attribute_ids not defined:  %s" % (request.endpoint, ', '.join(ids))
+    given_attrkeys = {a['attrkey'] for a in payload.get(ATTRIBUTES, set())}
+    undefined_attrkeys = given_attrkeys - defined_attrkeys
+    if len(undefined_attrkeys) > 0:
+        keys = list(map(str, undefined_attrkeys))
+        message = "%s:  attrkeys not defined:  %s" % (request.endpoint, ', '.join(keys))
         return message, 400
 
     attributes = payload.get(ATTRIBUTES, [])
@@ -264,17 +267,17 @@ def update_word(word_id):
         else:
             attributes_deleting.append(a)
 
-    attrids_adding_list = [x['attribute_id'] for x in attributes_adding]
+    attrids_adding_list = [x['attrkey'] for x in attributes_adding]
     attrids_adding_set = set(attrids_adding_list)
     if len(attrids_adding_set) != len(attrids_adding_list):
         return "%s:  attempting to write multiple values for an attribute" % request.endpoint, 400
 
-    attrids_deleting_set = {x['attribute_id'] for x in attributes_deleting}
+    attrids_deleting_set = {x['attrkey'] for x in attributes_deleting}
 
-    deleting_and_updating_ids = attrids_deleting_set & attrids_adding_set
-    if deleting_and_updating_ids:
-        ids = list(map(str, deleting_and_updating_ids))
-        message = "%s:  attempting to delete and update attr ids:  %s" % (request.endpoint, ', '.join(ids))
+    deleting_and_updating_attrkeys = attrids_deleting_set & attrids_adding_set
+    if deleting_and_updating_attrkeys:
+        keys = list(map(str, deleting_and_updating_attrkeys))
+        message = "%s:  attempting to delete and update attrkeys:  %s" % (request.endpoint, ', '.join(keys))
         return message, 400
 
     # checks complete, let's do this.
@@ -291,9 +294,8 @@ def update_word(word_id):
         word = word.capitalize()  # this will not change ß to ss
 
     # noun plurals must be capitalized.
-    attr_ids_to_keys = {a['attribute_id']: a['attrkey'] for a in pos_structure['attributes']}
     for a in attributes_adding:
-        if attr_ids_to_keys[a['attribute_id']].casefold() == 'plural':
+        if a['attrkey'] == attrkey_enum.PLURAL:
             a['attrvalue'] = a['attrvalue'].capitalize()
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
@@ -327,7 +329,7 @@ def update_word(word_id):
                 }
                 cursor.execute(sql, d)
 
-            save_attributes(word_id, attributes_adding, attributes_deleting, cursor)
+            __save_attributes(word_id, attributes_adding, attributes_deleting, cursor, attrkey_enum)
 
             cursor.execute('commit')
 

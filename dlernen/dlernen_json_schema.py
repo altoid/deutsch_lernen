@@ -158,13 +158,13 @@ WORD_ATTRIBUTES_SCHEMA = {
     """,
     "type": "object",
     "required": [
-        "attribute_id"
+        "attrkey"
         # attrvalue is not required.  if not provided, the attribute is deleted.
     ],
     "properties": {
-        "attribute_id": {
-            "type": "integer",
-            "minimum": 1
+        "attrkey": {
+            "type": "string",
+            "pattern": ID_PATTERN
         },
         "attrvalue": {
             "type": "string",

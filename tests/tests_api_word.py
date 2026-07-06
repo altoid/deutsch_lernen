@@ -52,7 +52,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": None,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -77,7 +77,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": None,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -113,7 +113,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": notes,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -139,7 +139,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": old_notes,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -175,7 +175,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": old_notes,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -209,7 +209,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": old_notes,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -231,7 +231,7 @@ class TestAPIWordNotes(unittest.TestCase):
             "notes": old_notes,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -299,7 +299,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         verb_structure = list(filter(lambda x: x['pos_name'] == self.POSName.VERB, obj))[0]
         attributes = [
             {
-                'attribute_id': x['attribute_id'],
+                "attrkey": x["attrkey"],
                 'attrvalue': ''.join(random.choices(string.ascii_lowercase, k=10)),
             }
             for x in verb_structure['attributes']
@@ -394,7 +394,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
             "pos_name": self.POSName.ADJECTIVE,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -454,7 +454,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
             "pos_name": self.POSName.NOUN,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.get_id(attrkey),
+                    "attrkey": attrkey,
                     "attrvalue": word
                 },
             ]
@@ -476,13 +476,12 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         word = ''.join(random.choices(string.ascii_lowercase, k=10))
         word_capitalized = word.capitalize()
         attrkey = 'plural'
-        attribute_id = self.AttrKey.PLURAL.attribute_id
         payload = {
             "word": word,
             "pos_name": self.POSName.NOUN,
             ATTRIBUTES: [
                 {
-                    "attribute_id": attribute_id,
+                    "attrkey": attrkey,
                     "attrvalue": word
                 },
             ]
@@ -503,7 +502,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     "attrvalue": new_word,
-                    "attribute_id": attribute_id,
+                    "attrkey": attrkey,
                 }
             ]
         }
@@ -578,15 +577,15 @@ class TestAPIWordEndToEnd(unittest.TestCase):
         update_payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.ARTICLE.attribute_id,
+                    "attrkey": self.AttrKey.ARTICLE,
                     "attrvalue": "der"
                 },
                 {
-                    "attribute_id": self.AttrKey.PLURAL.attribute_id,
+                    "attrkey": self.AttrKey.PLURAL,
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -657,15 +656,15 @@ class TestAPIWordEndToEnd(unittest.TestCase):
             "pos_name": self.POSName.NOUN,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.ARTICLE.attribute_id,
+                    "attrkey": self.AttrKey.ARTICLE,
                     "attrvalue": "der"
                 },
                 {
-                    "attribute_id": self.AttrKey.PLURAL.attribute_id,
+                    "attrkey": self.AttrKey.PLURAL,
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -695,15 +694,15 @@ class TestAPIWordEndToEnd(unittest.TestCase):
             "pos_name": self.POSName.NOUN,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.ARTICLE.attribute_id,
+                    "attrkey": self.AttrKey.ARTICLE,
                     "attrvalue": "der"
                 },
                 {
-                    "attribute_id": self.AttrKey.PLURAL.attribute_id,
+                    "attrkey": self.AttrKey.PLURAL,
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -719,7 +718,7 @@ class TestAPIWordEndToEnd(unittest.TestCase):
             "pos_name": self.POSName.ADJECTIVE,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -784,15 +783,15 @@ class TestAPIWordPOST(unittest.TestCase):
             "pos_name": self.POSName.NOUN,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.ARTICLE.attribute_id,
+                    "attrkey": self.AttrKey.ARTICLE,
                     "attrvalue": "der"
                 },
                 {
-                    "attribute_id": self.AttrKey.PLURAL.attribute_id,
+                    "attrkey": self.AttrKey.PLURAL,
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -806,15 +805,15 @@ class TestAPIWordPOST(unittest.TestCase):
             "word": "aonsetuhasoentuh",
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.ARTICLE.attribute_id,
+                    "attrkey": self.AttrKey.ARTICLE,
                     "attrvalue": "der"
                 },
                 {
-                    "attribute_id": self.AttrKey.PLURAL.attribute_id,
+                    "attrkey": self.AttrKey.PLURAL,
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -828,18 +827,18 @@ class TestAPIWordPOST(unittest.TestCase):
         r = self.client.post(url_for('api_word.add_word'), json=payload)
         self.assertEqual(400, r.status_code)
 
-    # attr ids are bullshit
-    def test_bullshit_attribute_ids(self):
+    # attr keys are bullshit
+    def test_bullshit_attrkeys(self):
         payload = {
             "word": "aoeiaoueaou",
             "pos_name": self.POSName.NOUN,
             ATTRIBUTES: [
                 {
-                    "attribute_id": 5346345,
+                    "attrkey": "cornflakes",
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": "legal attribute_id here"
                 }
             ]
@@ -854,15 +853,15 @@ class TestAPIWordPOST(unittest.TestCase):
             "pos_id": 92378456,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.ARTICLE.attribute_id,
+                    "attrkey": self.AttrKey.ARTICLE,
                     "attrvalue": "der"
                 },
                 {
-                    "attribute_id": self.AttrKey.PLURAL.attribute_id,
+                    "attrkey": self.AttrKey.PLURAL,
                     "attrvalue": "Xxxxxxxxxx"
                 },
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": "feelthy"
                 }
             ]
@@ -917,7 +916,7 @@ class TestAPIWordPUT(unittest.TestCase):
         update_payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": "Foofoo"
                 }
             ]
@@ -931,7 +930,7 @@ class TestAPIWordPUT(unittest.TestCase):
         update_payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": 5555555555555,
+                    "attrkey": 5555555555555,
                     "attrvalue": "der"
                 }
             ]
@@ -944,7 +943,7 @@ class TestAPIWordPUT(unittest.TestCase):
         update_payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": 4345345345
+                    "attrkey": 4345345345
                 }
             ]
         }
@@ -959,7 +958,7 @@ class TestAPIWordPUT(unittest.TestCase):
             "word": "",
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.ARTICLE.attribute_id,
+                    "attrkey": self.AttrKey.ARTICLE,
                     "attrvalue": "der"
                 }
             ]
@@ -974,7 +973,7 @@ class TestAPIWordPUT(unittest.TestCase):
         update_payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": ""
                 }
             ]
@@ -1021,12 +1020,11 @@ class TestAPIWordPUT(unittest.TestCase):
         # since we created the word with no attributes, add one that we can update.
 
         attrkey = 'definition'
-        attribute_id = self.AttrKey.get_id(attrkey)
         payload = {
             ATTRIBUTES: [
                 {
                     "attrvalue": "male bovine excrement",
-                    "attribute_id": attribute_id
+                    "attrkey": attrkey
                 }
             ]
         }
@@ -1038,7 +1036,7 @@ class TestAPIWordPUT(unittest.TestCase):
         payload = {
             ATTRIBUTES: [
                 {
-                    'attribute_id': attribute_id,
+                    "attrkey": attrkey,
                     'attrvalue': new_value
                 }
             ]
@@ -1178,11 +1176,11 @@ class TestAPIWordUpdate(unittest.TestCase):
         # add, update, and delete the same attr value in 3 separate requests
         old_def = "it smells like cereal here"
         attrkey = 'definition'
-        attribute_id = self.AttrKey.get_id(attrkey)
+
         payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": attribute_id,
+                    "attrkey": attrkey,
                     "attrvalue": old_def
                 }
             ]
@@ -1202,7 +1200,7 @@ class TestAPIWordUpdate(unittest.TestCase):
         payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": attribute_id,
+                    "attrkey": attrkey,
                     "attrvalue": new_def
                 }
             ]
@@ -1220,7 +1218,7 @@ class TestAPIWordUpdate(unittest.TestCase):
         payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": attribute_id
+                    "attrkey": attrkey
                 }
             ]
         }
@@ -1239,11 +1237,11 @@ class TestAPIWordUpdate(unittest.TestCase):
         payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                     "attrvalue": old_def
                 },
                 {
-                    "attribute_id": self.AttrKey.FIRST_PERSON_SINGULAR.attribute_id,
+                    "attrkey": self.AttrKey.FIRST_PERSON_SINGULAR,
                     "attrvalue": "mr_lonely"
                 }
             ]
@@ -1258,14 +1256,14 @@ class TestAPIWordUpdate(unittest.TestCase):
         payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.SECOND_PERSON_SINGULAR.attribute_id,
+                    "attrkey": self.AttrKey.SECOND_PERSON_SINGULAR,
                     "attrvalue": sps_val
                 },
                 {
-                    "attribute_id": self.AttrKey.DEFINITION.attribute_id,
+                    "attrkey": self.AttrKey.DEFINITION,
                 },
                 {
-                    "attribute_id": self.AttrKey.FIRST_PERSON_SINGULAR.attribute_id,
+                    "attrkey": self.AttrKey.FIRST_PERSON_SINGULAR,
                     "attrvalue": new_fps
                 }
             ]
@@ -1285,12 +1283,12 @@ class TestAPIWordUpdate(unittest.TestCase):
     def test_update_delete_same_attr(self):
         # error if we attempt to update and delete the same attr id.
         old_def = "it smells like cereal here"
-        attrkey = 'definition'
-        attribute_id = self.AttrKey.get_id(attrkey)
+        attrkey = self.AttrKey.DEFINITION
+
         payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": attribute_id,
+                    "attrkey": attrkey,
                     "attrvalue": old_def
                 }
             ]
@@ -1302,11 +1300,11 @@ class TestAPIWordUpdate(unittest.TestCase):
         payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": attribute_id,
+                    "attrkey": attrkey,
                     "attrvalue": "not the same at all"
                 },
                 {
-                    "attribute_id": attribute_id,
+                    "attrkey": attrkey,
                 }
             ]
         }
@@ -1330,11 +1328,11 @@ class TestAPIWordUpdate(unittest.TestCase):
         payload = {
             ATTRIBUTES: [
                 {
-                    "attribute_id": attribute_id,
+                    "attrkey": attribute_id,
                     "attrvalue": "it smells like cereal here"
                 },
                 {
-                    "attribute_id": attribute_id,
+                    "attrkey": attribute_id,
                     "attrvalue": "wheee"
                 }
             ]

@@ -69,17 +69,20 @@ TODO - how to deal with verbs that are both separable and inseparable - e.g. umf
 
 FIXME - the verb wiederherstellen (stellt wieder her) is causing problems re verb prefixes.
 
-TODO - change the selectors to be a class derived from enum.StrEnum.
-    POSName done
-    QuizKey done
-    Selector done
-    attrkeys
-
 TODO - break dlernen_json_schema into multiple modules.  but don't delete it because that's where the registry is
 
 TODO - enhance /api/verbs as in app notes google doc
 
 TODO - integrate all quizzes into quiz_defs, special case for definitions
+
+FIXME - contents of bulk-add text area should persist when notes are updated.  or better, when any button is clicked.
+
+FIXME - POST or PUT payloads for attributes should take attrkey not attr_id.  we should do the conversion on the
+    server side.
+    QUIZ_ANSWER_PAYLOAD_SCHEMA
+    WORD_ATTRIBUTE_RESPONSE_SCHEMA? - has attrkey and id both
+    POS_STRUCTURE_RESPONSE_SCHEMA? - has attrkey and id both
+
 ---------------
 
 new patch program:

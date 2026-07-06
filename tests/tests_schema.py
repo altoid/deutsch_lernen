@@ -1760,11 +1760,11 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
             "notes": "do re mi",
             ATTRIBUTES: [
                 {
-                    "attribute_id": 1111,
+                    "attrkey": "aoeuaoeu",
                     "attrvalue": "value"
                 },
                 {
-                    "attribute_id": 3243,
+                    "attrkey": "aoeuaoeu",
                     # attrvalue not required.
                 }
             ]
@@ -1819,7 +1819,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
             "notes": "boo boo",
             ATTRIBUTES: [
                 {
-                    # has to have an attribute id
+                    # has to have an attrkey
                 }
             ]
         },
@@ -1829,7 +1829,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
             "notes": "boo boo",
             ATTRIBUTES: [
                 {
-                    "attribute_id": "id has to be a string"
+                    "attrkey": "key cannot have whitespace"
                 }
             ]
         },
@@ -1839,7 +1839,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
             "notes": "boo boo",
             ATTRIBUTES: [
                 {
-                    "attribute_id": 234,
+                    "attrkey": "aoeuaoeu",
                     "attrvalue": ""
                 }
             ]
@@ -1850,7 +1850,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
             "notes": "boo boo",
             ATTRIBUTES: [
                 {
-                    "attribute_id": 234,
+                    "attrkey": "whatevs",
                     "attrvalue": "  "
                 }
             ]
@@ -1861,7 +1861,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
             "notes": "boo boo",
             ATTRIBUTES: [
                 {
-                    "attribute_id": 234,
+                    "attrkey": "whatevs",
                     "attrvalue": None
                 }
             ]
@@ -1872,7 +1872,7 @@ class Test_WORD_ADD_PAYLOAD_SCHEMA(unittest.TestCase):
             "notes": "boo boo",
             ATTRIBUTES: [
                 {
-                    "attribute_id": 234,
+                    "attrkey": "whatevs",
                     "attrvalue": 1234
                 }
             ]
@@ -1955,11 +1955,11 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
             "notes": "boo boo",
             ATTRIBUTES: [
                 {
-                    "attribute_id": 1111,
+                    "attrkey": "aoeuaoeu",
                     "attrvalue": "value"
                 },
                 {
-                    "attribute_id": 3243,
+                    "attrkey": "aoeuaoeu",
                     # attrvalue not required.
                 }
             ]
@@ -1985,21 +1985,21 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
         {
             ATTRIBUTES: [
                 {
-                    # has to have an attribute id
+                    # has to have an attrkey
                 }
             ]
         },
         {
             ATTRIBUTES: [
                 {
-                    "attribute_id": "id has to be a string"
+                    "attrkey": "key cannot have whitespace"
                 }
             ]
         },
         {
             ATTRIBUTES: [
                 {
-                    "attribute_id": 234,
+                    "attrkey": "whatevs",
                     "attrvalue": ""
                 }
             ]
@@ -2007,7 +2007,7 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
         {
             ATTRIBUTES: [
                 {
-                    "attribute_id": 234,
+                    "attrkey": "whatevs",
                     "attrvalue": "  "
                 }
             ]
@@ -2015,7 +2015,7 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
         {
             ATTRIBUTES: [
                 {
-                    "attribute_id": 234,
+                    "attrkey": "whatevs",
                     "attrvalue": None
                 }
             ]
@@ -2024,7 +2024,7 @@ class Test_WORD_UPDATE_PAYLOAD_SCHEMA(unittest.TestCase):
             ATTRIBUTES: [
                 {
                     # attrvalue has to be a string
-                    "attribute_id": 234,
+                    "attrkey": "whatevs",
                     "attrvalue": 1234
                 }
             ]

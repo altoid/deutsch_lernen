@@ -69,7 +69,7 @@ def patch_words(wordlist_id, quiz_key):
                 'attributes': [
                     {
                         "attrvalue": answer,
-                        "attribute_id": attr['attribute_id']
+                        "attrkey": attr['attrkey']
                     }
                 ]
             }

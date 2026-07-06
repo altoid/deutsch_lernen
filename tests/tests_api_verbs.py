@@ -69,7 +69,7 @@ class TestVerbsSeparablePrefixes(unittest.TestCase):
         if prefix:
             payload[ATTRIBUTES] = [
                 {
-                    "attribute_id": self.AttrKey.THIRD_PERSON_SINGULAR.attribute_id,
+                    "attrkey": self.AttrKey.THIRD_PERSON_SINGULAR,
                     "attrvalue": "%s %s" % (verb, prefix)
                 }
             ]
@@ -257,7 +257,7 @@ class TestVerbsInseparablePrefixes(unittest.TestCase):
             "pos_name": self.POSName.VERB,
             ATTRIBUTES: [
                 {
-                    "attribute_id": self.AttrKey.THIRD_PERSON_SINGULAR.attribute_id,
+                    "attrkey": self.AttrKey.THIRD_PERSON_SINGULAR,
                     "attrvalue": prefix + verb
                 }
             ]

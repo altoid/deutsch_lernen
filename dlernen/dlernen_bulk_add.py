@@ -46,7 +46,7 @@ def get_bulk_add_form_data(raw_list, wordlist_id=None):
                 tag_field_value = ''
                 tag_field_name = None
                 label = p['pos_name']
-                common_field_parts = [w, p['pos_name'], attr['attribute_id']]
+                common_field_parts = [w, p['pos_name'], attr['attrkey']]
                 if p['word_id']:
                     common_field_parts.append(p['word_id'])
 
@@ -81,7 +81,7 @@ def get_bulk_add_form_data(raw_list, wordlist_id=None):
                     'attribute': attr['attrkey']
                 })
 
-                # tag_field_name will be None for articles, tag+word+pos_name+attribute_id for definitions.  that way
+                # tag_field_name will be None for articles, tag+word+pos_name+attrkey for definitions.  that way
                 # when we have a tag field name, we will also have an attr field name (for definitions) and we will
                 # know what the attr field name is:  the two fields will be the same except for the FIELD_PREFIX.
 
@@ -184,7 +184,7 @@ def bulk_add_submit():
     # this will work by dropping all the definitions for extant words, then adding them back with what we pull from
     # the form.  even if the definition is unchanged.  clunky but better than diffing.
 
-    POSName = current_app.extensions.get('POSName')
+    posname_enum = current_app.extensions.get('POSName')
     serialized_tag_state = request.form.get('serialized_tag_state')
     redirect_to = request.form.get('redirect_to')
 
@@ -215,7 +215,7 @@ def bulk_add_submit():
         value = value_unstripped.strip()
         word = parts[1]
         pos_name = parts[2]
-        attribute_id = int(parts[3])
+        attrkey = parts[3]
         word_id = int(parts[4]) if len(parts) > 4 else None
 
         t = (word, pos_name)
@@ -229,7 +229,7 @@ def bulk_add_submit():
             payload = word_ids_to_delete_payloads[word_id]
             payload[ATTRIBUTES].append(
                 {
-                    'attribute_id': attribute_id
+                    'attrkey': attrkey
                 }
             )
 
@@ -241,7 +241,7 @@ def bulk_add_submit():
             if value:
                 payload[ATTRIBUTES].append(
                     {
-                        'attribute_id': attribute_id,
+                        'attrkey': attrkey,
                         'attrvalue': value
                     }
                 )
@@ -257,7 +257,7 @@ def bulk_add_submit():
             if value:
                 payload[ATTRIBUTES].append(
                     {
-                        'attribute_id': attribute_id,
+                        'attrkey': attrkey,
                         'attrvalue': value
                     }
                 )
@@ -273,15 +273,15 @@ def bulk_add_submit():
     nouns_missing_attributes = []
     for k, payload in word_pos_to_add_payloads.items():
         word, pos_name = k
-        if pos_name != POSName.NOUN:
+        if pos_name != posname_enum.NOUN:
             continue
 
-        article_attr = list(filter(lambda x: x['attribute_id'] == 1, payload[ATTRIBUTES]))  # attr id for article
+        article_attr = list(filter(lambda x: x['attrkey'] == 1, payload[ATTRIBUTES]))  # attr id for article
         if not article_attr:
             nouns_missing_attributes.append(word)
             continue
 
-        defn_attr = list(filter(lambda x: x['attribute_id'] == 5, payload[ATTRIBUTES]))  # attr id for defn
+        defn_attr = list(filter(lambda x: x['attrkey'] == 5, payload[ATTRIBUTES]))  # attr id for defn
         if not defn_attr:
             nouns_missing_attributes.append(word)
             continue

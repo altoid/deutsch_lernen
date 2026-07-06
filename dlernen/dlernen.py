@@ -610,7 +610,7 @@ def word_editor(word):
     for p in pos_structure:
         form_data[p['pos_name']] = []
         for a in p[ATTRIBUTES]:
-            t = ['attr', p['pos_name'], a['attribute_id']]
+            t = ['attr', p['pos_name'], a['attrkey']]
             if p['word_id']:
                 t.append(p['word_id'])
 
@@ -727,7 +727,7 @@ def word_editor_submit():
 
         value = value_unstripped.strip()
         pos_name = parts[1]
-        attribute_id = int(parts[2])
+        attrkey = parts[2]
         word_id = int(parts[3]) if len(parts) > 3 else None
 
         t = (word, pos_name)
@@ -742,7 +742,7 @@ def word_editor_submit():
             if value:
                 payload[ATTRIBUTES].append(
                     {
-                        'attribute_id': attribute_id,
+                        'attrkey': attrkey,
                         'attrvalue': value
                     }
                 )
@@ -754,7 +754,7 @@ def word_editor_submit():
             payload = word_ids_to_delete_payloads[word_id]
             payload[ATTRIBUTES].append(
                 {
-                    'attribute_id': attribute_id
+                    'attrkey': attrkey
                 }
             )
 
@@ -771,7 +771,7 @@ def word_editor_submit():
             if value:
                 payload[ATTRIBUTES].append(
                     {
-                        'attribute_id': attribute_id,
+                        'attrkey': attrkey,
                         'attrvalue': value
                     }
                 )
