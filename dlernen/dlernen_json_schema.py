@@ -416,7 +416,6 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
                         "type": "object",
                         "required": [
                             "attrkey",
-                            "attribute_id",
                             "sort_order",
                             "attrvalue"
                         ],
@@ -453,7 +452,6 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
                         "type": "object",
                         "required": [
                             "attrkey",
-                            "attribute_id",
                             "sort_order",
                             "attrvalue"
                         ],
@@ -473,10 +471,6 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
                 "attrkey": {
                     "type": "string"
                 },
-                "attribute_id": {
-                    "type": "integer",
-                    "minimum": 0
-                },
                 "sort_order": {
                     "type": "integer",
                     "minimum": 0
@@ -490,10 +484,6 @@ POS_STRUCTURE_RESPONSE_SCHEMA = {
             "properties": {
                 "attrkey": {
                     "type": "string"
-                },
-                "attribute_id": {
-                    "type": "integer",
-                    "minimum": 0
                 },
                 "sort_order": {
                     "type": "integer",
@@ -649,7 +639,6 @@ QUIZ_REPORT_RESPONSE_SCHEMA = {
                             "type": "object",
                             "required": [
                                 "attrkey",
-                                'attribute_id',
                                 'sort_order',
                                 "correct_count",
                                 "presentation_count",
@@ -661,10 +650,6 @@ QUIZ_REPORT_RESPONSE_SCHEMA = {
                                 "attrkey": {
                                     "type": "string",
                                     'pattern': ID_PATTERN
-                                },
-                                "attribute_id": {
-                                    "type": "integer",
-                                    "minimum": 1
                                 },
                                 "sort_order": {
                                     "type": "integer"

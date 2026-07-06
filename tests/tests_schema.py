@@ -77,7 +77,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                     'attributes': [  # minItems is 1
                         {
                             'attrkey': 'aoeu',
-                            'attribute_id': 1,
                             'sort_order': 1,
                             'correct_count': 1,  # >= 0
                             'presentation_count': 1,
@@ -86,7 +85,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                         },
                         {
                             'attrkey': 'blabla',
-                            'attribute_id': 2,
                             'sort_order': 2,
                             'correct_count': 0,  # >= 0
                             'presentation_count': 18,  # just forgetful i guess
@@ -101,7 +99,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                     'attributes': [  # minItems is 1
                         {
                             'attrkey': 'aoeu',
-                            'attribute_id': 1,
                             'sort_order': 1,
                             'correct_count': 1,  # >= 0
                             'presentation_count': 1,
@@ -110,7 +107,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                         },
                         {
                             'attrkey': 'blabla',
-                            'attribute_id': 2,
                             'sort_order': 2,
                             'correct_count': 0,  # >= 0
                             'presentation_count': 18,  # just forgetful i guess
@@ -144,7 +140,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                     'attributes': [  # minItems is 1
                         {
                             'attrkey': 'blabla',
-                            'attribute_id': 2,
                             'sort_order': 2,
                             'correct_count': 0,  # >= 0
                             'presentation_count': 18,  # just forgetful i guess
@@ -166,7 +161,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                     'attributes': [  # minItems is 1
                         {
                             'attrkey': 'blabla',
-                            'attribute_id': 2,
                             'sort_order': 2,
                             'correct_count': 0,  # >= 0
                             'presentation_count': 18,  # just forgetful i guess
@@ -188,7 +182,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                     'attributes': [  # minItems is 1
                         {
                             'attrkey': 'blabla',
-                            'attribute_id': 2,
                             'sort_order': 2,
                             'correct_count': 0,  # >= 0
                             'presentation_count': 18,  # just forgetful i guess
@@ -210,7 +203,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
             #         'attributes': [  # minItems is 1
             #             {
             #                 'attrkey': 'blabla',
-            #                 'attribute_id': 2,
             #                 'sort_order': 2,
             #                 'correct_count': 0,  # >= 0
             #                 'presentation_count': 18,  # just forgetful i guess
@@ -232,7 +224,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                     'attributes': [  # minItems is 1
                         {
                             'attrkey': 'blabla',
-                            'attribute_id': 2,
                             'sort_order': 2,
                             'correct_count': 0,  # >= 0
                             'presentation_count': 18,  # just forgetful i guess
@@ -254,7 +245,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                     'attributes': [  # minItems is 1
                         {
                             'attrkey': 'blabla',
-                            'attribute_id': 2,
                             'sort_order': 2,
                             'correct_count': 0,  # >= 0
                             'presentation_count': 18,  # just forgetful i guess
@@ -276,7 +266,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                     # 'attributes': [  # minItems is 1
                     #     {
                     #         'attrkey': 'blabla',
-                    #         'attribute_id': 2,
                     #         'sort_order': 2,
                     #         'correct_count': 0,  # >= 0
                     #         'presentation_count': 18,  # just forgetful i guess
@@ -298,29 +287,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                     'attributes': [  # minItems is 1
                         {
                             # 'attrkey': 'blabla',
-                            'attribute_id': 2,
-                            'sort_order': 2,
-                            'correct_count': 0,  # >= 0
-                            'presentation_count': 18,  # just forgetful i guess
-                            'raw_score': 0.0,  # type is 'number'
-                            'last_presentation': 'string-valued'
-                        },
-                    ]
-                },
-            ]
-        },
-        {
-            'quiz_key': 'number9',
-            'quiz_id': 1,
-            'wordlist_id': 1,
-            'words': [
-                {
-                    'word': 'wat',
-                    'word_id': 1,
-                    'attributes': [  # minItems is 1
-                        {
-                            'attrkey': 'blabla',
-                            # 'attribute_id': 2,
                             'sort_order': 2,
                             'correct_count': 0,  # >= 0
                             'presentation_count': 18,  # just forgetful i guess
@@ -342,7 +308,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                     'attributes': [  # minItems is 1
                         {
                             'attrkey': 'blabla',
-                            'attribute_id': 2,
                             # 'sort_order': 2,
                             'correct_count': 0,  # >= 0
                             'presentation_count': 18,  # just forgetful i guess
@@ -364,7 +329,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                     'attributes': [  # minItems is 1
                         {
                             'attrkey': 'blabla',
-                            'attribute_id': 2,
                             'sort_order': 2,
                             # 'correct_count': 0,  # >= 0
                             'presentation_count': 18,  # just forgetful i guess
@@ -386,7 +350,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                     'attributes': [  # minItems is 1
                         {
                             'attrkey': 'blabla',
-                            'attribute_id': 2,
                             'sort_order': 2,
                             'correct_count': 0,  # >= 0
                             # 'presentation_count': 18,  # just forgetful i guess
@@ -408,7 +371,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                     'attributes': [  # minItems is 1
                         {
                             'attrkey': 'blabla',
-                            'attribute_id': 2,
                             'sort_order': 2,
                             'correct_count': 0,  # >= 0
                             'presentation_count': 18,  # just forgetful i guess
@@ -430,7 +392,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                     'attributes': [  # minItems is 1
                         {
                             'attrkey': 'blabla',
-                            'attribute_id': 2,
                             'sort_order': 2,
                             'correct_count': 0,  # >= 0
                             'presentation_count': 18,  # just forgetful i guess
@@ -470,7 +431,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                     'attributes': [  # minItems is 1
                         {
                             'attrkey': 'blabla',
-                            'attribute_id': 2,
                             'sort_order': 2,
                             'correct_count': 0,  # >= 0
                             'presentation_count': 18,  # just forgetful i guess
@@ -495,7 +455,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                     'attributes': [  # minItems is 1
                         {
                             'attrkey': 'blabla',
-                            'attribute_id': 2,
                             'sort_order': 2,
                             'correct_count': 0,  # >= 0
                             'presentation_count': 18,  # just forgetful i guess
@@ -520,7 +479,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
                         {
                             'gotAnyGrapes': True,
                             'attrkey': 'blabla',
-                            'attribute_id': 2,
                             'sort_order': 2,
                             'correct_count': 0,  # >= 0
                             'presentation_count': 18,  # just forgetful i guess
@@ -780,13 +738,11 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                     {
                         # all of these are required
                         "attrkey": "definition",
-                        "attribute_id": 1234,
                         "sort_order": 5,
                         "attrvalue": "aoeu",
                     },
                     {
                         "attrkey": "first_person_singular",
-                        "attribute_id": 1234,
                         "sort_order": 6,
                         "attrvalue": None,
                     }
@@ -800,7 +756,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "attributes": [
                     {
                         "attrkey": "definition",
-                        "attribute_id": 1234,
                         "sort_order": 0,
                         "attrvalue": "aoeu"
                     }
@@ -816,7 +771,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "attributes": [
                     {
                         "attrkey": "definition",
-                        "attribute_id": 1234,
                         "sort_order": 0,
                         "attrvalue": None
                     }
@@ -844,7 +798,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "attributes": [
                     {
                         # "attrkey": "whatevs",
-                        "attribute_id": 1234,
                         "sort_order": 11,
                         "attrvalue": "aoeu"
                     }
@@ -860,23 +813,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "attributes": [
                     {
                         "attrkey": "whatevs",
-                        # "attribute_id": 1234,
-                        "sort_order": 11,
-                        "attrvalue": "aoeu"
-                    }
-                ]
-            }
-        ],
-        [
-            {
-                "pos_name": "voib",
-                "pos_id": 1234,
-                "word": "aoeu",
-                "word_id": 1234,
-                "attributes": [
-                    {
-                        "attrkey": "whatevs",
-                        "attribute_id": 1234,
                         # "sort_order": 11,
                         "attrvalue": "aoeu"
                     }
@@ -892,7 +828,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "attributes": [
                     {
                         "attrkey": "whatevs",
-                        "attribute_id": 1234,
                         "sort_order": 11,
                         # "attrvalue": "aoeu"
                     }
@@ -907,8 +842,7 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "word_id": 1234,
                 # "attributes": [
                 #     {
-                #         "attrkey": "whatevs",
-                #         "attribute_id": 1234,
+                #         "attrkey": "whatevs",,
                 #         "sort_order": 11,
                 #         "attrvalue": "aoeu"
                 #     }
@@ -924,7 +858,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "attributes": [
                     {
                         "attrkey": "missing_pos",
-                        "attribute_id": 1234,
                         "sort_order": 11,
                         "attrvalue": "aoeu"
                     }
@@ -940,7 +873,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "attributes": [
                     {
                         "attrkey": "missing_pos",
-                        "attribute_id": 1234,
                         "sort_order": 11,
                         "attrvalue": "aoeu",
                     }
@@ -956,7 +888,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "attributes": [
                     {
                         "attrkey": "missing_pos",
-                        "attribute_id": 1234,
                         "sort_order": 11,
                         "attrvalue": "aoeu"
                     }
@@ -972,7 +903,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "attributes": [
                     {
                         "attrkey": "missing_pos",
-                        "attribute_id": 1234,
                         "sort_order": 11,
                         "attrvalue": "aoeu",
                     }
@@ -988,7 +918,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "attributes": [
                     {
                         "attrkey": "missing_pos",
-                        "attribute_id": 1234,
                         "sort_order": 11,
                         "attrvalue": "word and word id must be both null or not null",
                     }
@@ -1004,7 +933,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "attributes": [
                     {
                         "attrkey": "missing_pos",
-                        "attribute_id": 1234,
                         "sort_order": 11,
                         "attrvalue": "word and word id must be both null or not null",
                     }
@@ -1020,7 +948,6 @@ class Test_POS_STRUCTURE_RESPONSE_SCHEMA(unittest.TestCase):
                 "attributes": [
                     {
                         "attrkey": "missing_pos",
-                        "attribute_id": 1234,
                         "sort_order": 11,
                         "attrvalue": "if word info is null then there should be nulls for attrs too",
                     }

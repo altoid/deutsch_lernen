@@ -92,7 +92,7 @@ def quiz(quiz_key, wordlist_id, selector, tags):
 
             payload = {
                 "word_id": candidate['word_id'],
-                "attribute_id": attr['attribute_id'],
+                "attrkey": attr['attrkey'],
                 "correct": correct,
             }
 

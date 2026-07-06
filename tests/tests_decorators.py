@@ -10,11 +10,11 @@ VALID_PAYLOAD = {
     "notes": "do re mi",
     ATTRIBUTES: [
         {
-            "attribute_id": 1111,
+            "attrkey": "bubbles",
             "attrvalue": "value"
         },
         {
-            "attribute_id": 3243,
+            "attrkey": "what",
             # attrvalue not required.
         }
     ]
@@ -30,7 +30,6 @@ VALID_RESPONSE = {
     "attributes": [
         {
             'attrkey': 'definition',
-            'attribute_id': 234,
             'sort_order': 5,
             'attrvalue': 'to spoil, deteriorate, go bad'
         },

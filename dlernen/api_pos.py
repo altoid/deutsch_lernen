@@ -11,7 +11,7 @@ bp = Blueprint('api_pos', __name__, url_prefix='/api/pos')
 
 ##########################################################################################
 #
-# NB - there are no ORDER BY clauses in the sql.  all the sorting is done by __get_pos.
+# there are no ORDER BY clauses in the sql.  all the sorting is done by __get_pos.
 #
 
 
@@ -35,7 +35,6 @@ def __get_pos(sql, args):
             pos_name_to_attrs[r['pos_name']].append(
                 {
                     "attrkey": r['attrkey'].casefold(),
-                    "attribute_id": r['attribute_id'],
                     "sort_order": r['sort_order'],
                     "attrvalue": r['attrvalue']  # might be None
                 }
@@ -87,7 +86,6 @@ def get_pos_for_word_id(word_id):
     SELECT pd.pos_name,
            pd.pos_id,
            pd.attrkey,
-           pd.attribute_id,
            pd.sort_order,
            wd.word,
            wd.word_id,
@@ -127,7 +125,6 @@ def get_pos_for_word(word):
     SELECT pd.pos_name,
            pd.pos_id,
            pd.attrkey,
-           pd.attribute_id,
            pd.sort_order,
            wd.word,
            wd.word_id,

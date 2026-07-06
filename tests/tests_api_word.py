@@ -839,7 +839,7 @@ class TestAPIWordPOST(unittest.TestCase):
                 },
                 {
                     "attrkey": self.AttrKey.DEFINITION,
-                    "attrvalue": "legal attribute_id here"
+                    "attrvalue": "legal attrkey here"
                 }
             ]
         }
@@ -982,7 +982,7 @@ class TestAPIWordPUT(unittest.TestCase):
         r = self.client.put(url_for('api_word.update_word', word_id=self.word_id), json=update_payload)
         self.assertNotEqual(200, r.status_code)
 
-    # attribute_id keyword missing
+    # attrkey keyword missing
     def test_attrvalue_keyword_missing(self):
         update_payload = {
             ATTRIBUTES: [
@@ -1324,15 +1324,14 @@ class TestAPIWordUpdate(unittest.TestCase):
         # is not allowed.
 
         attrkey = 'definition'
-        attribute_id = self.AttrKey.get_id(attrkey)
         payload = {
             ATTRIBUTES: [
                 {
-                    "attrkey": attribute_id,
+                    "attrkey": attrkey,
                     "attrvalue": "it smells like cereal here"
                 },
                 {
-                    "attrkey": attribute_id,
+                    "attrkey": attrkey,
                     "attrvalue": "wheee"
                 }
             ]
