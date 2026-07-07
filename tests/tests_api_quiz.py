@@ -17,6 +17,39 @@ def cleanupWordlistID(client, wordlist_id):
     client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id))
 
 
+class APIQuizReport(unittest.TestCase):
+    app = None
+    app_context = None
+    client = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
+            TESTING=True,
+        )
+
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
+
+    # do nothing, just make sure that setUp works
+    def test_nothing(self):
+        pass
+
+    def test1(self):
+        wordlist_id = 79
+        quiz_key = 'definitions'
+
+        r = self.client.get(url_for('api_quiz.get_report', quiz_key=quiz_key, wordlist_id=wordlist_id))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+
+
 class APIPostQuizAnswer(unittest.TestCase):
     app = None
     app_context = None

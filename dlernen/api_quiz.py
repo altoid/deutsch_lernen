@@ -612,12 +612,11 @@ def __get_report(cursor, quiz_id, candidate_word_ids, wordlist_id, quiz_key):
 
     attr_keys_to_copy = {
         'attrkey',
-        'attribute_id',
         'sort_order',
         'correct_count',
         'presentation_count',
+        'raw_score',
         'last_presentation',
-        'raw_score'
     }
 
     for r in rows:
