@@ -683,7 +683,7 @@ QUIZ_RESPONSE_SCHEMA = {
     "required": [
         # "article",    # shows up occasionally
         "word",
-        "quiz_id",
+        "quiz_key",
         "word_id",
         "pos_name",
         ATTRIBUTES
@@ -701,9 +701,9 @@ QUIZ_RESPONSE_SCHEMA = {
             "type": "integer",
             "minimum": 1
         },
-        "quiz_id": {
-            "type": "integer",
-            "minimum": 1
+        "quiz_key": {
+            "type": "string",
+            "pattern": ID_PATTERN
         },
         ATTRIBUTES: {
             "type": "array",

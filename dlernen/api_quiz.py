@@ -211,7 +211,7 @@ def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id, selector=Sele
         select
             word,
             word_id,
-            quiz_id,
+            quiz_key,
             attribute_id,
             sort_order,
             attrvalue,
@@ -249,7 +249,6 @@ def __get_rows_for_report(cursor, candidate_word_ids, quiz_id):
             word,
             word_id,
             quiz_id,
-            attribute_id,
             sort_order,
             attrvalue,
             attrkey,
@@ -274,7 +273,7 @@ def __get_rows_for_report(cursor, candidate_word_ids, quiz_id):
     return rows
 
 
-def __get_articles_for_word_ids(cursor, quiz_key, word_ids):
+def __get_articles_for_word_ids(cursor, quiz_id, word_ids):
     # if this quiz does NOT test for articles, then get the articles for every candidate word that has one.
     # return a dict mapping word_id to article.
 
@@ -284,11 +283,11 @@ def __get_articles_for_word_ids(cursor, quiz_key, word_ids):
     select quiz_key, quiz_id, attrkey from quiz q 
     inner join quiz_structure qs on q.id = qs.quiz_id 
     inner join attribute a on a.id = qs.attribute_id 
-    where quiz_key = %(QUIZ_KEY)s and attrkey = 'article';
+    where quiz_key = %(QUIZ_ID)s and attrkey = 'article';
     """
 
     cursor.execute(sql, {
-        'QUIZ_KEY': quiz_key
+        'QUIZ_ID': quiz_id
     })
     rows = cursor.fetchall()
 
@@ -310,7 +309,7 @@ def __get_articles_for_word_ids(cursor, quiz_key, word_ids):
 
 
 @js_validate_result(ARRAY_QUIZ_RESPONSE_SCHEMA)
-def __build_results(quiz_id, rows, word_ids_to_articles):
+def __build_results(quiz_key, rows, word_ids_to_articles):
     # get the unique word ids in the order in which they appear in the query result.
     word_ids_in_order = []
     word_ids_seen = set()
@@ -335,7 +334,7 @@ def __build_results(quiz_id, rows, word_ids_to_articles):
         )
     results = [
         {
-            'quiz_id': quiz_id,
+            'quiz_key': quiz_key,
             'word_id': x,
             'word': word_id_to_word_pos_name[x][0],
             'pos_name': word_id_to_word_pos_name[x][1],
@@ -357,6 +356,7 @@ def get_words(quiz_key):
     # optional arguments:  selector, wordlist_ids (multiple.  if none given use whole dictionary.)
 
     selector = request.args.get('selector', Selector.DEFAULT)
+    quiz_key_enum = current_app.extensions.get('QuizKey')
     wordlist_ids = request.args.getlist('wordlist_id')
     wordlist_ids = list(set(map(int, wordlist_ids)))  # convert to int and remove dups
 
@@ -370,21 +370,12 @@ def get_words(quiz_key):
         return message, 400
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-
-        # - quiz key is valid
-        sql = """
-        select id quiz_id
-        from quiz
-        where quiz_key = %(quiz_key)s
-        """
-
-        cursor.execute(sql, {'quiz_key': quiz_key})
-        rows = cursor.fetchall()
-        if not rows:
-            message = "unknown quiz:  %s" % quiz_key
-            return message, 404
-
-        quiz_id = rows[0]['quiz_id']
+        # make sure quiz key is valid
+        try:
+            quiz_id = quiz_key_enum.get_id(quiz_key)
+        except ValueError:
+            message = "invalid quiz_key:  %s" % quiz_key
+            return message, 400
 
         # checks complete, let's do this.
         if wordlist_ids:
@@ -403,9 +394,9 @@ def get_words(quiz_key):
             return message, 400
 
         rows = __get_rows_for_candidates(cursor, complete_candidates, quiz_id, selector)
-        word_ids_to_articles = __get_articles_for_word_ids(cursor, quiz_key, complete_candidates)
+        word_ids_to_articles = __get_articles_for_word_ids(cursor, quiz_id, complete_candidates)
 
-        results = __build_results(quiz_id, rows, word_ids_to_articles)
+        results = __build_results(quiz_key, rows, word_ids_to_articles)
 
         return results
 
@@ -447,9 +438,9 @@ def get_incomplete_words(quiz_key):
             _, incomplete_candidates = __complete_and_incomplete_candidates(cursor, quiz_key)
 
         rows = __get_rows_for_candidates(cursor, incomplete_candidates, quiz_id)
-        word_ids_to_articles = __get_articles_for_word_ids(cursor, quiz_key, incomplete_candidates)
+        word_ids_to_articles = __get_articles_for_word_ids(cursor, quiz_id, incomplete_candidates)
 
-        results = __build_results(quiz_id, rows, word_ids_to_articles)
+        results = __build_results(quiz_key, rows, word_ids_to_articles)
 
         return results
 
@@ -530,9 +521,9 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
             return message, 400
 
         rows = __get_rows_for_candidates(cursor, complete_candidates, quiz_id, selector)
-        word_ids_to_articles = __get_articles_for_word_ids(cursor, quiz_key, complete_candidates)
+        word_ids_to_articles = __get_articles_for_word_ids(cursor, quiz_id, complete_candidates)
 
-        results = __build_results(quiz_id, rows, word_ids_to_articles)
+        results = __build_results(quiz_key, rows, word_ids_to_articles)
 
         return results
 
@@ -590,15 +581,18 @@ def get_single_word(quiz_key, word_id):
             return message, 400
 
         rows = __get_rows_for_candidates(cursor, complete_candidates, quiz_id)
-        word_ids_to_articles = __get_articles_for_word_ids(cursor, quiz_key, complete_candidates)
+        word_ids_to_articles = __get_articles_for_word_ids(cursor, quiz_id, complete_candidates)
 
-        results = __build_results(quiz_id, rows, word_ids_to_articles)
+        results = __build_results(quiz_key, rows, word_ids_to_articles)
 
         return results[0]
 
 
 @js_validate_result(QUIZ_REPORT_RESPONSE_SCHEMA)
-def __get_report(cursor, quiz_id, candidate_word_ids, wordlist_id, quiz_key):
+def __get_report(cursor, candidate_word_ids, wordlist_id, quiz_key):
+    quiz_key_enum = current_app.extensions.get('QuizKey')
+
+    quiz_id = quiz_key_enum.get_id(quiz_key)
     rows = __get_rows_for_report(cursor, candidate_word_ids, quiz_id)
 
     result = {
@@ -677,7 +671,7 @@ def get_report(quiz_key, wordlist_id):
             message = "no candidates for quiz %s" % quiz_key
             return message, 400
 
-        result = __get_report(cursor, quiz_id, completes, wordlist_id, quiz_key)
+        result = __get_report(cursor, completes, wordlist_id, quiz_key)
 
         return result
 
@@ -686,18 +680,23 @@ def get_report(quiz_key, wordlist_id):
 @js_validate_payload(QUIZ_ANSWER_PAYLOAD_SCHEMA)
 def post_quiz_score(quiz_key):
     attrkey_enum = current_app.extensions.get('AttrKey')
+    quiz_key_enum = current_app.extensions.get('QuizKey')
 
     payload = request.get_json()
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
-        cursor.execute('start transaction')
+        # make sure quiz key is valid
+        try:
+            quiz_id = quiz_key_enum.get_id(quiz_key)
+        except ValueError:
+            message = "invalid quiz_key:  %s" % quiz_key
+            return message, 400
 
-        # FIXME - make explicit check for quiz_key and return 400 if it is not legitimate.  do not silently fail by
-        #  returning 0 results.
+        cursor.execute('start transaction')
 
         # make sure the payload makes sense
         sql = """
-        select quiz_id, word_id, attribute_id
+        select word_id, attribute_id
         from quiz_candidate_v
         where quiz_key = %(QUIZ_KEY)s
         and word_id = %(WORD_ID)s
@@ -714,7 +713,6 @@ def post_quiz_score(quiz_key):
             cursor.execute('rollback')
             return message, 400
 
-        quiz_id = rows[0]['quiz_id']
         update = """
             insert into quiz_score_event
             (quiz_id, word_id, attribute_id, correct)
