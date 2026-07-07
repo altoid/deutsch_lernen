@@ -17,55 +17,6 @@ def cleanupWordlistID(client, wordlist_id):
     client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id))
 
 
-class APIQuizSelector(unittest.TestCase):
-    # make sure dynamically-created Selector Enum class is well-behaved
-
-    def test1(self):
-        self.assertEqual('oldest_first', Selector.OLDEST_FIRST)
-
-    def test2(self):
-        self.assertTrue(Selector.OLDEST_FIRST, Selector.DEFAULT)
-
-    def test3(self):
-        self.assertTrue('rare' in Selector)
-
-    def test4(self):
-        self.assertTrue(Selector.RARE in Selector)
-
-
-class APIQuizKey(unittest.TestCase):
-    # make sure dynamically-created QuizKey Enum class is well-behaved
-
-    app = None
-    app_context = None
-    client = None
-    QuizKey = None
-    POSName = None
-
-    @classmethod
-    def setUpClass(cls):
-        cls.app = create_app()
-        cls.app.config.update(
-            TESTING=True,
-        )
-
-        cls.QuizKey = cls.app.extensions.get('QuizKey')
-        cls.POSName = cls.app.extensions.get('POSName')
-        cls.client = cls.app.test_client()
-        cls.app_context = cls.app.app_context()
-        cls.app_context.push()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.app_context.pop()
-
-    def test1(self):
-        self.assertEqual('definitions', self.QuizKey.DEFINITIONS)
-
-    def test2(self):
-        self.assertTrue(self.QuizKey.IRREGULAR_VERBS in self.QuizKey)
-
-
 class APIPostQuizAnswer(unittest.TestCase):
     app = None
     app_context = None

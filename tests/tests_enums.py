@@ -3,6 +3,37 @@ from dlernen import create_app
 from dlernen.api_quiz import Selector
 
 
+class QuizKey(unittest.TestCase):
+    # make sure dynamically-created QuizKey Enum class is well-behaved
+
+    app = None
+    app_context = None
+    client = None
+    QuizKey = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
+            TESTING=True,
+        )
+
+        cls.QuizKey = cls.app.extensions.get('QuizKey')
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
+
+    def test1(self):
+        self.assertEqual('definitions', self.QuizKey.DEFINITIONS)
+
+    def test2(self):
+        self.assertTrue(self.QuizKey.IRREGULAR_VERBS in self.QuizKey)
+
+
 class SelectorTests(unittest.TestCase):
     # make sure dynamically-created Selector Enum class is well-behaved
 
@@ -30,6 +61,15 @@ class SelectorTests(unittest.TestCase):
 
     def test2(self):
         self.assertEqual('random', str(Selector.RANDOM))
+
+    def test3(self):
+        self.assertEqual('oldest_first', Selector.OLDEST_FIRST)
+
+    def test4(self):
+        self.assertTrue(Selector.OLDEST_FIRST, Selector.DEFAULT)
+
+    def test6(self):
+        self.assertTrue(Selector.RARE in Selector)
 
 
 class PosName(unittest.TestCase):
