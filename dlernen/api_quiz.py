@@ -604,7 +604,6 @@ def __get_report(cursor, quiz_id, candidate_word_ids, wordlist_id, quiz_key):
     result = {
         'wordlist_id': wordlist_id,
         'quiz_key': quiz_key,
-        'quiz_id': quiz_id,
         'words': []
     }
 
@@ -715,7 +714,7 @@ def post_quiz_score(quiz_key):
             cursor.execute('rollback')
             return message, 400
 
-        payload['quiz_id'] = rows[0]['quiz_id']
+        quiz_id = rows[0]['quiz_id']
         update = """
             insert into quiz_score_event
             (quiz_id, word_id, attribute_id, correct)
@@ -724,7 +723,7 @@ def post_quiz_score(quiz_key):
             """
 
         cursor.execute(update, {
-            'quiz_id': payload['quiz_id'],
+            'quiz_id': quiz_id,
             'word_id': payload['word_id'],
             'attribute_id': attrkey_enum.get_id(payload['attrkey']),
             'correct': payload['correct']

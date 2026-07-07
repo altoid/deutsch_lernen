@@ -62,13 +62,12 @@ class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
         jsonschema.Draft202012Validator.check_schema(self.schema)
 
 
-class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
+class Test_QUIZ_REPORT_RESPONSE_SCHEMA(unittest.TestCase):
     schema = QUIZ_REPORT_RESPONSE_SCHEMA
 
     valid_docs = [
         {
             'quiz_key': 'jerky',
-            'quiz_id': 1,
             'wordlist_id': 1,
             'words': [
                 {
@@ -119,7 +118,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
         },
         {
             'quiz_key': 'herky',
-            'quiz_id': 2,
             'wordlist_id': 2,
             'words': [
                 # ok to have no words
@@ -131,28 +129,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
         # missing fields
         {
             # 'quiz_key': 'number1',
-            'quiz_id': 1,
-            'wordlist_id': 1,
-            'words': [
-                {
-                    'word': 'wat',
-                    'word_id': 1,
-                    'attributes': [  # minItems is 1
-                        {
-                            'attrkey': 'blabla',
-                            'sort_order': 2,
-                            'correct_count': 0,  # >= 0
-                            'presentation_count': 18,  # just forgetful i guess
-                            'raw_score': 0.0,  # type is 'number'
-                            'last_presentation': 'string-valued'
-                        },
-                    ]
-                },
-            ]
-        },
-        {
-            'quiz_key': 'number2',
-            # 'quiz_id': 1,
             'wordlist_id': 1,
             'words': [
                 {
@@ -173,7 +149,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
         },
         {
             'quiz_key': 'number3',
-            'quiz_id': 1,
             # 'wordlist_id': 1,
             'words': [
                 {
@@ -194,7 +169,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
         },
         {
             'quiz_key': 'number4',
-            'quiz_id': 1,
             'wordlist_id': 1,
             # 'words': [
             #     {
@@ -215,7 +189,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
         },
         {
             'quiz_key': 'number5',
-            'quiz_id': 1,
             'wordlist_id': 1,
             'words': [
                 {
@@ -236,7 +209,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
         },
         {
             'quiz_key': 'number6',
-            'quiz_id': 1,
             'wordlist_id': 1,
             'words': [
                 {
@@ -257,7 +229,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
         },
         {
             'quiz_key': 'number7',
-            'quiz_id': 1,
             'wordlist_id': 1,
             'words': [
                 {
@@ -278,7 +249,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
         },
         {
             'quiz_key': 'number8',
-            'quiz_id': 1,
             'wordlist_id': 1,
             'words': [
                 {
@@ -299,7 +269,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
         },
         {
             'quiz_key': 'number10',
-            'quiz_id': 1,
             'wordlist_id': 1,
             'words': [
                 {
@@ -320,7 +289,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
         },
         {
             'quiz_key': 'number11',
-            'quiz_id': 1,
             'wordlist_id': 1,
             'words': [
                 {
@@ -341,7 +309,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
         },
         {
             'quiz_key': 'number12',
-            'quiz_id': 1,
             'wordlist_id': 1,
             'words': [
                 {
@@ -362,7 +329,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
         },
         {
             'quiz_key': 'number13',
-            'quiz_id': 1,
             'wordlist_id': 1,
             'words': [
                 {
@@ -383,7 +349,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
         },
         {
             'quiz_key': 'number14',
-            'quiz_id': 1,
             'wordlist_id': 1,
             'words': [
                 {
@@ -406,7 +371,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
         # must have at least one attribute for a word
         {
             'quiz_key': 'number15',
-            'quiz_id': 1,
             'wordlist_id': 1,
             'words': [
                 {
@@ -421,7 +385,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
         # stowaway in top-level doc
         {
             'quiz_key': 'number16',
-            'quiz_id': 1,
             'gotAnyGrapes': True,
             'wordlist_id': 1,
             'words': [
@@ -445,7 +408,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
         # stowaway in word
         {
             'quiz_key': 'number17',
-            'quiz_id': 1,
             'wordlist_id': 1,
             'words': [
                 {
@@ -469,7 +431,6 @@ class Test_QUIZ_REPORT_RESPONSE_SCHEMA_2(unittest.TestCase):
         # stowaway in attribute
         {
             'quiz_key': 'number18',
-            'quiz_id': 1,
             'wordlist_id': 1,
             'words': [
                 {

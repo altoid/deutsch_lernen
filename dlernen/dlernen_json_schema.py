@@ -596,7 +596,6 @@ QUIZ_REPORT_RESPONSE_SCHEMA = {
     "type": "object",
     "required": [
         "quiz_key",
-        "quiz_id",
         "wordlist_id",
         "words",
     ],
@@ -608,10 +607,6 @@ QUIZ_REPORT_RESPONSE_SCHEMA = {
         },
         "quiz_key": {
             "type": "string",
-        },
-        "quiz_id": {
-            "type": "integer",
-            "minimum": 1
         },
         "words": {
             "type": "array",  # 0-length is ok
