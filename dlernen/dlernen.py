@@ -907,6 +907,7 @@ def quiz_report(quiz_key, wordlist_id):
     r = requests.get(url_for('api_quiz.get_report',
                              quiz_key=quiz_key,
                              wordlist_id=wordlist_id,
+                             tag=tag_state.selected_tags(),
                              _external=True))
     if not r:
         abort(r.status_code, response=r)

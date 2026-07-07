@@ -644,6 +644,8 @@ def get_report(quiz_key, wordlist_id):
     # - quiz_key is valid
     # - wordlist exists
 
+    tags = request.args.getlist('tag')
+
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         # - quiz key is valid
         sql = """
@@ -665,7 +667,8 @@ def get_report(quiz_key, wordlist_id):
         if not list_metadata:
             return "wordlist %s not found" % wordlist_id, 404
 
-        completes, incompletes = __complete_and_incomplete_candidates_in_wordlists(cursor, quiz_key, [wordlist_id])
+        completes, incompletes = __complete_and_incomplete_candidates_in_wordlists(cursor, quiz_key, [wordlist_id],
+                                                                                   tags=tags)
 
         if not completes:
             if incompletes:
