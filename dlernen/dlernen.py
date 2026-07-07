@@ -260,7 +260,7 @@ def wordlist_editor(wordlist_id):
     column_height = 45
     nwords = len(wordlist_obj['words'])
     ncolumns = (nwords + column_height - 1) // column_height
-    ncolumns = min(ncolumns, 3)  # meh.  if we have to scroll at all then scroll vertically.
+    ncolumns = min(ncolumns, 2)  # meh.  if we have to scroll at all then scroll vertically.
     upto = (nwords + ncolumns - 1) // ncolumns
 
     return render_template('wordlist_editor.html',
