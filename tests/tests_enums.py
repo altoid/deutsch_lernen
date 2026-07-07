@@ -28,10 +28,20 @@ class QuizKey(unittest.TestCase):
         cls.app_context.pop()
 
     def test1(self):
-        self.assertEqual('definitions', self.QuizKey.DEFINITIONS)
+        self.assertEqual('genders', self.QuizKey.GENDERS)
 
     def test2(self):
-        self.assertTrue(self.QuizKey.IRREGULAR_VERBS in self.QuizKey)
+        self.assertTrue(self.QuizKey.DEFINITIONS in self.QuizKey)
+
+    def test3(self):
+        self.assertTrue('past_participle' in self.QuizKey)
+
+    def test4(self):
+        self.assertEqual(self.QuizKey.DEFINITIONS.quiz_id, self.QuizKey.get_id('definitions'))
+
+    def test5(self):
+        with self.assertRaises(ValueError):
+            x = self.QuizKey.get_id('theudietuhnid')
 
 
 class SelectorTests(unittest.TestCase):
