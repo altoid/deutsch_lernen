@@ -185,6 +185,7 @@ def bulk_add_submit():
     # the form.  even if the definition is unchanged.  clunky but better than diffing.
 
     posname_enum = current_app.extensions.get('POSName')
+    attrkey_enum = current_app.extensions.get('AttrKey')
     serialized_tag_state = request.form.get('serialized_tag_state')
     redirect_to = request.form.get('redirect_to')
 
@@ -276,12 +277,12 @@ def bulk_add_submit():
         if pos_name != posname_enum.NOUN:
             continue
 
-        article_attr = list(filter(lambda x: x['attrkey'] == 1, payload[ATTRIBUTES]))  # attr id for article
+        article_attr = list(filter(lambda x: x['attrkey'] == attrkey_enum.ARTICLE, payload[ATTRIBUTES]))
         if not article_attr:
             nouns_missing_attributes.append(word)
             continue
 
-        defn_attr = list(filter(lambda x: x['attrkey'] == 5, payload[ATTRIBUTES]))  # attr id for defn
+        defn_attr = list(filter(lambda x: x['attrkey'] == attrkey_enum.DEFINITION, payload[ATTRIBUTES]))
         if not defn_attr:
             nouns_missing_attributes.append(word)
             continue

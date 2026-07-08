@@ -406,6 +406,8 @@ def get_incomplete_words(quiz_key):
     # returns ARRAY_QUIZ_RESPONSE_SCHEMA.  returns empty list if nothing found.
     # optional arguments:  wordlist_ids (multiple.  if none given use whole dictionary.)
 
+    quiz_key_enum = current_app.extensions.get('QuizKey')
+
     wordlist_ids = request.args.getlist('wordlist_id')
     wordlist_ids = list(set(map(int, wordlist_ids)))  # convert to int and remove dups
 
@@ -415,19 +417,11 @@ def get_incomplete_words(quiz_key):
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
 
         # - quiz key is valid
-        sql = """
-        select id quiz_id
-        from quiz
-        where quiz_key = %(quiz_key)s
-        """
-
-        cursor.execute(sql, {'quiz_key': quiz_key})
-        rows = cursor.fetchall()
-        if not rows:
-            message = "unknown quiz:  %s" % quiz_key
+        try:
+            quiz_id = quiz_key_enum.get_id(quiz_key)
+        except ValueError:
+            message = "invalid quiz_key:  %s" % quiz_key
             return message, 404
-
-        quiz_id = rows[0]['quiz_id']
 
         # checks complete, let's do this.
         if wordlist_ids:
@@ -451,6 +445,8 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
     # optional arguments:  selector, tag (0 or more)
 
     selector = request.args.get('selector', Selector.DEFAULT)
+    quiz_key_enum = current_app.extensions.get('QuizKey')
+
     tags = request.args.getlist('tag')
     tags = list(set(tags))  # remove dups
 
@@ -480,19 +476,11 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
 
         # - quiz key is valid
-        sql = """
-        select id quiz_id
-        from quiz
-        where quiz_key = %(quiz_key)s
-        """
-
-        cursor.execute(sql, {'quiz_key': quiz_key})
-        rows = cursor.fetchall()
-        if not rows:
-            message = "unknown quiz:  %s" % quiz_key
+        try:
+            quiz_id = quiz_key_enum.get_id(quiz_key)
+        except ValueError:
+            message = "invalid quiz_key:  %s" % quiz_key
             return message, 404
-
-        quiz_id = rows[0]['quiz_id']
 
         # wordlist exists
         list_metadata = common.get_wordlist_metadata(cursor, [wordlist_id])
@@ -532,6 +520,8 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
 def get_single_word(quiz_key, word_id):
     # returns a single instance of QUIZ_RESPONSE_SCHEMA
 
+    quiz_key_enum = current_app.extensions.get('QuizKey')
+
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         # checks:
         # - quiz key exists
@@ -540,19 +530,11 @@ def get_single_word(quiz_key, word_id):
         # - all attributes defined for the quiz have values
 
         # - quiz key exists
-        sql = """
-        select id quiz_id
-        from quiz
-        where quiz_key = %(quiz_key)s
-        """
-
-        cursor.execute(sql, {'quiz_key': quiz_key})
-        rows = cursor.fetchall()
-        if not rows:
-            message = "unknown quiz:  %s" % quiz_key
+        try:
+            quiz_id = quiz_key_enum.get_id(quiz_key)
+        except ValueError:
+            message = "invalid quiz_key:  %s" % quiz_key
             return message, 404
-
-        quiz_id = rows[0]['quiz_id']
 
         # - word id exists
         sql = """
@@ -638,22 +620,13 @@ def get_report(quiz_key, wordlist_id):
     # - wordlist exists
 
     tags = request.args.getlist('tag')
+    quiz_key_enum = current_app.extensions.get('QuizKey')
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         # - quiz key is valid
-        sql = """
-        select id quiz_id
-        from quiz
-        where quiz_key = %(quiz_key)s
-        """
-
-        cursor.execute(sql, {'quiz_key': quiz_key})
-        rows = cursor.fetchall()
-        if not rows:
-            message = "unknown quiz:  %s" % quiz_key
+        if quiz_key not in quiz_key_enum:
+            message = "invalid quiz_key:  %s" % quiz_key
             return message, 404
-
-        quiz_id = rows[0]['quiz_id']
 
         # wordlist exists
         list_metadata = common.get_wordlist_metadata(cursor, [wordlist_id])
@@ -690,7 +663,7 @@ def post_quiz_score(quiz_key):
             quiz_id = quiz_key_enum.get_id(quiz_key)
         except ValueError:
             message = "invalid quiz_key:  %s" % quiz_key
-            return message, 400
+            return message, 404
 
         cursor.execute('start transaction')
 

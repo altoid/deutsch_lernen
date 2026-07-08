@@ -135,7 +135,7 @@ class APIPostQuizAnswer(unittest.TestCase):
             "attrkey": self.AttrKey.DEFINITION
         }
         r = self.client.post(url_for('api_quiz.post_quiz_score', quiz_key=quiz_key), json=payload)
-        self.assertEqual(400, r.status_code)
+        self.assertEqual(404, r.status_code)
 
     # not a candidate
     def test2(self):
