@@ -52,7 +52,7 @@ for tags:
                 <td>
                     {% if f.attribute == 'definition' %}
                     <input type="text"
-                           class="wordedit {{ defn_enlightened }}"
+                           class="bulk_add_defn {{ defn_enlightened }}"
                            name="{{ f.attr_field_name }}"
                            id="{{ f.attr_field_name }}"
                            placeholder="definition"
@@ -77,7 +77,7 @@ for tags:
                 <td>
                     {% if f.attribute == 'definition' %}
                     <input type="text"
-                           class="wordedit {{ tag_enlightened }}"
+                           class="bulk_add_tag {{ tag_enlightened }}"
                            name="{{ f.tag_field_name }}"
                            id="{{ f.tag_field_name }}"
                            placeholder="tag"

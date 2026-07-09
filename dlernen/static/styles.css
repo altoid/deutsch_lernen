@@ -158,6 +158,14 @@ td.grundverb {
     min-height: 100vh;
 }
 
+input[type="text"].bulk_add_defn {
+    width: 350px;
+}
+
+input[type="text"].bulk_add_tag {
+    width: 200px;
+}
+
 .relation_editor {
     background-color: var(--background-color);
     padding: 10px;
