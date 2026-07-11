@@ -572,7 +572,7 @@ def word_notes_submit():
 @bp.route('/word/editor/<string:word>', methods=['GET'])
 def word_editor(word):
     # construct the editing form for this word, with all attributes for all parts of speech.
-    # field name formats are described in word_editor.html.  a tags field
+    # field name formats are described in word_editor_all_pos.html.  a tags field
     # will NOT appear for the part of speech if:
     #
     # - no wordlist_id is present OR
@@ -661,7 +661,7 @@ def word_editor(word):
 
             form_data[p['pos_name']].append(d)
 
-    return render_template('word_editor.html',
+    return render_template('word_editor_all_pos.html',
                            word=word,
                            form_data=form_data,
                            redirect_to=redirect_to,
