@@ -12,15 +12,12 @@ ATTRIBUTE_FIELD_PREFIX = 'attr'
 TAG_FIELD_PREFIX = 'tag'
 
 
-def get_bulk_add_form_data(raw_list, wordlist_id=None):
+def __get_bulk_add_form_data(words_to_add, wordlist_id=None):
     # returns 2 dictionaries:
     #
     # 1.  mapping of each unique word in the raw list to a dict giving the label and field name
     #     for each text field in the bulk-add page.
     # 2.  mapping of field names to field values.
-
-    words_to_add = raw_list.strip().split()
-    words_to_add = sorted(set(words_to_add))  # remove dups and sort
 
     # get info for all parts of speech
     word_to_pos_info = {}
@@ -144,6 +141,15 @@ def editor_page():
 
     serialized_tag_state = request.form.get('serialized_tag_state')
     redirect_to = request.form.get('redirect_to')
+    raw_list = request.form.get('bulk_add_submit', '')
+
+    words_to_add = raw_list.strip().split()
+    words_to_add = sorted(set(words_to_add))  # remove dups and sort
+
+    if len(words_to_add) == 1:
+        word = words_to_add[0]
+        # go to the word_edit page instead of bulk-adding a bunch of words.
+        return redirect(url_for('dlernen.word_editor', word=word, _external=True))
 
     tag_state = None
     wordlist_id = None
@@ -151,8 +157,7 @@ def editor_page():
         tag_state = TagState.deserialize(serialized_tag_state)
         wordlist_id = tag_state.wordlist_id
 
-    raw_list = request.form.get('bulk_add_submit', '')
-    word_to_form_data, field_names_to_field_values = get_bulk_add_form_data(raw_list, wordlist_id=wordlist_id)
+    word_to_form_data, field_names_to_field_values = __get_bulk_add_form_data(words_to_add, wordlist_id=wordlist_id)
 
     if not word_to_form_data:
         return redirect(url_for(redirect_to,
@@ -319,7 +324,10 @@ def bulk_add_submit():
         # go back and try again
 
         raw_list = request.form.get('bulk_add_submit', '')
-        word_to_form_data, _ = get_bulk_add_form_data(raw_list)
+        words_to_add = raw_list.strip().split()
+        words_to_add = sorted(set(words_to_add))  # remove dups and sort
+
+        word_to_form_data, _ = __get_bulk_add_form_data(words_to_add)
 
         # construct the form data from what we have already entered into the form, not from prior knowledge
         # of the words we want to bulk-add.
