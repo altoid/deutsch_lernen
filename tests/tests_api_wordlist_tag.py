@@ -341,20 +341,20 @@ class TestAPIWordlistTagSmartList(unittest.TestCase):
         r = self.client.post(url_for('api_wordlist_tag.add_tags',
                                      wordlist_id=self.wordlist_id),
                              json=payload)
-        self.assertNotEqual(201, r.status_code)
+        self.assertEqual(409, r.status_code)
 
     def test_deleteTags(self):
         r = self.client.delete(url_for('api_wordlist_tag.delete_tags_for_word_id',
                                        wordlist_id=self.wordlist_id,
                                        word_id=self.word1_id),
                                json=['tag1', 'tag2'])
-        self.assertEqual(400, r.status_code)
+        self.assertEqual(409, r.status_code)
 
     def test_get_nonmember(self):
         r = self.client.get(url_for('api_wordlist_tag.get_tags',
                                     wordlist_id=self.wordlist_id,
                                     word_id=self.word2_id))
-        self.assertEqual(404, r.status_code)
+        self.assertEqual(409, r.status_code)
 
     def test_get_member(self):
         r = self.client.get(url_for('api_wordlist_tag.get_tags',
@@ -363,6 +363,18 @@ class TestAPIWordlistTagSmartList(unittest.TestCase):
         self.assertEqual(200, r.status_code)
         obj = json.loads(r.data)
         self.assertEqual(0, len(obj['tags']))
+
+    def test_bullshit_wordlist_id(self):
+        r = self.client.get(url_for('api_wordlist_tag.get_tags',
+                                    wordlist_id=10006660001,
+                                    word_id=self.word1_id))
+        self.assertEqual(404, r.status_code)
+
+    def test_bullshit_word_id(self):
+        r = self.client.get(url_for('api_wordlist_tag.get_tags',
+                                    wordlist_id=self.wordlist_id,
+                                    word_id=666666666))
+        self.assertEqual(404, r.status_code)
 
 
 class TestAPIWordlistTag(unittest.TestCase):
@@ -791,4 +803,4 @@ class TestAPIWordlistTagStandardList(unittest.TestCase):
         r = self.client.delete(url_for('api_wordlist_tag.delete_tags_for_word_id',
                                        word_id=5555555555,
                                        wordlist_id=self.wordlist_id))
-        self.assertEqual(400, r.status_code)
+        self.assertEqual(404, r.status_code)

@@ -43,11 +43,12 @@ def __get_tags(cursor, wordlist_id, word_id):
 def get_tags(wordlist_id, word_id):
     # get all the tags affixed to this word id in this wordlist.
 
-    # perform the following checks:
+    # perform the following checks, in this order:
     #
-    # - wordlist exists
-    # - wordlist is not a smart list
-    # - if not a smartlist, word is present in the list.
+    # 1.  wordlist exists
+    # 2.  word_id exists
+    # 3.  wordlist is not a smart list
+    # 4.  if not a smartlist, word is present in the list.
     #
 
     url = url_for('api_wordlist.get_metadata', wordlist_id=wordlist_id, _external=True)
@@ -65,9 +66,20 @@ def get_tags(wordlist_id, word_id):
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
         try:
+            # the word_id must exist
+            sql = """
+            select id
+            from word
+            where id = %s
+            """
+            cursor.execute(sql, (word_id,))
+            rows = cursor.fetchall()
+            if not rows:
+                return "word %s not found" % word_id, 404
+
             members = set(common.get_word_ids_from_wordlists(cursor, [wordlist_id]))
             if word_id not in members:
-                return "word %s not in list %s" % (word_id, wordlist_id), 404
+                return "word %s not in list %s" % (word_id, wordlist_id), 409
 
             if metadata['list_type'] == 'smart':
                 # not considered an error condition.
@@ -178,7 +190,7 @@ def add_tags(wordlist_id):
             if rows[0]['sqlcode']:
                 cursor.execute('rollback')
                 message = "cannot add tags to words in a smart list:  %s" % wordlist_id
-                return message, 400
+                return message, 409
 
             # toss any word ids that are not in this list.
             payload_word_ids = [x['word_id'] for x in payload]
@@ -284,6 +296,15 @@ def delete_tags_for_word_id(wordlist_id, word_id):
         try:
             cursor.execute('start transaction')
 
+            # do the checks in this order:
+            #
+            # 1.  wordlist_id exists
+            # 2.  wordlist is not a smart list.
+            # 3.  word_id exists.
+            #
+            # if we can't even do this operation on this list, it doesn't matter whether the word id exists
+            # and is a member.
+
             # the wordlist_id must exist
             sql = """
             select id, sqlcode
@@ -300,7 +321,19 @@ def delete_tags_for_word_id(wordlist_id, word_id):
             if rows[0]['sqlcode']:
                 cursor.execute('rollback')
                 message = "cannot remove tags from words in a smart list:  %s" % wordlist_id
-                return message, 400
+                return message, 409
+
+            # the word_id must exist
+            sql = """
+            select id
+            from word
+            where id = %s
+            """
+            cursor.execute(sql, (word_id,))
+            rows = cursor.fetchall()
+            if not rows:
+                cursor.execute('rollback')
+                return "word %s not found" % word_id, 404
 
             doomed_tags = request.args.getlist('tag')
 
@@ -317,7 +350,7 @@ def delete_tags_for_word_id(wordlist_id, word_id):
             rows = cursor.fetchall()
             if not rows:
                 cursor.execute('rollback')
-                return "word %s not in list %s" % (word_id, wordlist_id), 400
+                return "word %s not in list %s" % (word_id, wordlist_id), 409
 
             # checks complete, let's do this.
             if doomed_tags:
