@@ -570,7 +570,7 @@ def word_notes_submit():
 
 
 @bp.route('/word/editor/<string:word>', methods=['GET'])
-def word_editor(word):
+def word_editor_all_pos(word):
     # construct the editing form for this word, with all attributes for all parts of speech.
     # field name formats are described in word_editor_all_pos.html.  a tags field
     # will NOT appear for the part of speech if:
@@ -591,8 +591,7 @@ def word_editor(word):
         tag_state_object = TagState.deserialize(serialized_tag_state)
         wordlist_id = tag_state_object.wordlist_id
 
-    url = url_for('api_pos.get_pos_for_word', word=word, _external=True)
-    r = requests.get(url)
+    r = requests.get(url_for('api_pos.get_pos_for_word', word=word, _external=True))
     if not r:
         abort(r.status_code, response=r)
 
@@ -601,8 +600,7 @@ def word_editor(word):
 
     wordlist_obj = None
     if wordlist_id:
-        url = url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True)
-        r = requests.get(url)
+        r = requests.get(url_for('api_wordlist.get_wordlist', wordlist_id=wordlist_id, _external=True))
         if not r:
             abort(r.status_code, response=r)
         wordlist_obj = r.json()
@@ -669,9 +667,167 @@ def word_editor(word):
                            tag_state=tag_state_object)
 
 
+@bp.route('/word/editor/<int:word_id>', methods=['GET'])
+def word_editor(word_id):
+    tag_state_object = None
+    wordlist_id = None
+    serialized_tag_state = request.args.get('serialized_tag_state')
+    if serialized_tag_state:
+        tag_state_object = TagState.deserialize(serialized_tag_state)
+        wordlist_id = tag_state_object.wordlist_id
+
+    r = requests.get(url_for('api_pos.get_pos_for_word_id', word_id=word_id, _external=True))
+    if not r:
+        abort(r.status_code, response=r)
+
+    pos_structure = r.json()[0]
+
+    form_data = []
+    for a in pos_structure[ATTRIBUTES]:
+        t = ['attr', a['attrkey']]
+
+        field_name = '-'.join(t)
+        field_value = a['attrvalue'] if a['attrvalue'] else ""
+        d = {
+            'field_name': field_name,
+            'field_value': field_value,
+            'label': a['attrkey'],
+            'sort_order': a['sort_order'],
+        }
+        form_data.append(d)
+
+    form_data = sorted(form_data, key=lambda x: x['sort_order'])
+
+    return render_template('word_editor.html',
+                           word=pos_structure['word'],
+                           pos_structure=pos_structure,
+                           form_data=form_data,
+                           tag_state=tag_state_object)
+
+
+@bp.route('/word/editor/<int:word_id>', methods=['POST'])
+def word_editor_submit(word_id):
+
+    # hitting the submit button in the edit-by-word_id word editor brings us here.
+
+    wordlist_id = None
+    serialized_tag_state = request.form.get('serialized_tag_state')
+    if serialized_tag_state:
+        # in case we added a new tag while editing the word
+        tag_state_object = TagState.deserialize(serialized_tag_state)
+        tag_state_object.update()
+        wordlist_id = tag_state_object.wordlist_id
+
+    relation_id = request.form.get('relation_id')
+    redirect_to = request.form.get('redirect_to', 'dlernen.lookup_by_id')
+
+    # there are two incarnations of the word being edited:  the word itself, as pulled from the word table,
+    # and the word as pulled from the 'word' text field.  these will be the same, unless we have altered the word in
+    # the text field, e.g. changing the spelling.  the form must be well-behaved if the word field is cleared.
+
+    word_original = request.form.get('word_original')
+    word = request.form.get('word', '').strip()
+
+    if not word:
+        target = url_for('dlernen.word_editor',
+                         word=word_original,
+                         serialized_tag_state=serialized_tag_state,  # can be None
+                         redirect_to=redirect_to,
+                         relation_id=relation_id,
+                         _external=True)
+
+        flash("word field has been cleared; that's not right")
+        return redirect(target)
+
+    update_payload = {
+        'word': word,
+        ATTRIBUTES: []
+    }
+    delete_payload = {
+        ATTRIBUTES: []
+    }
+
+    for field_name, value_unstripped in request.form.items():
+        parts = field_name.split('-')
+        if parts[0] != 'attr':
+            continue
+
+        attrkey = parts[1]
+        attrvalue = value_unstripped.strip()
+
+        delete_payload[ATTRIBUTES].append(
+            {
+                'attrkey': attrkey
+            }
+        )
+
+        if attrvalue:
+            update_payload[ATTRIBUTES].append(
+                {
+                    'attrkey': attrkey,
+                    'attrvalue': attrvalue
+                }
+            )
+
+    # we will proceed by dropping all the attribute values for this word and adding back whatever was in the form.
+    r = requests.put(url_for('api_word.update_word', word_id=word_id, _external=True), json=delete_payload)
+    if not r:
+        message = "could not update word_id %s [%s]:  %s" % (word_id, r.status_code, r.text)
+        abort(r.status_code, message=message, response=r)
+
+    # don't update if the update_payload has no attributes and we didn't change the spelling of the word
+    if word != word_original or update_payload[ATTRIBUTES]:
+        r = requests.put(url_for('api_word.update_word', word_id=word_id, _external=True), json=update_payload)
+        if not r:
+            message = "could not update word_id %s [%s]:  %s" % (word_id, r.status_code, r.text)
+            abort(r.status_code, message=message, response=r)
+
+    # now deal with the tags.
+    tags = request.form.get('tag', '').strip().split()
+    if wordlist_id and tags:
+        # first, drop all the tags for the word_id.
+
+        # api_wordlist_tag.delete_tags_for_word_id will return 409 if word_id is not in wordlist.
+
+        r = requests.delete(url_for('api_wordlist_tag.delete_tags_for_word_id',
+                                    word_id=word_id,
+                                    wordlist_id=wordlist_id,
+                                    _external=True))
+        if r.status_code == 409:
+            # word id is not in the word list.  no big deal.
+            pass
+        elif not r:
+            message = "delete tags failed for wordlist_id %s, word_id %s" % (wordlist_id, word_id)
+            abort(r.status_code, message=message, response=r)
+
+        # next, add back the tags that we pull from the form.
+        payload = {
+            'word_id': word_id,
+            'tags': tags
+        }
+
+        r = requests.post(url_for('api_wordlist_tag.add_tags',
+                                  wordlist_id=wordlist_id,
+                                  _external=True),
+                          json=payload)
+        if not r:
+            message = "add tags failed for wordlist_id %s" % wordlist_id
+            abort(r.status_code, message=message, response=r)
+
+    pprint(request.form)
+    target = url_for(redirect_to,
+                     word_id=word_id,
+                     relation_id=relation_id,
+                     serialized_tag_state=serialized_tag_state,
+                     wordlist_id=wordlist_id)
+
+    return redirect(target)
+
+
 @bp.route('/word/editor', methods=['POST'])
-def word_editor_submit():
-    # hitting the submit button in the word editor brings us here.
+def word_editor_all_pos_submit():
+
+    # hitting the submit button in the all-POS word editor brings us here.
 
     # go through the text fields in the request to distinguish what words are being edited and added.
     # for those words whose attributes we are modifying, delete all the attributes and re-add the values.  easier and
@@ -700,7 +856,7 @@ def word_editor_submit():
     word = request.form.get('word', '').strip()
 
     if not word:
-        target = url_for('dlernen.word_editor',
+        target = url_for('dlernen.word_editor_all_pos',
                          word=word_original,
                          serialized_tag_state=serialized_tag_state,  # can be None
                          redirect_to=redirect_to,
@@ -810,7 +966,7 @@ def word_editor_submit():
 
     if not word_ids:
         flash("""no words created""")
-        return redirect(url_for('dlernen.word_editor',
+        return redirect(url_for('dlernen.word_editor_all_pos',
                                 word=word,
                                 serialized_tag_state=request.form.get('serialized_tag_state'),
                                 redirect_to=redirect_to,
@@ -838,7 +994,7 @@ def word_editor_submit():
                                         word_id=word_id,
                                         wordlist_id=wordlist_id,
                                         _external=True))
-            if r.status_code == 400:
+            if r.status_code == 409:
                 # word id is not in the word list.  no big deal.
                 # NB - will this ever happen?
                 continue
@@ -986,7 +1142,7 @@ def __submit_to_wordlist(serialized_tag_state, word, redirect_to):
             flash(r2.text)
 
     elif r.status_code == 404:
-        return redirect(url_for('dlernen.word_editor',
+        return redirect(url_for('dlernen.word_editor_all_pos',
                                 word=word,
                                 serialized_tag_state=serialized_tag_state,
                                 redirect_to=redirect_to,
@@ -995,7 +1151,7 @@ def __submit_to_wordlist(serialized_tag_state, word, redirect_to):
     else:
         flash(r.text)
 
-    return redirect(url_for('dlernen.word_editor',
+    return redirect(url_for('dlernen.word_editor_all_pos',
                             word=word,
                             serialized_tag_state=serialized_tag_state,
                             redirect_to=redirect_to,

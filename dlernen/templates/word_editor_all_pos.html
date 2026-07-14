@@ -34,7 +34,7 @@ for the tags fields, the names are:
 <div class="addword">
     {% include 'header.html' %}
     <h1>{{ word }}</h1>
-    <form action="{{ url_for('dlernen.word_editor_submit') }}" method="post">
+    <form action="{{ url_for('dlernen.word_editor_all_pos_submit') }}" method="post">
         <input type="submit" value="Submit"/>
         <input type="hidden" name="redirect_to" value="{{ redirect_to }}">
         <input type="hidden" name="word_original" value="{{ word }}">

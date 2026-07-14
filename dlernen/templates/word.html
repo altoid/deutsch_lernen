@@ -25,12 +25,12 @@ word id.
     <h1>
         {% if serialized_tag_state %}
         <a name="{{ wordobject['word'] }}"
-           href="{{ url_for('dlernen.word_editor', serialized_tag_state=serialized_tag_state, word=wordobject['word']) }}">
+           href="{{ url_for('dlernen.word_editor', serialized_tag_state=serialized_tag_state, word_id=wordobject['word_id']) }}">
             {{ wordobject['word'] }}
         </a>
         {% else %}
         <a name="{{ wordobject['word'] }}"
-           href="{{ url_for('dlernen.word_editor', word=wordobject['word']) }}">
+           href="{{ url_for('dlernen.word_editor', word_id=wordobject['word_id']) }}">
             {{ wordobject['word'] }}
         </a>
         {% endif %}

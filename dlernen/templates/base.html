@@ -40,7 +40,10 @@
 
     {% if (request.endpoint in [
         'dlernen.lookup_word',
-        'dlernen.home', 'dlernen.wordlist', 'dlernen.wordlist_editor'
+        'dlernen.home',
+        'dlernen.wordlist',
+        'dlernen.wordlist_editor',
+        'dlernen.wordlist_editor_all_pos'
     ] and tag_state and tag_state.list_type != 'smart')
     or request.endpoint == 'dlernen.wordlists'
     %}

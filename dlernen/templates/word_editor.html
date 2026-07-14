@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}
+Edit {{ word }}
+{% endblock %}
+
+{#
+
+this form is used to edit an individual word.  the URL to get here will contain the word id, not the word.
+
+the form shows the word and provides fill-in fields for the attributes for the part of speech associated with this
+word id.
+
+the names of the fields are in this format:
+
+    "attr"-attrkey
+
+if a tag field is present, its name is "tag."
+
+#}
+
+{% block body %}
+{{ super() }}
+
+{% if tag_state %}
+{% set serialized_tag_state = tag_state.serialize() %}
+{% endif %}
+
+<div class="word_editor">
+    {% include 'header.html' %}
+
+    <h1>{{ word }}</h1>
+    <h2>{{ pos_structure.pos_name }}</h2>
+    <form action="{{ url_for('dlernen.word_editor_submit', word_id=pos_structure.word_id) }}" method="post">
+        <table class="wordedit">
+            <tr>
+                <th class="wordedit">
+                    Wort - Die Rechtschreibung kann hier korrigiert werden
+                </th>
+            </tr>
+            <tr>
+                <td class="wordedit">
+                    <input type="text"
+                           class="wordedit"
+                           name="word"
+                           value="{{ word }}">
+                </td>
+            </tr>
+        </table>
+        <table>
+            {% for fd in form_data %}
+            <tr>
+                <td>{{ fd.label }}</td>
+                <td class="wordedit">
+                    <input type="text"
+                           class="wordedit"
+                           id="{{ fd.field_name }}"
+                           name="{{ fd.field_name }}"
+                           value="{{ fd.field_value }}">
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <input type="submit" value="Submit"/>
+        <input type="hidden" name="word_original" value="{{ word }}">
+        {% if serialized_tag_state %}
+        <input type="hidden" name="serialized_tag_state" value="{{ serialized_tag_state }}">
+        {% endif %}
+
+    </form>
+</div>
+
+{% endblock %}

@@ -95,7 +95,7 @@ def update_tags(word_pos_to_word_id, wordlist_id):
                                     wordlist_id=wordlist_id,
                                     _external=True))
         if not r:
-            message = "could not delete tags for wordlist %s (shouldn't get a 400 here)" % wordlist_id
+            message = "could not delete tags for wordlist %s (shouldn't get a 4xx here)" % wordlist_id
             abort(r.status_code, message=message, response=r)
     # next, add back the tags that we pull from the form.
     payload = []
@@ -143,19 +143,23 @@ def editor_page():
     redirect_to = request.form.get('redirect_to')
     raw_list = request.form.get('bulk_add_submit', '')
 
+    tag_state = None
+    wordlist_id = None
+    if serialized_tag_state:
+        tag_state = TagState.deserialize(serialized_tag_state)
+        wordlist_id = tag_state.wordlist_id
+
     words_to_add = raw_list.strip().split()
     words_to_add = sorted(set(words_to_add))  # remove dups and sort
 
     if len(words_to_add) == 1:
         word = words_to_add[0]
         # go to the word_edit page instead of bulk-adding a bunch of words.
-        return redirect(url_for('dlernen.word_editor', word=word, _external=True))
-
-    tag_state = None
-    wordlist_id = None
-    if serialized_tag_state:
-        tag_state = TagState.deserialize(serialized_tag_state)
-        wordlist_id = tag_state.wordlist_id
+        return redirect(url_for('dlernen.word_editor_all_pos',
+                                word=word,
+                                redirect_to=redirect_to,
+                                serialized_tag_state=serialized_tag_state,
+                                _external=True))
 
     word_to_form_data, field_names_to_field_values = __get_bulk_add_form_data(words_to_add, wordlist_id=wordlist_id)
 
@@ -176,7 +180,7 @@ def editor_page():
 def bulk_add_submit():
     # hitting the submit button in the bulk add page brings us here.
 
-    # this is pretty close to the algorithm used in word_editor_submit, but not close enough that we can
+    # this is pretty close to the algorithm used in word_editor_all_pos_submit, but not close enough that we can
     # actually reuse code.  the form fields in the word-edit form and this form are different.  the words are
     # embedded in the field names here.  we can't do that in the other form because of the possibility that we would
     # change the spelling of the word there.
