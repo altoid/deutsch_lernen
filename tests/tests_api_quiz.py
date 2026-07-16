@@ -297,14 +297,14 @@ class APIQuizTestGetSingleWord(unittest.TestCase):
                                     word_id=8675309))
         self.assertEqual(404, r.status_code)
 
-    # word is not a candidate for the quiz -> 400
+    # word is not a candidate for the quiz -> 409
     def test3(self):
         _, word_id = self.create_adjective()
 
         r = self.client.get(url_for('api_quiz.get_single_word',
                                     quiz_key=self.QUIZ_KEY,
                                     word_id=word_id))
-        self.assertEqual(400, r.status_code)
+        self.assertEqual(409, r.status_code)
 
     # word is a candidate but not all of its attributes are there -> 409
     def test4(self):

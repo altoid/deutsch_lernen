@@ -492,7 +492,7 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
         # tags verboten with smart lists
         if tags and list_metadata['list_type'] == 'smart':
             message = "tags are verboten with smart lists"
-            return message, 400
+            return message, 409
 
         # checks complete, let's do this.
         complete_candidates, incomplete_candidates = __complete_and_incomplete_candidates_in_wordlists(cursor,
@@ -506,7 +506,7 @@ def get_words_in_wordlist(quiz_key, wordlist_id):
                 return message, 409
 
             message = "no candidates for quiz %s" % quiz_key
-            return message, 400
+            return message, 404
 
         rows = __get_rows_for_candidates(cursor, complete_candidates, quiz_id, selector)
         word_ids_to_articles = __get_articles_for_word_ids(cursor, quiz_id, complete_candidates)
@@ -560,7 +560,7 @@ def get_single_word(quiz_key, word_id):
                 return message, 409
 
             message = "word_id %s not a candidate for quiz %s" % (word_id, quiz_key)
-            return message, 400
+            return message, 409
 
         rows = __get_rows_for_candidates(cursor, complete_candidates, quiz_id)
         word_ids_to_articles = __get_articles_for_word_ids(cursor, quiz_id, complete_candidates)
@@ -642,7 +642,7 @@ def get_report(quiz_key, wordlist_id):
                 return message, 409
 
             message = "no candidates for quiz %s" % quiz_key
-            return message, 400
+            return message, 404
 
         result = __get_report(cursor, completes, wordlist_id, quiz_key)
 
