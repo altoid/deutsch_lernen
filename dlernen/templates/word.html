@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}
-Lookup {{ word }}
+Lookup {{ wordobject.word }}
 {% endblock %}
 
 {#
@@ -24,25 +24,25 @@ word id.
 
     <h1>
         {% if serialized_tag_state %}
-        <a name="{{ wordobject['word'] }}"
-           href="{{ url_for('dlernen.word_editor', serialized_tag_state=serialized_tag_state, word_id=wordobject['word_id']) }}">
-            {{ wordobject['word'] }}
+        <a name="{{ wordobject.word }}"
+           href="{{ url_for('dlernen.word_editor', serialized_tag_state=serialized_tag_state, word_id=wordobject.word_id) }}">
+            {{ wordobject.word }}
         </a>
         {% else %}
-        <a name="{{ wordobject['word'] }}"
-           href="{{ url_for('dlernen.word_editor', word_id=wordobject['word_id']) }}">
-            {{ wordobject['word'] }}
+        <a name="{{ wordobject.word }}"
+           href="{{ url_for('dlernen.word_editor', word_id=wordobject.word_id) }}">
+            {{ wordobject.word }}
         </a>
         {% endif %}
     </h1>
     <h3>{{ wordobject['pos_name'] }}</h3>
     <table>
-        {% for attr in wordobject['attributes'] %}
+        {% for attr in wordobject.attributes %}
         <tr>
-            <td class="word_attributes">{{ attr['attrkey'] }}</td>
+            <td class="word_attributes">{{ attr.attrkey }}</td>
             <td>
-                {% if attr['attrvalue'] != None %}
-                {{ attr['attrvalue'] }}
+                {% if attr.attrvalue != None %}
+                {{ attr.attrvalue }}
                 {% endif %}
             </td>
         </tr>
@@ -70,7 +70,7 @@ word id.
         {% if serialized_tag_state %}
         <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
         {% endif %}
-        <input type="hidden" value="{{ wordobject['word_id'] }}" name="word_id"/>
+        <input type="hidden" value="{{ wordobject.word_id }}" name="word_id"/>
         <h2>Noten</h2>
         <input type="submit" value="Update Notes"/>
         <textarea class="word_notes" name="notes">{{ wordobject.notes if wordobject.notes else '' }}</textarea>
@@ -82,7 +82,7 @@ word id.
         {% if serialized_tag_state %}
         <input type="hidden" value="{{ serialized_tag_state }}" name="serialized_tag_state"/>
         {% endif %}
-        <input type="hidden" value="{{ wordobject['word_id'] }}" name="word_id"/>
+        <input type="hidden" value="{{ wordobject.word_id }}" name="word_id"/>
         <table>
             {% for r in relations %}
             <tr>
