@@ -66,6 +66,17 @@ TODO - integrate all quizzes into quiz_defs, special case for definitions
 
 FIXME - contents of bulk-add text area should persist when notes are updated.  or better, when any button is clicked.
 
+TODO - save and restore the current state of the bulk-add page.  grey out sidebar field if saved state exists.  also
+    need to discard saved state.  state is not dependent on word lists.
+
+TODO - review operations that depend on word_ids being members of wordlists.  there should be separate checks for
+    these:
+    1. word_id is real --> 404 if not
+    2. wordlist_id is real --> 404 if not
+    3. both are real but the word_id is not a member of wordlist_id --> 409.
+
+TODO - the lookup page for a word should include the tags when there is a tag state.
+
 ---------------
 
 new patch program:
@@ -82,7 +93,7 @@ won't care about tags, that would be stupid.
 
 -----------
 
-dlernen.word_editor takes a redirect_to argument
+dlernen.word_editor_all_pos takes a redirect_to argument
 
 currently dlernen.wordlist_editor
 defaults to dlernen.wordlist
@@ -131,6 +142,11 @@ best practices:
 - PAYLOAD schemas should have additionalProperties set to False, so that testing payload validation is easier.
 - in a unit test module for an api, there must be at least one class where the setup method
   doesn't call code from the API we are testing. ==> VERIFIED THAT ALL TEST MODULES COMPLY 4/27/26
+- prefer returning 409 when individual inputs are valid but can't be combined.  example:  if an operation depends
+  on a word being in a word list, but it is not, and the word and wordlist ids are both valid, that should be
+  a 409 condition, not 400 or 404.  another example:  operations on that are legal on standard lists but not
+  on smart lists.
+
 -----------
 
 tag api changes:

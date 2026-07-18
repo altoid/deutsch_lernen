@@ -278,10 +278,3 @@ def delete_relation(relation_id):
         except Exception as e:
             cursor.execute('rollback')
             return "error, transaction rolled back:  %s" % (str(e)), 500
-
-
-@bp.route('/wordlist/<int:wordlist_id>', methods=['POST'])
-def create_relation_from_wordlist(wordlist_id):
-    # no json payload needed here
-    # make sure the wordlist exists, otherwise 400
-    return "unimplemented", 501

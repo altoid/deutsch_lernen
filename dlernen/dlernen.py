@@ -731,6 +731,7 @@ def word_editor_submit(word_id):
     if not word:
         target = url_for('dlernen.word_editor',
                          word=word_original,
+                         word_id=word_id,
                          serialized_tag_state=serialized_tag_state,  # can be None
                          redirect_to=redirect_to,
                          relation_id=relation_id,

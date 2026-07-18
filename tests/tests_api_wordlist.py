@@ -472,7 +472,7 @@ and after
         }
 
         r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
-        self.assertEqual(400, r.status_code)
+        self.assertEqual(409, r.status_code)
 
     # get with bullshit wordlist id
     def test_get_bullshit_wordlist_id(self):
@@ -573,7 +573,7 @@ and after
             "word_ids": [self.word1_id],
         })
 
-        self.assertNotEqual(200, r.status_code)
+        self.assertEqual(409, r.status_code)
 
     def test_update_with_word_ids_and_sqlcode(self):
         # the mutual exclusivity of word_ids and sqlcode is enforced in the json schema.
@@ -581,6 +581,8 @@ and after
             'word_ids': [self.word1_id, self.word2_id],
             'sqlcode': 'select id word_id from word where id = %s' % self.word1_id
         }
+
+        # NB should be 409, but the 400 here is a json schema validation error that comes from the decorator.
         r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(400, r.status_code)
 
@@ -616,7 +618,7 @@ and after
         r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
         self.assertEqual(200, r.status_code)
 
-    # update smart list with words not in the list ==> 400
+    # update smart list with words not in the list ==> 409
     def test_update_smart_list_3(self):
         payload = {
             'sqlcode': 'select id word_id from word where id = %s' % self.word1_id
@@ -630,9 +632,9 @@ and after
             'word_ids': [self.word2_id]
         }
         r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
-        self.assertEqual(400, r.status_code)
+        self.assertEqual(409, r.status_code)
 
-    # update smart list with words in the list and not in the list ==> 400
+    # update smart list with words in the list and not in the list ==> 409
     def test_update_smart_list_4(self):
         payload = {
             'sqlcode': 'select id word_id from word where id = %s' % self.word1_id
@@ -646,7 +648,7 @@ and after
             'word_ids': [self.word1_id, self.word2_id]
         }
         r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
-        self.assertEqual(400, r.status_code)
+        self.assertEqual(409, r.status_code)
 
     # update smart list with words not in the list, but also attempt to update other things, e.g. citation
     # ==> 400, citation not changed
@@ -666,7 +668,7 @@ and after
             'citation': """shouldn't see this"""
         }
         r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=self.wordlist_id), json=payload)
-        self.assertEqual(400, r.status_code)
+        self.assertEqual(409, r.status_code)
 
         r = self.client.get(url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id))
         self.assertEqual(200, r.status_code)

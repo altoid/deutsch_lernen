@@ -198,7 +198,7 @@ def update_wordlist(wordlist_id):
                         members, nonmembers = __check_word_ids(cursor, wordlist_id, payload['word_ids'])
 
                         if nonmembers:
-                            return "can't add words to a smart list", 400
+                            return "can't add words to a smart list", 409
 
                 cursor.execute('start transaction')
 
@@ -419,7 +419,7 @@ def delete_from_wordlist(wordlist_id):
             row = cursor.fetchone()
             if row and row['sqlcode']:
                 cursor.execute('rollback')
-                return "can't delete words from smart list", 400
+                return "can't delete words from smart list", 409
 
             word_ids = payload.get('word_ids', [])
 
