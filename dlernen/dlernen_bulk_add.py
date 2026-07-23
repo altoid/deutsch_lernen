@@ -61,7 +61,7 @@ def __get_bulk_add_form_data(words_to_add, wordlist_id=None):
                     if r:
                         tags_obj = r.json()
                         tag_field_value = ' '.join(tags_obj['tags'])
-                    elif r.status_code == 404:
+                    elif r.status_code == 409:
                         pass  # we don't care.
                     else:
                         # other problems, we care about.
