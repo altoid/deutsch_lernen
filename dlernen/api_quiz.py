@@ -9,7 +9,7 @@ from dlernen.dlernen_json_schema import \
     QUIZ_REPORT_RESPONSE_SCHEMA, \
     ARRAY_QUIZ_RESPONSE_SCHEMA
 from dlernen.decorators import js_validate_result, js_validate_payload
-from pprint import pprint
+from pprint import pprint, pformat
 
 bp = Blueprint('api_quiz', __name__, url_prefix='/api/quiz')
 
@@ -150,7 +150,11 @@ def __complete_and_incomplete_candidates_in_wordlists(cursor, quiz_key, wordlist
     #
     # tags will be ignored if there is more than one wordlist_id.
 
-    word_ids = common.get_word_ids_from_wordlists(cursor, wordlist_ids)  # returns [] if wordlist_ids is degenerate
+    word_ids = common.get_word_ids_from_wordlists(cursor, wordlist_ids)
+    if not word_ids:
+        # lists are empty.  it could happen.
+        return [], []
+
     complete_candidates, incomplete_candidates = __complete_and_incomplete_candidates(cursor, quiz_key, word_ids)
 
     if wordlist_ids and word_ids and tags:
@@ -363,6 +367,7 @@ def get_words(quiz_key):
     # checks:
     # - selector is valid
     # - quiz_key is valid
+    # - no invalid list ids
 
     # - selector is valid
     if selector not in Selector:
@@ -376,6 +381,12 @@ def get_words(quiz_key):
         except ValueError:
             message = "invalid quiz_key:  %s" % quiz_key
             return message, 400
+
+        if wordlist_ids:
+            known_ids, unknown_ids = common.check_wordlist_ids(cursor, wordlist_ids)
+            if unknown_ids:
+                message = "invalid list ids:  %s" % pformat(unknown_ids)
+                return message, 400
 
         # checks complete, let's do this.
         if wordlist_ids:
@@ -413,6 +424,7 @@ def get_incomplete_words(quiz_key):
 
     # checks:
     # - quiz_key is valid
+    # - no invalid list ids.
 
     with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
 
@@ -422,6 +434,12 @@ def get_incomplete_words(quiz_key):
         except ValueError:
             message = "invalid quiz_key:  %s" % quiz_key
             return message, 404
+
+        if wordlist_ids:
+            known_ids, unknown_ids = common.check_wordlist_ids(cursor, wordlist_ids)
+            if unknown_ids:
+                message = "invalid list ids:  %s" % pformat(unknown_ids)
+                return message, 400
 
         # checks complete, let's do this.
         if wordlist_ids:
