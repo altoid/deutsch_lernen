@@ -14,7 +14,7 @@ def placeholder_string(itr):
 # it is guaranteed that:
 #
 # - the lists are disjoint
-# - no word id appears more than once in either list.
+# - neither list has dups.
 #
 def check_word_ids(cursor, word_ids):
     if not word_ids:
@@ -30,6 +30,30 @@ def check_word_ids(cursor, word_ids):
     rows = cursor.fetchall()
     known_ids = {x['word_id'] for x in rows}
     unknown_ids = set(word_ids) - known_ids
+
+    return list(known_ids), list(unknown_ids)
+
+
+# returns two lists:  the wordlist_ids that exist in the database and those that don't.
+# it is guaranteed that:
+#
+# - the lists are disjoint
+# - neither list has dups.
+#
+def check_wordlist_ids(cursor, wordlist_ids):
+    if not wordlist_ids:
+        return [], []
+
+    sql = """
+    select distinct id wordlist_id
+    from wordlist
+    where id in (%(id_args)s)
+    """ % {'id_args': placeholder_string(wordlist_ids)}
+
+    cursor.execute(sql, wordlist_ids)
+    rows = cursor.fetchall()
+    known_ids = {x['wordlist_id'] for x in rows}
+    unknown_ids = set(wordlist_ids) - known_ids
 
     return list(known_ids), list(unknown_ids)
 

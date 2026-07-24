@@ -162,6 +162,122 @@ class APIPostQuizAnswer(unittest.TestCase):
         self.assertEqual(400, r.status_code)
 
 
+class APIQuizTestGetIncomplete(unittest.TestCase):
+    app = None
+    app_context = None
+    client = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
+            TESTING=True,
+        )
+
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.POSName = cls.app.extensions.get('POSName')
+        cls.QuizKey = cls.app.extensions.get('QuizKey')
+        cls.app_context.push()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
+
+    def create_wordlist(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=add_payload)
+        obj = json.loads(r.data)
+        wordlist_id = obj['wordlist_id']
+        self.addCleanup(cleanupWordlistID, self.client, wordlist_id)
+
+        return list_name, wordlist_id
+
+    def create_complete_verb(self):
+        # create a fake verb with all attributes set
+        word = ''.join(random.choices(string.ascii_lowercase, k=11))
+        attrkeys = [
+            # these are all the attributes defined for the 'present_indicative' quiz
+            'first_person_singular',
+            'second_person_singular',
+            'third_person_singular',
+            'first_person_plural',
+            'second_person_plural',
+            'third_person_plural',
+        ]
+        attributes = [
+            {
+                "attrkey": k,
+                "attrvalue": k,
+            }
+            for k in attrkeys
+        ]
+        add_payload = {
+            "word": word,
+            "pos_name": self.POSName.VERB,
+            ATTRIBUTES: attributes
+        }
+
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+
+        self.addCleanup(cleanupWordID, self.client, word_id)
+
+        return word, word_id
+
+    # get incomplete candidates from a wordlist which will have no words to match the quiz key: plurals
+    # from a list of verbs.  should return 0 results.
+    def test1(self):
+        # create a wordlist
+
+        list_name, wordlist_id = self.create_wordlist()
+
+        # create a verb
+
+        word, word_id = self.create_complete_verb()
+
+        # put the word in the wordlist
+
+        payload = {
+            'word_ids': [
+                word_id
+            ],
+        }
+
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=wordlist_id), json=payload)
+        self.assertEqual(200, r.status_code)
+
+        # get on with it.
+
+        r = self.client.get(url_for('api_quiz.get_incomplete_words',
+                                    wordlist_id=[wordlist_id],
+                                    quiz_key=self.QuizKey.PLURALS))
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual(0, len(obj))
+
+    # get incomplete candidates from an empty wordlist.  should return 0 results.
+    def test2(self):
+        # create a wordlist
+
+        list_name, wordlist_id = self.create_wordlist()
+
+        # get on with it.
+
+        r = self.client.get(url_for('api_quiz.get_incomplete_words',
+                                    wordlist_id=[wordlist_id],
+                                    quiz_key=self.QuizKey.PLURALS))
+
+        self.assertEqual(200, r.status_code)
+        obj = json.loads(r.data)
+        self.assertEqual(0, len(obj))
+
+
 class APIQuizTestGetSingleWord(unittest.TestCase):
     app = None
     app_context = None
