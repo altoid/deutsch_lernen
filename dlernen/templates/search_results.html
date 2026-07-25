@@ -43,26 +43,26 @@ Lookup {{ word }}
             {% for r in search_results %}
             <tr>
                 <td>
-                    {% if r.word.is_member %}
+                    {% if r.is_member %}
                     <input type="checkbox"
                            name="selected"
-                           value="{{ r.word.word_id }}" checked>
-                    <a href="#{{ r.word.word }}">{{ r.word.word }}</a>
+                           value="{{ r.word_id }}" checked>
+                    <a href="#{{ r.word }}">{{ r.word }}</a>
                     {% else %}
                     <input type="checkbox"
                            name="selected"
-                           value="{{ r.word.word_id }}">
-                    <a href="#{{ r.word.word }}">{{ r.word.word }}</a>
+                           value="{{ r.word_id }}">
+                    <a href="#{{ r.word }}">{{ r.word }}</a>
                     {% endif %}
                 </td>
                 <td>
                     <input class="search_results_text"
                            type="text"
-                           value="{{ r.word.tags }}"
-                           name="tag-{{ r.word.word_id }}"/>
+                           value="{{ r.tags }}"
+                           name="tag-{{ r.word_id }}"/>
                 </td>
                 <td>
-                    {{ r.word.pos_name }}
+                    {{ r.pos_name }}
                 </td>
             </tr>
             {% endfor %}
@@ -74,7 +74,7 @@ Lookup {{ word }}
         {% for r in search_results %}
         <tr>
             <td>
-                <a href="#{{ r.word.word }}">{{ r.word.word }}</a>
+                <a href="#{{ r.word }}">{{ r.word }}</a>
             </td>
         </tr>
         {% endfor %}
@@ -83,20 +83,20 @@ Lookup {{ word }}
     {% for r in search_results %}
     <h1>
         {% if serialized_tag_state %}
-        <a name="{{ r.word.word }}"
-           href="{{ url_for('dlernen.lookup_by_id', word_id=r.word.word_id, serialized_tag_state=serialized_tag_state) }}">
-            {{ r.word.word }}
+        <a name="{{ r.word }}"
+           href="{{ url_for('dlernen.lookup_by_id', word_id=r.word_id, serialized_tag_state=serialized_tag_state) }}">
+            {{ r.word }}
         </a>
         {% else %}
-        <a name="{{ r.word.word }}"
-           href="{{ url_for('dlernen.lookup_by_id', word_id=r.word.word_id) }}">
-            {{ r.word.word }}
+        <a name="{{ r.word }}"
+           href="{{ url_for('dlernen.lookup_by_id', word_id=r.word_id) }}">
+            {{ r.word }}
         </a>
         {% endif %}
     </h1>
-    <h3>{{ r.word.pos_name }}</h3>
+    <h3>{{ r.pos_name }}</h3>
     <table>
-        {% for attr in r.word.attributes %}
+        {% for attr in r.attributes %}
         <tr>
             <td class="word_attributes">{{ attr.attrkey }}</td>
             <td>
@@ -107,17 +107,22 @@ Lookup {{ word }}
         </tr>
         {% endfor %}
     </table>
-    {% if r.wordlist_metadata_list %}
+    {% if r.member_wordlists %}
     <h2>Wortlisten, die dieses Wort enthalten</h2>
     <table>
-        {% for wl in r.wordlist_metadata_list %}
+        {% for wl in r.member_wordlists %}
         <tr>
             <td>
                 {% if wl.list_type == 'smart' %}
                 (*)
                 {% endif %}
             </td>
-            <td><a href="{{ url_for('dlernen.wordlist', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a></td>
+            <td>
+                <a href="{{ url_for('dlernen.wordlist', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a>
+                {% if wl.tags %}
+                (tags: {{ ', '.join(wl.tags) }})
+                {% endif %}
+            </td>
         </tr>
         {% endfor %}
     </table>

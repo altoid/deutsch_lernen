@@ -966,37 +966,71 @@ ARRAY_WORD_RESPONSE_SCHEMA = {
     }
 }
 
-WORD_WORDLIST_METADATA_MAP_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/word_wordlist_metadata_map.json",
+MEMBER_WORDLIST_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/member_wordlist_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Word to Wordlist Metadata Map",
+    "title": "Member Wordlist Schema",
     "description": """
-    associates a word object with a wordlist metadata object.  this is used for api calls that find the wordlists
-    that a word id is a member of.
+    information on a wordlist that a word_id is a member of.
     """,
     "type": "object",
     "required": [
-        "word",
-        "wordlist_metadata_list"
+        "word_id",
+        "member_wordlists"
     ],
+    "additionalProperties": False,
     "properties": {
-        "word": {
-            "$ref": WORD_RESPONSE_SCHEMA["$id"]
+        "word_id": {
+            "type": "integer",
         },
-        "wordlist_metadata_list": {
-            "$ref": ARRAY_WORDLIST_METADATA_RESPONSE_SCHEMA["$id"]
+        "member_wordlists": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "name",
+                    "wordlist_id",
+                    "list_type",
+                    "tags"
+                ],
+                "additionalProperties": False,
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "pattern": NAME_PATTERN,
+                    },
+                    "wordlist_id": {
+                        "type": "integer",
+                    },
+                    "list_type": {
+                        "type": "string",
+                        "enum": [
+                            "smart",
+                            "standard",
+                            "empty"  # no code or words
+                        ]
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "pattern": ID_PATTERN
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
-ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA = {
-    "$id": "https://deutsch-lernen.doug/schemas/array_word_wordlist_metadata_map.json",
+ARRAY_MEMBER_WORDLIST_RESPONSE_SCHEMA = {
+    "$id": "https://deutsch-lernen.doug/schemas/array_member_wordlist_response.json",
     "$schema": jsonschema.Draft202012Validator.META_SCHEMA["$id"],
-    "title": "Word",
-    "description": "list of words with attributes",
+    "title": "Array of Member Wordlist Response",
+    "description": "list of member wordlist response objects",
     "type": "array",
     "items": {
-        "$ref": WORD_WORDLIST_METADATA_MAP_SCHEMA["$id"]
+        "$ref": MEMBER_WORDLIST_RESPONSE_SCHEMA["$id"]
     }
 }
 
@@ -1007,7 +1041,6 @@ ALL_SCHEMAS = [
     ARRAY_RELATION_RESPONSE_SCHEMA,
     ARRAY_WORDLIST_METADATA_RESPONSE_SCHEMA,
     ARRAY_WORD_RESPONSE_SCHEMA,
-    ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA,
     DISPLAYABLE_WORD_SCHEMA,
     POS_STRUCTURE_RESPONSE_SCHEMA,
     PREFIX_VERB_RESPONSE_SCHEMA,
@@ -1027,7 +1060,8 @@ ALL_SCHEMAS = [
     WORD_RESPONSE_SCHEMA,
     WORD_TAG_RESPONSE_SCHEMA,
     WORD_UPDATE_PAYLOAD_SCHEMA,
-    WORD_WORDLIST_METADATA_MAP_SCHEMA,
+    MEMBER_WORDLIST_RESPONSE_SCHEMA,
+    ARRAY_MEMBER_WORDLIST_RESPONSE_SCHEMA,
 ]
 
 # build the registry ONCE at module level

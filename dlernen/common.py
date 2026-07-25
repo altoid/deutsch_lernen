@@ -1,6 +1,7 @@
 from dlernen.decorators import js_validate_result
 from dlernen.dlernen_json_schema import ARRAY_WORD_RESPONSE_SCHEMA, \
     ARRAY_DISPLAYABLE_WORD_SCHEMA, \
+    WORD_TAG_RESPONSE_SCHEMA, \
     ARRAY_WORDLIST_METADATA_RESPONSE_SCHEMA
 
 
@@ -8,6 +9,30 @@ from dlernen.dlernen_json_schema import ARRAY_WORD_RESPONSE_SCHEMA, \
 
 def placeholder_string(itr):
     return ','.join(['%s'] * len(itr))
+
+
+@js_validate_result(WORD_TAG_RESPONSE_SCHEMA)
+def get_tags(cursor, wordlist_id, word_id):
+    result = {
+        "wordlist_id": wordlist_id,
+        "word_id": word_id,
+        "tags": []
+    }
+
+    sql = """
+    select tag from tag
+    where wordlist_id=%(wordlist_id)s and word_id=%(word_id)s
+    """
+
+    cursor.execute(sql, {
+        "wordlist_id": wordlist_id,
+        "word_id": word_id
+    })
+    rows = cursor.fetchall()
+
+    result['tags'] = [x['tag'] for x in rows]
+
+    return result
 
 
 # returns two lists:  the word_ids that exist in the database and those that don't.

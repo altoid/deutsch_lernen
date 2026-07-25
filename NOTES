@@ -69,13 +69,8 @@ FIXME - contents of bulk-add text area should persist when notes are updated.  o
 TODO - save and restore the current state of the bulk-add page.  grey out sidebar field if saved state exists.  also
     need to discard saved state.  state is not dependent on word lists.
 
-TODO - review operations that depend on word_ids being members of wordlists.  there should be separate checks for
-    these:
-    1. word_id is real --> 404 if not
-    2. wordlist_id is real --> 404 if not
-    3. both are real but the word_id is not a member of wordlist_id --> 409.
-
-TODO - the lookup page for a word should include the tags when there is a tag state.
+FIXME - when updating a word, need a way to restore the original attribute values if update_word fails.  same with the
+    tags.
 
 ---------------
 

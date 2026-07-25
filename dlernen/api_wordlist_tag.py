@@ -15,30 +15,6 @@ import requests
 bp = Blueprint('api_wordlist_tag', __name__, url_prefix='/api/wordlist/tags')
 
 
-@js_validate_result(WORD_TAG_RESPONSE_SCHEMA)
-def __get_tags(cursor, wordlist_id, word_id):
-    result = {
-        "wordlist_id": wordlist_id,
-        "word_id": word_id,
-        "tags": []
-    }
-
-    sql = """
-    select tag from tag
-    where wordlist_id=%(wordlist_id)s and word_id=%(word_id)s
-    """
-
-    cursor.execute(sql, {
-        "wordlist_id": wordlist_id,
-        "word_id": word_id
-    })
-    rows = cursor.fetchall()
-
-    result['tags'] = [x['tag'] for x in rows]
-
-    return result
-
-
 @bp.route('/<int:wordlist_id>/<int:word_id>', methods=['GET'])
 def get_tags(wordlist_id, word_id):
     # get all the tags affixed to this word id in this wordlist.
@@ -86,7 +62,7 @@ def get_tags(wordlist_id, word_id):
                 return result
 
             # checks complete, let's do this.
-            return __get_tags(cursor, wordlist_id, word_id)
+            return common.get_tags(cursor, wordlist_id, word_id)
 
         except mysql.connector.errors.ProgrammingError as e:
             print(e.msg)

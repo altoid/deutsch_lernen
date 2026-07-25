@@ -6,12 +6,13 @@ from dlernen import common
 from dlernen.decorators import js_validate_result, js_validate_payload
 from dlernen.dlernen_json_schema import \
     ATTRIBUTES, \
-    ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA, \
+    ARRAY_MEMBER_WORDLIST_RESPONSE_SCHEMA, \
     ARRAY_RELATION_RESPONSE_SCHEMA, \
     WORD_ADD_PAYLOAD_SCHEMA, \
     WORD_UPDATE_PAYLOAD_SCHEMA
 from contextlib import closing
 import jsonschema
+from collections import defaultdict
 
 # view functions for /api/word URLs are here.
 
@@ -395,27 +396,25 @@ def get_relations(word_id):
         return __get_relations(cursor, word_id)
 
 
-@js_validate_result(ARRAY_WORD_WORDLIST_METADATA_MAP_SCHEMA)
+@js_validate_result(ARRAY_MEMBER_WORDLIST_RESPONSE_SCHEMA)
 def __get_member_wordlists(cursor, word_ids):
     # for each of the given word ids, find the word lists of which the word is a member.
-    # return a list of "maps" (the best we can do with jsonschema) associating a word object to a list of
-    # list metadata objects, for each word id.
 
     if not word_ids:
         return []
 
-    word_ids = list(set(word_ids))  # remove dups
+    word_ids = set(word_ids)  # remove dups
 
     args = common.placeholder_string(word_ids)
 
     # find standard lists that these words are in
     sql = """
-    select wordlist_id, word_id
+    select word_id, wordlist_id
     from wordlist_word
     where word_id in (%(args)s)
     """ % {'args': args}
 
-    cursor.execute(sql, word_ids)
+    cursor.execute(sql, list(word_ids))
     standard_list_rows = cursor.fetchall()
 
     # find the smart lists these words are in!  make a giant query out of all the sqlcode statements in the
@@ -434,7 +433,7 @@ def __get_member_wordlists(cursor, word_ids):
     if sqlcode_rows:
         selectors = [
             """
-            select %(wordlist_id)s wordlist_id, word_id from (
+            select word_id, %(wordlist_id)s wordlist_id from (
             %(sqlcode)s
             ) a%(wordlist_id)s 
             """ % {
@@ -450,60 +449,97 @@ def __get_member_wordlists(cursor, word_ids):
         (
         %(sql)s
         )
-        select wordlist_id, word_id
+        select word_id, wordlist_id
         from omg
         where word_id in (%(args)s)
         """ % {'sql': sql,
                'args': args}
 
-        cursor.execute(sql, word_ids)
+        cursor.execute(sql, list(word_ids))
         smartlist_rows = cursor.fetchall()
 
-    word_list_associations = smartlist_rows + standard_list_rows
+    wordid_listid_pairs = smartlist_rows + standard_list_rows
+
+    wordlist_ids = {x['wordlist_id'] for x in wordid_listid_pairs}
+    listed_word_ids = {x['word_id'] for x in wordid_listid_pairs}
+    unlisted_word_ids = word_ids - listed_word_ids
 
     # turn the query results into a map of word ids to lists of list ids
+    wordid_listid_mapping = defaultdict(list)
+    for r in wordid_listid_pairs:
+        wordid_listid_mapping[r['word_id']].append(r['wordlist_id'])
 
-    word_list_mapping = {}
-    for a in word_list_associations:
-        if a['word_id'] not in word_list_mapping:
-            word_list_mapping[a['word_id']] = []
-        word_list_mapping[a['word_id']].append(a['wordlist_id'])
+    # for all the relevant word lists, get name and type
+    args = common.placeholder_string(wordlist_ids)
 
-    # for the lists of complex objects, create dictionaries mapping the ids to the objects so that we can
-    # snag them while constructing the result.
+    list_info_rows = []
+    if wordlist_ids:
+        sql = """
+        with list_count as
+        (
+        select
+            wordlist_id, count(*) wordlist_count
+        from wordlist_word
+        group by wordlist_id
+        )
+        select distinct
+            wl.id wordlist_id,
+            wl.name,
+            case
+                when wl.sqlcode is not null then 'smart'
+                when lc.wordlist_count is null then 'empty'
+                else 'standard'
+            end list_type
+        from wordlist wl
+        left join list_count lc
+        on lc.wordlist_id = wl.id
+        where wl.id in (%(args)s)
+        """ % {'args': args}
 
-    # word objects for all of the word ids.  some might not be in any list.
-    word_objects = common.get_words_from_word_ids(cursor, word_ids)
-    word_map = {x['word_id']: x for x in word_objects}
+        cursor.execute(sql, list(wordlist_ids))
+        list_info_rows = cursor.fetchall()
 
-    wordlist_ids = [x['wordlist_id'] for x in word_list_associations]  # the api will filter dups
-    metadata_list = common.get_wordlist_metadata(cursor, wordlist_ids)
-    metadata_map = {x['wordlist_id']: x for x in metadata_list}
+    # create a mapping of wordlist_id --> row for each row just received.
+    list_info_map = {x['wordlist_id']: x for x in list_info_rows}
 
-    listed_word_ids = {x for x in word_list_mapping.keys()}
-    unlisted_word_ids = set(word_ids) - listed_word_ids
+    results = []
 
-    listed_words = [
-        {
-            "word": word_map[x],
-            "wordlist_metadata_list": sorted([metadata_map[y] for y in word_list_mapping[x]], key=lambda z: z['name'])
+    for k, wl_ids in wordid_listid_mapping.items():
+        d = {
+            'word_id': k,
+            'member_wordlists': []
         }
-        for x in listed_word_ids
-    ]
-    unlisted_words = [
-        {
-            "word": word_map[x],
-            "wordlist_metadata_list": []
-        }
-        for x in unlisted_word_ids
-    ]
 
-    return sorted(listed_words + unlisted_words, key=lambda x: x['word']['word'].casefold())
+        for wl_id in wl_ids:
+            m = {
+                'wordlist_id': list_info_map[wl_id]['wordlist_id'],
+                'name': list_info_map[wl_id]['name'],
+                'list_type': list_info_map[wl_id]['list_type'],
+            }
+            d['member_wordlists'].append(m)
+
+        d['member_wordlists'] = sorted(d['member_wordlists'], key=lambda x: x['name'])
+
+        results.append(d)
+
+    for wl_id in unlisted_word_ids:
+        results.append({
+            'word_id': wl_id,
+            'member_wordlists': []
+        })
+
+    # a thousand cuts
+    for r in results:
+        for l in r['member_wordlists']:
+            word_tags = common.get_tags(cursor, l['wordlist_id'], r['word_id'])
+            l['tags'] = word_tags['tags']
+
+    return results
 
 
 @bp.route('/<int:word_id>/list_metadata')
 def get_member_wordlists(word_id):
-    # this will return a WORD_WORDLIST_METADATA_MAP_SCHEMA object.
+    # this will return a single MEMBER_WORDLIST_RESPONSE_SCHEMA object.
     try:
         with closing(connect(**current_app.config['DSN'])) as dbh, closing(dbh.cursor(dictionary=True)) as cursor:
             result = __get_member_wordlists(cursor, [word_id])

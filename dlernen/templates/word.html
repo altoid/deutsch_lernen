@@ -48,17 +48,24 @@ word id.
         </tr>
         {% endfor %}
     </table>
-    {% if member_wordlists %}
+    {% if member_wordlists.member_wordlists %}
     <h2>Wortlisten, die dieses Wort enthalten</h2>
     <table>
-        {% for wl in member_wordlists %}
+        {% for wl in member_wordlists.member_wordlists %}
         <tr>
             <td>
                 {% if wl.list_type == 'smart' %}
                 (*)
                 {% endif %}
             </td>
-            <td><a href="{{ url_for('dlernen.wordlist', wordlist_id=wl.wordlist_id) }}">{{ wl.name }}</a></td>
+            <td>
+                <a href="{{ url_for('dlernen.wordlist', wordlist_id=wl.wordlist_id) }}">
+                    {{ wl.name }}
+                </a>
+                {% if wl.tags %}
+                (tags: {{ ', '.join(wl.tags) }})
+                {% endif %}
+            </td>
         </tr>
         {% endfor %}
     </table>

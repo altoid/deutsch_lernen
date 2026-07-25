@@ -58,25 +58,26 @@ def lookup_word(word):
     if partial_match.lower() == 'true':
         partial = True
 
-    results = []
+    search_results = []
     r = requests.get(url_for('api_word.get_word', word=word, partial=partial, _external=True))
     if r.status_code == 404:
         pass
     elif r.status_code == 200:
-        results = r.json()
+        search_results = r.json()
     else:
         abort(r.status_code, response=r)
 
-    words_found = {x['word'].casefold() for x in results}
+    words_found = {x['word'].casefold() for x in search_results}
     exact_match_found = word.casefold() in words_found
 
-    matching_word_ids = [x['word_id'] for x in results]
+    matching_word_ids = [x['word_id'] for x in search_results]
 
     r = requests.get(url_for('api_word.get_member_wordlists_multiple', word_id=matching_word_ids, _external=True))
     if not r:
         abort(r.status_code, response=r)
 
-    search_results = r.json()
+    member_wordlists = r.json()
+    word_id_to_member_wordlists = {x['word_id']: x for x in member_wordlists}
 
     # get wordlist if appropriate
     tag_state = TagState.deserialize(serialized_tag_state) if serialized_tag_state else None
@@ -88,16 +89,20 @@ def lookup_word(word):
 
         wordlist_obj = r.json()
         member_word_ids = {x['word_id'] for x in wordlist_obj['words']}
+        member_word_ids_to_member_word_objs = {x['word_id']: x for x in wordlist_obj['words']}
+
         matching_member_word_ids = set(matching_word_ids) & member_word_ids
 
-        word_ids_to_words = {x['word_id']: x for x in wordlist_obj['words']}
-        # decorate the search result keys
-        for r in search_results:
-            if r['word']['word_id'] in matching_member_word_ids:
-                r['word']['is_member'] = True
-                r['word']['tags'] = ' '.join(word_ids_to_words[r['word']['word_id']]['tags'])
+        # decorate the search results
+        for result in search_results:
+            if result['word_id'] in matching_member_word_ids:
+                result['is_member'] = True
+                result['tags'] = ' '.join(member_word_ids_to_member_word_objs[result['word_id']]['tags'])
             else:
-                r['word']['is_member'] = False
+                result['is_member'] = False
+
+            if result['word_id'] in word_id_to_member_wordlists:
+                result['member_wordlists'] = word_id_to_member_wordlists[result['word_id']]['member_wordlists']
 
     return render_template('search_results.html',
                            word=word,
@@ -180,8 +185,7 @@ def lookup_by_id(word_id):
     if not r:
         abort(r.status_code, response=r)
 
-    obj = r.json()
-    member_wordlists = obj['wordlist_metadata_list']
+    member_wordlists = r.json()
 
     r = requests.get(url_for('api_word.get_relations', word_id=word_id, _external=True))
     if not r:
@@ -190,7 +194,9 @@ def lookup_by_id(word_id):
     relations = r.json()
 
     related_verbs = get_related_verbs(wordobject)
-    tag_state = TagState.deserialize(serialized_tag_state) if serialized_tag_state else None
+    tag_state = None
+    if serialized_tag_state:
+        tag_state = TagState.deserialize(serialized_tag_state)
 
     return render_template('word.html',
                            wordobject=wordobject,
@@ -780,6 +786,7 @@ def word_editor_submit(word_id):
     if word != word_original or update_payload[ATTRIBUTES]:
         r = requests.put(url_for('api_word.update_word', word_id=word_id, _external=True), json=update_payload)
         if not r:
+            # FIXME - the current attribute values have been nuked!  need a way to put them back if update fails.
             message = "could not update word_id %s [%s]:  %s" % (word_id, r.status_code, r.text)
             abort(r.status_code, message=message, response=r)
 

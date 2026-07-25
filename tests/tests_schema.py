@@ -1,6 +1,7 @@
 import unittest
 import jsonschema
-from dlernen.dlernen_json_schema import get_validator, ATTRIBUTES, \
+from dlernen.json_schema_patterns import ATTRIBUTES
+from dlernen.dlernen_json_schema import get_validator, \
     NULL_SCHEMA, \
     WORDLIST_PAYLOAD_SCHEMA, \
     WORD_ADD_PAYLOAD_SCHEMA, \
@@ -16,6 +17,7 @@ from dlernen.dlernen_json_schema import get_validator, ATTRIBUTES, \
     ARRAY_RELATION_RESPONSE_SCHEMA, \
     WORD_RESPONSE_SCHEMA, \
     ARRAY_WORD_RESPONSE_SCHEMA, \
+    MEMBER_WORDLIST_RESPONSE_SCHEMA, \
     WORD_TAG_RESPONSE_SCHEMA, \
     WORDLIST_METADATA_RESPONSE_SCHEMA, \
     WORDLIST_RESPONSE_SCHEMA
@@ -26,7 +28,6 @@ from pprint import pprint
 # none of the tests here uses the API or hits the database.  these tests make sure that the JSONSCHEMA documents
 # are defined correctly.
 
-
 class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
     schema = NULL_SCHEMA
 
@@ -34,6 +35,194 @@ class Test_COPY_AND_PASTE_TO_CREATE_SCHEMA_TEST_CLASS(unittest.TestCase):
     ]
 
     invalid_docs = [
+    ]
+
+    #############################################################
+    #
+    # the jsonschema.validate method needs a schema against which it
+    # can validate the data.  if you don"t specify it via cls=
+    # then it will figure it out from the $schema in the schema object.
+    # more here:
+    #
+    # https://python-jsonschema.readthedocs.io/en/stable/api/#jsonschema.validate
+    #
+    #############################################################
+
+    def test_valid_docs(self):
+        for jdoc in self.valid_docs:
+            with self.subTest(jdoc=jdoc):
+                get_validator(self.schema).validate(jdoc)
+
+    def test_invalid_docs(self):
+        for jdoc in self.invalid_docs:
+            with self.subTest(jdoc=jdoc):
+                with self.assertRaises(jsonschema.exceptions.ValidationError):
+                    get_validator(self.schema).validate(jdoc)
+
+    def test_check_schema(self):
+        jsonschema.Draft202012Validator.check_schema(self.schema)
+
+
+class Test_MEMBER_WORDLIST_RESPONSE_SCHEMA(unittest.TestCase):
+    schema = MEMBER_WORDLIST_RESPONSE_SCHEMA
+
+    valid_docs = [
+        {
+            "word_id": 123,
+            "member_wordlists": [
+                {
+                    "name": "aoeu",
+                    "wordlist_id": 234,
+                    "list_type": "standard",
+                    "tags": ["one", "two", "three", "fart"]
+                },
+                {
+                    "name": "eek",
+                    "wordlist_id": 234,
+                    "list_type": "smart",
+                    "tags": []
+                },
+            ]
+        },
+        {
+            "word_id": 666,
+            "member_wordlists": [
+            ]
+        },
+    ]
+
+    invalid_docs = [
+        # missing fields
+
+        {
+            # "word_id": 123,
+            "member_wordlists": [
+                {
+                    "name": "aoeu",
+                    "wordlist_id": 234,
+                    "list_type": "standard",
+                    "tags": ["one", "two", "three", "fart"]
+                },
+            ]
+        },
+        {
+            "word_id": 1231,
+            # "member_wordlists": [
+            #     {
+            #         "name": "aoeu",
+            #         "wordlist_id": 234,
+            #         "list_type": "standard",
+            #         "tags": ["one", "two", "three", "fart"]
+            #     },
+            # ]
+        },
+        {
+            "word_id": 1232,
+            "member_wordlists": [
+                {
+                    # "name": "aoeu",
+                    "wordlist_id": 234,
+                    "list_type": "standard",
+                    "tags": ["one", "two", "three", "fart"]
+                },
+            ]
+        },
+        {
+            "word_id": 1233,
+            "member_wordlists": [
+                {
+                    "name": "aoeu",
+                    # "wordlist_id": 234,
+                    "list_type": "standard",
+                    "tags": ["one", "two", "three", "fart"]
+                },
+            ]
+        },
+        {
+            "word_id": 1234,
+            "member_wordlists": [
+                {
+                    "name": "aoeu",
+                    "wordlist_id": 234,
+                    # "list_type": "standard",
+                    "tags": ["one", "two", "three", "fart"]
+                },
+            ]
+        },
+        {
+            "word_id": 1235,
+            "member_wordlists": [
+                {
+                    "name": "aoeu",
+                    "wordlist_id": 234,
+                    "list_type": "standard",
+                    # "tags": ["one", "two", "three", "fart"]
+                },
+            ]
+        },
+
+        # additional fields
+
+        {
+            "word_id": 1236,
+            "asnoethusau": "aoeuaoeu",
+            "member_wordlists": [
+                {
+                    "name": "aoeu",
+                    "wordlist_id": 234,
+                    "list_type": "standard",
+                    "tags": ["one", "two", "three", "fart"]
+                },
+            ]
+        },
+        {
+            "word_id": 1237,
+            "member_wordlists": [
+                {
+                    "asnoethusau": "aoeuaoeu",
+                    "name": "aoeu",
+                    "wordlist_id": 234,
+                    "list_type": "standard",
+                    "tags": ["one", "two", "three", "fart"]
+                },
+            ]
+        },
+
+        # degenerate values
+
+        {
+            "word_id": 1238,
+            "member_wordlists": [
+                {
+                    "name": "",
+                    "wordlist_id": 234,
+                    "list_type": "standard",
+                    "tags": ["one", "two", "three", "fart"]
+                },
+            ]
+        },
+        {
+            "word_id": 12310,
+            "member_wordlists": [
+                {
+                    "name": "aoeu",
+                    "wordlist_id": 234,
+                    "list_type": "garbage",
+                    "tags": ["one", "two", "three", "fart"]
+                },
+            ]
+        },
+        {
+            "word_id": 12311,
+            "member_wordlists": [
+                {
+                    "name": "aoeu",
+                    "wordlist_id": 234,
+                    "list_type": "standard",
+                    "tags": ["no spaces allowed"]
+                },
+            ]
+        },
     ]
 
     #############################################################
