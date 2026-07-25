@@ -521,8 +521,8 @@ def __get_member_wordlists(cursor, word_ids):
         # want to sort by list type, descending, then by name.  can't do it with one operation, but since the sort is
         # stable, we can do it in two.
 
-        d['member_wordlists'] = sorted(d['member_wordlists'], key=lambda x: x['name'])
-        d['member_wordlists'] = sorted(d['member_wordlists'], key=lambda x: x['list_type'], reverse=True)
+        d['member_wordlists'].sort(key=lambda x: x['name'])
+        d['member_wordlists'].sort(key=lambda x: x['list_type'], reverse=True)
 
         results.append(d)
 
