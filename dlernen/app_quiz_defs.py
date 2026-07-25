@@ -582,24 +582,11 @@ def quiz_loop(generating_function_and_args):
                     print(message)
                     return message, r.status_code
 
-                # this is a WORD_WORDLIST_METADATA_MAP_SCHEMA object.
-                obj = r.json()
+                # this is a MEMBER_WORDLIST_RESPONSE object.
+                member_wordlists = r.json()
 
-                wordlist_list_obj = obj['wordlist_metadata_list']
-
-                for n in wordlist_list_obj:
-                    r = requests.get(url_for('api_wordlist_tag.get_tags',
-                                             wordlist_id=n['wordlist_id'],
-                                             word_id=word_to_test['word_id']))
-                    if not r:
-                        message = "could not get tags for word id %s:  [%s, %s]" % (
-                            word_to_test['word_id'], r.text,
-                            r.status_code)
-                        print(message)
-                        return message, r.status_code
-
-                    tags_response = r.json()
-                    tags = ', '.join(tags_response['tags'])
+                for n in member_wordlists['member_wordlists']:
+                    tags = ', '.join(n['tags'])
                     if tags:
                         print("%s [%s:  %s]" % (n['name'], n['wordlist_id'], tags))
                     else:
