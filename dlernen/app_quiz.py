@@ -3,22 +3,21 @@ from pprint import pprint, pformat
 import requests
 import click
 from dlernen import api_quiz
+from dlernen.api_quiz import Selector
 from dlernen.dlernen_json_schema import ATTRIBUTES
 bp = Blueprint('app_quiz', __name__)
-
-QUIZ_KEY = 'definitions'
 
 
 @bp.cli.command('quiz')
 @click.argument('quiz_key')
 @click.option('--wordlist_id', '-l')
-@click.option('--selector', '-s')
+@click.option('--selector', '-s', default=Selector.DEFAULT)
 @click.option('--tags', '-t', multiple=True)
-def quiz(quiz_key, wordlist_id, selector, tags):
+def quiz(quiz_key, wordlist_id, tags, selector):
     print("quiz_key = |%s|, wordlist_id = |%s|, selector = |%s|, tags = |%s|" % (
         quiz_key,
-        pformat(wordlist_id),
-        pformat(selector),
+        wordlist_id,
+        selector,
         pformat(tags)
     ))
 
