@@ -47,7 +47,8 @@ def __create_selector_class():
         'RARE': 'rare',
         'CRAPPY_SCORE': 'crappy_score',
         'IMPERFECT': 'imperfect',
-        'NEVER': 'never',
+        'NEVER': 'never',  # for testing
+        'ALPHABETICAL': 'alphabetical'
     }
     selector_dict['DEFAULT'] = selector_dict['OLDEST_FIRST']
 
@@ -209,6 +210,10 @@ def __get_rows_for_candidates(cursor, candidate_word_ids, quiz_id, selector=Sele
             'where': 'and FALSE',
             'order_by': '1'
         },
+        Selector.ALPHABETICAL: {
+            'where': '',
+            'order_by': 'word'
+        }
     }
     
     sql = """
