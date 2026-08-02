@@ -60,6 +60,8 @@ class AppState(object):
         self.post_scores = False
         self.words_missed.clear()
         self.words_hinted.clear()
+        self.quiz_list.clear()
+        self.pointer = 0
 
 
 APPSTATE = AppState()
