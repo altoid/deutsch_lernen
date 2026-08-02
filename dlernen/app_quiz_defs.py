@@ -47,7 +47,7 @@ class AppState(object):
             self.words_missed = {}
 
         # if false, do not write quiz results to database.
-        self.post_scores = False
+        self.post_scores = True
 
         # list of words to be quizzed; pointer to next word
         self.quiz_list = []
@@ -57,7 +57,7 @@ class AppState(object):
         self.wordlists.clear()
         self.selector = str(Selector.DEFAULT)
         self.tags.clear()
-        self.post_scores = False
+        self.post_scores = True
         self.words_missed.clear()
         self.words_hinted.clear()
         self.quiz_list.clear()
