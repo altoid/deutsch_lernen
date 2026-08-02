@@ -49,6 +49,10 @@ class AppState(object):
         # if false, do not write quiz results to database.
         self.post_scores = False
 
+        # list of words to be quizzed; pointer to next word
+        self.quiz_list = []
+        self.pointer = 0
+
     def reset(self):
         self.wordlists.clear()
         self.selector = str(Selector.DEFAULT)
@@ -170,6 +174,8 @@ def reset():
 
     APPSTATE.reset()
 
+    build_quiz_list()
+
 
 def toggle_posting_scores():
     global APPSTATE
@@ -241,6 +247,8 @@ lists selected:
         print("""
 ** no lists selected; using entire dictionary **
 """)
+
+    build_quiz_list()
 
 
 def status():
@@ -344,6 +352,8 @@ or enter list of tags, space separated
         APPSTATE.tags |= tags
         print("current tags:  %s" % pformat(APPSTATE.tags))
 
+    build_quiz_list()
+
 
 def select_selector():
     global APPSTATE
@@ -391,6 +401,8 @@ or enter selector name
         APPSTATE.selector = answer
         print("selection:  %s" % APPSTATE.selector)
 
+    build_quiz_list()
+
 
 def show_missed_words():
     global APPSTATE
@@ -432,61 +444,6 @@ def show_hinted_words():
         print("    %s (%s)" % (w['word'], w['pos_name']))
 
 
-def get_next_word(wordlist_ids):
-    # wordlist_ids is a list and may be empty.
-    global APPSTATE
-
-    # the quiz api works by getting ALL candidates in one go.  even if it's the whole dictionary.  subsequent calls
-    # here (and to similar functions) will just loop over the list forever.
-
-    url = url_for('api_quiz.get_words',
-                  wordlist_id=wordlist_ids,
-                  quiz_key=APPSTATE.quiz_key,
-                  selector=APPSTATE.selector)
-
-    r = requests.get(url)
-    if r:
-        words_to_test = r.json()
-        if not words_to_test:
-            yield None
-
-        i = 0
-        while True:
-            yield words_to_test[i]
-            i += 1
-            i = i % len(words_to_test)
-
-    print("get_words failed:  [%s - %s]" % (r.text, r.status_code))
-    yield None
-
-
-def get_next_word_with_tags(wordlist_id, tags):
-    # wordlist_id is a single id, not a list.
-
-    global APPSTATE
-
-    url = url_for('api_quiz.get_words_in_wordlist',
-                  wordlist_id=wordlist_id,
-                  quiz_key=APPSTATE.quiz_key,
-                  selector=APPSTATE.selector,
-                  tag=tags)
-
-    r = requests.get(url)
-    if r:
-        words_to_test = r.json()
-        if not words_to_test:
-            yield None
-
-        i = 0
-        while True:
-            yield words_to_test[i]
-            i += 1
-            i = i % len(words_to_test)
-
-    print("get_words_in_wordlist failed:  [%s - %s]" % (r.text, r.status_code))
-    yield None
-
-
 def dummy_get_next_word(wordlist_ids, selector):
     # for testing
     pprint(wordlist_ids)
@@ -507,20 +464,52 @@ def get_next_word_from_list(candidates):
         i = i % len(candidates)
 
 
+def get_next_word_from_state():
+    global APPSTATE
+
+    while True:
+        yield APPSTATE.quiz_list[APPSTATE.pointer]
+        APPSTATE.pointer += 1
+        APPSTATE.pointer = APPSTATE.pointer % len(APPSTATE.quiz_list)
+
+
 def make_triple(function, *args, **kwargs):
     return function, args, kwargs
 
 
-def quiz_definitions():
+def build_quiz_list():
+    # this has to be called every time we change:
+    #
+    # - lists
+    # - tags
+    # - selector
+    #
+    # also has to be called on reset.
+
     global APPSTATE
 
     wordlist_ids = list(APPSTATE.wordlists.keys())
     tags = list(APPSTATE.tags)
 
     if tags and len(wordlist_ids) == 1:
-        function_and_args = make_triple(get_next_word_with_tags, wordlist_ids[0], tags)
+        r = requests.get(url_for('api_quiz.get_words_in_wordlist',
+                                 wordlist_id=wordlist_ids[0],
+                                 quiz_key=APPSTATE.quiz_key,
+                                 selector=APPSTATE.selector,
+                                 tag=tags))
+
     else:
-        function_and_args = make_triple(get_next_word, wordlist_ids)
+        r = requests.get(url_for('api_quiz.get_words',
+                                 wordlist_id=wordlist_ids, # this can be empty.  if so, whole dictionary is fetched.
+                                 quiz_key=APPSTATE.quiz_key,
+                                 selector=APPSTATE.selector))
+
+    APPSTATE.quiz_list = r.json()
+    APPSTATE.pointer = 0
+
+
+def quiz_definitions():
+    function_and_args = make_triple(get_next_word_from_state)
 
     quiz_loop(function_and_args)
 

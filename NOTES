@@ -34,10 +34,6 @@ TODO - for definitions quiz app, can we just rewrite the whole thing as a class?
 
 TODO - in quiz app, add options to k, l, and tags subcommands
 
-FIXME - in quiz app, if you go to the main menu in the middle of a quiz where all word ids are prefetched,
-    state is lost and you lose your place.  should keep state until list is changed or app is reset.  this state
-    should be saved to disk on program exit.
-
 FIXME - in the sidebar, show the name/id of the prevailing list
 
 FIXME - overhaul json schema
