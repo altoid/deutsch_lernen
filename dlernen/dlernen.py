@@ -104,6 +104,8 @@ def lookup_word(word):
             if result['word_id'] in word_id_to_member_wordlists:
                 result['member_wordlists'] = word_id_to_member_wordlists[result['word_id']]['member_wordlists']
 
+    search_results.sort(key=lambda x: x['word'].lower())
+
     return render_template('search_results.html',
                            word=word,
                            redirect_to=redirect_to,
