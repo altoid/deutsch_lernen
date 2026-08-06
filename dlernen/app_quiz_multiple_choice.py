@@ -10,7 +10,7 @@ bp = Blueprint('app_quiz_multiple_choice', __name__)
 QUIZ_KEY = 'definitions'
 
 
-@bp.cli.command('quiz_words')
+@bp.cli.command('quiz_definitions')
 @click.option('--wordlist_ids', '-l', multiple=True)
 @click.option('--query', '-q', multiple=True)
 def quiz_words(wordlist_ids, queries):

@@ -72,8 +72,8 @@ APPSTATE = AppState()
 # this is the entry point
 #
 #
-@bp.cli.command('quiz_definitions')
-def quiz_words():
+@bp.cli.command('quiz_selected_words')
+def quiz_definitions():
     global STATE_FILE
     global APPSTATE
 
@@ -523,7 +523,7 @@ def build_quiz_list():
     print("build_quiz_list:  |list| = %s, ptr = %s" % (len(APPSTATE.quiz_list), APPSTATE.pointer))
 
 
-def quiz_definitions():
+def quiz_selected_words():
     function_and_args = make_triple(get_next_word_from_state)
 
     quiz_loop(function_and_args)
@@ -663,7 +663,7 @@ CALLBACKS = {
     'go': {
         'tagline': 'start quiz',
         'display_order': 10,
-        'callback': quiz_definitions
+        'callback': quiz_selected_words
     },
     'f': {
         'tagline': 'show missed words',
