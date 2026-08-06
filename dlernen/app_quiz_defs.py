@@ -304,10 +304,13 @@ Selector:  %s""" % APPSTATE.selector)
     if r:
         obj = r.json()
         print("""
-Word count:  %s""" % len(obj['word_ids']))
+Total word count:  %s""" % len(obj['word_ids']))
     else:
         print("could not retrieve word count:  [%s - %s]" % (r.text, r.status_code))
 
+    print("""
+Number of words from selector:  %s""" % len(APPSTATE.quiz_list))
+    
     print("""
 Words missed:
 """)
@@ -511,7 +514,6 @@ def build_quiz_list():
                                  quiz_key=APPSTATE.quiz_key,
                                  selector=APPSTATE.selector,
                                  tag=tags))
-
     else:
         r = requests.get(url_for('api_quiz.get_words',
                                  wordlist_id=wordlist_ids, # this can be empty.  if so, whole dictionary is fetched.
@@ -520,7 +522,6 @@ def build_quiz_list():
 
     APPSTATE.quiz_list = r.json()
     APPSTATE.pointer = 0
-    print("build_quiz_list:  |list| = %s, ptr = %s" % (len(APPSTATE.quiz_list), APPSTATE.pointer))
 
 
 def quiz_selected_words():
