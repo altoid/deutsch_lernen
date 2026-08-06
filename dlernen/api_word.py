@@ -29,7 +29,7 @@ def get_word_by_id(word_id):
         if not result:
             return "%s:  word id %s not found" % (request.endpoint, word_id), 404
 
-        # result has already been validated in __get_word()
+        # result has already been validated in get_words_from_word_ids()
         return result[0]
 
 
