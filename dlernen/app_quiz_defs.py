@@ -107,6 +107,13 @@ def unimplemented():
     """)
 
 
+def clear_missed_hinted():
+    global APPSTATE
+
+    APPSTATE.words_missed.clear()
+    APPSTATE.words_hinted.clear()
+
+
 def quit_program():
     global APPSTATE
     global STATE_FILE
@@ -403,7 +410,12 @@ or enter selector name
         APPSTATE.selector = answer
         print("selection:  %s" % APPSTATE.selector)
 
-    build_quiz_list()
+        build_quiz_list()
+
+        if APPSTATE.quiz_list:
+            break
+
+        print("*** selecting %s gives 0 candidate words.  pick another selector." % APPSTATE.selector)
 
 
 def show_missed_words():
@@ -508,6 +520,7 @@ def build_quiz_list():
 
     APPSTATE.quiz_list = r.json()
     APPSTATE.pointer = 0
+    print("build_quiz_list:  |list| = %s, ptr = %s" % (len(APPSTATE.quiz_list), APPSTATE.pointer))
 
 
 def quiz_definitions():
@@ -535,6 +548,10 @@ def quiz_missed_words():
 def quiz_loop(generating_function_and_args):
     global APPSTATE
     global AttrKey
+
+    if not APPSTATE.quiz_list:
+        print("*** no words to test.")
+        return
 
     function, args, kwargs = generating_function_and_args
 
@@ -682,6 +699,11 @@ CALLBACKS = {
         'tagline': 'this menu',
         'display_order': 35,
         'callback': main_menu
+    },
+    'clear': {
+        'tagline': 'clear missed and hinted words',
+        'display_order': 38,
+        'callback': clear_missed_hinted
     },
     'reset': {
         'tagline': 'reset',
