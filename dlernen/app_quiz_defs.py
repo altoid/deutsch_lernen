@@ -72,7 +72,7 @@ APPSTATE = AppState()
 # this is the entry point
 #
 #
-@bp.cli.command('quiz_selected_words')
+@bp.cli.command('quiz_definitions')
 def quiz_definitions():
     global STATE_FILE
     global APPSTATE
@@ -294,8 +294,9 @@ Tags:""")
     else:
         print("** no tags")
 
-    print("""
-Selector:  %s""" % APPSTATE.selector)
+    format_width = 30
+
+    print(f"{'Selector':>{format_width}}: %s" % APPSTATE.selector)
 
     url = url_for('api_wordlist.get_word_ids_from_wordlists',
                   wordlist_id=list(APPSTATE.wordlists.keys()),
@@ -303,14 +304,12 @@ Selector:  %s""" % APPSTATE.selector)
     r = requests.get(url)
     if r:
         obj = r.json()
-        print("""
-Total word count:  %s""" % len(obj['word_ids']))
+        print(f"{'Total word count':>{format_width}}: %s" % len(obj['word_ids']))
     else:
         print("could not retrieve word count:  [%s - %s]" % (r.text, r.status_code))
 
-    print("""
-Number of words from selector:  %s""" % len(APPSTATE.quiz_list))
-    
+    print(f"{'Number of words from selector':>{format_width}}: %s" % len(APPSTATE.quiz_list))
+
     print("""
 Words missed:
 """)
