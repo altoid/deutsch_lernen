@@ -413,6 +413,7 @@ def __get_wordlist(wordlist_id, cursor, tags=None):
                 word_data[(r['word'], r['word_id'])]['tags'].append(r['tag'])
 
         result['words'] = list(word_data.values())
+        result['words'].sort(key=lambda x: x['word'])
 
     if sqlcode:
         result['list_type'] = "smart"
