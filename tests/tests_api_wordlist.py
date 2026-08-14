@@ -5,7 +5,7 @@ import json
 import random
 import string
 from pprint import pprint
-
+from dlernen.api_wordlist import UNTAGGED
 
 def cleanupWordID(client, word_id):
     client.delete(url_for('api_word.delete_word', word_id=word_id))
@@ -13,6 +13,158 @@ def cleanupWordID(client, word_id):
 
 def cleanupWordlistID(client, wordlist_id):
     client.delete(url_for('api_wordlist.delete_wordlist', wordlist_id=wordlist_id))
+
+
+class TestAPIWordlistGetUntaggedWords(unittest.TestCase):
+    app = None
+    app_context = None
+    client = None
+    POSName = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = create_app()
+        cls.app.config.update(
+            TESTING=True,
+        )
+
+        cls.POSName = cls.app.extensions.get('POSName')
+        cls.client = cls.app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
+
+    def createWordlist(self):
+        list_name = "%s_%s" % (self.id(), ''.join(random.choices(string.ascii_lowercase, k=20)))
+        add_payload = {
+            'name': list_name
+        }
+
+        r = self.client.post(url_for('api_wordlist.create_wordlist'), json=add_payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        wordlist_id = obj['wordlist_id']
+        self.addCleanup(cleanupWordlistID, self.client, wordlist_id)
+
+        return list_name, wordlist_id
+
+    def createWord(self):
+        word = ''.join(random.choices(string.ascii_lowercase, k=10))
+
+        add_payload = {
+            "word": word,
+            "pos_name": self.POSName.ADJECTIVE,
+        }
+        r = self.client.post(url_for('api_word.add_word'), json=add_payload)
+        self.assertEqual(201, r.status_code)
+        obj = json.loads(r.data)
+        word_id = obj['word_id']
+        self.addCleanup(cleanupWordID, self.client, word_id)
+
+        return word, word_id
+
+    def assignWordAndTags(self, wordlist_id, word_id, tags=None):
+        payload = {
+            'word_ids': [
+                word_id
+            ]
+        }
+
+        r = self.client.put(url_for('api_wordlist.update_wordlist', wordlist_id=wordlist_id), json=payload)
+        self.assertEqual(200, r.status_code)
+
+        if tags:
+            payload = [
+                {
+                    'word_id': word_id,
+                    'tags': tags
+                }
+            ]
+            r = self.client.post(url_for('api_wordlist_tag.add_tags',
+                                         wordlist_id=wordlist_id),
+                                 json=payload)
+            self.assertEqual(201, r.status_code)
+
+    # create a list with 3 words:
+    # word1 - tag is aoeu
+    # word2 - tag is asdf
+    # word3 - no tag
+
+    def setUp(self):
+        self.list_name, self.wordlist_id = self.createWordlist()
+        self.word1, self.word1_id = self.createWord()
+        self.word2, self.word2_id = self.createWord()
+        self.word3, self.word3_id = self.createWord()
+
+        self.addCleanup(cleanupWordlistID, self.client, self.wordlist_id)
+        self.addCleanup(cleanupWordID, self.client, self.word1_id)
+        self.addCleanup(cleanupWordID, self.client, self.word2_id)
+        self.addCleanup(cleanupWordID, self.client, self.word3_id)
+
+        self.assignWordAndTags(self.wordlist_id, self.word1_id, tags=['aoeu'])
+        self.assignWordAndTags(self.wordlist_id, self.word2_id, tags=['asdf'])
+        self.assignWordAndTags(self.wordlist_id, self.word3_id)
+
+    # do nothing, just make sure that setUpClass and tearDownClaass work
+    def test_nothing(self):
+        pass
+
+    # 1. fetch only the word tagged 'aoeu'
+    def test1(self):
+        url = url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id, tag=['aoeu'])
+        r = self.client.get(url)
+        self.assertEqual(200, r.status_code)
+
+        obj = json.loads(r.data)
+
+        self.assertEqual(1, len(obj['words']))
+        word0 = obj['words'][0]
+
+        self.assertEqual(self.word1_id, word0['word_id'])
+
+    # 2. fetch only the untagged word
+    def test2(self):
+        url = url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id, tag=[UNTAGGED])
+        r = self.client.get(url)
+        self.assertEqual(200, r.status_code)
+
+        obj = json.loads(r.data)
+
+        self.assertEqual(1, len(obj['words']))
+        word0 = obj['words'][0]
+
+        self.assertEqual(self.word3_id, word0['word_id'])
+
+    # 3. fetch both tag='bla'&tag='untagged'
+    def test3(self):
+        url = url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id, tag=[UNTAGGED, 'aoeu'])
+        r = self.client.get(url)
+        self.assertEqual(200, r.status_code)
+
+        obj = json.loads(r.data)
+
+        self.assertEqual(2, len(obj['words']))
+        test_word_ids = sorted([x['word_id'] for x in obj['words']])
+        control_word_ids = sorted([self.word1_id, self.word3_id])
+
+        self.assertCountEqual(control_word_ids, test_word_ids)
+
+    # 4. fetch all words
+    def test4(self):
+        url = url_for('api_wordlist.get_wordlist', wordlist_id=self.wordlist_id)
+        r = self.client.get(url)
+        self.assertEqual(200, r.status_code)
+
+        obj = json.loads(r.data)
+
+        self.assertEqual(3, len(obj['words']))
+        test_word_ids = sorted([x['word_id'] for x in obj['words']])
+        control_word_ids = sorted([self.word1_id, self.word3_id, self.word2_id])
+
+        self.assertCountEqual(control_word_ids, test_word_ids)
 
 
 class TestAPIWordlistCreateDelete(unittest.TestCase):

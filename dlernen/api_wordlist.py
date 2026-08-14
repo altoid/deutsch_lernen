@@ -13,6 +13,8 @@ from dlernen.decorators import js_validate_result, js_validate_payload
 from contextlib import closing
 import jsonschema
 
+UNTAGGED = 'untagged'
+
 # view functions for /api/wordlist URLs are here.
 
 bp = Blueprint('api_wordlist', __name__, url_prefix='/api/wordlist')
@@ -304,33 +306,68 @@ def __get_wordlist(wordlist_id, cursor, tags=None):
     else:
         if tags:
             tags = set(tags)  # remove any dups
+            words = []
 
-            words_sql = """
-            select
-                m.word,
-                m.pos_name,
-                m.word_id,
-                m.attrvalue definition,
-                ifnull(m2.attrvalue, '') article,
-                tag.tag
-            from wordlist_word ww
-            left join mashup_v m
-            on   ww.word_id = m.word_id
-            and  m.attrkey = 'definition'
-            left join mashup_v m2
-            on   ww.word_id = m2.word_id
-            and  m2.attrkey = 'article'
-            
-            inner join tag on ww.wordlist_id = tag.wordlist_id and ww.word_id = tag.word_id
-            
-            where ww.wordlist_id = %%s
-            and tag.tag in (%(tag_args)s)
-            order by m.word
-            """ % {
-                "tag_args": common.placeholder_string(tags)
-            }
-            cursor.execute(words_sql, (wordlist_id, *tags))
-            words = cursor.fetchall()
+            realtags = tags - {UNTAGGED}
+
+            if realtags:
+                tagged_words_sql = """
+                select
+                    m.word,
+                    m.pos_name,
+                    m.word_id,
+                    m.attrvalue definition,
+                    ifnull(m2.attrvalue, '') article,
+                    tag.tag
+                from wordlist_word ww
+                left join mashup_v m
+                on   ww.word_id = m.word_id
+                and  m.attrkey = 'definition'
+                left join mashup_v m2
+                on   ww.word_id = m2.word_id
+                and  m2.attrkey = 'article'
+    
+                inner join tag on ww.wordlist_id = tag.wordlist_id and ww.word_id = tag.word_id
+    
+                where ww.wordlist_id = %%s
+                and tag.tag in (%(tag_args)s)
+                order by m.word
+                """ % {
+                    "tag_args": common.placeholder_string(realtags)
+                }
+                cursor.execute(tagged_words_sql, (wordlist_id, *realtags))
+                words += cursor.fetchall()
+
+            if UNTAGGED in tags:
+                untagged_words_sql = """
+                select
+                    m.word,
+                    m.pos_name,
+                    m.word_id,
+                    m.attrvalue definition,
+                    ifnull(m2.attrvalue, '') article,
+                    tag.tag
+                from wordlist_word ww
+                left join mashup_v m
+                on   ww.word_id = m.word_id
+                and  m.attrkey = 'definition'
+                left join mashup_v m2
+                on   ww.word_id = m2.word_id
+                and  m2.attrkey = 'article'
+    
+                left join tag on ww.wordlist_id = tag.wordlist_id and ww.word_id = tag.word_id
+    
+                where ww.wordlist_id = %(wordlist_id)s
+                and tag.tag is null
+                order by m.word
+                """ % {
+                    "wordlist_id": wordlist_id
+                }
+                cursor.execute(untagged_words_sql)
+                untagged_words = cursor.fetchall()
+
+                words += untagged_words
+
         else:
             words_sql = """
             select
@@ -370,6 +407,7 @@ def __get_wordlist(wordlist_id, cursor, tags=None):
             'tags': []
         }
             for r in words}
+
         for r in words:
             if r['tag']:
                 word_data[(r['word'], r['word_id'])]['tags'].append(r['tag'])
