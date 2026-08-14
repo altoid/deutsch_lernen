@@ -331,7 +331,6 @@ def __get_wordlist(wordlist_id, cursor, tags=None):
     
                 where ww.wordlist_id = %%s
                 and tag.tag in (%(tag_args)s)
-                order by m.word
                 """ % {
                     "tag_args": common.placeholder_string(realtags)
                 }
@@ -359,7 +358,6 @@ def __get_wordlist(wordlist_id, cursor, tags=None):
     
                 where ww.wordlist_id = %(wordlist_id)s
                 and tag.tag is null
-                order by m.word
                 """ % {
                     "wordlist_id": wordlist_id
                 }
@@ -392,7 +390,6 @@ def __get_wordlist(wordlist_id, cursor, tags=None):
             and ww.word_id = tag.word_id
 
             where ww.wordlist_id = %s
-            order by m.word
             """
 
             cursor.execute(words_sql, (wordlist_id,))
