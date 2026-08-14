@@ -58,8 +58,6 @@ TODO - break dlernen_json_schema into multiple modules.  but don't delete it bec
 
 TODO - enhance /api/verbs as in app notes google doc
 
-TODO - integrate all quizzes into quiz_defs, special case for definitions
-
 FIXME - contents of bulk-add text area should persist when notes are updated.  or better, when any button is clicked.
 
 TODO - save and restore the current state of the bulk-add page.  grey out sidebar field if saved state exists.  also
@@ -67,6 +65,8 @@ TODO - save and restore the current state of the bulk-add page.  grey out sideba
 
 FIXME - when updating a word, need a way to restore the original attribute values if update_word fails.  same with the
     tags.
+
+TODO - in wordlist page, separate words by tags selected
 
 ---------------
 
