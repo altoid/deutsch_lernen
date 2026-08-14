@@ -2,7 +2,7 @@ import pickle
 import base64
 import requests
 from flask import url_for
-
+from dlernen.api_wordlist import UNTAGGED
 
 class TagState(object):
     def __init__(self, wordlist_id):
@@ -31,6 +31,8 @@ class TagState(object):
                                  _external=True))
         obj = r.json()
         tags = obj['tags']
+        if tags:
+            tags.append(UNTAGGED)
         self.tags = sorted(tags)
 
         tags_set = set(tags)
