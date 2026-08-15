@@ -272,30 +272,13 @@ def status():
 
 """)
 
-    if APPSTATE.post_scores:
-        print("""
-Scores ARE being posted to the database""")
-    else:
-        print("""
-Scores ARE NOT being posted to the database""")
-
-    print("""
-Lists:""")
-    if APPSTATE.wordlists:
-        for k, v in APPSTATE.wordlists.items():
-            print("[%s] - %s" % (k, v))
-    else:
-        print("** entire dictionary")
-
-    print("""
-Tags:""")
-    if APPSTATE.tags:
-        print("current tags:  %s" % pformat(APPSTATE.tags))
-    else:
-        print("** no tags")
-
     format_width = 30
+    tag_string = "None"
+    if APPSTATE.tags:
+        tag_string = ' '.join(sorted(APPSTATE.tags))
 
+    print(f"{'Posting Scores':>{format_width}}: %s" % "YES" if APPSTATE.post_scores else "NO")
+    print(f"{'Tags':>{format_width}}: %s" % tag_string)
     print(f"{'Selector':>{format_width}}: %s" % APPSTATE.selector)
 
     url = url_for('api_wordlist.get_word_ids_from_wordlists',
@@ -309,6 +292,14 @@ Tags:""")
         print("could not retrieve word count:  [%s - %s]" % (r.text, r.status_code))
 
     print(f"{'Number of words from selector':>{format_width}}: %s" % len(APPSTATE.quiz_list))
+
+    print("""
+Lists:""")
+    if APPSTATE.wordlists:
+        for k, v in APPSTATE.wordlists.items():
+            print("[%s] - %s" % (k, v))
+    else:
+        print("** entire dictionary")
 
     print("""
 Words missed:
