@@ -21,7 +21,8 @@
     {% if tag_state.list_type == 'empty' or tag_state.list_type == 'standard' %}
     <a href="{{ url_for('dlernen.wordlist_editor', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state) }}">Editor</a>
     {% endif %}
-    <a href="{{ url_for('dlernen.study_guide', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state) }}">Studienanleitung</a>
+    <a
+            href="{{ url_for('dlernen.study_guide', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state) }}">Lernhilfe</a>
     <a href="{{ url_for('dlernen.quiz_report', quiz_key='definitions', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state) }}">
         Zeugnis: Definitionen</a>
     <a href="{{ url_for('dlernen.wordlist_attributes', wordlist_id=tag_state.wordlist_id, serialized_tag_state=serialized_tag_state) }}">
