@@ -33,7 +33,7 @@ class TagState(object):
         tags = obj['tags']
         if tags:
             tags.append(UNTAGGED)
-        self.tags = sorted(tags)
+        self.tags.sort()
 
         tags_set = set(tags)
         keys_to_remove = current_tags - tags_set
