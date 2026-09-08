@@ -11,6 +11,36 @@ Wordlist:  {{ wordlist.name }}
 {% set divclass='wordlist' %}
 {% endif %}
 
+{% macro render_chunked_list(words) %}
+<tr>
+    {% for column in words %}
+    <td>
+        <table>
+            {% for r in column %}
+            <tr>
+                <td>
+                    {{ r.article }}
+                </td>
+                <td>
+                    {% if serialized_tag_state %}
+                    <a href="{{ url_for('dlernen.lookup_by_id', word_id=r.word_id, serialized_tag_state=serialized_tag_state) }}">
+                        {{ r.word }}
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('dlernen.lookup_by_id', word_id=r.word_id) }}">
+                        {{ r.word }}
+                    </a>
+                    {% endif %}
+                </td>
+                <td>{{ r.definition if r.definition else '--' }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </td>
+    {% endfor %}
+</tr>
+{% endmacro %}
+
 <div class="{{ divclass }}">
     <h1>
         {{wordlist.name}} ({{wordlist.wordlist_id}})
@@ -70,33 +100,7 @@ Wordlist:  {{ wordlist.name }}
         <tr>
             <td>
                 <table class="tableau">
-                    <tr>
-                        {% for column in words %}
-                        <td>
-                            <table>
-                                {% for r in column %}
-                                <tr>
-                                    <td>
-                                        {{ r.article }}
-                                    </td>
-                                    <td>
-                                        {% if serialized_tag_state %}
-                                        <a href="{{ url_for('dlernen.lookup_by_id', word_id=r.word_id, serialized_tag_state=serialized_tag_state) }}">
-                                            {{ r.word }}
-                                        </a>
-                                        {% else %}
-                                        <a href="{{ url_for('dlernen.lookup_by_id', word_id=r.word_id) }}">
-                                            {{ r.word }}
-                                        </a>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ r.definition if r.definition else '--' }}</td>
-                                </tr>
-                                {% endfor %}
-                            </table>
-                        </td>
-                        {% endfor %}
-                    </tr>
+                    {{ render_chunked_list(words) }}
                 </table>
             </td>
         </tr>
