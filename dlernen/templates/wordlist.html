@@ -97,12 +97,16 @@ Wordlist:  {{ wordlist.name }}
     {% endif %} {# if tag_state #}
     <h2>Worte ({{ wordlist.words|length }})</h2>
     <table class="tableau">
+        {% if selected_tags %}
+        {% for t in selected_tags %}
         <tr>
-            <th colspan="{{ chunks|length }}">
-                YUBBA
-            </th>
+            <th colspan="{{ nchunks }}">{{ t }}</th>
         </tr>
-        {{ render_chunked_list(chunks) }}
+        {{ render_chunked_list(tags_to_words[t]) }}
+        {% endfor %}
+        {% else %}
+        {{ render_chunked_list(tags_to_words['']) }}
+        {% endif %}
     </table>
     <form action="{{ url_for('dlernen_relation.create_relation') }}" method="post">
         <h2>Relationen</h2>

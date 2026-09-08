@@ -53,7 +53,7 @@ def slice_n_dice(tag_state_object, wordlist_object, nchunks):
     result = {}
 
     if not tag_state_object or not tag_state_object.selected_tags():
-        result['<NADA>'] = chunkify(wordlist_object['words'], nchunks)
+        result[''] = chunkify(wordlist_object['words'], nchunks)
         return result
 
     # first, make a list of (tag, word) pairs
@@ -75,7 +75,7 @@ def slice_n_dice(tag_state_object, wordlist_object, nchunks):
     selected_tag_set = set(tag_state_object.selected_tags())
     for tag, word in tag_word_pairs:
         if tag in selected_tag_set:
-            intermediate_result[tag] = word
+            intermediate_result[tag].append(word)
 
     for tag, words in intermediate_result.items():
         words.sort(key=lambda x: x['word'].lower())
@@ -384,8 +384,9 @@ def wordlist(wordlist_id):
         wordlist_obj['notes'] = ''
 
     nchunks = request.args.get('nchunks', current_app.config['NCHUNKS'], type=int)
-    # tags_to_words = slice_n_dice(tag_state_object, wordlist_obj, nchunks)
-    chunks = chunkify(wordlist_obj['words'], nchunks)
+    tags_to_words = slice_n_dice(tag_state_object, wordlist_obj, nchunks)
+    selected_tags = tag_state_object.selected_tags()
+
     tag_chunks = chunkify(tag_state_object.tag_state(), 4)
 
     r = requests.get(url_for('api_wordlist.get_relations',
@@ -401,7 +402,9 @@ def wordlist(wordlist_id):
                            relations=relations,
                            tag_state=tag_state_object,
                            tag_chunks=tag_chunks,
-                           chunks=chunks)
+                           selected_tags=selected_tags,
+                           nchunks=nchunks,
+                           tags_to_words=tags_to_words)
 
 
 @bp.route('/wordlists', methods=['POST'])
