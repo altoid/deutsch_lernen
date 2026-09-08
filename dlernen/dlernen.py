@@ -4,7 +4,10 @@ import json
 
 from dlernen.tagstate import TagState
 from dlernen.dlernen_json_schema import ATTRIBUTES
+from dlernen.api_wordlist import UNTAGGED
+
 from pprint import pprint, pformat
+from collections import defaultdict
 
 bp = Blueprint('dlernen', __name__, url_prefix='/dlernen')
 
@@ -26,6 +29,58 @@ def chunkify(arr, nchunks=1):
     result = []
     for x in z:
         result.append(arr[x[0]:x[1]])
+    return result
+
+
+def slice_n_dice(tag_state_object, wordlist_object, nchunks):
+    # this is used in rendering a word list for display.  what we want to see is each individual tag, followed by the
+    # words in the wordlist that have that tag.
+    #
+    # this function produces a dictionary that maps each tag to a list of the words with that tag, where that list
+    # has been passed through chunkify().  we'll deal with sorting the tags at rendering time.
+    #
+    # if there are no tags, we return a dictionary that has the empty string as its sole key.
+    #
+    # UNTAGGED may be present in the set of tags, but it is not used as an actual tag, i.e. no such tag will appear
+    # in the database.
+    #
+    # a wordlist object is a WORDLIST_RESPONSE_SCHEMA object, which has a list of DISPLAYABLE_WORD_SCHEMA objects.
+    # each of this is a word with a list of tags for that word.  so to create our return object we have to turn this
+    # inside out.
+    #
+    # this should probably be done at the API level, but later, i'm tired.  https://www.youtube.com/watch?v=Uai7M4RpoLU
+
+    result = {}
+
+    if not tag_state_object or not tag_state_object.selected_tags():
+        result['<NADA>'] = chunkify(wordlist_object['words'], nchunks)
+        return result
+
+    # first, make a list of (tag, word) pairs
+    tag_word_pairs = []
+
+    for w in wordlist_object['words']:
+        if 'tags' not in w:
+            tag_word_pairs.append((UNTAGGED, w))
+            continue
+
+        if not w['tags']:
+            tag_word_pairs.append((UNTAGGED, w))
+            continue
+
+        for t in w['tags']:
+            tag_word_pairs.append((t, w))
+
+    intermediate_result = defaultdict(list)
+    selected_tag_set = set(tag_state_object.selected_tags())
+    for tag, word in tag_word_pairs:
+        if tag in selected_tag_set:
+            intermediate_result[tag] = word
+
+    for tag, words in intermediate_result.items():
+        words.sort(key=lambda x: x['word'].lower())
+        result[tag] = chunkify(words, nchunks)
+
     return result
 
 
@@ -329,7 +384,8 @@ def wordlist(wordlist_id):
         wordlist_obj['notes'] = ''
 
     nchunks = request.args.get('nchunks', current_app.config['NCHUNKS'], type=int)
-    words = chunkify(wordlist_obj['words'], nchunks)
+    # tags_to_words = slice_n_dice(tag_state_object, wordlist_obj, nchunks)
+    chunks = chunkify(wordlist_obj['words'], nchunks)
     tag_chunks = chunkify(tag_state_object.tag_state(), 4)
 
     r = requests.get(url_for('api_wordlist.get_relations',
@@ -345,7 +401,7 @@ def wordlist(wordlist_id):
                            relations=relations,
                            tag_state=tag_state_object,
                            tag_chunks=tag_chunks,
-                           words=words)
+                           chunks=chunks)
 
 
 @bp.route('/wordlists', methods=['POST'])

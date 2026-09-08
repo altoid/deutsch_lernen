@@ -11,9 +11,9 @@ Wordlist:  {{ wordlist.name }}
 {% set divclass='wordlist' %}
 {% endif %}
 
-{% macro render_chunked_list(words) %}
+{% macro render_chunked_list(chunks) %}
 <tr>
-    {% for column in words %}
+    {% for column in chunks %}
     <td>
         <table>
             {% for r in column %}
@@ -97,7 +97,12 @@ Wordlist:  {{ wordlist.name }}
     {% endif %} {# if tag_state #}
     <h2>Worte ({{ wordlist.words|length }})</h2>
     <table class="tableau">
-        {{ render_chunked_list(words) }}
+        <tr>
+            <th colspan="{{ chunks|length }}">
+                YUBBA
+            </th>
+        </tr>
+        {{ render_chunked_list(chunks) }}
     </table>
     <form action="{{ url_for('dlernen_relation.create_relation') }}" method="post">
         <h2>Relationen</h2>
