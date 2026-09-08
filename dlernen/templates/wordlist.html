@@ -96,14 +96,8 @@ Wordlist:  {{ wordlist.name }}
     {% endif %} {# tag_state.tag_state|length > 0 #}
     {% endif %} {# if tag_state #}
     <h2>Worte ({{ wordlist.words|length }})</h2>
-    <table>
-        <tr>
-            <td>
-                <table class="tableau">
-                    {{ render_chunked_list(words) }}
-                </table>
-            </td>
-        </tr>
+    <table class="tableau">
+        {{ render_chunked_list(words) }}
     </table>
     <form action="{{ url_for('dlernen_relation.create_relation') }}" method="post">
         <h2>Relationen</h2>
