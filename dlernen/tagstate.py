@@ -4,6 +4,7 @@ import requests
 from flask import url_for
 from dlernen.api_wordlist import UNTAGGED
 
+
 class TagState(object):
     def __init__(self, wordlist_id):
 
@@ -33,7 +34,7 @@ class TagState(object):
         tags = obj['tags']
         if tags:
             tags.append(UNTAGGED)
-        self.tags.sort()
+        self.tags = sorted(tags)
 
         tags_set = set(tags)
         keys_to_remove = current_tags - tags_set
