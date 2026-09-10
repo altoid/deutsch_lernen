@@ -50,7 +50,7 @@ def __create_selector_class():
         'NEVER': 'never',  # for testing
         'ALPHABETICAL': 'alphabetical'
     }
-    selector_dict['DEFAULT'] = selector_dict['OLDEST_FIRST']
+    selector_dict['DEFAULT'] = selector_dict['RANDOM']
 
     # note:  class_dict is an _EnumDict.  the |= operator won't work, but .update() works fine.
     class_dict.update(selector_dict)
