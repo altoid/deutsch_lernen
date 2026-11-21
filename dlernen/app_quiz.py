@@ -8,7 +8,21 @@ from dlernen.dlernen_json_schema import ATTRIBUTES
 bp = Blueprint('app_quiz', __name__)
 
 
-@bp.cli.command('quiz')
+class QuizKeyHelpCommand(click.Command):
+    def get_help(self, ctx):
+        txt = ''
+        app = ctx.obj.get('app') if isinstance(ctx.obj, dict) else None
+        if not app:
+            from dlernen import create_app
+            app = create_app()
+            qk = [str(x) for x in app.extensions['QuizKey']]
+            txt = 'available quizzes:  %s' % ', '.join(qk)
+        self.help = txt
+
+        return super().get_help(ctx)
+
+
+@bp.cli.command('quiz', cls=QuizKeyHelpCommand)
 @click.argument('quiz_key')
 @click.option('--wordlist_id', '-l')
 @click.option('--selector', '-s', default=Selector.DEFAULT)
