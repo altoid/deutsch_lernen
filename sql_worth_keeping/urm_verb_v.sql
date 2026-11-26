@@ -1,6 +1,6 @@
 use deutsch;
 
-create or replace view urm_verben_v as
+create or replace view urm_verb_v as
 WITH without_prefix AS
 (
 SELECT
