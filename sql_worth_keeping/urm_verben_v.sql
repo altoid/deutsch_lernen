@@ -1,5 +1,6 @@
 use deutsch;
 
+create or replace view urm_verben_v as
 WITH without_prefix AS
 (
 SELECT
@@ -77,9 +78,7 @@ WHERE sps IS NOT NULL
 AND tps IS NOT NULL
 AND tpp IS NOT NULL
 )
-SELECT *
+SELECT word_id
 FROM identify_irregular
-
-ORDER BY rand()
-limit 33
+WHERE irregular = 1
 ;
